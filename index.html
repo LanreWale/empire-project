@@ -1,0 +1,84 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>The Empire — Secure Functions Demo</title>
+  <style>
+    body{font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif;margin:2rem;max-width:860px}
+    button{padding:.7rem 1rem;border-radius:.6rem;border:1px solid #ddd;cursor:pointer}
+    input,select{padding:.6rem;border-radius:.5rem;border:1px solid #ccc;width:100%}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin:.6rem 0}
+    .card{border:1px solid #eee;border-radius:1rem;padding:1rem;margin:1rem 0;box-shadow:0 2px 8px rgba(0,0,0,.04)}
+    pre{background:#f8f8f8;padding:1rem;border-radius:.5rem;overflow:auto}
+  </style>
+</head>
+<body>
+  <h1>⚔️ The Empire — Live Integrations</h1>
+
+  <div class="card">
+    <h2>Sync Google Sheets</h2>
+    <button onclick="syncSheets()">Sync</button>
+    <pre id="sheetsOut"></pre>
+  </div>
+
+  <div class="card">
+    <h2>Resolve Bank Account (Flutterwave)</h2>
+    <div class="row">
+      <div><label>Account Bank (code)</label><input id="bank" placeholder="044" /></div>
+      <div><label>Account Number</label><input id="acct" placeholder="0123456789" /></div>
+    </div>
+    <button onclick="resolveAcct()">Resolve</button>
+    <pre id="resolveOut"></pre>
+  </div>
+
+  <div class="card">
+    <h2>Initiate Transfer</h2>
+    <div class="row">
+      <div><label>Amount</label><input id="amt" type="number" placeholder="500" /></div>
+      <div><label>Currency</label><input id="ccy" value="NGN" /></div>
+    </div>
+    <div class="row">
+      <div><label>Bank Code</label><input id="tbank" placeholder="076" /></div>
+      <div><label>Account Number</label><input id="tacct" placeholder="1761413055" /></div>
+    </div>
+    <button onclick="doTransfer()">Transfer</button>
+    <pre id="transferOut"></pre>
+  </div>
+
+<script>
+async function syncSheets(){
+  const r = await fetch('/.netlify/functions/sheets-sync');
+  const j = await r.json();
+  document.querySelector('#sheetsOut').textContent = JSON.stringify(j, null, 2);
+}
+
+async function resolveAcct(){
+  const account_bank = document.querySelector('#bank').value.trim();
+  const account_number = document.querySelector('#acct').value.trim();
+  const r = await fetch('/.netlify/functions/flw-resolve', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ account_bank, account_number })
+  });
+  const t = await r.text();
+  document.querySelector('#resolveOut').textContent = t;
+}
+
+async function doTransfer(){
+  const amount = Number(document.querySelector('#amt').value);
+  const currency = document.querySelector('#ccy').value.trim() || 'NGN';
+  const account_bank = document.querySelector('#tbank').value.trim();
+  const account_number = document.querySelector('#tacct').value.trim();
+  const payload = { amount, currency, account_bank, account_number, narration:'Empire Payout' };
+  const r = await fetch('/.netlify/functions/flw-transfer', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify(payload)
+  });
+  const t = await r.text();
+  document.querySelector('#transferOut').textContent = t;
+}
+</script>
+</body>
+</html>

@@ -1,14 +1,10 @@
 [build]
-  functions = "netlify/functions"
-  publish = "."
-
-[[headers]]
-  for = "/*"
-  [headers.values]
-    Access-Control-Allow-Origin = "*"
-[build]
   command = "echo No build"
   publish = "."
+
+  # 👇 Add environment overrides here instead of a second [build]
+  [build.environment]
+    SECRETS_SCAN_OMIT_PATHS = "node_modules/nodemailer/lib/well-known/services.json"
 
 [functions]
   directory = "netlify/functions"
@@ -18,7 +14,3 @@
     for = "/*"
     [headers.values]
       Access-Control-Allow-Origin = "*"
-
-# Ignore Nodemailer’s services.json in secret scan
-[build.environment]
-  SECRETS_SCAN_OMIT_PATHS = "node_modules/nodemailer/lib/well-known/services.json"

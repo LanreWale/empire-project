@@ -35,3 +35,21 @@ exports.handler = async (event) => {
     return { statusCode: code, body: JSON.stringify({ error: data, reference }) };
   }
 };
+/* EMAIL_HOOK_START */
+const { sendEmail } = require("./lib/email");
+const T = require("./lib/templates");
+/* EMAIL_HOOK_END */
+
+// === Empire Email: Payout Initiated ===
+try {
+  const to = process.env.EMAIL_TO || process.env.SMTP_USER;
+  const tpl = T.payoutInitiated({ amount, ref: reference, name: recipientName || "Partner" });
+  await sendEmail({ to, subject: tpl.subject, html: tpl.html, text: tpl.text });
+} catch (e) { /* don’t block transfer on email failure */ }
+
+// === Empire Email: Payout Result ===
+try {
+  const to = process.env.EMAIL_TO || process.env.SMTP_USER;
+  const tpl = T.payoutResult({ amount, ref: reference, status: transferStatus, reason: failureReason });
+  await sendEmail({ to, subject: tpl.subject, html: tpl.html, text: tpl.text });
+} catch (e) { /* ignore email errors */ }

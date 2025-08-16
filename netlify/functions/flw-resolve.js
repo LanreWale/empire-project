@@ -25,3 +25,17 @@ exports.handler = async (event) => {
     return { statusCode: code, body: JSON.stringify({ error: data }) };
   }
 };
+
+// === Empire Email: Bank Verification ===
+try {
+  const to = process.env.EMAIL_TO || process.env.SMTP_USER;
+  const tpl = T.bankVerify({ bank: bankCode, account: accountNumber, name: resolvedName, ok: true });
+  await sendEmail({ to, subject: tpl.subject, html: tpl.html, text: tpl.text });
+} catch (e) { /* ignore */ }
+
+// === Empire Email: Bank Verification FAILED ===
+try {
+  const to = process.env.EMAIL_TO || process.env.SMTP_USER;
+  const tpl = T.bankVerify({ bank: bankCode, account: accountNumber, name: "-", ok: false });
+  await sendEmail({ to, subject: tpl.subject, html: tpl.html, text: tpl.text });
+} catch (e) { /* ignore */ }

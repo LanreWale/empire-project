@@ -1,22 +1,15 @@
-const axios = require("axios");
-
-exports.handler = async (event) => {
+exports.handler = async () => {
+  const axios = require('axios');
+  if (!process.env.FLUTTERWAVE_SECRET_KEY) {
+    return { statusCode: 500, body: JSON.stringify({ error: 'Missing FLUTTERWAVE_SECRET_KEY' }) };
+  }
   try {
-    const { account_bank, account_number } = JSON.parse(event.body);
-
-    if (!account_bank || !account_number) {
-      return { statusCode: 400, body: JSON.stringify({ error: "Missing bank or account number" }) };
-    }
-
-    const response = await axios.post(
-      "https://api.flutterwave.com/v3/accounts/resolve",
-      { account_bank, account_number },
-      { headers: { Authorization: `Bearer ${process.env.FLUTTERWAVE_SECRET_KEY}` } }
-    );
-
-    return { statusCode: 200, body: JSON.stringify(response.data) };
-
-  } catch (err) {
-    return { statusCode: 500, body: JSON.stringify({ error: err.message }) };
+    const r = await axios.get('https://api.flutterwave.com/v3/banks/NG', {
+      headers: { Authorization: `Bearer ${process.env.FLUTTERWAVE_SECRET_KEY}` }
+    });
+    return { statusCode: 200, body: JSON.stringify({ ok: true, count: r.data?.data?.length || 0 }) };
+  } catch (e) {
+    const code = e.response?.status || 500;
+    return { statusCode: code, body: JSON.stringify({ error: e.response?.data || e.message }) };
   }
 };

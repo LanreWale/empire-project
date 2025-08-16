@@ -2,15 +2,14 @@
   command = "echo No build"
   publish = "."
 
-  # 👇 Add environment overrides here instead of a second [build]
   [build.environment]
     SECRETS_SCAN_OMIT_PATHS = "node_modules/nodemailer/lib/well-known/services.json"
+    NODE_VERSION = "18"
 
 [functions]
   directory = "netlify/functions"
 
-[headers]
-  [[headers]]
-    for = "/*"
-    [headers.values]
-      Access-Control-Allow-Origin = "*"
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Access-Control-Allow-Origin = "*"

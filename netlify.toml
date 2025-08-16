@@ -6,3 +6,19 @@
   for = "/*"
   [headers.values]
     Access-Control-Allow-Origin = "*"
+[build]
+  command = "echo No build"
+  publish = "."
+
+[functions]
+  directory = "netlify/functions"
+
+[headers]
+  [[headers]]
+    for = "/*"
+    [headers.values]
+      Access-Control-Allow-Origin = "*"
+
+# Ignore Nodemailer’s services.json in secret scan
+[build.environment]
+  SECRETS_SCAN_OMIT_PATHS = "node_modules/nodemailer/lib/well-known/services.json"

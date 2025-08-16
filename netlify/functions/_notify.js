@@ -1,44 +1,63 @@
-const axios = require("axios");
 const nodemailer = require("nodemailer");
 
+/** Netlify function: POST body = { to, subject, text?, html? } */
 exports.handler = async (event) => {
   try {
-    const { type, success, data, error } = JSON.parse(event.body);
-
-    const message = success
-      ? `✅ Empire Alert: ${type.toUpperCase()} succeeded\n${JSON.stringify(data, null, 2)}`
-      : `❌ Empire Alert: ${type.toUpperCase()} failed\nError: ${error}`;
-
-    if (process.env.TELEGRAM_BOT_TOKEN && process.env.TELEGRAM_CHAT_ID) {
-      const tgUrl = `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`;
-      await axios.post(tgUrl, {
-        chat_id: process.env.TELEGRAM_CHAT_ID,
-        text: message
-      });
+    if (event.httpMethod !== "POST") {
+      return { statusCode: 405, body: JSON.stringify({ error: "Method Not Allowed" }) };
     }
 
-    if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
-      const transporter = nodemailer.createTransport({
-        host: process.env.SMTP_HOST,
-        port: parseInt(process.env.SMTP_PORT || "587", 10),
-        secure: process.env.SMTP_PORT === "465",
-        auth: {
-          user: process.env.SMTP_USER,
-          pass: process.env.SMTP_PASS
-        }
-      });
+    const payload = JSON.parse(event.body || "{}");
 
-      await transporter.sendMail({
-        from: process.env.EMAIL_FROM,
-        to: process.env.EMAIL_TO,
-        subject: `Empire Alert: ${type}`,
-        text: message
-      });
+    // Read env safely with defaults and NO toUpperCase() on undefined
+    const host = String(process.env.SMTP_HOST || "").trim();
+    const port = Number(process.env.SMTP_PORT || 587);
+    const user = String(process.env.SMTP_USER || "").trim();
+    const pass = String(process.env.SMTP_PASS || "").trim();
+    const from = String(process.env.SMTP_FROM || user || "").trim();
+    const secure = String(process.env.SMTP_SECURE || "false").toLowerCase() === "true";
+
+    // Validate required env
+    const missing = [];
+    if (!host) missing.push("SMTP_HOST");
+    if (!user) missing.push("SMTP_USER");
+    if (!pass) missing.push("SMTP_PASS");
+    if (!from) missing.push("SMTP_FROM (or SMTP_USER)");
+    if (missing.length) {
+      return {
+        statusCode: 500,
+        body: JSON.stringify({
+          error: "Missing required SMTP environment variables",
+          missing,
+        }),
+      };
     }
 
-    return { statusCode: 200, body: JSON.stringify({ ok: true }) };
+    // Validate request
+    if (!payload.to) {
+      return { statusCode: 400, body: JSON.stringify({ error: 'Missing "to" in request body' }) };
+    }
 
+    const transporter = nodemailer.createTransport({
+      host,
+      port,
+      secure,
+      auth: { user, pass },
+    });
+
+    const info = await transporter.sendMail({
+      from,
+      to: payload.to,
+      subject: payload.subject || "No subject",
+      text: payload.text,
+      html: payload.html,
+    });
+
+    return { statusCode: 200, body: JSON.stringify({ ok: true, messageId: info.messageId }) };
   } catch (err) {
-    return { statusCode: 500, body: JSON.stringify({ error: err.message }) };
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ error: err.message, stack: err.stack }),
+    };
   }
 };

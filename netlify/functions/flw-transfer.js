@@ -1,48 +1,37 @@
-const axios = require("axios");
-
 exports.handler = async (event) => {
+  if (event.httpMethod !== 'POST') {
+    return { statusCode: 405, body: JSON.stringify({ error: 'Use POST' }) };
+  }
+  const axios = require('axios');
+  const { amount, currency, account_bank, account_number, narration } = JSON.parse(event.body || '{}');
+
+  const min = Number(process.env.MIN_TRANSFER_AMOUNT || 0);
+  if (Number(amount) < min) {
+    return { statusCode: 400, body: JSON.stringify({ error: `Minimum amount is ${min}` }) };
+  }
+  if (!process.env.FLUTTERWAVE_SECRET_KEY) {
+    return { statusCode: 500, body: JSON.stringify({ error: 'Missing FLUTTERWAVE_SECRET_KEY' }) };
+  }
+
+  const reference = `empire_${Date.now()}`;
   try {
-    const { account_bank, account_number, amount, currency, narration } = JSON.parse(event.body);
-
-    if (!account_bank || !account_number || !amount) {
-      return { statusCode: 400, body: JSON.stringify({ error: "Missing required fields" }) };
-    }
-
-    const minAmount = parseInt(process.env.MIN_TRANSFER_AMOUNT || "500", 10);
-    if (amount < minAmount) {
-      return { statusCode: 400, body: JSON.stringify({ error: `Minimum transfer is ${minAmount}` }) };
-    }
-
-    const response = await axios.post(
-      "https://api.flutterwave.com/v3/transfers",
+    const r = await axios.post(
+      'https://api.flutterwave.com/v3/transfers',
       {
         account_bank,
         account_number,
-        amount,
-        currency: currency || "NGN",
-        narration: narration || "Empire System Transfer",
-        reference: `empire_${Date.now()}`
+        amount: Number(amount),
+        currency: currency || 'NGN',
+        debit_currency: 'NGN',
+        narration: narration || 'Empire payout',
+        reference
       },
-      {
-        headers: { Authorization: `Bearer ${process.env.FLUTTERWAVE_SECRET_KEY}` }
-      }
+      { headers: { Authorization: `Bearer ${process.env.FLUTTERWAVE_SECRET_KEY}`, 'Content-Type': 'application/json' } }
     );
-
-    await axios.post(`${process.env.URL}/.netlify/functions/_notify`, {
-      type: "transfer",
-      success: true,
-      data: response.data
-    });
-
-    return { statusCode: 200, body: JSON.stringify(response.data) };
-
-  } catch (err) {
-    await axios.post(`${process.env.URL}/.netlify/functions/_notify`, {
-      type: "transfer",
-      success: false,
-      error: err.message
-    });
-
-    return { statusCode: 500, body: JSON.stringify({ error: err.message }) };
+    return { statusCode: 200, body: JSON.stringify({ ok: true, reference, data: r.data }) };
+  } catch (e) {
+    const code = e.response?.status || 500;
+    const data = e.response?.data || { message: e.message };
+    return { statusCode: code, body: JSON.stringify({ error: data, reference }) };
   }
 };

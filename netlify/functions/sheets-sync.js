@@ -1,134 +1,151 @@
 // netlify/functions/sheets-sync.js
+// READ: CSV from public sheet (GET)
+// WRITE: Append via Apps Script Web App (POST action=append)
+// Secured with GS_WEBAPP_KEY shared secret
+
 const axios = require("axios");
 
-const ALLOW_ORIGIN = "*"; // you already set global CORS in netlify.toml; this is a safe local fallback
+const CORS = {
+  "Content-Type": "application/json",
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "Content-Type",
+  "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
+};
 
-function corsify(statusCode, body) {
-  return {
-    statusCode,
-    headers: {
-      "Content-Type": "application/json",
-      "Access-Control-Allow-Origin": ALLOW_ORIGIN,
-      "Access-Control-Allow-Headers": "Content-Type",
-      "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
-    },
-    body: JSON.stringify(body),
-  };
+function reply(statusCode, body) {
+  return { statusCode, headers: CORS, body: JSON.stringify(body) };
 }
 
 exports.handler = async (event) => {
   try {
-    // Preflight
-    if ((event.httpMethod || "").toUpperCase() === "OPTIONS") {
-      return corsify(200, { ok: true });
-    }
-
     const method = (event.httpMethod || "").toUpperCase();
 
+    // Preflight
+    if (method === "OPTIONS") return reply(200, { ok: true });
+
     // ─────────────────────────────────────────────────────────────
-    // GET → READ (your current behavior)
+    // GET → READ CSV (public view) or passthrough to Apps Script
     // ─────────────────────────────────────────────────────────────
     if (method === "GET") {
-      // Option A: public CSV via Google visualization endpoint
-      if (process.env.GOOGLE_SHEETS_PUBLIC === "true" && process.env.GOOGLE_SHEETS_ID && process.env.GOOGLE_SHEETS_GID) {
-        const url = `https://docs.google.com/spreadsheets/d/${process.env.GOOGLE_SHEETS_ID}/gviz/tq?tqx=out:csv&gid=${process.env.GOOGLE_SHEETS_GID}`;
-        const resp = await axios.get(url, { timeout: 15000 });
-        return corsify(200, { csv: resp.data });
+      if (process.env.GOOGLE_SHEETS_PUBLIC === "true" &&
+          process.env.GOOGLE_SHEETS_ID) {
+        const gid =
+          (event.queryStringParameters && event.queryStringParameters.gid) ||
+          process.env.GOOGLE_SHEETS_GID ||
+          "0";
+        const url = `https://docs.google.com/spreadsheets/d/${process.env.GOOGLE_SHEETS_ID}/gviz/tq?tqx=out:csv&gid=${gid}`;
+        const { data } = await axios.get(url, { timeout: 15000 });
+        return reply(200, { csv: data });
       }
 
-      // Option B: Apps Script Web App passthrough (GET)
       if (process.env.GOOGLE_SHEETS_WEBAPP_URL) {
-        const resp = await axios.get(process.env.GOOGLE_SHEETS_WEBAPP_URL, { timeout: 15000 });
-        return corsify(200, resp.data);
+        const { data } = await axios.get(process.env.GOOGLE_SHEETS_WEBAPP_URL, { timeout: 15000 });
+        return reply(200, data);
       }
 
-      return corsify(400, { error: "No Google Sheets configuration set for READ. Set GOOGLE_SHEETS_PUBLIC=true (with ID & GID) or GOOGLE_SHEETS_WEBAPP_URL." });
+      return reply(400, { error: "No Google Sheets configuration set (READ). Set GOOGLE_SHEETS_PUBLIC=true + ID(+GID) or GOOGLE_SHEETS_WEBAPP_URL." });
     }
 
     // ─────────────────────────────────────────────────────────────
-    // POST → APPEND / WRITE
-    // payload: { action: "append", values: ["colA","colB",...]}
+    // POST → APPEND / WRITE via Apps Script Web App
+    // payload: { action:"append", sheet:"TabName", values:[...]}  OR
+    //          { action:"append", sheet:"TabName", record:{...mapped} }
     // ─────────────────────────────────────────────────────────────
     if (method === "POST") {
+      if (!process.env.GOOGLE_SHEETS_WEBAPP_URL) {
+        return reply(400, { error: "Apps Script Web App URL not configured (GOOGLE_SHEETS_WEBAPP_URL)" });
+      }
+      if (!process.env.GS_WEBAPP_KEY) {
+        return reply(400, { error: "Missing GS_WEBAPP_KEY in environment" });
+      }
+
       let body = {};
       try {
         body = JSON.parse(event.body || "{}");
       } catch {
-        return corsify(400, { error: "Invalid JSON body." });
+        return reply(400, { error: "Invalid JSON body" });
       }
 
       const action = (body.action || "").toLowerCase();
-
+      const sheet = body.sheet;
       if (action !== "append") {
-        return corsify(400, { error: "Unsupported action. Use { \"action\": \"append\", \"values\": [...] }" });
+        return reply(400, { error: "Unsupported action. Use action:\"append\"" });
+      }
+      if (!sheet) {
+        return reply(400, { error: "Missing 'sheet' (target tab name)" });
       }
 
-      // If you’ve set an Apps Script Web App that appends rows, use it directly
-      if (process.env.GOOGLE_SHEETS_WEBAPP_URL) {
-        try {
-          const resp = await axios.post(
-            process.env.GOOGLE_SHEETS_WEBAPP_URL,
-            { values: body.values },
-            { timeout: 20000, headers: { "Content-Type": "application/json" } }
-          );
-          return corsify(200, { ok: true, via: "apps_script", result: resp.data });
-        } catch (err) {
-          const data = err.response?.data || { message: err.message };
-          return corsify(err.response?.status || 500, { error: "Apps Script append failed", details: data });
+      // Map record -> ordered row when needed
+      let row = body.values;
+      if (!Array.isArray(row) && body.record) {
+        const r = body.record;
+        switch (sheet) {
+          case "Onboarding":
+            // Name, Email, Phone No, Telegram, Status
+            row = [r.name || "", r.email || "", r.phone || "", r.telegram || "", r.status || "Pending"];
+            break;
+          case "Log_Event":
+            // Timestamp, User, Action
+            row = [r.timestamp || new Date().toISOString(), r.user || "system", r.action || ""];
+            break;
+          case "Performance_Report":
+            // Date/Time, Country, Offer Type, Device, Clicks, Leads, Earnings
+            row = [
+              r.datetime || new Date().toISOString(),
+              r.country || "",
+              r.offerType || "",
+              r.device || "",
+              r.clicks || "",
+              r.leads || "",
+              r.earnings || ""
+            ];
+            break;
+          case "New Associates":
+            // Full Name, Email, Phone, Telegram Handle, Bank Name, Bank Account No, Sort Code, Meta
+            row = [
+              r.fullName || "",
+              r.email || "",
+              r.phone || "",
+              r.telegram || "",
+              r.bankName || "",
+              r.bankAccount || "",
+              r.sortCode || "",
+              r.meta || ""
+            ];
+            break;
+          default:
+            // Fallback: just take values in object order
+            row = Object.values(r);
         }
       }
 
-      // Otherwise, use Service Account (recommended)
-      const {
-        GOOGLE_CLIENT_EMAIL,
-        GOOGLE_PRIVATE_KEY,
-        GOOGLE_SHEETS_ID,
-        GOOGLE_SHEETS_RANGE,
-      } = process.env;
-
-      if (!GOOGLE_CLIENT_EMAIL || !GOOGLE_PRIVATE_KEY || !GOOGLE_SHEETS_ID || !GOOGLE_SHEETS_RANGE) {
-        return corsify(400, {
-          error: "Missing env vars for Service Account append",
-          required: ["GOOGLE_CLIENT_EMAIL", "GOOGLE_PRIVATE_KEY", "GOOGLE_SHEETS_ID", "GOOGLE_SHEETS_RANGE"],
-        });
+      if (!Array.isArray(row)) {
+        return reply(400, { error: "Provide values[] or a mappable record{}" });
       }
 
-      // Lazy import to avoid overhead on GET
-      const { google } = require("googleapis");
+      // Send to Apps Script Web App with shared key
+      const payload = {
+        key: process.env.GS_WEBAPP_KEY, // 🔐 shared secret
+        action: "append",
+        sheet,
+        values: row,
+      };
 
       try {
-        const auth = new google.auth.GoogleAuth({
-          credentials: {
-            client_email: GOOGLE_CLIENT_EMAIL,
-            private_key: GOOGLE_PRIVATE_KEY.replace(/\\n/g, "\n"),
-          },
-          scopes: ["https://www.googleapis.com/auth/spreadsheets"],
+        const { data } = await axios.post(process.env.GOOGLE_SHEETS_WEBAPP_URL, payload, {
+          headers: { "Content-Type": "application/json" },
+          timeout: 20000,
         });
-
-        const sheets = google.sheets({ version: "v4", auth });
-
-        // Append a single row (array of values)
-        const req = await sheets.spreadsheets.values.append({
-          spreadsheetId: GOOGLE_SHEETS_ID,
-          range: GOOGLE_SHEETS_RANGE, // e.g., "Sheet1!A:D" (next available row is auto-detected)
-          valueInputOption: "USER_ENTERED",
-          requestBody: { values: [Array.isArray(body.values) ? body.values : [body.values]] },
-        });
-
-        return corsify(200, {
-          ok: true,
-          via: "service_account",
-          updates: req.data?.updates || null,
-        });
+        return reply(200, { ok: true, via: "apps_script", result: data });
       } catch (err) {
         const status = err.response?.status || 500;
         const details = err.response?.data || { message: err.message };
-        return corsify(status, { error: "Service Account append failed", details });
+        return reply(status, { error: "Apps Script append failed", details });
       }
     }
 
-    return corsify(405, { error: "Method not allowed. Use GET or POST." });
+    return reply(405, { error: "Method not allowed. Use GET or POST." });
   } catch (err) {
-    return corsify(500, { error: err.message || "Unexpected error" });
+    return reply(500, { error: err.message || "Unexpected error" });
   }
 };

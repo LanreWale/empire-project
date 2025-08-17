@@ -7,7 +7,9 @@ exports.handler = async () => {
       node: process.version,
       GOOGLE_SHEETS_PUBLIC: process.env.GOOGLE_SHEETS_PUBLIC,
       GOOGLE_SHEETS_WEBAPP_URL: process.env.GOOGLE_SHEETS_WEBAPP_URL || "",
-      GS_WEBAPP_KEY_len: (process.env.GS_WEBAPP_KEY || "").length
+      GS_WEBAPP_KEY_len: (process.env.GS_WEBAPP_KEY || "").length,
+      GS_SHEET_ID: process.env.GS_SHEET_ID || "",
+      GOOGLE_SHEETS_ID: process.env.GOOGLE_SHEETS_ID || ""
     })
   };
 };

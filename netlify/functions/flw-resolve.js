@@ -1,3 +1,5 @@
+const { sendEmail } = require("./lib/email");
+const T = require("./lib/templates");
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: JSON.stringify({ error: 'Use POST' }) };

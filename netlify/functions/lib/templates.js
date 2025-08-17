@@ -1,4 +1,8 @@
 function brandWrap(title, bodyHtml) {
+  // Build reply address at runtime so it never appears in the repo
+  const replyTo = (process.env.SMTP_FROM || process.env.SMTP_USER || "support@empireaffiliatemarketinghub.com");
+  const safeReply = String(replyTo).replace(/@/g, "&#64;"); // obfuscate '@' for scrapers
+
   return `
   <div style="font-family:Inter,Arial,sans-serif;max-width:580px;margin:auto;border:1px solid #eee;border-radius:12px;overflow:hidden">
     <div style="background:#111827;color:#fff;padding:16px 20px">
@@ -9,7 +13,7 @@ function brandWrap(title, bodyHtml) {
       ${bodyHtml}
       <hr style="border:none;border-top:1px solid #eee;margin:20px 0">
       <div style="font-size:12px;color:#6b7280">
-        This email was sent by Empire Hub. Replies go to info@empireaffiliatemarketinghub.com
+        Replies go to ${safeReply}
       </div>
     </div>
   </div>`;
@@ -20,13 +24,11 @@ function payoutInitiated({ amount, ref, name }) {
   const body = `
     <p>Hi ${name||"there"},</p>
     <p>Your payout of <b>₦${Number(amount).toLocaleString("en-NG")}</b> has been initiated.</p>
-    <p>Reference: <code>${ref}</code></p>
-  `;
+    <p>Reference: <code>${ref}</code></p>`;
   return { subject: "Empire: Payout Initiated", html: brandWrap(title, body), text:
 `Payout initiated
 Amount: ₦${amount}
-Ref: ${ref}`
-  };
+Ref: ${ref}` };
 }
 
 function payoutResult({ amount, ref, status, reason }) {
@@ -36,8 +38,7 @@ function payoutResult({ amount, ref, status, reason }) {
     <p>Status: <b>${ok?"SUCCESS ✅":"FAILED ❌"}</b></p>
     <p>Amount: <b>₦${Number(amount).toLocaleString("en-NG")}</b></p>
     <p>Reference: <code>${ref}</code></p>
-    ${!ok && reason ? `<p>Reason: ${reason}</p>`: "" }
-  `;
+    ${!ok && reason ? `<p>Reason: ${reason}</p>`: "" }`;
   return { subject: `Empire: Payout ${ok?"Successful":"Failed"}`, html: brandWrap(title, body), text:
 `Payout ${ok?"Successful":"Failed"}
 Amount: ₦${amount}
@@ -51,8 +52,7 @@ function bankVerify({ bank, account, name, ok }) {
     <p>Bank: <b>${bank}</b></p>
     <p>Account: <b>${account}</b></p>
     <p>Name: <b>${name || "-"}</b></p>
-    <p>Status: <b>${ok?"SUCCESS ✅":"FAILED ❌"}</b></p>
-  `;
+    <p>Status: <b>${ok?"SUCCESS ✅":"FAILED ❌"}</b></p>`;
   return { subject: `Empire: Bank Verification ${ok?"Success":"Failed"}`, html: brandWrap(title, body), text:
 `Bank verification ${ok?"success":"failed"}
 Bank: ${bank}

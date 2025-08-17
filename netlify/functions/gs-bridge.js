@@ -1,96 +1,97 @@
-const axios = require("axios");
-
-exports.handler = async (event) => {
-  try {
-    // Simple GET health
-    if (event.httpMethod === "GET") {
-      const q = event.queryStringParameters || {};
-      if (q.debug === "1") {
-        return json({
-          ok: true,
-          via: "debug",
-          GOOGLE_SHEETS_WEBAPP_URL: process.env.GOOGLE_SHEETS_WEBAPP_URL || "",
-          GS_WEBAPP_KEY_len: (process.env.GS_WEBAPP_KEY || "").length,
-          GS_SHEET_ID: process.env.GS_SHEET_ID || "",
-          GOOGLE_SHEETS_ID: process.env.GOOGLE_SHEETS_ID || ""
-        });
-      }
-      return json({ ok: true, via: "doGet", ts: new Date().toISOString() });
-    }
-
-    // Parse JSON body
-    let body = {};
+export const handler = async (event) => {
+  // Health check (GET)
+  if (event.httpMethod === "GET") {
     try {
-      body = JSON.parse(event.body || "{}");
-    } catch (_) {
-      return error(400, "Invalid JSON body");
+      const url = process.env.GOOGLE_SHEETS_WEBAPP_URL;
+      const health = await fetch(`${url}?action=ping&key=${encodeURIComponent(process.env.GS_WEBAPP_KEY)}`, {
+        method: "GET",
+        redirect: "follow",
+      });
+      const json = await health.json().catch(() => null);
+      return json
+        ? jsonResponse(200, json)
+        : jsonResponse(500, { ok: false, error: "Health check failed" });
+    } catch (err) {
+      return jsonResponse(500, { ok: false, error: String(err) });
     }
+  }
 
-    const WEBAPP_URL = (process.env.GOOGLE_SHEETS_WEBAPP_URL || "").trim();
-    if (!WEBAPP_URL) return error(500, "GOOGLE_SHEETS_WEBAPP_URL not set");
+  // Only POST beyond this point
+  if (event.httpMethod !== "POST") {
+    return jsonResponse(405, { ok: false, error: "Method not allowed" });
+  }
 
-    // Sheet ID: prefer GS_SHEET_ID; fallback GOOGLE_SHEETS_ID
-    const SHEET_ID = (process.env.GS_SHEET_ID || process.env.GOOGLE_SHEETS_ID || "").trim();
-    if (!SHEET_ID) return error(500, "GS_SHEET_ID not set");
+  // ---- guard envs
+  const APP_URL = process.env.GOOGLE_SHEETS_WEBAPP_URL || "";
+  const GS_KEY  = process.env.GS_WEBAPP_KEY || "";
+  const SSID    = process.env.GS_SHEET_ID || process.env.GOOGLE_SHEETS_ID || "";
 
-    // Optional key enforcement
-    const WANT_KEY = process.env.GS_WEBAPP_KEY;
-    if (WANT_KEY && body.key !== WANT_KEY) {
-      return error(401, "Invalid or missing key");
-    }
+  if (!APP_URL) return jsonResponse(500, { ok: false, error: "GOOGLE_SHEETS_WEBAPP_URL not set" });
+  if (!GS_KEY)  return jsonResponse(500, { ok: false, error: "GS_WEBAPP_KEY not set" });
+  if (!SSID)    return jsonResponse(500, { ok: false, error: "GS_SHEET_ID not set" });
 
-    const action = (body.action || "").trim();
-    if (!action) return error(400, "Missing action");
-
-    // We will use doGet in the Apps Script (more reliable from server environment)
-    const qs = new URLSearchParams();
-    qs.set("key", WANT_KEY || "");
-    qs.set("sheetId", SHEET_ID);
-
-    if (action === "append") {
-      const sheet = (body.sheet || "").trim();
-      const values = body.values;
-      if (!sheet || !Array.isArray(values)) {
-        return error(400, "append requires sheet and values[]");
-      }
-      qs.set("action", "append");
-      qs.set("sheet", sheet);
-      qs.set("values", JSON.stringify(values));
-    } else if (action === "read") {
-      const sheet = (body.sheet || "").trim();
-      if (!sheet) return error(400, "read requires sheet");
-      qs.set("action", "read");
-      qs.set("sheet", sheet);
-    } else {
-      return error(400, `Unsupported action: ${action}`);
-    }
-
-    const url = WEBAPP_URL + (WEBAPP_URL.includes("?") ? "&" : "?") + qs.toString();
-    const resp = await axios.get(url, { timeout: 20000 });
-
-    // Pass through Apps Script response (expecting JSON)
-    if (typeof resp.data === "object") {
-      return json({ ok: true, upstream: resp.data });
-    }
-    // If it was HTML or text, just surface it
-    return json({ ok: true, upstream_raw: String(resp.data).slice(0, 2000) });
+  // ---- read body
+  let body;
+  try {
+    body = event.body ? JSON.parse(event.body) : {};
   } catch (e) {
-    return error(500, e.message);
+    return jsonResponse(400, { ok: false, error: "Invalid JSON body" });
+  }
+
+  // default the key if caller didn’t include it
+  if (!body.key) body.key = GS_KEY;
+
+  // ---- do POST with manual redirect, then re-POST to Location
+  try {
+    const upstream = await postWithRedirect(APP_URL, body);
+    return jsonResponse(200, { ok: true, upstream });
+  } catch (err) {
+    return jsonResponse(502, { ok: false, error: String(err) });
   }
 };
 
-function json(obj) {
-  return {
-    statusCode: 200,
-    headers: { "Content-Type": "application/json", "Cache-Control": "no-cache" },
-    body: JSON.stringify(obj),
-  };
+// ---- helpers
+
+async function postWithRedirect(url, payload) {
+  // First request: don't auto-follow so we can keep method/body
+  const res1 = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+    redirect: "manual",
+  });
+
+  // If Google replied 3xx, take Location and re-POST same body there
+  if (res1.status >= 300 && res1.status < 400) {
+    const loc = res1.headers.get("location");
+    if (!loc) throw new Error(`Redirect (${res1.status}) without Location header`);
+    const res2 = await fetch(loc, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+      redirect: "follow",
+    });
+    return assertJSON(res2);
+  }
+
+  // No redirect; just parse body
+  return assertJSON(res1);
 }
 
-function error(code, msg) {
+async function assertJSON(res) {
+  const txt = await res.text();
+  try {
+    const j = JSON.parse(txt);
+    return j;
+  } catch {
+    throw new Error(`Upstream non-JSON (${res.status}): ${txt.slice(0, 300)}`);
+  }
+}
+
+function jsonResponse(statusCode, obj) {
   return {
-    statusCode: code,
+    statusCode,
     headers: { "Content-Type": "application/json", "Cache-Control": "no-cache" },
-    body: JSON.stringify({ ok: false, error: msg }),
+    body: JSON.stringify(obj),
   };
 }

@@ -3,7 +3,7 @@ const axios = require("axios");
 
 exports.handler = async (event) => {
   try {
-    const APP_URL = process.env.GOOGLE_SHEETS_WEBAPP_URL; // your /exec URL
+    const APP_URL = process.env.GOOGLE_SHEETS_WEBAPP_URL; // Apps Script /exec URL
     const KEY = process.env.GS_WEBAPP_KEY;
 
     if (!APP_URL) {
@@ -11,17 +11,17 @@ exports.handler = async (event) => {
     }
 
     if (event.httpMethod === "GET") {
-      // passthrough to Apps Script doGet
+      // simple health/ping passthrough
       const url = new URL(APP_URL);
       url.searchParams.set("action", "ping");
       if (KEY) url.searchParams.set("key", KEY);
 
-      const r = await axios.get(url.toString(), { timeout: 15000 });
-      return json(200, r.data);
+      const r = await axios.get(url.toString(), { timeout: 15000, maxRedirects: 5 });
+      return json(200, typeof r.data === "string" ? safeParse(r.data) : r.data);
     }
 
     if (event.httpMethod === "POST") {
-      const body = JSON.parse(event.body || "{}");
+      const body = safeParse(event.body || "{}");
       const { action, sheet, values, key } = body;
 
       const payload = {
@@ -31,7 +31,7 @@ exports.handler = async (event) => {
         key: key || KEY,
       };
 
-      // Use form-encoded POST because Apps Script sometimes 405s application/json
+      // Use form-encoded POST (Apps Script is picky about JSON)
       const params = new URLSearchParams();
       Object.entries(payload).forEach(([k, v]) =>
         params.append(k, typeof v === "string" ? v : JSON.stringify(v))
@@ -43,10 +43,7 @@ exports.handler = async (event) => {
         timeout: 20000,
       });
 
-      let data = r.data;
-      if (typeof data === "string") {
-        try { data = JSON.parse(data); } catch {}
-      }
+      const data = typeof r.data === "string" ? safeParse(r.data) : r.data;
       return json(200, { ok: true, upstream: data });
     }
 
@@ -68,4 +65,8 @@ function json(statusCode, obj) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(obj),
   };
+}
+
+function safeParse(s) {
+  try { return JSON.parse(s); } catch { return { raw: String(s) }; }
 }

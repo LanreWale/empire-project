@@ -1,33 +1,41 @@
+// netlify/functions/gs-append.js
+const fetch = global.fetch;
+
 exports.handler = async (event) => {
   try {
     if (event.httpMethod !== "POST") {
-      return { statusCode: 405, body: "Use POST" };
+      return { statusCode: 405, body: JSON.stringify({ ok: false, error: "Use POST" }) };
     }
+
     const { sheet, values } = JSON.parse(event.body || "{}");
     if (!sheet || !Array.isArray(values)) {
-      return { statusCode: 400, body: JSON.stringify({ ok:false, error:"sheet and values[] required" }) };
+      return { statusCode: 400, body: JSON.stringify({ ok: false, error: "sheet and values[] required" }) };
     }
-    const EXEC = process.env.GOOGLE_SHEETS_WEBAPP_URL;
-    const KEY  = process.env.GS_WEBAPP_KEY;
-    if (!EXEC || !KEY) {
-      return { statusCode: 500, body: JSON.stringify({ ok:false, error:"Missing EXEC URL or KEY env" }) };
+
+    const WEBAPP = process.env.GOOGLE_SHEETS_WEBAPP_URL;  // https://script.google.com/macros/s/.../exec
+    const KEY    = process.env.GS_WEBAPP_KEY;             // empireaffiliatemarketinghub@157_69
+
+    if (!WEBAPP || !KEY) {
+      return { statusCode: 500, body: JSON.stringify({ ok: false, error: "WEBAPP URL or KEY not set" }) };
     }
-    const qs = new URLSearchParams({
-      action: "append",
-      key: KEY,
-      sheet,
-      values: JSON.stringify(values),
-    });
-    const url = `${EXEC}?${qs.toString()}`;
-    const res = await fetch(url, { method: "GET" });
+
+    // Call Apps Script via GET to avoid POST body drop on redirect
+    const url = new URL(WEBAPP);
+    url.searchParams.set("action", "append");
+    url.searchParams.set("key", KEY);
+    url.searchParams.set("sheet", sheet);
+    url.searchParams.set("values", JSON.stringify(values));
+
+    const res = await fetch(url.toString(), { method: "GET" });
     const text = await res.text();
+
     try {
       const json = JSON.parse(text);
-      return { statusCode: 200, headers:{ "Content-Type":"application/json" }, body: JSON.stringify({ ok:true, upstream: json }) };
+      return { statusCode: 200, body: JSON.stringify({ ok: true, upstream: json }) };
     } catch {
-      return { statusCode: 502, headers:{ "Content-Type":"application/json" }, body: JSON.stringify({ ok:false, error:"Upstream not JSON", preview:text.slice(0,200) }) };
+      return { statusCode: 502, body: JSON.stringify({ ok: false, error: `Upstream non-JSON (${res.status})`, body: text.slice(0, 500) }) };
     }
   } catch (err) {
-    return { statusCode: 500, body: JSON.stringify({ ok:false, error:String(err) }) };
+    return { statusCode: 500, body: JSON.stringify({ ok: false, error: String(err) }) };
   }
 };

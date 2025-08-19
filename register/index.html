@@ -1,138 +1,86 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<title>Empire – Registration</title>
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<style>
-:root { --bg:#0b1220; --card:#121a2b; --muted:#96a0b5; --ok:#18b26b; --bad:#de524c; --txt:#e7ecf7; --accent:#4bb1ff; }
-*{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--txt);font:16px/1.5 system-ui,Segoe UI,Roboto,Helvetica,Arial}
-.wrap{max-width:720px;margin:0 auto;padding:24px}
-.card{background:var(--card);border-radius:16px;box-shadow:0 6px 40px rgba(0,0,0,.25);padding:24px}
-h1{margin:0 0 8px}.muted{color:var(--muted)}
-.msg{padding:12px 14px;border-radius:12px;margin:12px 0}
-.msg.ok{background:#0f2b21;border:1px solid #166c4a;color:#b9f4d8}
-.msg.bad{background:#2a1414;border:1px solid #7d2c2c;color:#ffc8c6}
-label{display:block;margin-top:12px}
-input{width:100%;padding:12px 14px;border:1px solid #2a3550;border-radius:10px;background:#0d1424;color:var(--txt)}
-button{margin-top:16px;width:100%;padding:12px 14px;border:0;border-radius:10px;background:var(--accent);color:#08101e;font-weight:700;cursor:pointer}
-button[disabled]{opacity:.5;cursor:not-allowed}
-.small{font-size:12px;color:var(--muted)}
-</style>
+  <meta charset="utf-8" />
+  <title>Empire – Registration</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root { --bg:#0b1220; --card:#121a2b; --muted:#96a0b5; --ok:#18b26b; --bad:#de524c; --txt:#e7ecf7; --accent:#4bb1ff; }
+    *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--txt);font:16px/1.5 system-ui,Segoe UI,Roboto,Helvetica,Arial}
+    .wrap{max-width:720px;margin:0 auto;padding:24px}
+    .card{background:var(--card);border-radius:16px;box-shadow:0 6px 40px rgba(0,0,0,.25);padding:24px}
+    h1{margin:0 0 8px} .muted{color:var(--muted)}
+    .msg{padding:12px 14px;border-radius:12px;margin:12px 0}
+    .msg.ok{background:#0f2b21;border:1px solid #166c4a;color:#b9f4d8}
+    .msg.bad{background:#2a1414;border:1px solid #7c2d2a;color:#ffd1cf}
+    button{background:var(--accent);border:0;color:#08111f;padding:12px 16px;border-radius:10px;font-weight:600;cursor:pointer}
+    input{width:100%;padding:12px 14px;border-radius:10px;border:1px solid #24304a;background:#0e1727;color:var(--txt)}
+    label{display:block;margin:10px 0 6px}
+  </style>
 </head>
 <body>
   <div class="wrap">
     <div class="card">
       <h1>Empire Registration</h1>
+      <p class="muted">Opening a personal invite. Invites expire after 48 hours.</p>
       <div id="msg" class="msg" style="display:none"></div>
 
       <form id="form" style="display:none">
         <label>Full name
-          <input id="fullname" required />
+          <input id="name" type="text" required />
         </label>
         <label>Email
           <input id="email" type="email" required />
         </label>
-        <label>Phone
-          <input id="phone" required />
+        <label>Phone (WhatsApp)
+          <input id="phone" type="tel" />
         </label>
-        <label>Telegram
-          <input id="telegram" placeholder="@handle" />
-        </label>
-        <label>WhatsApp
-          <input id="whatsapp" placeholder="+234..." />
-        </label>
-        <button id="submitBtn" type="submit">Submit Registration</button>
-        <div class="small">By submitting you agree to be contacted about program updates.</div>
+        <button type="submit">Submit Registration</button>
       </form>
     </div>
   </div>
 
 <script>
-const ORIGIN = location.origin; // same site
-const VERIFY_URL = ORIGIN + "/.netlify/functions/invite-verify";
-const SUBMIT_URL = ORIGIN + "/.netlify/functions/onboard-submit";
-
-const qs = new URLSearchParams(location.search);
-const token = qs.get("i") || qs.get("code");
-
-const msg = document.getElementById("msg");
-const form = document.getElementById("form");
-const fullname = document.getElementById("fullname");
-const email = document.getElementById("email");
-const phone = document.getElementById("phone");
-const telegram = document.getElementById("telegram");
-const whatsapp = document.getElementById("whatsapp");
-const submitBtn = document.getElementById("submitBtn");
-
-function show(type, text) {
-  msg.className = "msg " + (type || "");
-  msg.textContent = text;
-  msg.style.display = "block";
-}
-
-async function verify() {
-  if (!token) {
-    show("bad", "Missing invite token.");
-    return;
-  }
-  try {
-    const r = await fetch(VERIFY_URL + "?" + new URLSearchParams({ i: token }));
-    const data = await r.json();
-    if (!data.ok) {
-      show("bad", data.error || "Invalid invite.");
-      return;
-    }
-    const c = data.claims || {};
-    if (c.name) fullname.value = c.name;
-    if (c.email) email.value = c.email;
-    if (c.phone) phone.value = c.phone;
-    if (c.tg) telegram.value = c.tg;
-
-    show("ok", "Invite verified. Complete your details and submit.");
-    form.style.display = "block";
-  } catch (e) {
-    show("bad", "Network error while verifying invite.");
-  }
-}
-
-form.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  submitBtn.disabled = true;
-  show("", "Submitting...");
-
-  const payload = {
-    token,
-    fields: {
-      fullname: fullname.value.trim(),
-      email: email.value.trim(),
-      phone: phone.value.trim(),
-      telegram: telegram.value.trim(),
-      whatsapp: whatsapp.value.trim()
-    }
+(function(){
+  const msg = (t, good=false) => {
+    const el = document.getElementById('msg');
+    el.textContent = t;
+    el.className = 'msg ' + (good ? 'ok' : 'bad');
+    el.style.display = 'block';
   };
 
-  try {
-    const r = await fetch(SUBMIT_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
-    });
-    const data = await r.json();
-    if (data.ok) {
-      show("ok", "Registration received! We’ll review and get back to you.");
-      form.style.display = "none";
-    } else {
-      show("bad", data.error || "Submission failed.");
-      submitBtn.disabled = false;
-    }
-  } catch (e) {
-    show("bad", "Network error while submitting. Please retry.");
-    submitBtn.disabled = false;
+  // read token from ?i= or ?code=
+  const qs = new URLSearchParams(location.search);
+  const token = qs.get('i') || qs.get('code');
+  if (!token) {
+    msg('Missing invite code.');
+    return;
   }
-});
 
-verify();
+  // Same-origin call to your Netlify function
+  const base = window.location.origin;
+  const verifyUrl = `${base}/.netlify/functions/invite-verify?code=${encodeURIComponent(token)}`;
+
+  fetch(verifyUrl)
+    .then(r => r.json())
+    .then(data => {
+      if (!data.ok) throw new Error(data.error || 'Verification failed');
+      const c = data.claims || {};
+      // prefill
+      document.getElementById('name').value  = c.name || '';
+      document.getElementById('email').value = c.email || '';
+      document.getElementById('phone').value = c.phone || '';
+      document.getElementById('form').style.display = 'block';
+      msg('Invite verified. Complete the form and submit.', true);
+    })
+    .catch(err => msg(err.message || String(err)));
+
+  // demo submission – replace with your real flow later
+  document.getElementById('form').addEventListener('submit', function(e){
+    e.preventDefault();
+    msg('Thanks! Your registration has been received.', true);
+  });
+})();
 </script>
 </body>
 </html>

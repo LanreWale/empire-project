@@ -1,98 +1,111 @@
-// netlify/functions/invite-created.js
-"use strict";
-
+// netlify/functions/invite-create.js
 const crypto = require("crypto");
 const axios = require("axios");
-const { telegram, email, whatsapp } = require("./lib/notify");
+
+function json(status, body) {
+  return {
+    statusCode: status,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  };
+}
+
+function b64url(buf) {
+  return Buffer.from(buf)
+    .toString("base64")
+    .replace(/=/g, "")
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_");
+}
 
 exports.handler = async (event) => {
   try {
-    if (event.httpMethod !== "POST") return json(405, { ok: false, error: "Method not allowed" });
+    if (event.httpMethod !== "POST") {
+      return json(405, { ok: false, error: "Method not allowed" });
+    }
 
-    const body = safeJSON(event.body);
-    const token = (body.token || body.i || "").trim(); // support ?i= from frontend
-    if (!token || !token.includes(".")) return json(400, { ok: false, error: "Missing or malformed token" });
+    // ─── Required envs (read only; DO NOT log or embed) ────────────────────────
+    const SIGNING_KEY = process.env.INVITE_SIGNING_KEY || "";
+    const REG_FORM_URL = process.env.REG_FORM_URL || ""; // e.g. https://enchanting-tiramisu-e8c254.netlify.app
+    const INVITE_TTL_HOURS = parseInt(process.env.INVITE_TTL_HOURS || "48", 10);
 
-    const INVITES_SIGNING_KEY = process.env.INVITES_SIGNING_KEY || "";
-    if (!INVITES_SIGNING_KEY) return json(500, { ok: false, error: "Missing INVITES_SIGNING_KEY" });
+    if (!SIGNING_KEY) return json(500, { ok: false, error: "INVITE_SIGNING_KEY not set" });
+    if (!REG_FORM_URL) return json(500, { ok: false, error: "REG_FORM_URL not set" });
 
-    const [payloadB64, sig] = token.split(".");
-    const expected = crypto.createHmac("sha256", INVITES_SIGNING_KEY).update(payloadB64).digest("base64url");
-    if (!timingSafeEq(sig, expected)) return json(401, { ok: false, error: "Invalid signature" });
+    const body = JSON.parse(event.body || "{}");
+    const { name, email, phone } = body;
 
-    const claims = JSON.parse(Buffer.from(payloadB64, "base64url").toString("utf8"));
+    if (!email && !phone) {
+      return json(400, { ok: false, error: "email or phone is required" });
+    }
+
+    // ─── Create signed invite token (HMAC SHA256) ─────────────────────────────
     const now = Math.floor(Date.now() / 1000);
-    if (typeof claims.exp !== "number" || now > claims.exp) return json(401, { ok: false, error: "Invite expired" });
+    const exp = now + INVITE_TTL_HOURS * 3600;
 
-    // Merge submitted fields with claims
-    const form = {
-      name: body.name || claims.name || "",
-      email: body.email || claims.email || "",
-      phone: body.phone || claims.phone || "",
-      telegramHandle: body.telegramHandle || claims.tg || "",
-      notes: body.notes || "",
+    const payload = {
+      iat: now,
+      exp,
+      email: (email || "").trim().toLowerCase(),
+      phone: (phone || "").trim(),
+      name: (name || "").trim(),
     };
 
-    // Lightweight risk tags (flag, don’t block)
-    const reasons = [];
-    if (!form.email && !form.phone) reasons.push("no_contact");
-    if ((form.name || "").length < 2) reasons.push("short_name");
-    const risk = reasons.length ? `risk:${reasons.join(",")}` : "risk:none";
+    const header = { alg: "HS256", typ: "JWT" };
+    const part1 = b64url(JSON.stringify(header));
+    const part2 = b64url(JSON.stringify(payload));
+    const toSign = `${part1}.${part2}`;
+    const sig = crypto
+      .createHmac("sha256", Buffer.from(SIGNING_KEY, "hex").length ? Buffer.from(SIGNING_KEY, "hex") : SIGNING_KEY)
+      .update(toSign)
+      .digest();
+    const token = `${toSign}.${b64url(sig)}`;
 
-    // Record to Sheets
-    const siteOrigin =
-      process.env.URL || process.env.DEPLOY_PRIME_URL || process.env.DEPLOY_URL || "";
-    if (siteOrigin) {
-      const gsBridge = `${siteOrigin.replace(/\/$/, "")}/.netlify/functions/gs-bridge`;
-      axios
-        .post(
-          gsBridge,
-          {
-            action: "append",
-            sheet: "Onboarding",
-            values: [
-              new Date().toISOString(),
-              form.name,
-              form.email,
-              form.phone,
-              form.telegramHandle,
-              "submitted",
-              risk,
-            ],
-          },
-          { timeout: 10000 }
-        )
-        .catch(() => {});
+    // Invite link (registration page consumes ?invite=)
+    const invite_url = `${REG_FORM_URL}?invite=${encodeURIComponent(token)}`;
+
+    // ─── Notify (optional) via existing functions; best-effort no-fail ────────
+    const notifyTasks = [];
+
+    // Email (uses your _notify function)
+    if (process.env.EMAIL_TO) {
+      notifyTasks.push(
+        axios
+          .post(
+            `${process.env.URL || ""}/.netlify/functions/_notify`,
+            {
+              to: process.env.EMAIL_TO,
+              subject: "New Empire Invite Link",
+              text: `Invite created for ${name || email || phone}\nExpires in ${INVITE_TTL_HOURS}h\n\n${invite_url}`,
+            },
+            { timeout: 10000 }
+          )
+          .catch(() => null)
+      );
     }
 
-    // Notify ops
-    telegram(`[ONBOARD] ${form.email || form.phone} (${risk})`).catch(() => {});
-    // Acknowledge to user
-    if (form.email) {
-      email({
-        to: form.email,
-        subject: "Thanks — onboarding received",
-        text:
-          `Hi ${form.name || ""},\n\n` +
-          `We've received your registration and will review shortly.\n` +
-          `You’ll be notified on WhatsApp when approved.\n\n— Empire Team`,
-      }).catch(() => {});
+    // Telegram (uses your test-telegram / notify route if desired)
+    if (process.env.TELEGRAM_CHAT_ID && process.env.TELEGRAM_BOT_TOKEN) {
+      notifyTasks.push(
+        axios
+          .post(
+            `${process.env.URL || ""}/.netlify/functions/test-telegram`,
+            { text: `Invite created: ${name || email || phone}\nExpires in ${INVITE_TTL_HOURS}h\n${invite_url}` },
+            { timeout: 10000 }
+          )
+          .catch(() => null)
+      );
     }
-    if (form.phone) whatsapp(form.phone, "Thanks! Your registration was received. You’ll be notified on approval.").catch(() => {});
 
-    return json(200, { ok: true, status: "recorded", risk });
+    await Promise.allSettled(notifyTasks);
+
+    return json(200, {
+      ok: true,
+      invite_url,
+      expires_at: new Date(exp * 1000).toISOString(),
+      ttl_hours: INVITE_TTL_HOURS,
+    });
   } catch (err) {
-    return json(200, { ok: false, error: err.message || String(err) });
+    return json(500, { ok: false, error: err.message || String(err) });
   }
 };
-
-function timingSafeEq(a, b) {
-  const A = Buffer.from(a || "", "utf8");
-  const B = Buffer.from(b || "", "utf8");
-  if (A.length !== B.length) return false;
-  return crypto.timingSafeEqual(A, B);
-}
-function safeJSON(s) { try { return JSON.parse(s || "{}"); } catch { return {}; } }
-function json(statusCode, body) {
-  return { statusCode, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) };
-}

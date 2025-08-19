@@ -1,23 +1,22 @@
-// src/config/env.js (or functions/lib/env.js)
 const required = (key) => {
   const v = process.env[key];
   if (!v) throw new Error(`Missing required env: ${key}`);
   return v;
 };
 
-export const ENV = {
-  NODE_ENV: process.env.NODE_ENV || "production",
+const bool = (v) => String(v || "false").toLowerCase() === "true";
+const num = (v, d) => Number(v ?? d);
 
-  // Payments
-  FLW_PUB_KEY: required("FLW_PUBLIC_KEY"),
-  FLW_SEC_KEY: required("FLW_SECRET_KEY"),
-  FLW_ENC_KEY: required("FLW_ENCRYPTION_KEY"),
+module.exports = {
+  ENV: {
+    NODE_ENV: process.env.NODE_ENV || "production",
 
-  // Telegram
-  TG_BOT_TOKEN: required("TELEGRAM_BOT_TOKEN"),
-  TG_CHANNEL: required("TELEGRAM_CHANNEL_USERNAME"),
+    // Telegram
+    TELEGRAM_BOT_TOKEN: required("TELEGRAM_BOT_TOKEN"),
+    TELEGRAM_CHANNEL_USERNAME: required("TELEGRAM_CHANNEL_USERNAME"),
 
-  // Empire flags/policy
-  EMPIRE_KILL_SWITCH: String(process.env.EMPIRE_KILL_SWITCH || "false").toLowerCase() === "true",
-  EMPIRE_GLOBAL_MIN_USD: Number(process.env.EMPIRE_GLOBAL_MIN_USD || 500),
+    // Policy
+    EMPIRE_KILL_SWITCH: bool(process.env.EMPIRE_KILL_SWITCH),
+    EMPIRE_GLOBAL_MIN_USD: num(process.env.EMPIRE_GLOBAL_MIN_USD, 500),
+  },
 };

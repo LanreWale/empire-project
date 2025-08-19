@@ -31,7 +31,7 @@ exports.handler = async (event) => {
     const sig = crypto.createHmac("sha256", INVITES_SIGNING_KEY).update(payload).digest("base64url");
     const token = `${payload}.${sig}`;
 
-    const inviteUrl = `${INVITES_BASE_URL.replace(/\/$/, "")}/register?i=${encodeURIComponent(token)}`;
+    const inviteUrl = `${INVITES_BASE_URL.replace(/\/$/, "")}/login?i=${encodeURIComponent(token)}`;
 
     // Log to Sheets (best-effort)
     const siteOrigin = process.env.URL || process.env.DEPLOY_PRIME_URL || process.env.DEPLOY_URL || "";

@@ -1,22 +1,6 @@
-// netlify/functions/invite-create.js
-const crypto = require("crypto");
-const axios = require("axios");
+"use strict";
 
-function json(status, body) {
-  return {
-    statusCode: status,
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  };
-}
-
-function b64url(buf) {
-  return Buffer.from(buf)
-    .toString("base64")
-    .replace(/=/g, "")
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_");
-}
+const { telegram, email, whatsapp } = require("./lib/notify");
 
 exports.handler = async (event) => {
   try {
@@ -24,88 +8,40 @@ exports.handler = async (event) => {
       return json(405, { ok: false, error: "Method not allowed" });
     }
 
-    // ─── Required envs (read only; DO NOT log or embed) ────────────────────────
-    const SIGNING_KEY = process.env.INVITE_SIGNING_KEY || "";
-    const REG_FORM_URL = process.env.REG_FORM_URL || ""; // e.g. https://enchanting-tiramisu-e8c254.netlify.app
-    const INVITE_TTL_HOURS = parseInt(process.env.INVITE_TTL_HOURS || "48", 10);
+    const body = safeJSON(event.body);
+    // Example payload from invite flow:
+    // { to:"...", channel:"email|telegram|whatsapp", inviteUrl:"...", name:"" }
+    const { to = "", channel = "telegram", inviteUrl = "", name = "" } = body;
 
-    if (!SIGNING_KEY) return json(500, { ok: false, error: "INVITE_SIGNING_KEY not set" });
-    if (!REG_FORM_URL) return json(500, { ok: false, error: "REG_FORM_URL not set" });
+    // We do NOT print or hard-code the INVITES_BASE_URL to avoid secret scanning.
+    const BASE_URL_CONFIGURED = Boolean(process.env.INVITES_BASE_URL);
 
-    const body = JSON.parse(event.body || "{}");
-    const { name, email, phone } = body;
-
-    if (!email && !phone) {
-      return json(400, { ok: false, error: "email or phone is required" });
+    // Send notification (best-effort)
+    if (channel === "email" && to) {
+      await email({
+        to,
+        subject: "Your Empire invite",
+        text:
+          `Hello ${name || ""},\n\n` +
+          `Here is your invite link:\n${inviteUrl}\n\n— Empire`,
+      }).catch(() => {});
+    } else if (channel === "whatsapp" && to) {
+      await whatsapp(to, `Empire invite: ${inviteUrl}`).catch(() => {});
+    } else {
+      await telegram(`[INVITE_CREATED]\n${to}\n${inviteUrl}`).catch(() => {});
     }
 
-    // ─── Create signed invite token (HMAC SHA256) ─────────────────────────────
-    const now = Math.floor(Date.now() / 1000);
-    const exp = now + INVITE_TTL_HOURS * 3600;
-
-    const payload = {
-      iat: now,
-      exp,
-      email: (email || "").trim().toLowerCase(),
-      phone: (phone || "").trim(),
-      name: (name || "").trim(),
-    };
-
-    const header = { alg: "HS256", typ: "JWT" };
-    const part1 = b64url(JSON.stringify(header));
-    const part2 = b64url(JSON.stringify(payload));
-    const toSign = `${part1}.${part2}`;
-    const sig = crypto
-      .createHmac("sha256", Buffer.from(SIGNING_KEY, "hex").length ? Buffer.from(SIGNING_KEY, "hex") : SIGNING_KEY)
-      .update(toSign)
-      .digest();
-    const token = `${toSign}.${b64url(sig)}`;
-
-    // Invite link (registration page consumes ?invite=)
-    const invite_url = `${REG_FORM_URL}?invite=${encodeURIComponent(token)}`;
-
-    // ─── Notify (optional) via existing functions; best-effort no-fail ────────
-    const notifyTasks = [];
-
-    // Email (uses your _notify function)
-    if (process.env.EMAIL_TO) {
-      notifyTasks.push(
-        axios
-          .post(
-            `${process.env.URL || ""}/.netlify/functions/_notify`,
-            {
-              to: process.env.EMAIL_TO,
-              subject: "New Empire Invite Link",
-              text: `Invite created for ${name || email || phone}\nExpires in ${INVITE_TTL_HOURS}h\n\n${invite_url}`,
-            },
-            { timeout: 10000 }
-          )
-          .catch(() => null)
-      );
-    }
-
-    // Telegram (uses your test-telegram / notify route if desired)
-    if (process.env.TELEGRAM_CHAT_ID && process.env.TELEGRAM_BOT_TOKEN) {
-      notifyTasks.push(
-        axios
-          .post(
-            `${process.env.URL || ""}/.netlify/functions/test-telegram`,
-            { text: `Invite created: ${name || email || phone}\nExpires in ${INVITE_TTL_HOURS}h\n${invite_url}` },
-            { timeout: 10000 }
-          )
-          .catch(() => null)
-      );
-    }
-
-    await Promise.allSettled(notifyTasks);
-
-    return json(200, {
-      ok: true,
-      invite_url,
-      expires_at: new Date(exp * 1000).toISOString(),
-      ttl_hours: INVITE_TTL_HOURS,
-    });
+    return json(200, { ok: true, baseConfigured: BASE_URL_CONFIGURED });
   } catch (err) {
-    return json(500, { ok: false, error: err.message || String(err) });
+    return json(200, { ok: false, error: err.message || String(err) });
   }
 };
+
+function safeJSON(s) { try { return JSON.parse(s || "{}"); } catch { return {}; } }
+function json(statusCode, body) {
+  return {
+    statusCode,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  };
+}

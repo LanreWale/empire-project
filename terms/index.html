@@ -1,0 +1,55 @@
+<!doctype html><html lang="en"><head>
+<meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Empire – Terms</title>
+<style>
+:root{--bg:#0b1220;--card:#121a2b;--muted:#96a0b5;--txt:#e7ecf7;--accent:#4bb1ff}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--txt);font:16px/1.5 system-ui,Segoe UI,Roboto,Helvetica,Arial}
+.wrap{max-width:720px;margin:0 auto;padding:24px}
+.card{background:var(--card);border-radius:16px;box-shadow:0 6px 40px rgba(0,0,0,.25);padding:24px}
+h1{margin:0 0 8px}.muted{color:var(--muted)}
+button{background:var(--accent);border:0;color:#07111f;padding:12px 16px;border-radius:12px;font-weight:600;cursor:pointer}
+label{display:block;margin:10px 0 6px}
+</style>
+</head><body>
+<div class="wrap"><div class="card">
+  <h1>Empire Terms &amp; Conditions</h1>
+  <p class="muted">Please read and accept to continue registration.</p>
+  <div style="max-height:35vh;overflow:auto;border:1px solid #1f2a42;border-radius:10px;padding:12px;background:#0d1525">
+    <p><strong>Short version:</strong> Don’t spam, be truthful, and follow all laws and the Empire rules. Misuse may result in removal.</p>
+    <ul>
+      <li>Provide accurate information.</li>
+      <li>No fraud, chargebacks, or abuse.</li>
+      <li>Respect program caps and geos.</li>
+      <li>Payments &amp; disputes handled per program terms.</li>
+    </ul>
+  </div>
+
+  <label style="display:flex;gap:10px;align-items:center;margin-top:12px">
+    <input id="agree" type="checkbox"/> I agree to the Terms.
+  </label>
+
+  <div style="margin-top:14px;display:flex;gap:12px;align-items:center">
+    <button id="continueBtn" disabled>Continue to registration</button>
+    <a id="back" href="/login">Back</a>
+  </div>
+</div></div>
+
+<script>
+(function(){
+  const usp=new URLSearchParams(location.search);
+  const i = usp.get('i') || sessionStorage.getItem('empire.invite') || '';
+  if(i){ sessionStorage.setItem('empire.invite', i); }
+  const agree = document.getElementById('agree');
+  const btn = document.getElementById('continueBtn');
+  agree.onchange = () => { btn.disabled = !agree.checked; };
+  btn.onclick = () => {
+    const token = sessionStorage.getItem('empire.invite') || i || '';
+    const url = '/register' + (token ? ('?i='+encodeURIComponent(token)) : '');
+    location.href = url;
+  };
+  // Keep token when going back
+  const back = document.getElementById('back');
+  if(i){ back.href = '/login?i='+encodeURIComponent(i); }
+})();
+</script>
+</body></html>

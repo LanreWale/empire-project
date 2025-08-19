@@ -4,20 +4,17 @@
 
 [build.environment]
   NODE_VERSION = "18"
+  SECRETS_SCAN_OMIT_PATHS = "node_modules/nodemailer/lib/well-known/services.json"
 
-  # Secrets scanning settings
-  SECRETS_SCAN_ENABLED = "true"
-  SECRETS_SCAN_OMIT_PATHS = "node_modules/nodemailer/lib/well-known/services.json,tests,__mocks__"
-  SECRETS_SCAN_OMIT_KEYS = "EXAMPLE_KEY,PLACEHOLDER_TOKEN,DEMO_PASSWORD"
-
-  # Runtime secrets (set real values in Netlify UI, keep empty here if repo is public)
-  # FLW_PUBLIC_KEY = ""
-  # FLW_SECRET_KEY = ""
-  # FLW_ENCRYPTION_KEY = ""
-  # TELEGRAM_BOT_TOKEN = ""
-  # TELEGRAM_CHANNEL_USERNAME = "@TheEmpireHq"
-  # EMPIRE_KILL_SWITCH = "false"
-  # EMPIRE_GLOBAL_MIN_USD = "500"
+  # Do NOT put real values here, only placeholders
+  TELEGRAM_CHAT_ID = ""
+  FLW_PUBLIC_KEY = ""
+  FLW_SECRET_KEY = ""
+  FLW_ENCRYPTION_KEY = ""
+  TELEGRAM_BOT_TOKEN = ""
+  TELEGRAM_CHANNEL_USERNAME = ""
+  EMPIRE_KILL_SWITCH = "false"
+  EMPIRE_GLOBAL_MIN_USD = "500"
 
 [functions]
   directory = "netlify/functions"

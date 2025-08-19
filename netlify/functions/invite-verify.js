@@ -9,8 +9,7 @@ exports.handler = async (event) => {
     }
 
     const qs = event.queryStringParameters || {};
-    // accept both ?i= and ?code=
-    const token = (qs.i || qs.code || "").trim();
+    const token = (qs.i || qs.code || "").trim();      // accept ?i= or ?code=
     if (!token) return json(200, { ok: false, error: "Missing code" });
 
     const [payloadB64, sigB64] = token.split(".");

@@ -5,23 +5,29 @@ const axios = require("axios");
 
 // ---------- Email (SMTP) ----------
 async function email({ to, subject, text, html }) {
-  const { SMTP_HOST, SMTP_PORT, SMTP_SECURE, SMTP_USER, SMTP_PASS, SMTP_FROM } = process.env;
-  if (!SMTP_HOST || !SMTP_PORT || !SMTP_USER || !SMTP_PASS || !SMTP_FROM) return;
+  const host = process.env.SMTP_HOST;
+  const port = process.env.SMTP_PORT;
+  const secure = String(process.env.SMTP_SECURE || "").toLowerCase() === "true";
+  const user = process.env.SMTP_USER;
+  const pass = process.env.SMTP_PASS;
+  const from = process.env.SMTP_FROM;
+
+  if (!host || !port || !user || !pass || !from) return;
 
   const transporter = nodemailer.createTransport({
-    host: SMTP_HOST,
-    port: Number(SMTP_PORT),
-    secure: String(SMTP_SECURE || "").toLowerCase() === "true",
-    auth: { user: SMTP_USER, pass: SMTP_PASS },
+    host,
+    port: Number(port),
+    secure,
+    auth: { user, pass },
   });
 
-  await transporter.sendMail({ from: SMTP_FROM, to, subject, text, html });
+  await transporter.sendMail({ from, to, subject, text, html });
 }
 
 // ---------- Telegram ----------
 async function telegram(message) {
   const bot = process.env.TELEGRAM_BOT_TOKEN;
-  const chat = process.env.TELEGRAM_CHAT_ID; // set in Netlify UI, not in code
+  const chat = process.env.TELEGRAM_CHAT_ID; // set only in Netlify UI
   if (!bot || !chat) return;
 
   const url = `https://api.telegram.org/bot${bot}/sendMessage`;

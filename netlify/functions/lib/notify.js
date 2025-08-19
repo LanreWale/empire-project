@@ -1,4 +1,3 @@
-// netlify/functions/lib/notify.js
 "use strict";
 
 const nodemailer = require("nodemailer");
@@ -16,38 +15,35 @@ async function email({ to, subject, text, html }) {
     auth: { user: SMTP_USER, pass: SMTP_PASS },
   });
 
-  await transporter.sendMail({
-    from: SMTP_FROM,
-    to,
-    subject,
-    text,
-    html,
-  });
+  await transporter.sendMail({ from: SMTP_FROM, to, subject, text, html });
 }
 
 // ---------- Telegram ----------
 async function telegram(message) {
-  const { TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID } = process.env;
-  if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) return;
+  const bot = process.env.TELEGRAM_BOT_TOKEN;
+  const chat = process.env.TELEGRAM_CHAT_ID; // set in Netlify UI, not in code
+  if (!bot || !chat) return;
 
-  const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
-  await axios.post(url, { chat_id: TELEGRAM_CHAT_ID, text: message }, { timeout: 10000 });
+  const url = `https://api.telegram.org/bot${bot}/sendMessage`;
+  await axios.post(url, { chat_id: chat, text: message }, { timeout: 10000 });
 }
 
-// ---------- WhatsApp via Twilio (optional) ----------
+// ---------- WhatsApp via Twilio ----------
 async function whatsapp(toE164, body) {
-  const { TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_WHATSAPP_FROM } = process.env;
-  if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN || !TWILIO_WHATSAPP_FROM || !toE164) return;
+  const sid = process.env.TWILIO_ACCOUNT_SID;
+  const token = process.env.TWILIO_AUTH_TOKEN;
+  const from = process.env.TWILIO_WHATSAPP_FROM;
+  if (!sid || !token || !from || !toE164) return;
 
-  const url = `https://api.twilio.com/2010-04-01/Accounts/${encodeURIComponent(TWILIO_ACCOUNT_SID)}/Messages.json`;
+  const url = `https://api.twilio.com/2010-04-01/Accounts/${encodeURIComponent(sid)}/Messages.json`;
   const params = new URLSearchParams();
-  params.set("From", `whatsapp:${TWILIO_WHATSAPP_FROM}`);
+  params.set("From", `whatsapp:${from}`);
   params.set("To", `whatsapp:${toE164}`);
   params.set("Body", body);
 
   await axios.post(url, params, {
     timeout: 10000,
-    auth: { username: TWILIO_ACCOUNT_SID, password: TWILIO_AUTH_TOKEN },
+    auth: { username: sid, password: token },
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
   });
 }

@@ -1,32 +1,47 @@
-const ok = (b)=>({ statusCode:200, headers:{ "Content-Type":"application/json" }, body:JSON.stringify(b) });
-const bad = (c,m)=>({ statusCode:c, headers:{ "Content-Type":"application/json" }, body:JSON.stringify({ ok:false, error:m }) });
+// netlify/functions/invite-verify.js
+"use strict";
+const crypto = require("crypto");
 
-export const handler = async (event) => {
+exports.handler = async (event) => {
   try {
-    const code = (event.queryStringParameters?.code || "").trim();
-    if (!code) return bad(400, "Missing code");
+    if (event.httpMethod !== "GET") {
+      return json(405, { ok: false, error: "Method Not Allowed" });
+    }
 
-    const qs = new URLSearchParams({
-      action: "get",
-      key: process.env.GS_WEBAPP_KEY,
-      sheet: "Invites"
-    });
-    const url = `${process.env.GOOGLE_SHEETS_WEBAPP_URL}?${qs.toString()}`;
-    const res = await fetch(url);
-    const data = await res.json();
-    if (!data.ok || !Array.isArray(data.values)) return bad(500, "Upstream error");
+    const qs = event.queryStringParameters || {};
+    // accept both ?i= and ?code=
+    const token = (qs.i || qs.code || "").trim();
+    if (!token) return json(200, { ok: false, error: "Missing code" });
 
-    // [InviteCode, CreatedAt, ExpiresAt, UsedBy, Status]
-    const row = data.values.find((r) => r[0] === code);
-    if (!row) return ok({ ok:true, valid:false, reason:"not_found" });
+    const [payloadB64, sigB64] = token.split(".");
+    if (!payloadB64 || !sigB64) return json(200, { ok: false, error: "Malformed token" });
 
-    const [, , expiresISO, usedBy, status] = row;
-    const expired = Date.now() > Date.parse(expiresISO || "");
-    const used = !!(usedBy && usedBy.length);
-    const valid = !expired && !used && status === "active";
+    const key = process.env.INVITES_SIGNING_KEY || "";
+    if (!key) return json(500, { ok: false, error: "Server not configured" });
 
-    return ok({ ok:true, valid, expired, used, status, expires: expiresISO });
-  } catch (e) {
-    return bad(500, String(e));
+    const expected = crypto.createHmac("sha256", key).update(payloadB64).digest("base64url");
+    if (expected !== sigB64) return json(200, { ok: false, error: "Bad signature" });
+
+    let claims;
+    try { claims = JSON.parse(Buffer.from(payloadB64, "base64url").toString("utf8")); }
+    catch { return json(200, { ok: false, error: "Invalid payload" }); }
+
+    const now = Math.floor(Date.now() / 1000);
+    if (claims.exp && now > claims.exp) return json(200, { ok: false, error: "Expired" });
+
+    return json(200, { ok: true, claims, exp: claims.exp || null });
+  } catch (err) {
+    return json(200, { ok: false, error: err.message || String(err) });
   }
 };
+
+function json(statusCode, body) {
+  return {
+    statusCode,
+    headers: {
+      "Content-Type": "application/json",
+      "Access-Control-Allow-Origin": "*"
+    },
+    body: JSON.stringify(body),
+  };
+}

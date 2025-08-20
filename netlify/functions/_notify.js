@@ -1,92 +1,84 @@
-const json = (v) => JSON.stringify(v);
+const fetch = global.fetch || (await import('node-fetch')).default;
 
-async function notifyTelegram({
-  text,
-  chatId,                 // optional override (e.g. "-1002604...")
-  botToken,               // optional override
-}) {
-  try {
-    const token = botToken || process.env.TELEGRAM_BOT_TOKEN;
-    if (!token) return { ok: false, error: 'Missing TELEGRAM_BOT_TOKEN' };
-
-    // Prefer numeric chat id; otherwise fall back to @username
-    const target =
-      chatId ||
-      process.env.TELEGRAM_CHAT_VALUE ||        // e.g. "-1002604596144"
-      process.env.TELEGRAM_CHANNEL_USERNAME;    // e.g. "@TheEmpireHq"
-
-    if (!target) return { ok: false, error: 'Missing Telegram chat id/username' };
-
-    const url = `https://api.telegram.org/bot${encodeURIComponent(token)}/sendMessage`;
-    const body = {
-      chat_id: target,
-      text,
-      parse_mode: 'HTML',
-      disable_web_page_preview: true,
-    };
-
-    const r = await fetch(url, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: json(body),
-    });
-
-    const data = await r.json();
-    if (!r.ok || !data.ok) {
-      return { ok: false, status: r.status, error: json(data) };
-    }
-    return { ok: true, message_id: data.result?.message_id };
-  } catch (err) {
-    return { ok: false, error: String(err) };
-  }
+// Helper: read env safely without ever logging secret values
+function requireEnv(name) {
+  const v = process.env[name];
+  if (!v) throw new Error(`Missing required env: ${name}`);
+  return v;
+}
+function optionalEnv(name, fallback = undefined) {
+  return process.env[name] ?? fallback;
 }
 
-async function notifyWhatsApp({
-  to,        // E.164 number, e.g. +2348...
-  body,      // message text
-  from,      // optional override (e.g. "whatsapp:+14155238886")
-}) {
-  try {
-    const sid   = process.env.TWILIO_ACCOUNT_SID;
-    const token = process.env.TWILIO_AUTH_TOKEN;
-    const fromNumber =
-      from || `whatsapp:${process.env.TWILIO_WHATSAPP_FROM}`;
+/** Send a Telegram message to a channel/group/user.
+ * Prefers TELEGRAM_CHAT_VALUE (numeric id like -100xxxxxxxxxx),
+ * else falls back to TELEGRAM_CHANNEL_USERNAME (e.g. @TheEmpireHq).
+ */
+async function notifyTelegram(text) {
+  const token = requireEnv('TELEGRAM_BOT_TOKEN');
 
-    if (!sid || !token) return { ok: false, error: 'Missing Twilio credentials' };
-    if (!fromNumber)     return { ok: false, error: 'Missing TWILIO_WHATSAPP_FROM' };
-    if (!to)             return { ok: false, error: 'Missing WhatsApp recipient' };
+  // Prefer numeric chat id; fall back to @username
+  const chat = optionalEnv('TELEGRAM_CHAT_VALUE') || optionalEnv('TELEGRAM_CHANNEL_USERNAME');
+  if (!chat) throw new Error('No Telegram chat configured (TELEGRAM_CHAT_VALUE or TELEGRAM_CHANNEL_USERNAME)');
 
-    const url = `https://api.twilio.com/2010-04-01/Accounts/${encodeURIComponent(
-      sid
-    )}/Messages.json`;
+  const url = `https://api.telegram.org/bot${token}/sendMessage`;
+  const body = {
+    chat_id: chat, // can be -100… or @username
+    text,
+    parse_mode: 'HTML',
+    disable_web_page_preview: true,
+  };
 
-    const form = new URLSearchParams({
-      To: `whatsapp:${to}`,
-      From: fromNumber,
-      Body: body,
-    });
-
-    const r = await fetch(url, {
-      method: 'POST',
-      headers: {
-        Authorization:
-          'Basic ' + Buffer.from(`${sid}:${token}`).toString('base64'),
-        'content-type': 'application/x-www-form-urlencoded',
-      },
-      body: form.toString(),
-    });
-
-    const data = await r.json();
-    if (!r.ok) {
-      return { ok: false, status: r.status, error: json(data) };
-    }
-    return { ok: true, sid: data.sid };
-  } catch (err) {
-    return { ok: false, error: String(err) };
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || data.ok === false) {
+    return { ok: false, status: res.status, error: JSON.stringify(data) };
   }
+  return { ok: true, message_id: data.result?.message_id };
+}
+
+/** Send a WhatsApp message via Twilio */
+async function notifyWhatsApp(toPhoneE164, text) {
+  const accountSid = requireEnv('TWILIO_ACCOUNT_SID');
+  const authToken  = requireEnv('TWILIO_AUTH_TOKEN');
+  const fromWa    = requireEnv('TWILIO_WHATSAPP_FROM'); // e.g. +14155238886
+
+  const to = `whatsapp:${toPhoneE164.replace(/^whatsapp:/, '')}`;
+  const from = `whatsapp:${fromWa}`;
+
+  const url = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`;
+  const params = new URLSearchParams({ To: to, From: from, Body: text });
+
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: {
+      Authorization: 'Basic ' + Buffer.from(`${accountSid}:${authToken}`).toString('base64'),
+      'content-type': 'application/x-www-form-urlencoded',
+    },
+    body: params.toString(),
+  });
+
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    return { ok: false, status: res.status, error: JSON.stringify(data) };
+  }
+  return { ok: true, sid: data.sid };
+}
+
+/** (Optional) Email helper via SMTP (left unchanged if you already have one)
+ * Export a stub that always resolves if you don't need email right now.
+ */
+async function notifyEmail(_to, _subject, _htmlOrText) {
+  // Implement if needed with nodemailer without hardcoded secrets
+  return { ok: true, skipped: true };
 }
 
 module.exports = {
   notifyTelegram,
   notifyWhatsApp,
+  notifyEmail,
 };

@@ -1,73 +1,86 @@
-function requireEnv(name) {
-  const v = process.env[name];
-  if (!v) throw new Error(`Missing required env: ${name}`);
-  return v;
-}
-function optionalEnv(name, fallback) {
-  return process.env[name] ?? fallback;
-}
+// netlify/functions/_notify.js
+"use strict";
 
-// Telegram
+const axios = require("axios");
+const nodemailer = require("nodemailer");
+
+/**
+ * Telegram notification
+ * Reads TELEGRAM_BOT_TOKEN and either TELEGRAM_CHAT_VALUE (preferred) or TELEGRAM_CHAT_ID at runtime.
+ */
 async function notifyTelegram(text) {
-  const token = requireEnv('TELEGRAM_BOT_TOKEN');
-  const chat = optionalEnv('TELEGRAM_CHAT_VALUE') || optionalEnv('TELEGRAM_CHANNEL_USERNAME');
-  if (!chat) throw new Error('No Telegram chat configured (TELEGRAM_CHAT_VALUE or TELEGRAM_CHANNEL_USERNAME)');
+  try {
+    const BOT = process.env.TELEGRAM_BOT_TOKEN || "";
+    const CHAT = process.env.TELEGRAM_CHAT_VALUE || process.env.TELEGRAM_CHAT_ID || "";
+    if (!BOT || !CHAT) return { ok: false, error: "Telegram env not set" };
 
-  const url = `https://api.telegram.org/bot${token}/sendMessage`;
-  const body = {
-    chat_id: chat, // numeric id (-100...) or @username
-    text,
-    parse_mode: 'HTML',
-    disable_web_page_preview: true,
-  };
-
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify(body),
-  });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok || data.ok === false) {
-    return { ok: false, status: res.status, error: JSON.stringify(data) };
+    const url = `https://api.telegram.org/bot${BOT}/sendMessage`;
+    const res = await axios.post(
+      url,
+      { chat_id: CHAT, text, disable_web_page_preview: true },
+      { timeout: 10000 }
+    );
+    return { ok: true, result: res.data };
+  } catch (err) {
+    const status = err.response?.status;
+    const body = err.response?.data ? JSON.stringify(err.response.data) : String(err);
+    return { ok: false, status, error: body };
   }
-  return { ok: true, message_id: data.result?.message_id };
 }
 
-// WhatsApp via Twilio
-async function notifyWhatsApp(toPhoneE164, text) {
-  const accountSid = requireEnv('TWILIO_ACCOUNT_SID');
-  const authToken  = requireEnv('TWILIO_AUTH_TOKEN');
-  const fromWa     = requireEnv('TWILIO_WHATSAPP_FROM'); // e.g. +14155238886
+/**
+ * Email notification via SMTP
+ * Reads SMTP_* at runtime. No secrets are logged or emitted.
+ */
+async function notifyEmail({ to, subject, text, html }) {
+  try {
+    const host = process.env.SMTP_HOST || "";
+    const port = Number(process.env.SMTP_PORT || 587);
+    const secure = String(process.env.SMTP_SECURE || "false") === "true";
+    const user = process.env.SMTP_USER || "";
+    const pass = process.env.SMTP_PASS || "";
+    const from = process.env.SMTP_FROM || process.env.EMAIL_FROM || "";
 
-  const to = `whatsapp:${String(toPhoneE164).replace(/^whatsapp:/, '')}`;
-  const from = `whatsapp:${fromWa}`;
+    if (!host || !user || !pass || !from) return { ok: false, error: "SMTP env not set" };
 
-  const url = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`;
-  const params = new URLSearchParams({ To: to, From: from, Body: text });
-
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: {
-      Authorization: 'Basic ' + Buffer.from(`${accountSid}:${authToken}`).toString('base64'),
-      'content-type': 'application/x-www-form-urlencoded',
-    },
-    body: params.toString(),
-  });
-
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    return { ok: false, status: res.status, error: JSON.stringify(data) };
+    const transporter = nodemailer.createTransport({ host, port, secure, auth: { user, pass } });
+    const info = await transporter.sendMail({ from, to, subject, text, html });
+    return { ok: true, messageId: info.messageId };
+  } catch (err) {
+    return { ok: false, error: err.message || String(err) };
   }
-  return { ok: true, sid: data.sid };
 }
 
-// Optional email stub (no secrets here)
-async function notifyEmail(_to, _subject, _htmlOrText) {
-  return { ok: true, skipped: true };
+/**
+ * WhatsApp (Twilio)
+ * Reads TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_WHATSAPP_FROM at runtime.
+ */
+async function notifyWhatsApp(toE164, body) {
+  try {
+    const sid = process.env.TWILIO_ACCOUNT_SID || "";
+    const token = process.env.TWILIO_AUTH_TOKEN || "";
+    const from = process.env.TWILIO_WHATSAPP_FROM || "";
+    if (!sid || !token || !from) return { ok: false, error: "Twilio env not set" };
+
+    // Twilio WhatsApp requires the whatsapp: prefix
+    const url = `https://api.twilio.com/2010-04-01/Accounts/${sid}/Messages.json`;
+    const params = new URLSearchParams();
+    params.append("From", `whatsapp:${from}`);
+    params.append("To", `whatsapp:${toE164}`);
+    params.append("Body", body);
+
+    const res = await axios.post(url, params, {
+      auth: { username: sid, password: token },
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      timeout: 10000
+    });
+
+    return { ok: true, sid: res.data.sid };
+  } catch (err) {
+    const status = err.response?.status;
+    const body = err.response?.data ? JSON.stringify(err.response.data) : String(err);
+    return { ok: false, status, error: body };
+  }
 }
 
-module.exports = {
-  notifyTelegram,
-  notifyWhatsApp,
-  notifyEmail,
-};
+module.exports = { notifyTelegram, notifyEmail, notifyWhatsApp };

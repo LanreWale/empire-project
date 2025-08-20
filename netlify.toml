@@ -1,25 +1,21 @@
+# netlify.toml — full file
+
 [build]
   command = "echo No build"
   publish = "."
 
-[build.environment]
-  NODE_VERSION = "18"
-  SECRETS_SCAN_OMIT_PATHS = "node_modules/nodemailer/lib/well-known/services.json"
-
-  # Do NOT put real values here, only placeholders
-  TELEGRAM_CHAT_ID = ""
-  FLW_PUBLIC_KEY = ""
-  FLW_SECRET_KEY = ""
-  FLW_ENCRYPTION_KEY = ""
-  TELEGRAM_BOT_TOKEN = ""
-  TELEGRAM_CHANNEL_USERNAME = ""
-  EMPIRE_KILL_SWITCH = "false"
-  EMPIRE_GLOBAL_MIN_USD = "500"
-
-[functions]
-  directory = "netlify/functions"
-
+# CORS (keep if you already had this)
 [[headers]]
   for = "/*"
   [headers.values]
     Access-Control-Allow-Origin = "*"
+
+# Edge function will inspect host/path and only act on join.* or /_kv/*
+[[edge_functions]]
+  function = "shortener"
+  path = "/*"
+
+# Netlify KV: bind namespace "INVITES" for both edge + functions
+[[kv_namespaces]]
+  binding = "INVITES"
+  id = "auto"

@@ -1,45 +1,44 @@
-export default async (request, context) => {
+cat > netlify/functions/shortner.js <<'EOF'
+// netlify/functions/shortner.js
+// Returns a short URL that uses the Edge redirector at /i/<TOKEN>.
+exports.handler = async (event) => {
   try {
-    const url = new URL(request.url);
+    const method = event.httpMethod || "GET";
 
-    // Match paths like /i/<token>  (ignore trailing slash)
-    // e.g. /i/abc.def -> token = "abc.def"
-    const match = url.pathname.match(/^\/i\/([^/]+)\/?$/);
-    if (!match) {
-      // Not our route; let other assets/functions handle this request
-      return context.next();
+    let token =
+      new URLSearchParams(event.rawQuery || event.queryStringParameters || "")
+        .get("i") || "";
+
+    if (method === "POST" && !token) {
+      try {
+        const body = JSON.parse(event.body || "{}");
+        token = body.i || body.token || "";
+      } catch {}
     }
 
-    const token = match[1];
+    if (!token) return json(400, { ok: false, error: "Missing token (param 'i')" });
 
-    // Read base URL at runtime (don’t hardcode)
-    // Prefer SHORT_BASE_URL (if you want the redirect to live on a different domain),
-    // otherwise fall back to INVITES_BASE_URL.
-    const base =
-      (Netlify?.env?.get && Netlify.env.get("INVITES_BASE_URL")) ||
-      Deno.env.get("INVITES_BASE_URL") ||
+    const shortBase =
+      process.env.SHORT_BASE_URL ||
+      process.env.SHORTENER_PREFIX ||
+      process.env.URL ||
+      process.env.DEPLOY_URL ||
       "";
 
-    if (!base) {
-      return new Response(
-        JSON.stringify({ ok: false, error: "INVITES_BASE_URL not set" }),
-        {
-          status: 500,
-          headers: { "content-type": "application/json" },
-        }
-      );
-    }
+    if (!shortBase) return json(500, { ok: false, error: "SHORT_BASE_URL/URL not set" });
 
-    // Build destination: <base>/login?i=<token>
-    const dest = new URL(base.replace(/\/$/, "") + "/login");
-    dest.searchParams.set("i", token);
-
-    // 302 to the invite/login screen
-    return Response.redirect(dest.toString(), 302);
+    const shortUrl = shortBase.replace(/\/$/, "") + "/i/" + encodeURIComponent(token);
+    return json(200, { ok: true, shortUrl });
   } catch (err) {
-    return new Response(
-      JSON.stringify({ ok: false, error: String(err) }),
-      { status: 500, headers: { "content-type": "application/json" } }
-    );
+    return json(200, { ok: false, error: err.message || String(err) });
   }
 };
+
+function json(statusCode, body) {
+  return {
+    statusCode,
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(body),
+  };
+}
+EOF

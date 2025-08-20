@@ -1,32 +1,30 @@
-export default async (request, context) => {
+// netlify/edge-functions/shortener.js
+export default async (request) => {
   try {
     const url = new URL(request.url);
-
-    // Match paths like /i/<token>  (ignore trailing slash)
-    // e.g. /i/abc.def -> token = "abc.def"
+    // Match /i/<token> (optional trailing slash)
     const match = url.pathname.match(/^\/i\/([^/]+)\/?$/);
+
     if (!match) {
-      // Not our route; let other assets/functions handle this request
-      return context.next();
+      // Not our route—return a clean 404 JSON (no context.next())
+      return new Response(
+        JSON.stringify({ ok: false, error: "Not a short link" }),
+        { status: 404, headers: { "content-type": "application/json" } }
+      );
     }
 
     const token = match[1];
 
-    // Read base URL at runtime (don’t hardcode)
-    // Prefer SHORT_BASE_URL (if you want the redirect to live on a different domain),
-    // otherwise fall back to INVITES_BASE_URL.
+    // Read the base URL at runtime (no hard-coding)
     const base =
-      (Netlify?.env?.get && Netlify.env.get("INVITES_BASE_URL")) ||
+      (typeof Netlify !== "undefined" && Netlify.env?.get?.("INVITES_BASE_URL")) ||
       Deno.env.get("INVITES_BASE_URL") ||
       "";
 
     if (!base) {
       return new Response(
         JSON.stringify({ ok: false, error: "INVITES_BASE_URL not set" }),
-        {
-          status: 500,
-          headers: { "content-type": "application/json" },
-        }
+        { status: 500, headers: { "content-type": "application/json" } }
       );
     }
 
@@ -34,7 +32,7 @@ export default async (request, context) => {
     const dest = new URL(base.replace(/\/$/, "") + "/login");
     dest.searchParams.set("i", token);
 
-    // 302 to the invite/login screen
+    // Redirect to invite/login screen
     return Response.redirect(dest.toString(), 302);
   } catch (err) {
     return new Response(

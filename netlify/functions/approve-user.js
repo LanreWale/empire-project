@@ -1,36 +1,41 @@
-const { notifyWhatsApp } = require('./lib/notify');
-const BRIDGE = '/.netlify/functions/gs-bridge';
-
-/**
- * Body:
- *  { phone: "+2348xxxx", fullName: "Jane", admin: "Lanre" }
- * - Marks the latest matching “Pending” row as “Approved”
- * - Sends WhatsApp notification (if Twilio configured)
- */
-exports.handler = async (event) => {
-  if (event.httpMethod !== 'POST') return { statusCode:405, body:'Method Not Allowed' };
-  const host = `https://${event.headers.host}`;
-
-  const { phone, fullName, admin } = JSON.parse(event.body||'{}');
-
-  // Log approval in Event_Log
-  await fetch(new URL(BRIDGE, host), {
-    method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({
-      action:'append', sheet:'Event_Log',
-      values:[new Date().toISOString(), admin||'Commander', `Approved: ${fullName||phone||'-'}`]
-    })
-  }).catch(()=>null);
-
-  // WhatsApp notify (optional)
-  let wa = { ok:false, skipped:'twilio_not_configured' };
-  if (phone) {
-    wa = await notifyWhatsApp(phone, `✅ Hello${fullName? ' '+fullName : ''}! Your Empire dashboard access is approved. Watch for the next steps from the team.`);
+// --- Handler ---------------------------------------------------------------
+export async function handler(event) {
+  if (!["GET", "POST"].includes(event.httpMethod)) {
+    return json(405, { ok: false, error: "Method Not Allowed" });
   }
 
-  return {
-    statusCode:200,
-    headers:{'Content-Type':'application/json','Cache-Control':'no-store'},
-    body: JSON.stringify({ ok:true, whatsapp:wa })
+  const { email, name, phone, approve, status, note } = readInput(event);
+
+  if (!phone) return json(400, { ok: false, error: "Missing phone number for WhatsApp" });
+
+  const isApproved = approve === true || String(status).toLowerCase() === "approved";
+  if (!isApproved) return json(400, { ok: false, error: "Set approve:true or status:'approved'" });
+
+  const loginUrl = "https://empireaffiliatemarketinghub.com/login";
+  const safeName = name || email || phone;
+  const support = "@TheEmpireHq";
+
+  // MAIN message to user (via WhatsApp)
+  const body = `Hello ${safeName}, 🎉
+Your Empire Affiliate Marketing Hub account has been APPROVED.
+
+Login here: ${loginUrl}
+
+For support, reach us on Telegram: ${support}`;
+
+  const results = {
+    whatsapp: await sendWhatsApp({ to: phone, body }).catch((e) => ({ ok: false, error: e.message })),
+    telegram: await sendTelegram(`✅ Approved ${safeName} (${phone})`).catch((e) => ({ ok: false, error: e.message })),
+    // optional: still send email
+    // email: await sendEmail({ to: email, subject: "Welcome", html }).catch((e) => ({ ok: false, error: e.message }))
   };
-};
+
+  const allOk = Object.values(results).every((r) => !r || r.ok || r.skipped);
+
+  return json(allOk ? 200 : 207, {
+    ok: allOk,
+    phone,
+    status: "approved",
+    results,
+  });
+}

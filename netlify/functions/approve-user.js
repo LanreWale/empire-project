@@ -1,71 +1,55 @@
-const { notifyTelegram, notifyWhatsApp } = require('./_notify');
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'content-type',
-};
+const { notifyTelegram, notifyWhatsApp, notifyEmail } = require('./_notify.js');
 
 exports.handler = async (event) => {
-  if (event.httpMethod === 'OPTIONS') {
-    return { statusCode: 204, headers: corsHeaders };
-  }
-
   try {
-    const payload = event.body ? JSON.parse(event.body) : {};
+    const isJson = event.headers['content-type']?.includes('application/json');
+    const payload = isJson ? JSON.parse(event.body || '{}') : {};
     const { name, email, phone, approve } = payload;
 
-    if (!name || !email || !phone || typeof approve !== 'boolean') {
-      return {
-        statusCode: 400,
-        headers: corsHeaders,
-        body: JSON.stringify({
-          ok: false,
-          error:
-            'Required fields: name, email, phone, approve (boolean).',
-        }),
-      };
+    if (!name || !email || !phone) {
+      return json(400, { ok: false, error: 'Missing name/email/phone' });
     }
 
-    // Compose messages
-    const human =
-      approve
-        ? `🎉 <b>Approved:</b> <i>${name}</i>\n📧 ${email}\n📱 ${phone}`
-        : `🚫 <b>Declined:</b> <i>${name}</i>\n📧 ${email}\n📱 ${phone}`;
+    const statusText = approve ? 'APPROVED' : 'REVIEWED';
+    const msg = [
+      `✅ <b>Empire Onboarding ${statusText}</b>`,
+      '',
+      `<b>Name:</b> ${escapeHtml(name)}`,
+      `<b>Email:</b> ${escapeHtml(email)}`,
+      `<b>Phone:</b> ${escapeHtml(phone)}`,
+      '',
+      `Welcome to <b>The Empire</b>.`,
+    ].join('\n');
 
-    const waText =
-      approve
-        ? `Hello ${name}, your Empire application has been APPROVED. 🎉
-We’ll message you with next steps shortly.`
-        : `Hello ${name}, thanks for applying to the Empire.
-After review, we can’t approve this application right now.`;
+    // Fan-out notifications
+    const [waRes, tgRes, emRes] = await Promise.allSettled([
+      notifyWhatsApp(phone, `Empire ${statusText}: ${name}\nWelcome to The Empire.`),
+      notifyTelegram(msg),
+      notifyEmail(email, `Empire ${statusText}`, `Hello ${name}, your account is ${statusText}.`),
+    ]);
 
-    // Send WhatsApp to the user
-    const wa = await notifyWhatsApp({
-      to: phone,
-      body: waText,
-    });
-
-    // Announce on Telegram channel (chat ID first, then @username)
-    const tg = await notifyTelegram({
-      text: human,
-    });
-
-    return {
-      statusCode: 200,
-      headers: corsHeaders,
-      body: JSON.stringify({
-        ok: true,
-        results: {
-          whatsapp: wa,
-          telegram: tg,
-        },
-      }),
+    const results = {
+      whatsapp: settle(waRes),
+      telegram: settle(tgRes),
+      email: settle(emRes),
     };
+
+    return json(200, { ok: true, name, email, phone, results });
   } catch (err) {
-    return {
-      statusCode: 500,
-      headers: corsHeaders,
-      body: JSON.stringify({ ok: false, error: String(err) }),
-    };
+    return json(500, { ok: false, error: err.message });
   }
 };
+
+function json(status, body) {
+  return {
+    statusCode: status,
+    headers: { 'content-type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+    body: JSON.stringify(body),
+  };
+}
+function settle(p) {
+  return p.status === 'fulfilled' ? p.value : { ok: false, error: p.reason?.message || String(p.reason) };
+}
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, (c) => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+}

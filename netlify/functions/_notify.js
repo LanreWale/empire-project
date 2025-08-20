@@ -1,81 +1,92 @@
-const nodemailer = require("nodemailer");
+const json = (v) => JSON.stringify(v);
 
-/** Netlify function: POST body = { to, subject, text?, html? } */
-exports.handler = async (event) => {
+async function notifyTelegram({
+  text,
+  chatId,                 // optional override (e.g. "-1002604...")
+  botToken,               // optional override
+}) {
   try {
-    if ((event.httpMethod || "").toUpperCase() !== "POST") {
-      return { statusCode: 405, body: JSON.stringify({ error: "Method Not Allowed" }) };
-    }
+    const token = botToken || process.env.TELEGRAM_BOT_TOKEN;
+    if (!token) return { ok: false, error: 'Missing TELEGRAM_BOT_TOKEN' };
 
-    let payload = {};
-    try {
-      payload = JSON.parse(event.body || "{}");
-    } catch {
-      return { statusCode: 400, body: JSON.stringify({ error: "Invalid JSON body" }) };
-    }
+    // Prefer numeric chat id; otherwise fall back to @username
+    const target =
+      chatId ||
+      process.env.TELEGRAM_CHAT_VALUE ||        // e.g. "-1002604596144"
+      process.env.TELEGRAM_CHANNEL_USERNAME;    // e.g. "@TheEmpireHq"
 
-    // Read env safely with defaults (no toUpperCase on undefined)
-    const host = String(process.env.SMTP_HOST || "").trim();
-    const port = Number(process.env.SMTP_PORT || 587);
-    const user = String(process.env.SMTP_USER || "").trim();
-    const pass = String(process.env.SMTP_PASS || "").trim();
-    const from = String(process.env.SMTP_FROM || user || "").trim();
-    const secure = String(process.env.SMTP_SECURE || "false").toLowerCase() === "true";
+    if (!target) return { ok: false, error: 'Missing Telegram chat id/username' };
 
-    // Validate required env
-    const missing = [];
-    if (!host) missing.push("SMTP_HOST");
-    if (!user) missing.push("SMTP_USER");
-    if (!pass) missing.push("SMTP_PASS");
-    if (!from) missing.push("SMTP_FROM (or SMTP_USER)");
-    if (missing.length) {
-      return {
-        statusCode: 500,
-        body: JSON.stringify({
-          error: "Missing required SMTP environment variables",
-          missing,
-        }),
-      };
-    }
-
-    // Validate request
-    let { to, subject, text, html, replyTo } = payload;
-
-    if (Array.isArray(to)) to = to.filter(Boolean).join(",");
-    if (typeof to !== "string" || !to.includes("@")) {
-      return { statusCode: 400, body: JSON.stringify({ error: "Field 'to' must be an email or array" }) };
-    }
-    if (!subject || typeof subject !== "string" || !subject.trim()) {
-      return { statusCode: 400, body: JSON.stringify({ error: "Field 'subject' is required" }) };
-    }
-    if (!text && !html) {
-      return { statusCode: 400, body: JSON.stringify({ error: "Provide 'text' or 'html'" }) };
-    }
-
-    const transporter = nodemailer.createTransport({
-      host,
-      port,
-      secure,
-      auth: { user, pass },
-    });
-
-    const info = await transporter.sendMail({
-      from,
-      to,
-      subject,
+    const url = `https://api.telegram.org/bot${encodeURIComponent(token)}/sendMessage`;
+    const body = {
+      chat_id: target,
       text,
-      html,
-      replyTo: replyTo || from,
+      parse_mode: 'HTML',
+      disable_web_page_preview: true,
+    };
+
+    const r = await fetch(url, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: json(body),
     });
 
-    return { statusCode: 200, body: JSON.stringify({ ok: true, messageId: info.messageId }) };
+    const data = await r.json();
+    if (!r.ok || !data.ok) {
+      return { ok: false, status: r.status, error: json(data) };
+    }
+    return { ok: true, message_id: data.result?.message_id };
   } catch (err) {
-    return {
-      statusCode: 500,
-      body: JSON.stringify({
-        ok: false,
-        error: err?.message || String(err),
-      }),
-    };
+    return { ok: false, error: String(err) };
   }
+}
+
+async function notifyWhatsApp({
+  to,        // E.164 number, e.g. +2348...
+  body,      // message text
+  from,      // optional override (e.g. "whatsapp:+14155238886")
+}) {
+  try {
+    const sid   = process.env.TWILIO_ACCOUNT_SID;
+    const token = process.env.TWILIO_AUTH_TOKEN;
+    const fromNumber =
+      from || `whatsapp:${process.env.TWILIO_WHATSAPP_FROM}`;
+
+    if (!sid || !token) return { ok: false, error: 'Missing Twilio credentials' };
+    if (!fromNumber)     return { ok: false, error: 'Missing TWILIO_WHATSAPP_FROM' };
+    if (!to)             return { ok: false, error: 'Missing WhatsApp recipient' };
+
+    const url = `https://api.twilio.com/2010-04-01/Accounts/${encodeURIComponent(
+      sid
+    )}/Messages.json`;
+
+    const form = new URLSearchParams({
+      To: `whatsapp:${to}`,
+      From: fromNumber,
+      Body: body,
+    });
+
+    const r = await fetch(url, {
+      method: 'POST',
+      headers: {
+        Authorization:
+          'Basic ' + Buffer.from(`${sid}:${token}`).toString('base64'),
+        'content-type': 'application/x-www-form-urlencoded',
+      },
+      body: form.toString(),
+    });
+
+    const data = await r.json();
+    if (!r.ok) {
+      return { ok: false, status: r.status, error: json(data) };
+    }
+    return { ok: true, sid: data.sid };
+  } catch (err) {
+    return { ok: false, error: String(err) };
+  }
+}
+
+module.exports = {
+  notifyTelegram,
+  notifyWhatsApp,
 };

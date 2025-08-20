@@ -1,101 +1,71 @@
-const {
-  TWILIO_ACCOUNT_SID,
-  TWILIO_AUTH_TOKEN,
-  TWILIO_WHATSAPP_FROM,
-  TELEGRAM_BOT_TOKEN,
-  TELEGRAM_CHAT_VALUE, // numeric chat id
-} = process.env;
+const { notifyTelegram, notifyWhatsApp } = require('./_notify');
 
-function json(status, body) {
-  return {
-    statusCode: status,
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify(body),
-  };
-}
-
-function readInput(event) {
-  if (event.httpMethod === "GET") {
-    const p = event.queryStringParameters || {};
-    const approveStr = String(p.approve ?? p.status ?? "").toLowerCase();
-    return {
-      name: p.name,
-      email: p.email,
-      phone: p.phone,
-      approve: approveStr === "true" || approveStr === "approved",
-    };
-  }
-  try { return JSON.parse(event.body || "{}"); } catch { return {}; }
-}
-
-async function sendWhatsApp({ to, body }) {
-  if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN || !TWILIO_WHATSAPP_FROM) {
-    return { ok: false, skipped: true, reason: "Twilio env missing" };
-  }
-  if (!/^\+?\d{8,15}$/.test(String(to || ""))) {
-    return { ok: false, error: "Invalid phone number" };
-  }
-  const url = `https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/Messages.json`;
-  const params = new URLSearchParams({
-    From: `whatsapp:${TWILIO_WHATSAPP_FROM}`,
-    To: `whatsapp:${to}`,
-    Body: body,
-  });
-  const res = await fetch(url, {
-    method: "POST",
-    headers: {
-      Authorization: "Basic " + Buffer.from(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`).toString("base64"),
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
-    body: params.toString(),
-  });
-  if (!res.ok) return { ok: false, status: res.status, error: (await res.text()).slice(0, 400) };
-  const data = await res.json();
-  return { ok: true, sid: data.sid };
-}
-
-async function sendTelegram(text) {
-  if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_VALUE) {
-    return { ok: false, skipped: true, reason: "Telegram env missing" };
-  }
-  const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
-  const res = await fetch(url, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({
-      chat_id: TELEGRAM_CHAT_VALUE,
-      text,
-      parse_mode: "HTML",
-      disable_web_page_preview: true,
-    }),
-  });
-  if (!res.ok) return { ok: false, status: res.status, error: await res.text() };
-  return { ok: true };
-}
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'content-type',
+};
 
 exports.handler = async (event) => {
-  if (!["GET", "POST"].includes(event.httpMethod)) return json(405, { ok: false, error: "Method Not Allowed" });
+  if (event.httpMethod === 'OPTIONS') {
+    return { statusCode: 204, headers: corsHeaders };
+  }
 
-  const { name, email, phone, approve } = readInput(event);
-  if (!approve) return json(400, { ok: false, error: "Set approve:true" });
-  if (!phone) return json(400, { ok: false, error: "Missing phone" });
+  try {
+    const payload = event.body ? JSON.parse(event.body) : {};
+    const { name, email, phone, approve } = payload;
 
-  const who = name || email || phone;
-  const loginUrl = "https://empireaffiliatemarketinghub.com/login";
+    if (!name || !email || !phone || typeof approve !== 'boolean') {
+      return {
+        statusCode: 400,
+        headers: corsHeaders,
+        body: JSON.stringify({
+          ok: false,
+          error:
+            'Required fields: name, email, phone, approve (boolean).',
+        }),
+      };
+    }
 
-  const waBody =
-`Hello ${who}, 🎉
-Your Empire Affiliate Marketing Hub account has been APPROVED.
+    // Compose messages
+    const human =
+      approve
+        ? `🎉 <b>Approved:</b> <i>${name}</i>\n📧 ${email}\n📱 ${phone}`
+        : `🚫 <b>Declined:</b> <i>${name}</i>\n📧 ${email}\n📱 ${phone}`;
 
-Login: ${loginUrl}
+    const waText =
+      approve
+        ? `Hello ${name}, your Empire application has been APPROVED. 🎉
+We’ll message you with next steps shortly.`
+        : `Hello ${name}, thanks for applying to the Empire.
+After review, we can’t approve this application right now.`;
 
-Support: https://t.me/TheEmpireHq`;
+    // Send WhatsApp to the user
+    const wa = await notifyWhatsApp({
+      to: phone,
+      body: waText,
+    });
 
-  const [whatsapp, telegram] = await Promise.all([
-    sendWhatsApp({ to: phone, body: waBody }).catch(e => ({ ok: false, error: e.message })),
-    sendTelegram(`✅ Approved <b>${who}</b> (${phone})`).catch(e => ({ ok: false, error: e.message })),
-  ]);
+    // Announce on Telegram channel (chat ID first, then @username)
+    const tg = await notifyTelegram({
+      text: human,
+    });
 
-  const ok = (whatsapp.ok || whatsapp.skipped) && (telegram.ok || telegram.skipped);
-  return json(ok ? 200 : 207, { ok, phone, name, email, results: { whatsapp, telegram } });
+    return {
+      statusCode: 200,
+      headers: corsHeaders,
+      body: JSON.stringify({
+        ok: true,
+        results: {
+          whatsapp: wa,
+          telegram: tg,
+        },
+      }),
+    };
+  } catch (err) {
+    return {
+      statusCode: 500,
+      headers: corsHeaders,
+      body: JSON.stringify({ ok: false, error: String(err) }),
+    };
+  }
 };

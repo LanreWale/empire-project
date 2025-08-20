@@ -1,3 +1,9 @@
+# --- Edge function route for short links like /i/abc123 ---
 [[edge_functions]]
 function = "shortener"
 path = "/i/*"
+
+# --- (Optional) Functions bundling settings ---
+[functions]
+  node_bundler = "esbuild"
+  external_node_modules = ["axios"]

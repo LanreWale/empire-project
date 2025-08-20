@@ -1,47 +1,69 @@
+// netlify/functions/invite-created.js
 "use strict";
 
-const { telegram, email, whatsapp } = require("./lib/notify");
+const { notifyTelegram, notifyWhatsApp } = require("./_notify");
+
+// Helpers
+const safeJSON = (s) => {
+  try { return JSON.parse(s || "{}"); } catch { return {}; }
+};
+const json = (status, body) => ({
+  statusCode: status,
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify(body),
+});
 
 exports.handler = async (event) => {
-  try {
-    if (event.httpMethod !== "POST") {
-      return json(405, { ok: false, error: "Method not allowed" });
-    }
-
-    const body = safeJSON(event.body);
-    // Example payload from invite flow:
-    // { to:"...", channel:"email|telegram|whatsapp", inviteUrl:"...", name:"" }
-    const { to = "", channel = "telegram", inviteUrl = "", name = "" } = body;
-
-    // We do NOT print or hard-code the INVITES_BASE_URL to avoid secret scanning.
-    const BASE_URL_CONFIGURED = Boolean(process.env.INVITES_BASE_URL);
-
-    // Send notification (best-effort)
-    if (channel === "email" && to) {
-      await email({
-        to,
-        subject: "Your Empire invite",
-        text:
-          `Hello ${name || ""},\n\n` +
-          `Here is your invite link:\n${inviteUrl}\n\n— Empire`,
-      }).catch(() => {});
-    } else if (channel === "whatsapp" && to) {
-      await whatsapp(to, `Empire invite: ${inviteUrl}`).catch(() => {});
-    } else {
-      await telegram(`[INVITE_CREATED]\n${to}\n${inviteUrl}`).catch(() => {});
-    }
-
-    return json(200, { ok: true, baseConfigured: BASE_URL_CONFIGURED });
-  } catch (err) {
-    return json(200, { ok: false, error: err.message || String(err) });
+  // Accept both GET (ping) and POST (real submission)
+  if (event.httpMethod === "GET") {
+    return json(200, { ok: true, baseConfigured: true, via: "GET" });
   }
-};
 
-function safeJSON(s) { try { return JSON.parse(s || "{}"); } catch { return {}; } }
-function json(statusCode, body) {
-  return {
-    statusCode,
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  };
-}
+  if (event.httpMethod !== "POST") {
+    return json(405, { ok: false, error: "Method not allowed" });
+  }
+
+  const data = safeJSON(event.body);
+  const name  = (data.name  || "").trim();
+  const email = (data.email || "").trim();
+  const phone = (data.phone || "").trim();
+
+  if (!name && !email && !phone) {
+    return json(400, { ok: false, error: "Missing submission fields" });
+  }
+
+  // Build the message shown in Telegram/WhatsApp
+  const lines = [
+    "📝 *New registration received*",
+    name  ? `• *Name:* ${name}`   : null,
+    email ? `• *Email:* ${email}` : null,
+    phone ? `• *Phone:* ${phone}` : null,
+    "",
+    "🔔 You can approve instantly from Quick Approvals."
+  ].filter(Boolean);
+
+  const message = lines.join("\n");
+
+  // Fire notifications (do not fail the whole request if one channel fails)
+  const results = {};
+
+  try {
+    results.telegram = await notifyTelegram(message, { parse_mode: "Markdown" });
+  } catch (e) {
+    results.telegram = { ok: false, error: String(e?.message || e) };
+  }
+
+  if (phone) {
+    try {
+      results.whatsapp = await notifyWhatsApp(phone, message);
+    } catch (e) {
+      results.whatsapp = { ok: false, error: String(e?.message || e) };
+    }
+  }
+
+  return json(200, {
+    ok: true,
+    notified: true,
+    results,
+  });
+};

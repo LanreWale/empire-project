@@ -1,81 +1,139 @@
-// netlify/functions/invite-create.js
-"use strict";
+import crypto from "node:crypto";
+import nodemailer from "nodemailer";
 
-const crypto = require("crypto");
-const axios = require("axios");
-const { telegram, email, whatsapp } = require("./lib/notify");
+const env = (k, d = undefined) => process.env[k] ?? d;
+const REQUIRED = ["INVITES_SIGNING_KEY", "INVITE_TTL_HOURS", "INVITES_BASE_URL"];
 
-const json = (c, b) => ({ statusCode: c, headers: { "Content-Type": "application/json" }, body: JSON.stringify(b) });
-const safeJSON = (s) => { try { return JSON.parse(s || "{}"); } catch { return {}; } };
+function bad(status, msg) {
+  return { statusCode: status, headers: { "content-type": "application/json" }, body: JSON.stringify({ ok: false, error: msg }) };
+}
 
-exports.handler = async (event) => {
+function ok(json) {
+  return { statusCode: 200, headers: { "content-type": "application/json" }, body: JSON.stringify(json, null, 2) };
+}
+
+function signInvite(payload, key) {
+  const data = Buffer.from(JSON.stringify(payload)).toString("base64url");
+  const sig = crypto.createHmac("sha256", key).update(data).digest("base64url");
+  return `${data}.${sig}`;
+}
+
+function verifyTelegramTarget() {
+  // prefer numeric ID if provided; else fall back to @username
+  return env("TELEGRAM_CHAT_VALUE") || env("TELEGRAM_CHAT_ID");
+}
+
+async function sendTelegram(text) {
+  const token = env("TELEGRAM_BOT_TOKEN");
+  const chat = verifyTelegramTarget();
+  if (!token || !chat) return; // silently skip
+  const url = `https://api.telegram.org/bot${token}/sendMessage`;
+  await fetch(url, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ chat_id: chat, text, parse_mode: "HTML", disable_web_page_preview: true }),
+  }).catch(() => {});
+}
+
+async function sendEmail({ to, subject, html }) {
+  const host = env("SMTP_HOST");
+  const port = Number(env("SMTP_PORT") || 587);
+  const secure = String(env("SMTP_SECURE") || "false") === "true";
+  const user = env("SMTP_USER");
+  const pass = env("SMTP_PASS");
+  const from = env("SMTP_FROM") || "Empire Hub <no-reply@empireaffiliatemarketinghub.com>";
+
+  if (!host || !user || !pass) return; // skip if SMTP not configured
+
+  const transporter = nodemailer.createTransport({ host, port, secure, auth: { user, pass } });
+  await transporter.sendMail({ from, to, subject, html }).catch(() => {});
+}
+
+async function maybeShorten(longUrl) {
+  const prefix = env("SHORTENER_PREFIX"); // e.g. https://join.empire...
+  if (!prefix) return { shortUrl: null, longUrl };
+
+  // Call our own shortener function if present
   try {
-    if (event.httpMethod !== "POST") return json(405, { ok: false, error: "Method not allowed" });
-
-    // Optional guard
-    const CMD_USER = process.env.CMD_USER || "";
-    const headerUser = event.headers["x-cmd-user"] || event.headers["X-Cmd-User"] || "";
-    if (CMD_USER && headerUser !== CMD_USER) return json(401, { ok: false, error: "Unauthorized" });
-
-    const { name = "", email: userEmail = "", phone = "", telegramHandle = "" } = safeJSON(event.body);
-
-    // Required config
-    const INVITES_SIGNING_KEY = process.env.INVITES_SIGNING_KEY || "";
-    if (!INVITES_SIGNING_KEY) return json(500, { ok: false, error: "Missing INVITES_SIGNING_KEY" });
-
-    // TTL and bases (avoid hardcoding real values to keep Netlify secrets scan happy)
-    const INVITE_TTL_HOURS = Number(process.env.INVITE_TTL_HOURS || 48);
-    const siteOrigin = (process.env.URL || process.env.DEPLOY_PRIME_URL || process.env.DEPLOY_URL || "").replace(/\/$/, "");
-    const REG_FORM_URL = (process.env.REG_FORM_URL || siteOrigin || "").replace(/\/$/, "");
-    const SHORT_BASE_URL = (process.env.SHORT_BASE_URL || "").replace(/\/$/, ""); // e.g. https://join.yourdomain.com
-
-    // Build signed token
-    const now = Math.floor(Date.now() / 1000);
-    const exp = now + INVITE_TTL_HOURS * 3600;
-    const claims = { v: 1, iat: now, exp, email: userEmail, phone, tg: telegramHandle, name };
-    const payload = Buffer.from(JSON.stringify(claims)).toString("base64url");
-    const sig = crypto.createHmac("sha256", INVITES_SIGNING_KEY).update(payload).digest("base64url");
-    const token = `${payload}.${sig}`;
-
-    // Short id and KV mint via Edge endpoint
-    const shortId = crypto.randomBytes(4).toString("hex"); // 8 chars
-    const mintUrl = `${siteOrigin}/_kv/mint`;
-    try {
-      await axios.post(
-        mintUrl,
-        { id: shortId, token, ttl: INVITE_TTL_HOURS * 3600 },
-        { headers: { "content-type": "application/json", "x-cmd-user": CMD_USER }, timeout: 10000 }
-      );
-    } catch (_) {
-      // continue even if mint fails; longUrl will still work
-    }
-
-    const longUrl  = `${REG_FORM_URL}/register?i=${encodeURIComponent(token)}`;
-    const shortUrl = SHORT_BASE_URL ? `${SHORT_BASE_URL}/${shortId}` : longUrl; // fallback
-
-    // Log to Sheets (best effort)
-    if (siteOrigin) {
-      const gsBridge = `${siteOrigin}/.netlify/functions/gs-bridge`;
-      axios.post(
-        gsBridge,
-        { action: "append", sheet: "Event_Log", values: [new Date().toISOString(), "System", `Invite for ${userEmail || phone}`, shortUrl] },
-        { timeout: 10000 }
-      ).catch(() => {});
-    }
-
-    // Notify (best effort)
-    if (userEmail) {
-      email({
-        to: userEmail,
-        subject: "Your Empire invite (valid 48 hours)",
-        text: `Hello ${name || ""},\n\nHere is your invite link (expires in ${INVITE_TTL_HOURS} hours):\n${shortUrl}\n\n— Empire`,
-      }).catch(() => {});
-    }
-    telegram(`[INVITE] ${userEmail || phone} (${INVITE_TTL_HOURS}h)\n${shortUrl}`).catch(() => {});
-    if (phone) whatsapp(phone, `Empire invite (${INVITE_TTL_HOURS}h): ${shortUrl}`).catch(() => {});
-
-    return json(200, { ok: true, shortUrl, longUrl, exp, id: shortId });
-  } catch (err) {
-    return json(200, { ok: false, error: err.message || String(err) });
+    const res = await fetch(`${env("URL") || ""}/.netlify/functions/shortner`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ url: longUrl }),
+    });
+    if (!res.ok) throw new Error(`shortner ${res.status}`);
+    const data = await res.json();
+    return { shortUrl: data.shortUrl || null, longUrl };
+  } catch {
+    return { shortUrl: null, longUrl };
   }
-};
+}
+
+export async function handler(event) {
+  if (event.httpMethod !== "POST") return bad(405, "Method Not Allowed");
+
+  // Basic env validation (clear errors early)
+  for (const k of REQUIRED) {
+    if (!env(k)) return bad(500, `Missing env: ${k}`);
+  }
+
+  let body;
+  try {
+    body = JSON.parse(event.body || "{}");
+  } catch {
+    return bad(400, "Invalid JSON");
+  }
+
+  const name = (body.name || "").trim();
+  const email = (body.email || "").trim().toLowerCase();
+  const phone = (body.phone || "").trim();
+  const tg = (body.telegramHandle || "").trim();
+
+  if (!name || !email) return bad(400, "name and email are required");
+
+  const now = Math.floor(Date.now() / 1000);
+  const exp = now + Number(env("INVITE_TTL_HOURS")) * 3600;
+
+  const claims = { v: 1, iat: now, exp, email, phone, tg, name };
+  const token = signInvite(claims, env("INVITES_SIGNING_KEY"));
+
+  // Build long invite URL (send people into the login screen first)
+  const base = env("INVITES_BASE_URL").replace(/\/$/, "");
+  const longInviteUrl = `${base}/login?i=${token}`;
+
+  const { shortUrl } = await maybeShorten(longInviteUrl);
+  const inviteUrl = shortUrl || longInviteUrl;
+
+  // Fire-and-forget notifications
+  const brand = "Empire Affiliate Marketing Hub";
+  const html = `
+    <div style="font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:14px">
+      <p>Hello ${name},</p>
+      <p>You’ve been invited to join <b>${brand}</b>.</p>
+      <p><a href="${inviteUrl}" style="background:#2563eb;color:#fff;padding:10px 16px;border-radius:6px;text-decoration:none">Open your invite</a></p>
+      <p style="color:#64748b">This invite expires in ${env("INVITE_TTL_HOURS")} hours.</p>
+      <hr style="border:none;border-top:1px solid #e5e7eb;margin:16px 0"/>
+      <p>If the button doesn’t work, paste this link into your browser:<br/>
+      <a href="${inviteUrl}">${inviteUrl}</a></p>
+    </div>
+  `;
+
+  // Email (to the invitee)
+  await sendEmail({ to: email, subject: "Your Empire invite", html });
+
+  // Telegram (to HQ channel)
+  await sendTelegram(
+    [
+      "🟢 <b>New Invite Created</b>",
+      `Name: ${name}`,
+      `Email: ${email}`,
+      phone ? `Phone: ${phone}` : null,
+      tg ? `Telegram: ${tg}` : null,
+      `Link: ${inviteUrl}`,
+      `TTL: ${env("INVITE_TTL_HOURS")}h`,
+    ]
+      .filter(Boolean)
+      .join("\n")
+  );
+
+  return ok({ ok: true, inviteUrl, exp, claims: { name, email, phone, tg } });
+}

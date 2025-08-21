@@ -1,7 +1,7 @@
 // netlify/functions/approve-user.js
 "use strict";
 
-const fetch = (...args) => import("node-fetch").then(({ default: f }) => f(...args));
+const { notifyWhatsApp, notifyTelegram } = require("./_notify.js");
 
 const json = (status, body) => ({
   statusCode: status,
@@ -9,117 +9,41 @@ const json = (status, body) => ({
   body: JSON.stringify(body),
 });
 
-const env = (k, d="") => (process.env[k] ?? d);
-
-// --- Telegram helper (posts to your channel) ---
-async function sendTelegram(text) {
-  const bot = env("TELEGRAM_BOT_TOKEN");
-  const chatId = env("TELEGRAM_CHAT_VALUE"); // -100... for channels
-  if (!bot || !chatId) return { ok: false, skipped: "telegram not configured" };
-
-  const url = `https://api.telegram.org/bot${bot}/sendMessage`;
-  const res = await fetch(url, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ chat_id: chatId, text, disable_web_page_preview: true }),
-  });
-  const data = await res.json().catch(() => ({}));
-  return { ok: !!data.ok, status: res.status, result: data };
-}
-
-// --- WhatsApp helper (Twilio API) ---
-async function sendWhatsApp(toPhoneE164, body) {
-  const sid = env("TWILIO_ACCOUNT_SID");
-  const token = env("TWILIO_AUTH_TOKEN");
-  const from = env("TWILIO_WHATSAPP_FROM"); // "+1415..." (Twilio sandbox or number)
-
-  if (!sid || !token || !from) return { ok: false, skipped: "twilio not configured" };
-  if (!toPhoneE164 || !/^\+[\d]+$/.test(toPhoneE164)) return { ok: false, error: "Invalid phone number" };
-
-  const auth = Buffer.from(`${sid}:${token}`).toString("base64");
-  const url = `https://api.twilio.com/2010-04-01/Accounts/${sid}/Messages.json`;
-  const params = new URLSearchParams({
-    From: `whatsapp:${from}`,
-    To: `whatsapp:${toPhoneE164}`,
-    Body: body,
-  });
-
-  const res = await fetch(url, {
-    method: "POST",
-    headers: {
-      Authorization: `Basic ${auth}`,
-      "content-type": "application/x-www-form-urlencoded",
-    },
-    body: params.toString(),
-  });
-
-  const data = await res.json().catch(() => ({}));
-  return { ok: res.ok, status: res.status, sid: data.sid, result: data };
-}
-
-// --- Google Sheets (Apps Script WebApp) upsert associate ---
-async function upsertAssociate({ name, email, phone }) {
-  const webapp = env("GOOGLE_SHEETS_WEBAPP_URL");
-  if (!webapp) return { ok: false, error: "GOOGLE_SHEETS_WEBAPP_URL not set" };
-
-  const payload = {
-    action: "upsertAssociate",
-    row: {
-      name: String(name || ""),
-      email: String(email || ""),
-      phone: String(phone || ""),
-      status: "Active",
-      level: "1x",
-      lastActionAt: new Date().toISOString(),
-      notes: "Approved via Netlify",
-    },
-  };
-
-  const res = await fetch(webapp, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify(payload),
-  });
-
-  const data = await res.json().catch(() => ({}));
-  return { ok: data?.ok === true, upstream: data };
-}
-
 exports.handler = async (event) => {
   try {
-    if (event.httpMethod !== "POST") return json(405, { ok: false, error: "POST only" });
+    const payload = event.body ? JSON.parse(event.body) : {};
+    const name = String(payload.name || "").trim();
+    const email = String(payload.email || "").trim();
+    const phone = String(payload.phone || "").trim();
+    const approve = !!payload.approve;
 
-    const body = JSON.parse(event.body || "{}");
-    const { name, email, phone, approve } = body;
+    if (!name && !email && !phone) {
+      return json(400, { ok: false, error: "Missing user data" });
+    }
 
-    // Basic validation
-    if (!approve) return json(400, { ok: false, error: "approve=true is required" });
-    if (!email && !phone) return json(400, { ok: false, error: "email or phone is required" });
+    const results = {};
 
-    // 1) WhatsApp to the user
-    const waText =
-      `Hi ${name || "there"} 👋\n\n` +
-      `Your Empire registration has been *approved*. Welcome aboard!\n\n` +
-      `Level: 1x\n` +
-      `Next steps will follow here and in the Telegram channel.`;
+    // WhatsApp notification to the user (only when approving and phone is present)
+    if (approve && phone) {
+      const body =
+        `Hi ${name || "there"} 🎉\n` +
+        `Your Empire account has been approved.\n` +
+        `Email: ${email || "—"}\n` +
+        `Next steps will follow shortly.`;
+      results.whatsapp = await notifyWhatsApp({ to: phone, body });
+    }
 
-    const wa = await sendWhatsApp(phone, waText);
+    // Telegram log to your channel
+    const tgText =
+      `✅ <b>Approval</b>\n` +
+      `Name: <code>${name || "-"}</code>\n` +
+      `Email: <code>${email || "-"}</code>\n` +
+      `Phone: <code>${phone || "-"}</code>\n` +
+      `Action: <b>${approve ? "APPROVED" : "REVIEWED"}</b>`;
+    results.telegram = await notifyTelegram({ text: tgText });
 
-    // 2) Telegram admin/channel ping
-    const tMsg = `✅ Approved: ${name || ""}\nEmail: ${email || "-"}\nPhone: ${phone || "-"}`;
-    const tg = await sendTelegram(tMsg);
-
-    // 3) Upsert in Google Sheet (New Associates)
-    const gs = await upsertAssociate({ name, email, phone });
-
-    return json(200, {
-      ok: true,
-      name,
-      email,
-      phone,
-      results: { whatsapp: wa, telegram: tg, sheets: gs },
-    });
-  } catch (err) {
-    return json(500, { ok: false, error: String(err) });
+    return json(200, { ok: true, name, email, phone, results });
+  } catch (e) {
+    return json(500, { ok: false, error: String(e) });
   }
 };

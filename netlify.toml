@@ -7,3 +7,14 @@ path = "/i/*"
 [functions]
   node_bundler = "esbuild"
   external_node_modules = ["axios"]
+# (keep your existing config)
+# Ensure these folders are served as static pages
+[[redirects]]
+from = "/admin"
+to = "/admin/"
+status = 301
+
+[[redirects]]
+from = "/app"
+to = "/app/"
+status = 301

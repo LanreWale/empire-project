@@ -38,6 +38,10 @@
     .sep{height:1px;background:#1a2642;margin:6px 0 12px}
     .tiny{font-size:11px}
   </style>
+<script>
+  // No secrets here: build short invite URLs from current origin
+  window.makeInviteShort = (token) => `${location.origin}/i/${encodeURIComponent(token)}`;
+</script>
 </head>
 <body>
   <div class="wrap">
@@ -222,10 +226,10 @@
     $("go").onclick = ()=>{
       const t = $("tok").value.trim();
       if (!t) return;
-      const u = new URL((window.INVITES_BASE_URL || "") || "https://join.empireaffiliatemarketinghub.com");
       u.pathname = "/login"; u.searchParams.set("i", t);
       window.location.assign(u.toString());
     };
   </script>
 </body>
+<script>(function(){  function makeInviteShortFromUrl(inviteUrl){    try{      var u=new URL(inviteUrl, window.location.origin);      var tok=u.searchParams.get("i");      if(!tok){        /* Allow also paths like /login/<token> if ever used */        var m=(u.pathname||"").match(/\/login\/?([^/?#]+)/);        if(m && m[1]) tok=decodeURIComponent(m[1]);      }      if(!tok) return inviteUrl;      return (window.location.origin.replace(/\/$/,"")+"/i/"+encodeURIComponent(tok));    }catch(e){ return inviteUrl; }  }  function rewriteCandidate(el){    try{      var href=el.getAttribute && el.getAttribute("href");      var text=(el.textContent||"").trim();      var source=href || text;      if(!source) return;      if(!/[?&]i=/.test(source) && !/\/login\//.test(source)) return;      var short=makeInviteShortFromUrl(source);      if(href) el.setAttribute("href", short);      if(text && text.indexOf(source) !== -1){ el.textContent = short; }    }catch(e){}  }  function scan(){    document.querySelectorAll("a, .invite-url, .js-invite-url").forEach(rewriteCandidate);  }  document.addEventListener("DOMContentLoaded", scan);  new MutationObserver(scan).observe(document.documentElement, { childList:true, subtree:true });  window.makeInviteShortFromUrl = makeInviteShortFromUrl; /* optional global */})();</script>
 </html>

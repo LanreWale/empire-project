@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Empire – App</title>
+<style>
+:root{--bg:#0b1220;--card:#121a2b;--muted:#96a0b5;--txt:#e7ecf7;--accent:#4bb1ff}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--txt);font:16px/1.5 system-ui,Segoe UI,Roboto,Arial}
+.wrap{max-width:720px;margin:0 auto;padding:14px}
+.card{background:var(--card);border-radius:16px;box-shadow:0 6px 40px rgba(0,0,0,.25);padding:16px;margin:12px 0}
+h1{margin:0 0 10px}.muted{color:var(--muted)}
+.row{display:grid;gap:8px}
+.kv{display:flex;justify-content:space-between;border-bottom:1px dashed #24304a;padding:8px 0}
+a.btn{display:inline-block;background:var(--accent);color:#001427;padding:10px 12px;border-radius:10px;font-weight:700;text-decoration:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Empire – Your Space</h1>
+  <div class="card">
+    <div class="row" id="info"></div>
+    <p class="muted" id="status">Awaiting approval & level assignment…</p>
+    <p><a class="btn" href="/">Home</a></p>
+  </div>
+</div>
+
+<script>
+const qs = new URLSearchParams(location.search);
+const token = qs.get("i") || "";
+const info = document.getElementById("info");
+const status = document.getElementById("status");
+
+function row(k,v){
+  const div = document.createElement("div");
+  div.className = "kv";
+  div.innerHTML = `<span class="muted">${k}</span><span>${v||"-"}</span>`;
+  return div;
+}
+
+if(token){
+  const [payload] = token.split(".");
+  try{
+    const claims = JSON.parse(atob(payload.replace(/-/g,'+').replace(/_/g,'/')));
+    info.append(row("Name", claims.name));
+    info.append(row("Email", claims.email));
+    info.append(row("Phone", claims.phone));
+    status.textContent = "Invite verified. You will receive your level & onboarding notice after approval.";
+  }catch(e){
+    status.textContent = "Invalid invite token.";
+  }
+}else{
+  status.textContent = "Open this page from your invite link.";
+}
+</script>
+</body>
+</html>

@@ -1,11 +1,10 @@
 // netlify/functions/log-performance.js
 "use strict";
 
-const axios = require("axios");
-const https = require("https");
+// Notifications
 const { telegram, email, whatsapp } = require("./lib/notify");
 
-// --- helpers ---------------------------------------------------------------
+// helpers
 const safeJSON = (s) => { try { return JSON.parse(s || "{}"); } catch { return {}; } };
 const json = (status, body) => ({
   statusCode: status,
@@ -13,73 +12,25 @@ const json = (status, body) => ({
   body: JSON.stringify(body),
 });
 
-// single agent to disable keepAlive (avoids some TLS resets)
-const agent = new https.Agent({ keepAlive: false });
-
-async function appendViaBridge(values) {
-  const origin = process.env.URL || process.env.DEPLOY_PRIME_URL || process.env.DEPLOY_URL || "";
-  if (!origin) throw new Error("Missing site origin");
-  const gsBridge = `${origin.replace(/\/$/, "")}/.netlify/functions/gs-bridge`;
-
-  const r = await axios.post(
-    gsBridge,
-    { action: "append", sheet: "Performance_Report", values },
-    { timeout: 12000, httpsAgent: agent, headers: { Connection: "close" } }
-  );
-  return r.data;
-}
-
-async function appendDirectToAppsScript(values) {
-  const APP_URL = process.env.GOOGLE_SHEETS_WEBAPP_URL || "";
-  const KEY = process.env.GS_WEBAPP_KEY || "";
-  if (!APP_URL) throw new Error("GOOGLE_SHEETS_WEBAPP_URL not set");
-
-  // Apps Script prefers form-encoded
-  const params = new URLSearchParams();
-  params.set("action", "append");
-  params.set("sheet", "Performance_Report");
-  params.set("values", JSON.stringify(values));
-  if (KEY) params.set("key", KEY);
-
-  const r = await axios.post(APP_URL, params, {
-    timeout: 12000,
-    httpsAgent: agent,
-    headers: { "Content-Type": "application/x-www-form-urlencoded", Connection: "close" },
-    maxRedirects: 3,
+async function postJSON(url, payload) {
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(payload),
   });
-
-  // Some Apps Scripts return text
-  let data = r.data;
-  if (typeof data === "string") { try { data = JSON.parse(data); } catch {} }
-  return data;
+  const text = await res.text();
+  let data;
+  try { data = JSON.parse(text); } catch { data = { ok: false, raw: text }; }
+  return { status: res.status, data };
 }
 
-async function resilientAppend(values) {
-  // 1) try bridge (HTTP/1.1 Connection: close)
-  try {
-    const d = await appendViaBridge(values);
-    if (d && d.ok) return { ok: true, via: "bridge", data: d };
-    throw new Error(d?.error || "bridge not ok");
-  } catch (e1) {
-    // 2) fallback to Apps Script directly
-    try {
-      const d2 = await appendDirectToAppsScript(values);
-      if (d2 && d2.ok) return { ok: true, via: "apps_script", data: d2 };
-      return { ok: false, via: "apps_script", error: String(d2?.error || e1?.message || e1) };
-    } catch (e2) {
-      return { ok: false, via: "apps_script", error: String(e2?.message || e2) };
-    }
-  }
-}
-
-// --- handler ---------------------------------------------------------------
 exports.handler = async (event) => {
   try {
     if (event.httpMethod !== "POST") {
       return json(405, { ok: false, error: "Method not allowed" });
     }
 
-    // Optional minimal auth
+    // optional gate
     const CMD_USER = process.env.CMD_USER || "";
     const headerUser = event.headers["x-cmd-user"] || event.headers["X-Cmd-User"] || "";
     if (CMD_USER && headerUser !== CMD_USER) {
@@ -100,43 +51,87 @@ exports.handler = async (event) => {
 
     if (!userEmail) return json(400, { ok: false, error: "Missing email" });
 
+    // Build values row (InsertSource is appended later when we know which path succeeded)
     const now = new Date().toISOString();
-    const values = [now, userEmail, String(clicks), String(conversions), String(revenueUSD), String(level), notes];
+    const baseValues = [now, userEmail, String(clicks), String(conversions), String(revenueUSD), String(level), notes];
 
-    // Append with retry/fallback
-    const sheetAppend = await resilientAppend(values);
+    // URLs
+    const siteOrigin = process.env.URL || process.env.DEPLOY_PRIME_URL || process.env.DEPLOY_URL || "";
+    const BRIDGE = siteOrigin ? `${siteOrigin.replace(/\/$/, "")}/.netlify/functions/gs-bridge` : "";
+    const APPS = (process.env.GOOGLE_SHEETS_WEBAPP_URL || "").trim();
 
-    // Notifications (best-effort)
-    let tg = null, wa = null, mail = null;
-    if (notify) {
-      const line =
-        `📈 *Performance Log*\n` +
-        `Email: ${userEmail}\n` +
-        `Phone: ${phone || "—"}\n` +
-        `Level: ${level || "—"}\n` +
-        `Clicks: ${clicks}\n` +
-        `Conversions: ${conversions}\n` +
-        `Revenue: $${revenueUSD}\n` +
-        `Notes: ${notes || "—"}\n` +
-        `Time: ${now}`;
-
-      tg = await telegram(line).catch(err => ({ ok: false, error: String(err?.message || err) }));
-
-      if (phone && Number(conversions) > 0) {
-        wa = await whatsapp(phone,
-          `Empire update:\nConversions: ${conversions}\nRevenue: $${revenueUSD}\nGreat work!`
-        ).catch(err => ({ ok: false, error: String(err?.message || err) }));
+    // Try bridge first
+    let sheetAppend = { ok: false, via: "bridge" };
+    if (BRIDGE) {
+      try {
+        const resp = await postJSON(BRIDGE, {
+          action: "append",
+          sheet: "Performance_Report",
+          values: [...baseValues, "bridge"],
+        });
+        sheetAppend = {
+          ok: !!resp?.data?.ok,
+          via: "bridge",
+          status: resp.status,
+          upstream: resp.data,
+        };
+      } catch (e) {
+        sheetAppend = { ok: false, via: "bridge", error: String(e) };
       }
-
-      mail = await email({
-        to: process.env.EMAIL_TO || process.env.SMTP_FROM || "",
-        subject: `Performance • ${userEmail} • ${clicks}/${conversions} • $${revenueUSD}`,
-        text: line.replace(/\*|_/g, ""),
-      }).catch(err => ({ ok: false, error: String(err?.message || err) }));
     }
 
-    return json(200, { ok: true, sheetAppend, telegram: tg, whatsapp: wa, email: mail });
+    // Fall back to Apps Script if bridge failed
+    let fallback = null;
+    if (!sheetAppend.ok && APPS) {
+      try {
+        const resp = await postJSON(APPS, {
+          action: "append",
+          sheet: "Performance_Report",
+          values: [...baseValues, "apps_script"],
+          key: process.env.GS_WEBAPP_KEY || undefined, // harmless if undefined
+        });
+        fallback = {
+          ok: !!resp?.data?.ok,
+          via: "apps_script",
+          status: resp.status,
+          upstream: resp.data,
+        };
+        if (fallback.ok) sheetAppend = fallback;
+      } catch (e) {
+        fallback = { ok: false, via: "apps_script", error: String(e) };
+      }
+    }
+
+    // Notifications (best-effort)
+    let tg = null, wa = null, em = null;
+    if (notify) {
+      const line =
+        `📈 *Performance Log*` +
+        `\nEmail: ${userEmail}` +
+        `\nPhone: ${phone || "—"}` +
+        `\nLevel: ${level || "—"}` +
+        `\nClicks: ${clicks}` +
+        `\nConversions: ${conversions}` +
+        `\nRevenue: $${revenueUSD}` +
+        (notes ? `\nNotes: ${notes}` : "") +
+        `\nTime: ${now}`;
+      try { tg = await telegram(line); } catch { tg = { ok: false }; }
+      if (phone && Number(conversions) > 0) {
+        try { wa = await whatsapp(phone, `Great job! Today: ${conversions} conv • $${revenueUSD}. Keep going.`); }
+        catch { wa = { ok: false }; }
+      }
+      try { em = await email("Empire • Performance Log", line); } catch { em = { ok: false }; }
+    }
+
+    return json(200, {
+      ok: sheetAppend.ok,
+      sheetAppend,
+      fallbackTried: !!fallback,
+      telegram: tg,
+      whatsapp: wa,
+      email: em,
+    });
   } catch (err) {
-    return json(200, { ok: false, error: err.message || String(err) });
+    return json(200, { ok: false, error: err?.message || String(err) });
   }
 };

@@ -1,6 +1,22 @@
+// netlify/functions/lib/templates.js
+"use strict";
+
+// Resolve env at runtime — no secrets in source
+const env = (k, d = "") => (process.env?.[k] ?? d);
+
+/**
+ * Resolve admin/ops recipients at runtime.
+ * Set MAIL_TO (or EMAIL_TO) in Netlify env as a comma- or space-separated list.
+ */
+function getAdminRecipients() {
+  return (env("MAIL_TO") || env("EMAIL_TO") || "")
+    .split(/[,\s]+/)
+    .filter(Boolean);
+}
+
 function brandWrap(title, bodyHtml) {
   // Build reply address at runtime so it never appears in the repo
-  const replyTo = (process.env.SMTP_FROM || process.env.SMTP_USER || "support@empireaffiliatemarketinghub.com");
+  const replyTo = env("SMTP_FROM") || env("SMTP_USER") || "support@empireaffiliatemarketinghub.com";
   const safeReply = String(replyTo).replace(/@/g, "&#64;"); // obfuscate '@' for scrapers
 
   return `
@@ -22,28 +38,34 @@ function brandWrap(title, bodyHtml) {
 function payoutInitiated({ amount, ref, name }) {
   const title = "Payout Initiated";
   const body = `
-    <p>Hi ${name||"there"},</p>
+    <p>Hi ${name || "there"},</p>
     <p>Your payout of <b>₦${Number(amount).toLocaleString("en-NG")}</b> has been initiated.</p>
     <p>Reference: <code>${ref}</code></p>`;
-  return { subject: "Empire: Payout Initiated", html: brandWrap(title, body), text:
-`Payout initiated
+  return {
+    subject: "Empire: Payout Initiated",
+    html: brandWrap(title, body),
+    text: `Payout initiated
 Amount: ₦${amount}
-Ref: ${ref}` };
+Ref: ${ref}`
+  };
 }
 
 function payoutResult({ amount, ref, status, reason }) {
-  const ok = (String(status).toLowerCase()==="success");
+  const ok = (String(status).toLowerCase() === "success");
   const title = ok ? "Payout Successful" : "Payout Failed";
   const body = `
-    <p>Status: <b>${ok?"SUCCESS ✅":"FAILED ❌"}</b></p>
+    <p>Status: <b>${ok ? "SUCCESS ✅" : "FAILED ❌"}</b></p>
     <p>Amount: <b>₦${Number(amount).toLocaleString("en-NG")}</b></p>
     <p>Reference: <code>${ref}</code></p>
-    ${!ok && reason ? `<p>Reason: ${reason}</p>`: "" }`;
-  return { subject: `Empire: Payout ${ok?"Successful":"Failed"}`, html: brandWrap(title, body), text:
-`Payout ${ok?"Successful":"Failed"}
+    ${!ok && reason ? `<p>Reason: ${reason}</p>` : "" }`;
+  return {
+    subject: `Empire: Payout ${ok ? "Successful" : "Failed"}`,
+    html: brandWrap(title, body),
+    text: `Payout ${ok ? "Successful" : "Failed"}
 Amount: ₦${amount}
 Ref: ${ref}
-${reason?`Reason: ${reason}`:""}` };
+${reason ? `Reason: ${reason}` : ""}`
+  };
 }
 
 function bankVerify({ bank, account, name, ok }) {
@@ -52,12 +74,21 @@ function bankVerify({ bank, account, name, ok }) {
     <p>Bank: <b>${bank}</b></p>
     <p>Account: <b>${account}</b></p>
     <p>Name: <b>${name || "-"}</b></p>
-    <p>Status: <b>${ok?"SUCCESS ✅":"FAILED ❌"}</b></p>`;
-  return { subject: `Empire: Bank Verification ${ok?"Success":"Failed"}`, html: brandWrap(title, body), text:
-`Bank verification ${ok?"success":"failed"}
+    <p>Status: <b>${ok ? "SUCCESS ✅" : "FAILED ❌"}</b></p>`;
+  return {
+    subject: `Empire: Bank Verification ${ok ? "Success" : "Failed"}`,
+    html: brandWrap(title, body),
+    text: `Bank verification ${ok ? "success" : "failed"}
 Bank: ${bank}
 Account: ${account}
-Name: ${name||"-"}` };
+Name: ${name || "-"}`
+  };
 }
 
-module.exports = { payoutInitiated, payoutResult, bankVerify };
+module.exports = {
+  brandWrap,
+  payoutInitiated,
+  payoutResult,
+  bankVerify,
+  getAdminRecipients, // <-- use this in your mail sender
+};

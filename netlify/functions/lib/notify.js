@@ -27,7 +27,7 @@ async function notifyTelegram(text) {
 async function notifyWhatsApp(toPhoneE164, message) {
   const sid  = (process.env.TWILIO_ACCOUNT_SID || "").trim();
   const auth = (process.env.TWILIO_AUTH_TOKEN || "").trim();
-  const from = (process.env.TWILIO_WHATSAPP_FROM || "").trim(); // e.g. "whatsapp:+14155238886"
+  const from = (process.env.TWILIO_WHATSAPP_FROM || "").trim();
   if (!sid || !auth || !from) return { ok: false, error: "Twilio env vars not set" };
   if (!toPhoneE164) return { ok: false, error: "Missing recipient phone" };
 

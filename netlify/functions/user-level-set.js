@@ -1,50 +1,65 @@
 // netlify/functions/user-level-set.js
-import fetch from "node-fetch";
+"use strict";
 
-// We’ll store levels in Google Sheet (Users tab) for persistence
-// You already have GS_WEBAPP_KEY and GOOGLE_SHEETS_WEBAPP_URL available
+const fetch = (...args) => import("node-fetch").then(({ default: f }) => f(...args));
+const json = (s, b) => ({ statusCode: s, headers: { "content-type": "application/json" }, body: JSON.stringify(b) });
+const env = (k, d = "") => (process.env[k] ?? d);
 
-export default async (req, res) => {
+async function sendTelegram(text) {
+  const bot = env("TELEGRAM_BOT_TOKEN");
+  const chatId = env("TELEGRAM_CHAT_VALUE");
+  if (!bot || !chatId) return { ok: false, skipped: "telegram not configured" };
+  const url = `https://api.telegram.org/bot${bot}/sendMessage`;
+  const r = await fetch(url, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ chat_id: chatId, text, disable_web_page_preview: true }),
+  });
+  const data = await r.json().catch(() => ({}));
+  return { ok: !!data.ok, status: r.status, result: data };
+}
+
+async function setLevelOnSheets({ email, phone, newLevel, notes }) {
+  const webapp = env("GOOGLE_SHEETS_WEBAPP_URL");
+  if (!webapp) return { ok: false, error: "GOOGLE_SHEETS_WEBAPP_URL not set" };
+
+  const payload = {
+    action: "setLevel",
+    email: String(email || ""),
+    phone: String(phone || ""),
+    level: String(newLevel || ""),
+    notes: String(notes || ""),
+    at: new Date().toISOString(),
+  };
+
+  const res = await fetch(webapp, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+
+  const data = await res.json().catch(() => ({}));
+  return { ok: data?.ok === true, upstream: data };
+}
+
+exports.handler = async (event) => {
   try {
-    if (req.method === "OPTIONS") {
-      return res.setHeader("Access-Control-Allow-Origin", "*")
-        .setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-        .setHeader("Access-Control-Allow-Headers", "Content-Type")
-        .status(200).send("");
-    }
+    if (event.httpMethod !== "POST") return json(405, { ok: false, error: "POST only" });
 
-    const { phone, level } = req.body || {};
-    const sheet = "Users";
+    const body = JSON.parse(event.body || "{}");
+    const { email, phone, level, notes } = body;
 
-    if (req.method === "GET") {
-      // Query current level
-      const url = `${process.env.GOOGLE_SHEETS_WEBAPP_URL}?key=${process.env.GS_WEBAPP_KEY}&action=find&sheet=${sheet}&phone=${encodeURIComponent(req.query.phone || "")}`;
-      const r = await fetch(url);
-      const j = await r.json();
-      return res.json({ ok: true, level: j.level || 1 });
-    }
+    if (!email && !phone) return json(400, { ok: false, error: "email or phone is required" });
+    if (!level) return json(400, { ok: false, error: "level is required (e.g. 1x..5x or 10x)" });
 
-    if (req.method === "POST") {
-      if (!phone || !level) return res.status(400).json({ ok: false, error: "phone+level required" });
+    const gs = await setLevelOnSheets({ email, phone, newLevel: level, notes });
 
-      // Push to Sheet
-      const payload = {
-        action: "update",
-        sheet,
-        phone,
-        values: { level: level }
-      };
-      const r = await fetch(process.env.GOOGLE_SHEETS_WEBAPP_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
-      const j = await r.json();
-      return res.json({ ok: true, updated: j });
-    }
+    // Telegram audit trail
+    const who = email || phone;
+    const t = await sendTelegram(`🔧 Level change: ${who}\n➡️ ${level}${notes ? `\n📝 ${notes}` : ""}`);
 
-    return res.status(405).json({ ok: false, error: "Method not allowed" });
+    return json(200, { ok: true, results: { sheets: gs, telegram: t } });
   } catch (err) {
-    return res.status(500).json({ ok: false, error: String(err) });
+    return json(500, { ok: false, error: String(err) });
   }
 };

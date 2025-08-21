@@ -1,7 +1,7 @@
 // netlify/functions/lib/templates.js
 "use strict";
 
-// Resolve env at runtime — no secrets in source
+// Small helper to read env safely at runtime
 const env = (k, d = "") => (process.env?.[k] ?? d);
 
 /**
@@ -14,8 +14,11 @@ function getAdminRecipients() {
     .filter(Boolean);
 }
 
+/**
+ * Brand wrapper for HTML emails.
+ * Reply address is also resolved at runtime so nothing sensitive lives in the repo.
+ */
 function brandWrap(title, bodyHtml) {
-  // Build reply address at runtime so it never appears in the repo
   const replyTo = env("SMTP_FROM") || env("SMTP_USER") || "support@empireaffiliatemarketinghub.com";
   const safeReply = String(replyTo).replace(/@/g, "&#64;"); // obfuscate '@' for scrapers
 
@@ -35,6 +38,7 @@ function brandWrap(title, bodyHtml) {
   </div>`;
 }
 
+/** Payout initiated template */
 function payoutInitiated({ amount, ref, name }) {
   const title = "Payout Initiated";
   const body = `
@@ -50,6 +54,7 @@ Ref: ${ref}`
   };
 }
 
+/** Payout result template */
 function payoutResult({ amount, ref, status, reason }) {
   const ok = (String(status).toLowerCase() === "success");
   const title = ok ? "Payout Successful" : "Payout Failed";
@@ -68,6 +73,7 @@ ${reason ? `Reason: ${reason}` : ""}`
   };
 }
 
+/** Bank verification template */
 function bankVerify({ bank, account, name, ok }) {
   const title = ok ? "Bank Verification Success" : "Bank Verification Failed";
   const body = `
@@ -90,5 +96,5 @@ module.exports = {
   payoutInitiated,
   payoutResult,
   bankVerify,
-  getAdminRecipients, // <-- use this in your mail sender
+  getAdminRecipients, // used by mail sender to determine recipients at runtime
 };

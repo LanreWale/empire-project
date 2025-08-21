@@ -2,8 +2,10 @@
 "use strict";
 
 const axios = require("axios");
+const https = require("https");
+const { telegram, email, whatsapp } = require("./lib/notify");
 
-// small helpers
+// --- helpers ---------------------------------------------------------------
 const safeJSON = (s) => { try { return JSON.parse(s || "{}"); } catch { return {}; } };
 const json = (status, body) => ({
   statusCode: status,
@@ -11,26 +13,73 @@ const json = (status, body) => ({
   body: JSON.stringify(body),
 });
 
-// best-effort Telegram/WhatsApp/Email without crashing if a notifier is missing
-function buildNotifiers() {
+// single agent to disable keepAlive (avoids some TLS resets)
+const agent = new https.Agent({ keepAlive: false });
+
+async function appendViaBridge(values) {
+  const origin = process.env.URL || process.env.DEPLOY_PRIME_URL || process.env.DEPLOY_URL || "";
+  if (!origin) throw new Error("Missing site origin");
+  const gsBridge = `${origin.replace(/\/$/, "")}/.netlify/functions/gs-bridge`;
+
+  const r = await axios.post(
+    gsBridge,
+    { action: "append", sheet: "Performance_Report", values },
+    { timeout: 12000, httpsAgent: agent, headers: { Connection: "close" } }
+  );
+  return r.data;
+}
+
+async function appendDirectToAppsScript(values) {
+  const APP_URL = process.env.GOOGLE_SHEETS_WEBAPP_URL || "";
+  const KEY = process.env.GS_WEBAPP_KEY || "";
+  if (!APP_URL) throw new Error("GOOGLE_SHEETS_WEBAPP_URL not set");
+
+  // Apps Script prefers form-encoded
+  const params = new URLSearchParams();
+  params.set("action", "append");
+  params.set("sheet", "Performance_Report");
+  params.set("values", JSON.stringify(values));
+  if (KEY) params.set("key", KEY);
+
+  const r = await axios.post(APP_URL, params, {
+    timeout: 12000,
+    httpsAgent: agent,
+    headers: { "Content-Type": "application/x-www-form-urlencoded", Connection: "close" },
+    maxRedirects: 3,
+  });
+
+  // Some Apps Scripts return text
+  let data = r.data;
+  if (typeof data === "string") { try { data = JSON.parse(data); } catch {} }
+  return data;
+}
+
+async function resilientAppend(values) {
+  // 1) try bridge (HTTP/1.1 Connection: close)
   try {
-    const notify = require("./lib/notify");
-    const t = notify.telegram || notify.notifyTelegram;
-    const w = notify.whatsapp || notify.notifyWhatsApp;
-    const e = notify.email || notify.notifyEmail;
-    return { telegram: t, whatsapp: w, email: e };
-  } catch (e) {
-    return { telegram: null, whatsapp: null, email: null };
+    const d = await appendViaBridge(values);
+    if (d && d.ok) return { ok: true, via: "bridge", data: d };
+    throw new Error(d?.error || "bridge not ok");
+  } catch (e1) {
+    // 2) fallback to Apps Script directly
+    try {
+      const d2 = await appendDirectToAppsScript(values);
+      if (d2 && d2.ok) return { ok: true, via: "apps_script", data: d2 };
+      return { ok: false, via: "apps_script", error: String(d2?.error || e1?.message || e1) };
+    } catch (e2) {
+      return { ok: false, via: "apps_script", error: String(e2?.message || e2) };
+    }
   }
 }
 
+// --- handler ---------------------------------------------------------------
 exports.handler = async (event) => {
   try {
     if (event.httpMethod !== "POST") {
       return json(405, { ok: false, error: "Method not allowed" });
     }
 
-    // Optional gate (only if CMD_USER is set in env)
+    // Optional minimal auth
     const CMD_USER = process.env.CMD_USER || "";
     const headerUser = event.headers["x-cmd-user"] || event.headers["X-Cmd-User"] || "";
     if (CMD_USER && headerUser !== CMD_USER) {
@@ -38,108 +87,55 @@ exports.handler = async (event) => {
     }
 
     const body = safeJSON(event.body);
-    const email = String(body.email || "").trim();
-    const phone = String(body.phone || "").trim();
-    const level = String(body.level || "").trim(); // e.g., "1x".."5x"
-    const clicks = Number(body.clicks || 0);
-    const conversions = Number(body.conversions || 0);
-    const revenueUSD = Number(body.revenueUSD || 0);
-    const notes = String(body.notes || "").trim();
+    const {
+      email: userEmail = "",
+      clicks = 0,
+      conversions = 0,
+      revenueUSD = 0,
+      level = "",
+      notes = "",
+      phone = "",
+      notify = true
+    } = body;
 
-    if (!email && !phone) {
-      return json(400, { ok: false, error: "Missing email or phone" });
-    }
+    if (!userEmail) return json(400, { ok: false, error: "Missing email" });
 
-    // 1) Append to Google Sheets (Performance_Report) via gs-bridge (best-effort)
-    const siteOrigin = process.env.URL || process.env.DEPLOY_PRIME_URL || process.env.DEPLOY_URL || "";
-    let sheetsAppend = null;
-    if (siteOrigin) {
-      const gsBridge = `${siteOrigin.replace(/\/$/, "")}/.netlify/functions/gs-bridge`;
-      try {
-        const row = [
-          new Date().toISOString(),
-          email,
-          phone,
-          level || "1x",
-          clicks,
-          conversions,
-          revenueUSD,
-          notes
-        ];
-        const r = await axios.post(
-          gsBridge,
-          { action: "append", sheet: "Performance_Report", values: row },
-          { timeout: 15000 }
-        );
-        sheetsAppend = r.data || null;
-      } catch (e) {
-        sheetsAppend = { ok: false, error: String(e.message || e) };
+    const now = new Date().toISOString();
+    const values = [now, userEmail, String(clicks), String(conversions), String(revenueUSD), String(level), notes];
+
+    // Append with retry/fallback
+    const sheetAppend = await resilientAppend(values);
+
+    // Notifications (best-effort)
+    let tg = null, wa = null, mail = null;
+    if (notify) {
+      const line =
+        `📈 *Performance Log*\n` +
+        `Email: ${userEmail}\n` +
+        `Phone: ${phone || "—"}\n` +
+        `Level: ${level || "—"}\n` +
+        `Clicks: ${clicks}\n` +
+        `Conversions: ${conversions}\n` +
+        `Revenue: $${revenueUSD}\n` +
+        `Notes: ${notes || "—"}\n` +
+        `Time: ${now}`;
+
+      tg = await telegram(line).catch(err => ({ ok: false, error: String(err?.message || err) }));
+
+      if (phone && Number(conversions) > 0) {
+        wa = await whatsapp(phone,
+          `Empire update:\nConversions: ${conversions}\nRevenue: $${revenueUSD}\nGreat work!`
+        ).catch(err => ({ ok: false, error: String(err?.message || err) }));
       }
+
+      mail = await email({
+        to: process.env.EMAIL_TO || process.env.SMTP_FROM || "",
+        subject: `Performance • ${userEmail} • ${clicks}/${conversions} • $${revenueUSD}`,
+        text: line.replace(/\*|_/g, ""),
+      }).catch(err => ({ ok: false, error: String(err?.message || err) }));
     }
 
-    // 2) Notify ops on Telegram (optional)
-    const { telegram, whatsapp, email: emailNotify } = buildNotifiers();
-    const msg =
-      `📈 *Performance Log*\n` +
-      `Email: ${email || "—"}\n` +
-      `Phone: ${phone || "—"}\n` +
-      `Level: ${level || "—"}\n` +
-      `Clicks: ${clicks}\n` +
-      `Conversions: ${conversions}\n` +
-      `Revenue: $${revenueUSD}\n` +
-      (notes ? `Notes: ${notes}\n` : ``) +
-      `Time: ${new Date().toISOString()}`;
-
-    let tgResult = null;
-    if (typeof telegram === "function") {
-      try {
-        tgResult = await telegram(msg, { parse_mode: "Markdown" });
-      } catch (e) {
-        tgResult = { ok: false, error: String(e.message || e) };
-      }
-    }
-
-    // 3) (Optional) WhatsApp confirmation to user
-    let waResult = null;
-    if (phone && typeof whatsapp === "function") {
-      try {
-        waResult = await whatsapp(
-          phone,
-          `Empire: your performance log was received.\nClicks: ${clicks}, Conv: ${conversions}, Rev: $${revenueUSD}.`
-        );
-      } catch (e) {
-        waResult = { ok: false, error: String(e.message || e) };
-      }
-    }
-
-    // 4) (Optional) Email receipt to user
-    let mailResult = null;
-    if (email && typeof emailNotify === "function") {
-      try {
-        mailResult = await emailNotify({
-          to: email,
-          subject: "Empire Performance Log Receipt",
-          text:
-            `We received your performance log:\n\n` +
-            `Level: ${level || "—"}\n` +
-            `Clicks: ${clicks}\n` +
-            `Conversions: ${conversions}\n` +
-            `Revenue: $${revenueUSD}\n` +
-            (notes ? `Notes: ${notes}\n` : ``) +
-            `\n— Empire`
-        });
-      } catch (e) {
-        mailResult = { ok: false, error: String(e.message || e) };
-      }
-    }
-
-    return json(200, {
-      ok: true,
-      sheetAppend: sheetsAppend,
-      telegram: tgResult,
-      whatsapp: waResult,
-      email: mailResult,
-    });
+    return json(200, { ok: true, sheetAppend, telegram: tg, whatsapp: wa, email: mail });
   } catch (err) {
     return json(200, { ok: false, error: err.message || String(err) });
   }

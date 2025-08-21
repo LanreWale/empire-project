@@ -74,3 +74,13 @@ async function notifyEmail({ to, subject, text }) {
 }
 
 module.exports = { notifyTelegram, notifyWhatsApp, notifyEmail };
+
+if (!module.exports.telegram && module.exports.notifyTelegram) {
+  module.exports.telegram = module.exports.notifyTelegram;
+}
+if (!module.exports.whatsapp && module.exports.notifyWhatsApp) {
+  module.exports.whatsapp = module.exports.notifyWhatsApp;
+}
+if (!module.exports.email && module.exports.notifyEmail) {
+  module.exports.email = module.exports.notifyEmail;
+}

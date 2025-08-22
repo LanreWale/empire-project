@@ -1,84 +1,83 @@
 <!doctype html>
-<html>
+<html lang="en">
 <head>
   <meta charset="utf-8" />
+  <title>Empire – Access</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>The Empire — Secure Functions Demo</title>
+  <meta name="theme-color" content="#0b1220" />
   <style>
-    body{font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif;margin:2rem;max-width:860px}
-    button{padding:.7rem 1rem;border-radius:.6rem;border:1px solid #ddd;cursor:pointer}
-    input,select{padding:.6rem;border-radius:.5rem;border:1px solid #ccc;width:100%}
-    .row{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin:.6rem 0}
-    .card{border:1px solid #eee;border-radius:1rem;padding:1rem;margin:1rem 0;box-shadow:0 2px 8px rgba(0,0,0,.04)}
-    pre{background:#f8f8f8;padding:1rem;border-radius:.5rem;overflow:auto}
+    :root { --bg:#0b1220; --card:#111827; --muted:#97a0b6; --txt:#e7ecf7; --accent:#4bb1ff; }
+    *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--txt);font:16px/1.55 system-ui,Segoe UI,Roboto,Helvetica,Arial}
+    .wrap{max-width:760px;margin:0 auto;padding:20px}
+    .grid{display:grid;gap:16px}
+    .card{background:var(--card);border-radius:16px;box-shadow:0 6px 40px rgba(0,0,0,.25);padding:16px}
+    h1{margin:0 0 6px;font-size:22px}
+    h2{margin:0 0 8px;font-size:16px}
+    .muted{color:var(--muted)}
+    label{display:block;margin:10px 0 6px}
+    input,button,select{width:100%;padding:12px;border:0;border-radius:12px}
+    input{background:#0d1525;color:var(--txt);border:1px solid #22304e}
+    button{background:var(--accent);color:#051225;font-weight:700;cursor:pointer}
+    .row{display:grid;gap:12px;grid-template-columns:1fr 1fr}
+    .footer{color:#7d879b;text-align:center;margin:18px 0 4px;font-size:12px}
+    .hint{font-size:12px;color:var(--muted);margin-top:6px}
+    .linkish{display:inline-block;margin-top:8px;font-size:13px;color:#cfe1ff}
   </style>
 </head>
 <body>
-  <h1>⚔️ The Empire — Live Integrations</h1>
+  <div class="wrap grid">
+    <div class="card">
+      <h1>Empire Access</h1>
+      <div class="muted">Choose your path.</div>
+    </div>
 
-  <div class="card">
-    <h2>Sync Google Sheets</h2>
-    <button onclick="syncSheets()">Sync</button>
-    <pre id="sheetsOut"></pre>
+    <!-- Commander Login -->
+    <div class="card">
+      <h2>Commander Login</h2>
+      <label>Access Key (PIN)</label>
+      <input id="cmd_pin" placeholder="Enter PIN (matches Netlify CMD_USER)" />
+      <button id="btn_cmd">Enter Commander Console</button>
+      <div class="hint">We store your PIN locally (x-cmd-user) and never send it anywhere except function calls that require it.</div>
+    </div>
+
+    <!-- Approved User Login -->
+    <div class="card">
+      <h2>Approved User Login</h2>
+      <label>Email</label>
+      <input id="user_email" type="email" placeholder="email@example.com" />
+      <button id="btn_user">Enter My Dashboard</button>
+      <div class="hint">We keep your email in this device only to personalize your dashboard.</div>
+    </div>
+
+    <!-- New Onboarding -->
+    <div class="card">
+      <h2>New Onboarding</h2>
+      <div class="muted">Start with Login → T&amp;C → Registration Form.</div>
+      <a class="linkish" href="/login">Continue to Registration</a>
+    </div>
+
+    <div class="footer">© Empire Affiliate Marketing Hub</div>
   </div>
 
-  <div class="card">
-    <h2>Resolve Bank Account (Flutterwave)</h2>
-    <div class="row">
-      <div><label>Account Bank (code)</label><input id="bank" placeholder="044" /></div>
-      <div><label>Account Number</label><input id="acct" placeholder="0123456789" /></div>
-    </div>
-    <button onclick="resolveAcct()">Resolve</button>
-    <pre id="resolveOut"></pre>
-  </div>
+  <script>
+    // tiny helpers
+    const $ = (id) => document.getElementById(id);
 
-  <div class="card">
-    <h2>Initiate Transfer</h2>
-    <div class="row">
-      <div><label>Amount</label><input id="amt" type="number" placeholder="500" /></div>
-      <div><label>Currency</label><input id="ccy" value="NGN" /></div>
-    </div>
-    <div class="row">
-      <div><label>Bank Code</label><input id="tbank" placeholder="076" /></div>
-      <div><label>Account Number</label><input id="tacct" placeholder="1761413055" /></div>
-    </div>
-    <button onclick="doTransfer()">Transfer</button>
-    <pre id="transferOut"></pre>
-  </div>
+    // Commander path
+    $("btn_cmd").onclick = () => {
+      const pin = ($("cmd_pin").value || "").trim();
+      if (!pin) { alert("Please enter your PIN"); return; }
+      localStorage.setItem("empire_cmd_user", pin);   // used as x-cmd-user
+      location.href = "/admin/";                      // go to Commander Console
+    };
 
-<script>
-async function syncSheets(){
-  const r = await fetch('/.netlify/functions/sheets-sync');
-  const j = await r.json();
-  document.querySelector('#sheetsOut').textContent = JSON.stringify(j, null, 2);
-}
-
-async function resolveAcct(){
-  const account_bank = document.querySelector('#bank').value.trim();
-  const account_number = document.querySelector('#acct').value.trim();
-  const r = await fetch('/.netlify/functions/flw-resolve', {
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({ account_bank, account_number })
-  });
-  const t = await r.text();
-  document.querySelector('#resolveOut').textContent = t;
-}
-
-async function doTransfer(){
-  const amount = Number(document.querySelector('#amt').value);
-  const currency = document.querySelector('#ccy').value.trim() || 'NGN';
-  const account_bank = document.querySelector('#tbank').value.trim();
-  const account_number = document.querySelector('#tacct').value.trim();
-  const payload = { amount, currency, account_bank, account_number, narration:'Empire Payout' };
-  const r = await fetch('/.netlify/functions/flw-transfer', {
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body: JSON.stringify(payload)
-  });
-  const t = await r.text();
-  document.querySelector('#transferOut').textContent = t;
-}
-</script>
+    // Approved user path
+    $("btn_user").onclick = () => {
+      const email = ($("user_email").value || "").trim();
+      if (!email || !email.includes("@")) { alert("Enter a valid email"); return; }
+      localStorage.setItem("empire_user_email", email);
+      location.href = "/app/";                        // go to user dashboard
+    };
+  </script>
 </body>
 </html>

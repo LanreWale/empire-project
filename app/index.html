@@ -37,6 +37,8 @@
     .ok{background:#0f2b21;border:1px solid #166c4a;color:#b9f4d8}
     .bad{background:#2a1414;border:1px solid #944040;color:#ffd6d5}
     .footer{color:#7d879b;text-align:center;margin:18px 0 4px;font-size:12px}
+
+    /* Brand hero */
     .brand-hero {
       position: relative; border-radius: 18px; overflow: hidden; padding: 16px 18px; margin-bottom: 14px;
       background: linear-gradient(180deg, rgba(75,177,255,.20), rgba(24,178,107,.12)), url("/app/assets/brand/bg-texture.png");
@@ -80,7 +82,7 @@
       <!-- Commander Login -->
       <div id="paneCommander">
         <label>Admin PIN (CMD_USER)</label>
-        <input id="pin" placeholder="Enter your Commander PIN" />
+        <input id="pin" placeholder="Enter your Commander PIN" autocomplete="one-time-code" />
         <button id="btnCommander">Enter Commander Console</button>
         <div id="msgCmd" class="msg" style="display:none"></div>
         <div class="muted" style="margin-top:8px;font-size:12px">
@@ -91,7 +93,7 @@
       <!-- User Login -->
       <div id="paneUser" style="display:none">
         <label>Email</label>
-        <input id="user_email" placeholder="you@example.com" type="email" />
+        <input id="user_email" placeholder="you@example.com" type="email" autocomplete="email" />
         <button id="btnUser">Go to User Dashboard</button>
         <div id="msgUser" class="msg" style="display:none"></div>
         <div class="muted" style="margin-top:8px;font-size:12px">
@@ -127,7 +129,8 @@
     const $ = (id) => document.getElementById(id);
     const qs = new URLSearchParams(location.search);
     const token = qs.get("i") || qs.get("code") || ""; // supports ?i= and ?code=
-    const JOIN_BASE = "https://join.empireaffiliatemarketinghub.com"; // public, not a secret
+    // Public join app base (no secrets involved)
+    const JOIN_BASE = "https://join.empireaffiliatemarketinghub.com";
 
     // Local storage keys
     const LS_CMD = "empire_cmd_user";
@@ -185,10 +188,9 @@
       setTimeout(() => location.href = "/app/user.html", 500);
     };
 
-    // T&C flow
+    // T&C flow (only when invite token present)
     $("btnAccept").onclick = () => {
       if (!token) return;
-      // Route to registration login screen with token
       const u = new URL(JOIN_BASE.replace(/\/$/,"") + "/login");
       u.searchParams.set("i", token);
       location.href = u.toString();

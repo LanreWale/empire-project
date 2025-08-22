@@ -5,12 +5,12 @@
   <title>Empire – Commander Console</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <!-- Favicons & Social (static; no secrets) -->
+  <!-- Favicons & Social -->
   <link rel="icon" href="/app/assets/brand/logo.svg" type="image/svg+xml">
   <meta name="theme-color" content="#0b1220">
   <meta property="og:title" content="Empire – Commander Console">
   <meta property="og:description" content="Mobile-first controls for Invites, Approvals, Levels & Performance.">
-  <meta property="og:image" content="/app/assets/brand/logo.svg">
+  <meta property="og:image" content="https://empireaffiliatemarketinghub.com/app/assets/brand/logo.svg">
 
   <style>
     :root {
@@ -19,25 +19,20 @@
     }
     *{box-sizing:border-box}
     body{margin:0;background:var(--bg);color:var(--txt);font:15px/1.55 system-ui,Segoe UI,Roboto,Helvetica,Arial}
-    .wrap{max-width:880px;margin:0 auto;padding:18px}
+    .wrap{max-width:760px;margin:0 auto;padding:18px}
     .grid{display:grid;gap:14px}
-    .card{background:var(--card);border-radius:14px;box-shadow:0 6px 40px rgba(0,0,0,.25);padding:16px}
-    h1{margin:0 0 8px;font-size:22px;letter-spacing:.2px}
-    h2{margin:0 0 10px;font-size:16px}
+    .card{background:var(--card);border-radius:14px;box-shadow:0 6px 40px rgba(0,0,0,.25);padding:14px}
+    h1{margin:0 0 6px;font-size:20px}
+    h2{margin:0 0 8px;font-size:16px}
     .muted{color:var(--muted)}
     label{display:block;margin:10px 0 6px;font-size:13px}
     input,select,textarea{
-      width:100%;padding:12px 12px;border:1px solid #22304e;background:#0d1525;
-      color:var(--txt);border-radius:10px;outline:none
+      width:100%;padding:12px 12px;border:1px solid #22304e;background:#0d1525;color:var(--txt);border-radius:10px;
     }
     textarea{min-height:84px;resize:vertical}
-    button{
-      width:100%;padding:12px 14px;border:0;border-radius:12px;background:var(--accent);
-      color:#051225;font-weight:700;cursor:pointer
-    }
+    button{width:100%;padding:12px 14px;border:0;border-radius:12px;background:var(--accent);color:#051225;font-weight:700;cursor:pointer}
     .row{display:grid;gap:10px;grid-template-columns:1fr 1fr}
-    @media (max-width:720px){ .row{grid-template-columns:1fr} }
-    .msg{padding:10px 12px;border-radius:12px;margin:10px 0 0;font-size:13px;white-space:pre-wrap}
+    .msg{padding:10px 12px;border-radius:12px;margin:8px 0;font-size:13px}
     .ok{background:#0f2b21;border:1px solid #166c4a;color:#b9f4d8}
     .bad{background:#2a1414;border:1px solid #944040;color:#ffd6d5}
     .pill{display:inline-block;padding:4px 8px;border-radius:999px;background:#0d1a2a;color:#cfe1ff;border:1px solid #2a3d5c;font-size:12px}
@@ -45,304 +40,167 @@
     .small{font-size:12px}
     .footer{color:#7d879b;text-align:center;margin:18px 0 4px;font-size:12px}
 
-    /* === Brand hero / header === */
+    /* === Branding === */
     .brand-hero {
-      position:relative;border-radius:18px;overflow:hidden;padding:16px 18px;margin-bottom:14px;
-      background:linear-gradient(180deg, rgba(75,177,255,.20), rgba(24,178,107,.12)),
-                 url("/app/assets/brand/bg-texture.png");
-      background-size:cover;background-position:center;outline:1px solid #1b2740;
+      position: relative;
+      border-radius: 18px;
+      overflow: hidden;
+      padding: 16px 18px;
+      margin-bottom: 14px;
+      background:
+        linear-gradient(180deg, rgba(75,177,255,.20), rgba(24,178,107,.12)),
+        url("/app/assets/brand/bg-texture.png");
+      background-size: cover;
+      background-position: center;
+      outline: 1px solid #1b2740;
     }
-    .brandbar{display:flex;align-items:center;gap:14px}
-    .brandlogo{width:150px;height:auto;display:block}
-    .brand-hero .subtitle{margin-top:6px;color:#b9c3d9;font-size:13px}
-    .brand-hero .actions{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
-    .ghost{background:#334155;color:#dbe4f7;border:0;border-radius:10px;padding:10px 12px;cursor:pointer}
-    .watermark{position:absolute;right:10px;bottom:10px;opacity:.07;pointer-events:none;user-select:none}
-    .watermark img{width:120px;height:auto;display:block}
-
-    /* Section header row */
-    .section-head{display:flex;gap:10px;align-items:center;justify-content:space-between;margin-bottom:6px}
-    .section-head .tiny{font-size:12px;color:#9fb1d2}
-    .links{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
-    .links a{color:#cfe1ff;text-decoration:underline;font-size:12px}
+    .brand-hero .brandbar { display:flex; align-items:center; gap:12px; }
+    .brand-hero img.brandlogo { width: 140px; height:auto; display:block; }
+    .brand-hero .tag {
+      margin-left:auto;
+      background:#0d1a2a; border:1px solid #2a3d5c;
+      color:#cfe1ff; border-radius:999px; padding:6px 10px; font-size:12px;
+    }
+    .brand-hero .subtitle { margin-top:8px; color:#b9c3d9; font-size:13px; }
+    .brand-watermark { position:absolute; right:10px; bottom:10px; opacity:.07; }
+    .brand-watermark img { width:120px; }
+    button.primary { background:linear-gradient(135deg, #4bb1ff, #34d399); }
+    button.ghost { background:#334155; color:#dbe4f7; width:auto; }
   </style>
 </head>
 <body>
   <div class="wrap grid">
 
-    <!-- BRAND HEADER -->
+    <!-- Branding header -->
     <div class="brand-hero">
       <div class="brandbar">
         <img src="/app/assets/brand/logo.svg" alt="Empire Hub" class="brandlogo" />
-        <div>
-          <div style="font-weight:700;font-size:18px">Empire Affiliate Marketing Hub</div>
-          <div class="subtitle">Commander Console • Invites • Approvals • Levels • Performance</div>
-          <div class="links">
-            <a href="/" title="Login Hub">← Back to Login</a>
-            <a href="/app/user.html" title="User dashboard">User Dashboard</a>
-            <a href="mailto:info@empireaffiliatemarketinghub.com">Contact Support</a>
-          </div>
-        </div>
-        <div class="actions">
-          <button id="btnCopyApiBase" class="ghost" title="Copy API base">Copy API Base</button>
-          <button id="btnClearPin" class="ghost" title="Clear Admin PIN">Clear PIN</button>
-        </div>
+        <span class="tag">Commander Console</span>
       </div>
+      <div class="subtitle">Mobile-first controls for Invites, Approvals, Levels & Performance.</div>
+      <div class="brand-watermark">
+        <img src="/app/assets/brand/watermark.svg" alt="Empire watermark">
+      </div>
+    </div>
 
-      <!-- PIN row -->
-      <div class="flex" style="margin-top:10px;gap:10px">
+    <!-- PIN row -->
+    <div class="card">
+      <h1>Commander Console <span class="pill">Empire</span></h1>
+      <div class="muted small">PIN authenticates secure actions.</div>
+      <div id="pinRow" class="flex" style="margin-top:10px;gap:10px">
         <input id="pin" placeholder="Admin PIN (CMD_USER)" />
-        <button id="savePin" class="ghost">Save PIN</button>
+        <button id="savePin" class="ghost">Save</button>
+        <button id="clearPin" class="ghost">Clear</button>
       </div>
-      <div id="pinStatus" class="small muted" style="margin-top:6px"></div>
-
-      <div class="watermark"><img src="/app/assets/brand/watermark.svg" alt=""></div>
+      <div id="pinStatus" class="small muted" style="margin-top:8px"></div>
     </div>
 
-    <!-- CREATE INVITE -->
+    <!-- Create Invite -->
     <div class="card">
-      <div class="section-head">
-        <h2>Create Invite</h2>
-        <span class="tiny">Short links auto-map to <code>/i/&lt;token&gt;</code></span>
+      <h2>Create Invite</h2>
+      <div class="row">
+        <div><label>Name</label><input id="inv_name" placeholder="Full name" /></div>
+        <div><label>Email</label><input id="inv_email" type="email" placeholder="email@example.com" /></div>
       </div>
       <div class="row">
-        <div>
-          <label>Name</label>
-          <input id="inv_name" placeholder="Full name" />
-        </div>
-        <div>
-          <label>Email</label>
-          <input id="inv_email" placeholder="email@example.com" type="email" />
-        </div>
+        <div><label>Phone (WhatsApp, optional)</label><input id="inv_phone" placeholder="+23480..." /></div>
+        <div><label>Telegram (optional)</label><input id="inv_tg" placeholder="@username" /></div>
       </div>
-      <div class="row">
-        <div>
-          <label>Phone (WhatsApp, optional)</label>
-          <input id="inv_phone" placeholder="+23480..." />
-        </div>
-        <div>
-          <label>Telegram (optional)</label>
-          <input id="inv_tg" placeholder="@username" />
-        </div>
-      </div>
-      <button id="btnInvite">Generate Invite</button>
-      <div id="inviteMsg" class="msg" style="display:none"></div>
+      <button id="btnInvite" class="primary">Generate Invite</button>
+      <div id="inviteMsg"></div>
     </div>
 
-    <!-- APPROVE USER -->
+    <!-- Approve User -->
     <div class="card">
-      <div class="section-head">
-        <h2>Approve User</h2>
-        <span class="tiny">Sends WhatsApp + Telegram alerts (if configured)</span>
+      <h2>Approve User</h2>
+      <div class="row">
+        <div><label>Name</label><input id="appr_name" placeholder="Full name" /></div>
+        <div><label>Email</label><input id="appr_email" type="email" placeholder="email@example.com" /></div>
       </div>
       <div class="row">
-        <div>
-          <label>Name</label>
-          <input id="appr_name" placeholder="Full name" />
-        </div>
-        <div>
-          <label>Email</label>
-          <input id="appr_email" placeholder="email@example.com" type="email" />
-        </div>
-      </div>
-      <div class="row">
-        <div>
-          <label>Phone (WhatsApp)</label>
-          <input id="appr_phone" placeholder="+234803..." />
-        </div>
+        <div><label>Phone</label><input id="appr_phone" placeholder="+234803..." /></div>
         <div>
           <label>Approve?</label>
-          <select id="appr_approve">
-            <option value="true" selected>Approve</option>
-            <option value="false">Reject</option>
-          </select>
+          <select id="appr_approve"><option value="true">Approve</option><option value="false">Reject</option></select>
         </div>
       </div>
-      <button id="btnApprove">Send Approval</button>
-      <div id="apprMsg" class="msg" style="display:none"></div>
+      <button id="btnApprove" class="primary">Send Approval</button>
+      <div id="apprMsg"></div>
     </div>
 
-    <!-- SET USER LEVEL -->
+    <!-- Set User Level -->
     <div class="card">
-      <div class="section-head">
-        <h2>Set User Level</h2>
-        <span class="tiny">1x–5x for users • 10x Commander • 0x Suspended</span>
-      </div>
+      <h2>Set User Level</h2>
       <div class="row">
-        <div>
-          <label>Email</label>
-          <input id="lvl_email" placeholder="user@example.com" type="email" />
-        </div>
+        <div><label>Email</label><input id="lvl_email" type="email" placeholder="user@example.com" /></div>
         <div>
           <label>Level</label>
-          <select id="lvl_level">
-            <option>1x</option><option>2x</option><option>3x</option><option>4x</option><option>5x</option>
-            <option>10x (Commander)</option>
-            <option>0x (Suspended)</option>
-          </select>
+          <select id="lvl_level"><option>1x</option><option>2x</option><option>3x</option><option>4x</option><option>5x</option><option>10x</option><option>0x</option></select>
         </div>
       </div>
-      <label>Reason / Note</label>
-      <input id="lvl_reason" placeholder="e.g., performance upgrade" />
-      <button id="btnLevel">Apply Level</button>
-      <div id="lvlMsg" class="msg" style="display:none"></div>
+      <label>Reason / Note</label><input id="lvl_reason" placeholder="e.g., performance upgrade" />
+      <button id="btnLevel" class="primary">Apply Level</button>
+      <div id="lvlMsg"></div>
     </div>
 
-    <!-- LOG PERFORMANCE -->
+    <!-- Log Performance -->
     <div class="card">
-      <div class="section-head">
-        <h2>Log Performance</h2>
-        <span class="tiny">Appends to <code>Performance_Report</code> + notifies</span>
-      </div>
+      <h2>Log Performance</h2>
       <div class="row">
+        <div><label>Email</label><input id="perf_email" type="email" placeholder="user@example.com" /></div>
         <div>
-          <label>Email</label>
-          <input id="perf_email" placeholder="user@example.com" />
-        </div>
-        <div>
-          <label>Level Snapshot</label>
-          <select id="perf_level">
-            <option>1x</option><option>2x</option><option>3x</option><option>4x</option><option>5x</option><option>10x</option>
-          </select>
+          <label>Level</label>
+          <select id="perf_level"><option>1x</option><option>2x</option><option>3x</option><option>4x</option><option>5x</option><option>10x</option></select>
         </div>
       </div>
       <div class="row">
-        <div>
-          <label>Clicks</label>
-          <input id="perf_clicks" type="number" inputmode="numeric" value="0" />
-        </div>
-        <div>
-          <label>Conversions</label>
-          <input id="perf_conversions" type="number" inputmode="numeric" value="0" />
-        </div>
+        <div><label>Clicks</label><input id="perf_clicks" type="number" value="0" /></div>
+        <div><label>Conversions</label><input id="perf_conversions" type="number" value="0" /></div>
       </div>
       <div class="row">
-        <div>
-          <label>Revenue (USD)</label>
-          <input id="perf_revenue" type="number" step="0.01" value="0" />
-        </div>
+        <div><label>Revenue (USD)</label><input id="perf_revenue" type="number" step="0.01" value="0" /></div>
         <div>
           <label>Notify</label>
-          <select id="perf_notify">
-            <option value="true" selected>Yes</option>
-            <option value="false">No</option>
-          </select>
+          <select id="perf_notify"><option value="true">Yes</option><option value="false">No</option></select>
         </div>
       </div>
-      <label>Notes</label>
-      <textarea id="perf_notes" placeholder="e.g., evening push"></textarea>
-      <label>WhatsApp (optional)</label>
-      <input id="perf_phone" placeholder="+234803..." />
-      <button id="btnPerf">Record Performance</button>
-      <div id="perfMsg" class="msg" style="display:none"></div>
+      <label>Notes</label><textarea id="perf_notes"></textarea>
+      <button id="btnPerf" class="primary">Record Performance</button>
+      <div id="perfMsg"></div>
     </div>
 
     <div class="footer">© Empire Affiliate Marketing Hub</div>
   </div>
 
   <script>
-    // ---------- Helpers ----------
-    const $ = (id) => document.getElementById(id);
-    const safeJson = (s) => { try { return JSON.parse(s || "{}"); } catch { return {}; } };
-    const escapeHTML = (s) => String(s).replace(/[&<>]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[ch]));
+    const $ = id => document.getElementById(id);
 
-    // PIN / header management
-    const LS_CMD = "empire_cmd_user";
-    const getPIN = () => localStorage.getItem(LS_CMD) || "";
-    const setPIN = (v) => localStorage.setItem(LS_CMD, v || "");
-    const headerAuth = () => { const p=getPIN(); return p ? { "x-cmd-user": p } : {}; };
+    // PIN management
+    function getPIN(){ return localStorage.getItem("empire_cmd_user") || ""; }
+    function setPIN(v){ localStorage.setItem("empire_cmd_user", v || ""); }
+    function headerAuth(){ const p=getPIN(); return p?{ "x-cmd-user": p }:{}; }
 
-    const setMsg = (el, ok, html) => {
-      el.style.display = "";
-      el.className = "msg " + (ok ? "ok" : "bad");
-      el.innerHTML = html;
-    };
+    function setMsg(el, ok, html){ el.className="msg "+(ok?"ok":"bad"); el.innerHTML=html; }
 
-    const callJSON = async (path, body, msgEl) => {
-      try {
-        const headers = { "content-type": "application/json", ...headerAuth() };
-        const r = await fetch(path, { method: "POST", headers, body: JSON.stringify(body || {}) });
-        const data = await r.json();
-        setMsg(msgEl, data.ok !== false, `<pre>${escapeHTML(JSON.stringify(data, null, 2))}</pre>`);
-      } catch (e) {
-        setMsg(msgEl, false, escapeHTML(String(e)));
-      }
-    };
+    $("savePin").onclick=()=>{ setPIN($("pin").value.trim()); $("pinStatus").textContent="PIN saved."; };
+    $("clearPin").onclick=()=>{ setPIN(""); $("pin").value=""; $("pinStatus").textContent="PIN cleared."; };
+    window.addEventListener("DOMContentLoaded",()=>{ $("pin").value=getPIN(); });
 
-    // ---------- Init ----------
-    window.addEventListener("DOMContentLoaded", () => {
-      $("pin").value = getPIN();
-      $("pinStatus").textContent = getPIN() ? "PIN loaded." : "No PIN saved.";
-    });
+    async function callJSON(path, body, msgEl){
+      try{
+        const headers={ "content-type":"application/json", ...headerAuth() };
+        const r=await fetch(path,{method:"POST",headers,body:JSON.stringify(body||{})});
+        const data=await r.json();
+        setMsg(msgEl,data.ok!==false,`<pre>${escapeHTML(JSON.stringify(data,null,2))}</pre>`);
+      }catch(e){ setMsg(msgEl,false,escapeHTML(String(e))); }
+    }
 
-    // ---------- PIN actions ----------
-    $("savePin").onclick = () => {
-      setPIN(($("pin").value || "").trim());
-      $("pinStatus").textContent = "PIN saved (sent as x-cmd-user header).";
-    };
-    $("btnClearPin").onclick = () => {
-      setPIN("");
-      $("pin").value = "";
-      $("pinStatus").textContent = "PIN cleared.";
-    };
-    $("btnCopyApiBase").onclick = async () => {
-      try {
-        const base = location.origin;
-        await navigator.clipboard.writeText(base + "/.netlify/functions/");
-        $("pinStatus").textContent = "API base copied.";
-      } catch { $("pinStatus").textContent = "Copy failed (clipboard not allowed)."; }
-    };
+    function escapeHTML(s){ return s.replace(/[&<>]/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[ch])); }
 
-    // ---------- Create invite ----------
-    $("btnInvite").onclick = () => {
-      const body = {
-        name: $("inv_name").value.trim(),
-        email: $("inv_email").value.trim(),
-        phone: $("inv_phone").value.trim(),
-        telegramHandle: $("inv_tg").value.trim()
-      };
-      $("inviteMsg").style.display="none";
-      callJSON("/.netlify/functions/invite-create", body, $("inviteMsg"));
-    };
-
-    // ---------- Approve user ----------
-    $("btnApprove").onclick = () => {
-      const body = {
-        name: $("appr_name").value.trim(),
-        email: $("appr_email").value.trim(),
-        phone: $("appr_phone").value.trim(),
-        approve: $("appr_approve").value === "true"
-      };
-      $("apprMsg").style.display="none";
-      callJSON("/.netlify/functions/approve-user", body, $("apprMsg"));
-    };
-
-    // ---------- Set Level ----------
-    $("btnLevel").onclick = () => {
-      const body = {
-        email: $("lvl_email").value.trim(),
-        level: $("lvl_level").value.trim(),
-        reason: $("lvl_reason").value.trim()
-      };
-      $("lvlMsg").style.display="none";
-      callJSON("/.netlify/functions/user-level-set", body, $("lvlMsg"));
-    };
-
-    // ---------- Log Performance ----------
-    $("btnPerf").onclick = () => {
-      const body = {
-        email: $("perf_email").value.trim(),
-        clicks: Number($("perf_clicks").value || 0),
-        conversions: Number($("perf_conversions").value || 0),
-        revenueUSD: Number($("perf_revenue").value || 0),
-        level: $("perf_level").value.trim(),
-        notes: $("perf_notes").value.trim(),
-        phone: $("perf_phone").value.trim(),
-        notify: $("perf_notify").value === "true"
-      };
-      $("perfMsg").style.display="none";
-      callJSON("/.netlify/functions/log-performance", body, $("perfMsg"));
-    };
+    $("btnInvite").onclick=()=>callJSON("/.netlify/functions/invite-create",{name:$("inv_name").value,email:$("inv_email").value,phone:$("inv_phone").value,telegramHandle:$("inv_tg").value},$("inviteMsg"));
+    $("btnApprove").onclick=()=>callJSON("/.netlify/functions/approve-user",{name:$("appr_name").value,email:$("appr_email").value,phone:$("appr_phone").value,approve:$("appr_approve").value==="true"},$("apprMsg"));
+    $("btnLevel").onclick=()=>callJSON("/.netlify/functions/user-level-set",{email:$("lvl_email").value,level:$("lvl_level").value,reason:$("lvl_reason").value},$("lvlMsg"));
+    $("btnPerf").onclick=()=>callJSON("/.netlify/functions/log-performance",{email:$("perf_email").value,clicks:Number($("perf_clicks").value),conversions:Number($("perf_conversions").value),revenueUSD:Number($("perf_revenue").value),level:$("perf_level").value,notes:$("perf_notes").value,notify:$("perf_notify").value==="true"},$("perfMsg"));
   </script>
 </body>
 </html>

@@ -11,7 +11,7 @@
     }
     *{box-sizing:border-box}
     body{margin:0;background:var(--bg);color:var(--txt);font:15px/1.55 system-ui,Segoe UI,Roboto,Helvetica,Arial}
-    .wrap{max-width:760px;margin:0 auto;padding:18px}
+    .wrap{max-width:860px;margin:0 auto;padding:20px}
     .grid{display:grid;gap:14px}
     .card{background:var(--card);border-radius:14px;box-shadow:0 6px 40px rgba(0,0,0,.25);padding:14px}
     h1{margin:0 0 6px;font-size:20px}
@@ -26,23 +26,25 @@
       width:100%;padding:12px 14px;border:0;border-radius:12px;background:var(--accent);color:#051225;font-weight:700;cursor:pointer
     }
     .row{display:grid;gap:10px;grid-template-columns:1fr 1fr}
-    .msg{padding:10px 12px;border-radius:12px;margin:8px 0;font-size:13px}
+    .msg{padding:10px 12px;border-radius:12px;margin:8px 0;font-size:13px;white-space:pre-wrap}
     .ok{background:#0f2b21;border:1px solid #166c4a;color:#b9f4d8}
     .bad{background:#2a1414;border:1px solid #944040;color:#ffd6d5}
     .pill{display:inline-block;padding:4px 8px;border-radius:999px;background:#0d1a2a;color:#cfe1ff;border:1px solid #2a3d5c;font-size:12px}
-    .flex{display:flex;gap:8px;align-items:center}
+    .flex{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
     .small{font-size:12px}
     .hr{height:1px;background:#1b2740;margin:14px 0}
     .footer{color:#7d879b;text-align:center;margin:18px 0 4px;font-size:12px}
+    code{background:#091223;border:1px solid #1b2b4a;padding:2px 6px;border-radius:8px}
   </style>
 </head>
 <body>
   <div class="wrap grid">
 
+    <!-- Header / PIN -->
     <div class="card">
       <h1>Commander Console <span class="pill">Empire</span></h1>
       <div class="muted small">Mobile-first controls for Invites, Approvals, Levels & Performance.</div>
-      <div id="pinRow" class="flex" style="margin-top:10px;gap:10px">
+      <div class="flex" style="margin-top:10px;gap:10px">
         <input id="pin" placeholder="Admin PIN (CMD_USER)" />
         <button id="savePin" style="width:auto">Save</button>
         <button id="clearPin" style="width:auto;background:#334155;color:#dbe4f7">Clear</button>
@@ -50,6 +52,7 @@
       <div id="pinStatus" class="small muted" style="margin-top:8px"></div>
     </div>
 
+    <!-- Create Invite -->
     <div class="card">
       <h2>Create Invite</h2>
       <div class="row">
@@ -69,14 +72,14 @@
         </div>
         <div>
           <label>Telegram (optional)</label>
-          <!-- placeholder will be injected at runtime -->
-          <input id="inv_tg" placeholder="Telegram handle" />
+          <input id="inv_tg" placeholder="@channel_handle" />
         </div>
       </div>
       <button id="btnInvite">Generate Invite</button>
       <div id="inviteMsg"></div>
     </div>
 
+    <!-- Approve User -->
     <div class="card">
       <h2>Approve User</h2>
       <div class="row">
@@ -106,6 +109,7 @@
       <div id="apprMsg"></div>
     </div>
 
+    <!-- Set Level -->
     <div class="card">
       <h2>Set User Level</h2>
       <div class="row">
@@ -132,6 +136,7 @@
       <div id="lvlMsg"></div>
     </div>
 
+    <!-- Log Performance -->
     <div class="card">
       <h2>Log Performance</h2>
       <div class="row">
@@ -164,8 +169,8 @@
         <div>
           <label>Notify</label>
           <select id="perf_notify">
-            <option value="true" selected>Yes</option>
-            <option value="false">No</option>
+            <option value="true">Yes</option>
+            <option value="false" selected>No</option>
           </select>
         </div>
       </div>
@@ -175,6 +180,42 @@
       <input id="perf_phone" placeholder="+234803..." />
       <button id="btnPerf">Record Performance</button>
       <div id="perfMsg"></div>
+    </div>
+
+    <!-- 🔥 One-click Smoke Test -->
+    <div class="card">
+      <h2>One-click Smoke Test</h2>
+      <div class="small muted">Runs: Invite → Verify → Set Level → Log Performance → GS Bridge. Uses test data; no WhatsApp/Telegram spam.</div>
+      <div class="hr"></div>
+      <div class="row">
+        <div>
+          <label>Test Email</label>
+          <input id="smoke_email" value="qa@example.com" />
+        </div>
+        <div>
+          <label>Test Level</label>
+          <select id="smoke_level">
+            <option>2x</option><option>3x</option><option>4x</option><option>5x</option>
+          </select>
+        </div>
+      </div>
+      <button id="btnSmoke">Run Smoke Test</button>
+      <div id="smokeMsg" class="msg"></div>
+
+      <div class="hr"></div>
+      <div class="small muted">Optionally test approval (sends messages):</div>
+      <div class="row">
+        <div>
+          <label>Approval Name</label>
+          <input id="sm_appr_name" value="QA User" />
+        </div>
+        <div>
+          <label>Approval Phone (WhatsApp)</label>
+          <input id="sm_appr_phone" placeholder="+234803..." />
+        </div>
+      </div>
+      <button id="btnSmokeApprove">Test Approve User</button>
+      <div id="smokeApprMsg" class="msg"></div>
     </div>
 
     <div class="footer">© Empire Affiliate Marketing Hub</div>
@@ -192,6 +233,8 @@
       el.className = "msg " + (ok ? "ok" : "bad");
       el.innerHTML = html;
     }
+    function line(ok, text){ return (ok? "✅ " : "❌ ") + text; }
+    function escapeHTML(s){ return String(s).replace(/[&<>]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[ch])); }
 
     $("savePin").onclick = () => {
       setPIN($("pin").value.trim());
@@ -218,8 +261,6 @@
       }
     }
 
-    function escapeHTML(s){ return String(s).replace(/[&<>]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[ch])); }
-
     // Create invite
     $("btnInvite").onclick = () => {
       const body = {
@@ -245,4 +286,108 @@
     // Set Level
     $("btnLevel").onclick = () => {
       const body = {
-        email:
+        email: $("lvl_email").value.trim(),
+        level: $("lvl_level").value.trim(),
+        reason: $("lvl_reason").value.trim()
+      };
+      callJSON("/.netlify/functions/user-level-set", body, $("lvlMsg"));
+    };
+
+    // Log Performance
+    $("btnPerf").onclick = () => {
+      const body = {
+        email: $("perf_email").value.trim(),
+        clicks: Number($("perf_clicks").value || 0),
+        conversions: Number($("perf_conversions").value || 0),
+        revenueUSD: Number($("perf_revenue").value || 0),
+        level: $("perf_level").value.trim(),
+        notes: $("perf_notes").value.trim(),
+        phone: $("perf_phone").value.trim(),
+        notify: $("perf_notify").value === "true"
+      };
+      callJSON("/.netlify/functions/log-performance", body, $("perfMsg"));
+    };
+
+    // ---------- ONE-CLICK SMOKE TEST ----------
+    $("btnSmoke").onclick = async () => {
+      const out = [];
+      const email = $("smoke_email").value.trim() || "qa@example.com";
+      const level = $("smoke_level").value.trim() || "2x";
+      const headers = { "content-type": "application/json", ...headerAuth() };
+
+      try {
+        // 1) invite-create
+        let r = await fetch("/.netlify/functions/invite-create", {
+          method: "POST", headers,
+          body: JSON.stringify({ name: "QA", email })
+        });
+        let data = await r.json();
+        out.push(line(data.ok !== false, "invite-create"));
+        if (!data.inviteUrl) throw new Error("No inviteUrl returned");
+        // token can be at /i/<token> or /login?i=<token>
+        let token = "";
+        try {
+          const url = new URL(data.inviteUrl);
+          token = url.searchParams.get("i") || url.pathname.split("/").pop();
+        } catch { token = ""; }
+        if (!token) throw new Error("Could not parse token");
+        out.push("• token: " + token.slice(0,24) + "...");
+
+        // 2) invite-verify (code=<token>)
+        r = await fetch(`/.netlify/functions/invite-verify?code=${encodeURIComponent(token)}`);
+        data = await r.json();
+        out.push(line(data.ok === true, "invite-verify"));
+
+        // 3) user-level-set
+        r = await fetch("/.netlify/functions/user-level-set", {
+          method: "POST", headers,
+          body: JSON.stringify({ email, level, reason: "smoke test" })
+        });
+        data = await r.json();
+        out.push(line(data.ok === true, `user-level-set → ${level}`));
+
+        // 4) log-performance (notify false to avoid channel noise)
+        r = await fetch("/.netlify/functions/log-performance", {
+          method: "POST", headers,
+          body: JSON.stringify({
+            email, clicks: 1, conversions: 0, revenueUSD: 0,
+            level, notes: "smoke test", notify: false
+          })
+        });
+        data = await r.json();
+        out.push(line(data.ok === true, "log-performance (notify:false)"));
+
+        // 5) gs-bridge health
+        r = await fetch("/.netlify/functions/gs-bridge");
+        data = await r.json();
+        out.push(line(data.ok === true, "gs-bridge (doGet)"));
+
+        setMsg($("smokeMsg"), true, out.join("\n"));
+      } catch (e) {
+        out.push(line(false, String(e)));
+        setMsg($("smokeMsg"), false, out.join("\n"));
+      }
+    };
+
+    // Optional: approve-user smoke (will send messages if configured)
+    $("btnSmokeApprove").onclick = async () => {
+      const headers = { "content-type": "application/json", ...headerAuth() };
+      const body = {
+        name: $("sm_appr_name").value.trim() || "QA User",
+        email: $("smoke_email").value.trim() || "qa@example.com",
+        phone: $("sm_appr_phone").value.trim(),
+        approve: true
+      };
+      try {
+        const r = await fetch("/.netlify/functions/approve-user", {
+          method:"POST", headers, body: JSON.stringify(body)
+        });
+        const data = await r.json();
+        setMsg($("smokeApprMsg"), data.ok !== false, JSON.stringify(data, null, 2));
+      } catch(e) {
+        setMsg($("smokeApprMsg"), false, String(e));
+      }
+    };
+  </script>
+</body>
+</html>

@@ -2,81 +2,201 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Empire – Access</title>
+  <title>Empire – Login</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="theme-color" content="#0b1220" />
+
+  <!-- Favicons & Social (static; no secrets) -->
+  <link rel="icon" href="/app/assets/brand/logo.svg" type="image/svg+xml">
+  <meta name="theme-color" content="#0b1220">
+  <meta property="og:title" content="Empire – Login">
+  <meta property="og:description" content="Secure entry for Commander, Approved Users, and Onboarding.">
+  <meta property="og:image" content="https://empireaffiliatemarketinghub.com/app/assets/brand/logo.svg">
+
   <style>
-    :root { --bg:#0b1220; --card:#111827; --muted:#97a0b6; --txt:#e7ecf7; --accent:#4bb1ff; }
-    *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--txt);font:16px/1.55 system-ui,Segoe UI,Roboto,Helvetica,Arial}
-    .wrap{max-width:760px;margin:0 auto;padding:20px}
-    .grid{display:grid;gap:16px}
-    .card{background:var(--card);border-radius:16px;box-shadow:0 6px 40px rgba(0,0,0,.25);padding:16px}
+    :root {
+      --bg:#0b1220; --card:#111827; --muted:#97a0b6; --ok:#18b26b; --bad:#de524c;
+      --txt:#e7ecf7; --accent:#4bb1ff;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--txt);font:15px/1.55 system-ui,Segoe UI,Roboto,Helvetica,Arial}
+    .wrap{max-width:760px;margin:0 auto;padding:18px}
+    .card{background:var(--card);border-radius:14px;box-shadow:0 6px 40px rgba(0,0,0,.25);padding:16px}
     h1{margin:0 0 6px;font-size:22px}
     h2{margin:0 0 8px;font-size:16px}
     .muted{color:var(--muted)}
-    label{display:block;margin:10px 0 6px}
-    input,button,select{width:100%;padding:12px;border:0;border-radius:12px}
-    input{background:#0d1525;color:var(--txt);border:1px solid #22304e}
-    button{background:var(--accent);color:#051225;font-weight:700;cursor:pointer}
-    .row{display:grid;gap:12px;grid-template-columns:1fr 1fr}
+    label{display:block;margin:10px 0 6px;font-size:13px}
+    input,select,textarea{
+      width:100%;padding:12px 12px;border:1px solid #22304e;background:#0d1525;color:var(--txt);border-radius:10px;
+    }
+    button{width:100%;padding:12px 14px;border:0;border-radius:12px;background:var(--accent);color:#051225;font-weight:700;cursor:pointer}
+    .row{display:grid;gap:10px;grid-template-columns:1fr 1fr}
+    .tabs{display:flex;gap:8px;margin:12px 0}
+    .tab{flex:1;text-align:center;padding:10px;border-radius:10px;background:#0d1a2a;border:1px solid #2a3d5c;color:#cfe1ff;cursor:pointer}
+    .tab.active{background:linear-gradient(135deg,#4bb1ff,#34d399);color:#051225;border-color:transparent}
+    .msg{padding:10px 12px;border-radius:12px;margin:8px 0;font-size:13px}
+    .ok{background:#0f2b21;border:1px solid #166c4a;color:#b9f4d8}
+    .bad{background:#2a1414;border:1px solid #944040;color:#ffd6d5}
     .footer{color:#7d879b;text-align:center;margin:18px 0 4px;font-size:12px}
-    .hint{font-size:12px;color:var(--muted);margin-top:6px}
-    .linkish{display:inline-block;margin-top:8px;font-size:13px;color:#cfe1ff}
+
+    /* Brand hero */
+    .brand-hero {
+      position: relative; border-radius: 18px; overflow: hidden; padding: 16px 18px; margin-bottom: 14px;
+      background: linear-gradient(180deg, rgba(75,177,255,.20), rgba(24,178,107,.12)), url("/app/assets/brand/bg-texture.png");
+      background-size: cover; background-position: center; outline: 1px solid #1b2740;
+    }
+    .brand-hero .brandbar { display:flex; align-items:center; gap:12px; }
+    .brand-hero img.brandlogo { width: 140px; height:auto; display:block; }
+    .brand-hero .subtitle { margin-top:8px; color:#b9c3d9; font-size:13px; }
+    .ghost{ background:#334155; color:#dbe4f7; width:auto; }
+    .links { display:flex; gap:10px; flex-wrap:wrap; margin-top:8px; }
+    .links a { color:#cfe1ff; text-decoration:underline; font-size:12px }
+    .tc { line-height:1.55; font-size:14px; color:#d7def0; }
   </style>
 </head>
 <body>
-  <div class="wrap grid">
-    <div class="card">
-      <h1>Empire Access</h1>
-      <div class="muted">Choose your path.</div>
+  <div class="wrap">
+
+    <!-- BRAND -->
+    <div class="brand-hero">
+      <div class="brandbar">
+        <img src="/app/assets/brand/logo.svg" alt="Empire Hub" class="brandlogo" />
+        <div style="margin-left:auto;text-align:right">
+          <div style="font-weight:700">Empire Affiliate Marketing Hub</div>
+          <div class="subtitle">Secure entry for Commander, Approved Users, and Onboarding</div>
+        </div>
+      </div>
+      <div class="links">
+        <a href="/app/index.html">Commander Console</a>
+        <a href="/app/user.html">User Dashboard</a>
+        <a href="https://t.me/TheEmpireHq" target="_blank" rel="noopener">Telegram: &#64;TheEmpireHq</a>
+      </div>
     </div>
 
-    <!-- Commander Login -->
-    <div class="card">
-      <h2>Commander Login</h2>
-      <label>Access Key (PIN)</label>
-      <input id="cmd_pin" placeholder="Enter PIN (matches Netlify CMD_USER)" />
-      <button id="btn_cmd">Enter Commander Console</button>
-      <div class="hint">We store your PIN locally (x-cmd-user) and never send it anywhere except function calls that require it.</div>
+    <!-- TABS (Commander / User) shown only when NO token) -->
+    <div id="tabShell" class="card" style="display:none">
+      <div class="tabs">
+        <div id="tabCommander" class="tab active">Commander Login</div>
+        <div id="tabUser" class="tab">User Login</div>
+      </div>
+
+      <!-- Commander Login -->
+      <div id="paneCommander">
+        <label>Admin PIN (CMD_USER)</label>
+        <input id="pin" placeholder="Enter your Commander PIN" autocomplete="one-time-code" />
+        <button id="btnCommander">Enter Commander Console</button>
+        <div id="msgCmd" class="msg" style="display:none"></div>
+        <div class="muted" style="margin-top:8px;font-size:12px">
+          The PIN is stored only in your browser and sent as <code>x-cmd-user</code> header for secure actions.
+        </div>
+      </div>
+
+      <!-- User Login -->
+      <div id="paneUser" style="display:none">
+        <label>Email</label>
+        <input id="user_email" placeholder="you@example.com" type="email" autocomplete="email" />
+        <button id="btnUser">Go to User Dashboard</button>
+        <div id="msgUser" class="msg" style="display:none"></div>
+        <div class="muted" style="margin-top:8px;font-size:12px">
+          We’ll remember your email for your dashboard session.
+        </div>
+      </div>
     </div>
 
-    <!-- Approved User Login -->
-    <div class="card">
-      <h2>Approved User Login</h2>
-      <label>Email</label>
-      <input id="user_email" type="email" placeholder="email@example.com" />
-      <button id="btn_user">Enter My Dashboard</button>
-      <div class="hint">We keep your email in this device only to personalize your dashboard.</div>
-    </div>
-
-    <!-- New Onboarding -->
-    <div class="card">
-      <h2>New Onboarding</h2>
-      <div class="muted">Start with Login → T&amp;C → Registration Form.</div>
-      <a class="linkish" href="/login">Continue to Registration</a>
+    <!-- Onboarding (T&C) shown only when token is present) -->
+    <div id="tcShell" class="card" style="display:none">
+      <h1>Terms & Conditions</h1>
+      <div class="tc">
+        <p>Welcome to Empire. Please review and accept our Terms & Conditions to proceed to registration.</p>
+        <ul>
+          <li>Adhere to all program rules and quality guidelines.</li>
+          <li>No fraudulent traffic, misrepresentation, or policy breaches.</li>
+          <li>Payouts are subject to performance validation and compliance.</li>
+        </ul>
+        <p>By proceeding, you agree to the full T&C of Empire Affiliate Marketing Hub.</p>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px">
+        <button id="btnAccept">Accept & Continue</button>
+        <button id="btnDecline" class="ghost">Decline</button>
+      </div>
+      <div id="msgTC" class="msg" style="display:none"></div>
     </div>
 
     <div class="footer">© Empire Affiliate Marketing Hub</div>
   </div>
 
   <script>
-    // tiny helpers
+    // Helpers
     const $ = (id) => document.getElementById(id);
+    const qs = new URLSearchParams(location.search);
+    const token = qs.get("i") || qs.get("code") || ""; // supports ?i= and ?code=
+    // Public join app base (no secrets involved)
+    const JOIN_BASE = "https://join.empireaffiliatemarketinghub.com";
 
-    // Commander path
-    $("btn_cmd").onclick = () => {
-      const pin = ($("cmd_pin").value || "").trim();
-      if (!pin) { alert("Please enter your PIN"); return; }
-      localStorage.setItem("empire_cmd_user", pin);   // used as x-cmd-user
-      location.href = "/admin/";                      // go to Commander Console
+    // Local storage keys
+    const LS_CMD = "empire_cmd_user";
+    const LS_USER = "empire_user_email";
+
+    // Tab logic
+    function showTab(which){
+      $("tabCommander").classList.toggle("active", which==="cmd");
+      $("tabUser").classList.toggle("active", which==="user");
+      $("paneCommander").style.display = (which==="cmd") ? "" : "none";
+      $("paneUser").style.display = (which==="user") ? "" : "none";
+    }
+
+    // Init
+    (function init(){
+      if (token) {
+        // Onboarding route: show T&C
+        $("tcShell").style.display = "";
+        $("tabShell").style.display = "none";
+      } else {
+        // No token: show login tabs
+        $("tcShell").style.display = "none";
+        $("tabShell").style.display = "";
+        $("pin").value = localStorage.getItem(LS_CMD) || "";
+        $("user_email").value = localStorage.getItem(LS_USER) || "";
+        showTab("cmd");
+      }
+    })();
+
+    // Switchers
+    $("tabCommander").onclick = () => showTab("cmd");
+    $("tabUser").onclick = () => showTab("user");
+
+    // Commander Login
+    $("btnCommander").onclick = () => {
+      const pin = ($("pin").value || "").trim();
+      if (!pin) {
+        const el = $("msgCmd"); el.className = "msg bad"; el.style.display=""; el.textContent = "Please enter your Commander PIN.";
+        return;
+      }
+      localStorage.setItem(LS_CMD, pin);
+      const el = $("msgCmd"); el.className = "msg ok"; el.style.display=""; el.textContent = "PIN saved. Redirecting…";
+      setTimeout(() => location.href = "/app/index.html", 500);
     };
 
-    // Approved user path
-    $("btn_user").onclick = () => {
+    // User Login
+    $("btnUser").onclick = () => {
       const email = ($("user_email").value || "").trim();
-      if (!email || !email.includes("@")) { alert("Enter a valid email"); return; }
-      localStorage.setItem("empire_user_email", email);
-      location.href = "/app/";                        // go to user dashboard
+      if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+        const el = $("msgUser"); el.className = "msg bad"; el.style.display=""; el.textContent = "Enter a valid email.";
+        return;
+      }
+      localStorage.setItem(LS_USER, email);
+      const el = $("msgUser"); el.className = "msg ok"; el.style.display=""; el.textContent = "Email saved. Redirecting…";
+      setTimeout(() => location.href = "/app/user.html", 500);
+    };
+
+    // T&C flow (only when invite token present)
+    $("btnAccept").onclick = () => {
+      if (!token) return;
+      const u = new URL(JOIN_BASE.replace(/\/$/,"") + "/login");
+      u.searchParams.set("i", token);
+      location.href = u.toString();
+    };
+    $("btnDecline").onclick = () => {
+      const el = $("msgTC"); el.className = "msg bad"; el.style.display=""; el.textContent = "You must accept the T&C to register.";
     };
   </script>
 </body>

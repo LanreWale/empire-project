@@ -1,3 +1,10 @@
+<script>
+  // --- guard: require saved PIN ---
+  (function(){
+    if (!localStorage.getItem("empire_cmd_user")) location.replace("/");
+  })();
+
+  // (your current console JS continues below…)
 <!doctype html>
 <html lang="en">
 <head>

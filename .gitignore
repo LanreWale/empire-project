@@ -6,3 +6,4 @@
 *.bak*
 *.bak.*
 *.bak.*
+/scripts/

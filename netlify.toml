@@ -19,9 +19,3 @@ status = 301
 from = "/app"
 to = "/app/"
 status = 301
-
-[[redirects]]
-from = "/test-templates"
-to = "/.netlify/functions/test-templates"
-status = 200
-force = true

@@ -1,15 +1,18 @@
-# --- Edge function route for short links like /i/abc123 ---
-[[edge_functions]]
-function = "shortener"
-path = "/i/*"
-
 # --- Functions bundling settings ---
 [functions]
-  node_bundler = "esbuild"   # Let esbuild bundle all deps (no external_node_modules)
+  directory = "netlify/functions"   # ← explicitly point to your functions
+  node_bundler = "esbuild"          # bundle deps with esbuild
 
-# Keep your existing config below
+# If you DO NOT have netlify/edge-functions/shortener.* yet, comment this out.
+# [[edge_functions]]
+# function = "shortener"
+# path = "/i/*"
 
-# Ensure these folders are served as static pages (trailing slash)
+# --- Basic build (static) ---
+[build]
+  publish = "."
+
+# --- Redirects (keep yours) ---
 [[redirects]]
 from = "/admin"
 to = "/admin/"
@@ -20,7 +23,6 @@ from = "/app"
 to = "/app/"
 status = 301
 
-# Convenience route to hit the test function
 [[redirects]]
 from = "/test-templates"
 to = "/.netlify/functions/test-templates"

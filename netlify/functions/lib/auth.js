@@ -1,4 +1,4 @@
-// netlify/functions/lib/auth.js
+// netlify/functions/auth.js
 "use strict";
 
 const crypto = require("crypto");

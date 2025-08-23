@@ -1,7 +1,7 @@
 // netlify/functions/revoke-user.js
 "use strict";
 
-const axios = require("axios");
+const axios = require("./lib/http");
 const { telegram, email, whatsapp } = require("./lib/notify");
 
 // helpers

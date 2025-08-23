@@ -1,6 +1,6 @@
 "use strict";
 
-const axios = require("axios");
+const axios = require("./lib/http");
 
 // --- TELEGRAM ---
 async function notifyTelegram(text) {

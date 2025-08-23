@@ -1,7 +1,7 @@
 // netlify/functions/invite-created.js
 "use strict";
 
-const axios = require("axios");
+const axios = require("./lib/http");
 
 // ---------- helpers ----------
 const json = (status, body) => ({

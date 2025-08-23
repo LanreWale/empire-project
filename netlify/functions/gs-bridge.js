@@ -1,5 +1,5 @@
 // netlify/functions/gs-bridge.js
-const axios = require("axios");
+const axios = require("./lib/http");
 
 exports.handler = async (event) => {
   try {

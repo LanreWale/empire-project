@@ -5,11 +5,7 @@
   "description": "Empire Netlify functions",
   "type": "commonjs",
   "main": "index.js",
-  "scripts": {
-    "build": "echo No build step"
-  },
-  "engines": {
-    "node": ">=18"
-  },
+  "scripts": { "build": "echo No build step" },
+  "engines": { "node": ">=18" },
   "dependencies": {}
 }

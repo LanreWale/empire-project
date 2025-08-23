@@ -1,5 +1,5 @@
 exports.handler = async () => {
-  const axios = require('axios');
+  const axios = require('./lib/http');
   if (!process.env.FLUTTERWAVE_SECRET_KEY) {
     return { statusCode: 500, body: JSON.stringify({ error: 'Missing FLUTTERWAVE_SECRET_KEY' }) };
   }

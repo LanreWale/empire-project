@@ -2,7 +2,7 @@ exports.handler = async (event) => {
   if (event.httpMethod !== "POST") {
     return { statusCode: 405, body: JSON.stringify({ error: "Use POST" }) };
   }
-  const axios = require("axios");
+  const axios = require("./lib/http");
   const { account_number, bank_code } = JSON.parse(event.body || "{}");
 
   if (!process.env.PAYSTACK_SECRET_KEY) {

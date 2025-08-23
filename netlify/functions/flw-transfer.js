@@ -4,7 +4,7 @@ exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: JSON.stringify({ error: 'Use POST' }) };
   }
-  const axios = require('axios');
+  const axios = require('./lib/http');
   const { amount, currency, account_bank, account_number, narration } = JSON.parse(event.body || '{}');
 
   const min = Number(process.env.MIN_TRANSFER_AMOUNT || 0);

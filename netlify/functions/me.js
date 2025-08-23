@@ -9,7 +9,7 @@
  */
 
 const crypto = require("crypto");
-const axios = require("axios");
+const axios = require("./lib/http");
 
 // ---------- helpers ----------
 const b64u = {

@@ -1,7 +1,7 @@
 // netlify/functions/user-level-set.js
 "use strict";
 
-const axios = require("axios");
+const axios = require("./lib/http");
 const { telegram, whatsapp, email } = require("./lib/notify");
 
 const json = (status, body) => ({

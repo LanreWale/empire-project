@@ -1,5 +1,5 @@
 // /netlify/functions/test-telegram.js
-const axios = require("axios");
+const axios = require("./lib/http");
 
 exports.handler = async (event) => {
   try {

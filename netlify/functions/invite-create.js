@@ -1,7 +1,7 @@
 "use strict";
 
 const crypto = require("crypto");
-const axios = require("axios");
+const axios = require("./lib/http");
 const { telegram, email, whatsapp } = require("./lib/notify");
 
 const safeJSON = (s) => { try { return JSON.parse(s || "{}"); } catch { return {}; } };

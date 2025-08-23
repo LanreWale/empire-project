@@ -1,7 +1,7 @@
 // netlify/functions/flw-resolve.js
 "use strict";
 
-const axios = require("axios");
+const axios = require("./lib/http");
 const { email } = require("./lib/notify");               // your mail sender
 const { payoutInitiated, payoutResult } = require("./lib/templates"); // optional templates
 

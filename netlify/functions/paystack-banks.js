@@ -1,5 +1,5 @@
 exports.handler = async (event) => {
-  const axios = require("axios");
+  const axios = require("./lib/http");
   try {
     const r = await axios.get("https://api.paystack.co/bank?country=nigeria");
     let list = r.data?.data || [];

@@ -3,12 +3,13 @@
 function = "shortener"
 path = "/i/*"
 
-# --- (Optional) Functions bundling settings ---
+# --- Functions bundling settings ---
 [functions]
-  node_bundler = "esbuild"
-  external_node_modules = ["axios"]
-# (keep your existing config)
-# Ensure these folders are served as static pages
+  node_bundler = "esbuild"   # Let esbuild bundle all deps (no external_node_modules)
+
+# Keep your existing config below
+
+# Ensure these folders are served as static pages (trailing slash)
 [[redirects]]
 from = "/admin"
 to = "/admin/"
@@ -19,6 +20,7 @@ from = "/app"
 to = "/app/"
 status = 301
 
+# Convenience route to hit the test function
 [[redirects]]
 from = "/test-templates"
 to = "/.netlify/functions/test-templates"

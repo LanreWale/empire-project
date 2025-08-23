@@ -2,7 +2,7 @@
 "use strict";
 
 const crypto = require("crypto");
-const axios = require("./lib/http");
+const axios = require("./http");
 
 const COOKIE_NAME = "empire_session";
 const SIGNING_KEY = process.env.INVITES_SIGNING_KEY || "dev-key";

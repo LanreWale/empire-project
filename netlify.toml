@@ -1,18 +1,15 @@
-# --- Functions bundling settings ---
-[functions]
-  directory = "netlify/functions"   # ← explicitly point to your functions
-  node_bundler = "esbuild"          # bundle deps with esbuild
+[build]
+  publish = "."
 
-# If you DO NOT have netlify/edge-functions/shortener.* yet, comment this out.
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+
+# Comment out if you don't have the edge source file
 # [[edge_functions]]
 # function = "shortener"
 # path = "/i/*"
 
-# --- Basic build (static) ---
-[build]
-  publish = "."
-
-# --- Redirects (keep yours) ---
 [[redirects]]
 from = "/admin"
 to = "/admin/"

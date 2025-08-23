@@ -1,6 +1,6 @@
 // ===== EMPIRE CORE (single file) =====
 
-// --- Endpoints (Netlify Functions)
+// Endpoints (Netlify Functions)
 const ENDPOINTS = {
   health: "/.netlify/functions/monitor-health",
   feed:   "/.netlify/functions/monitor-feed",
@@ -8,7 +8,7 @@ const ENDPOINTS = {
   payout: "/.netlify/functions/wallet-transfer",
 };
 
-// --- Tiny fetch helpers
+// Tiny fetch helpers
 async function getJSON(url) {
   const r = await fetch(url, { headers: { "Accept": "application/json" } });
   if (!r.ok) throw new Error(await r.text());
@@ -25,47 +25,24 @@ async function postJSON(url, body) {
   return out;
 }
 
-// --- GLOBAL logger (use from ANY page)
+// Global logger (use from ANY page)
 async function logEvent({ type, message, ref = "", actor = "system", meta = {} }) {
-  try {
-    await postJSON(ENDPOINTS.feed, { type, message, ref, actor, meta });
-  } catch (e) {
-    console.warn("logEvent failed:", e.message || e);
-  }
+  try { await postJSON(ENDPOINTS.feed, { type, message, ref, actor, meta }); }
+  catch (e) { console.warn("logEvent failed:", e.message || e); }
 }
 
-// --- Optional helpers you can call directly (one-liners)
+// Optional helpers
 async function requestPayout(amount, role = "COMMANDER", dest = {}) {
   const res = await postJSON(ENDPOINTS.payout, { amount, role, dest });
-  // Log only on success; if blocked, throw to caller
-  await logEvent({
-    type: "PAYOUT_REQUESTED",
-    message: `Requested $${amount}`,
-    ref: "wallet:self",
-    actor: role,
-    meta: { amount, role }
-  });
+  await logEvent({ type: "PAYOUT_REQUESTED", message: `Requested $${amount}`, ref: "wallet:self", actor: role, meta: { amount, role } });
   return res;
 }
 async function inviteLogged({ whatsapp, actor = "Commander" }) {
-  await logEvent({
-    type: "INVITE_GENERATED",
-    message: `Invite link created for ${whatsapp}`,
-    ref: "users:invite",
-    actor,
-    meta: { whatsapp }
-  });
+  await logEvent({ type: "INVITE_GENERATED", message: `Invite link created for ${whatsapp}`, ref: "users:invite", actor, meta: { whatsapp } });
 }
 
-// Expose globally (no imports needed anywhere)
-window.Empire = Object.freeze({
-  endpoints: ENDPOINTS,
-  getJSON,
-  postJSON,
-  logEvent,
-  requestPayout,
-  inviteLogged,
-});
+// Expose globally
+window.Empire = Object.freeze({ endpoints: ENDPOINTS, getJSON, postJSON, logEvent, requestPayout, inviteLogged });
 
 // ===== Monitoring UI (auto-activates only if page has the elements) =====
 const healthRow = document.getElementById("healthRow");
@@ -74,11 +51,9 @@ const feedTable  = document.querySelector("#feedTable tbody");
 const feedEmpty  = document.getElementById("feedEmpty");
 
 if (healthRow && feedTable) {
-  // we are on monitoring.html — wire the UI
   function badge(label, value) {
-    const cls =
-      value === "ONLINE" || value === "OPERATIONAL" || value === "CONNECTED" ? "ok" :
-      value === "DEGRADED" ? "warn" : "down";
+    const cls = value === "ONLINE" || value === "OPERATIONAL" || value === "CONNECTED" ? "ok" :
+                value === "DEGRADED" ? "warn" : "down";
     return `<div class="card"><div style="display:flex;gap:8px;align-items:center">
       <span class="muted">${label}</span>
       <span class="badge ${cls}">${value}</span>
@@ -115,10 +90,8 @@ if (healthRow && feedTable) {
           const msg   = ev.message ?? ev[2] ?? "";
           const ref   = ev.ref     ?? ev[3] ?? "";
           const actor = ev.actor   ?? ev[4] ?? "";
-          feedTable.insertAdjacentHTML(
-            "beforeend",
-            `<tr><td>${ts}</td><td>${type}</td><td>${msg}</td><td>${ref}</td><td>${actor}</td></tr>`
-          );
+          feedTable.insertAdjacentHTML("beforeend",
+            `<tr><td>${ts}</td><td>${type}</td><td>${msg}</td><td>${ref}</td><td>${actor}</td></tr>`);
         });
       }
     } catch {
@@ -130,4 +103,4 @@ if (healthRow && feedTable) {
   render();
   setInterval(render, 15000);
 }
-// ===== END (single file) =====
+// ===== END =====

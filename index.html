@@ -34,12 +34,8 @@
       box-shadow:0 8px 18px rgba(0,0,0,.35);
       font-weight:800; color:#001; letter-spacing:.5px;
     }
-    .title{
-      font-size:18px; font-weight:700;
-    }
-    .sub{
-      color:var(--muted); line-height:1.45; margin-top:6px;
-    }
+    .title{ font-size:18px; font-weight:700; }
+    .sub{ color:var(--muted); line-height:1.45; margin-top:6px; }
     .links a{color:#a7c8ff; text-decoration:none; margin-right:16px}
     .panel{
       margin-top:16px; padding:18px; border-radius:24px;
@@ -93,7 +89,8 @@
         <div class="links">
           <a href="/admin/">Commander Console</a>
           <a href="/dashboard.html">User Dashboard</a>
-          <a href="https://t.me/TheEmpireHq" target="_blank" rel="noopener">Telegram: @TheEmpireHq</a>
+          <!-- Telegram link populated from public-config function -->
+          <a id="tgLink" href="#" target="_blank" rel="noopener">Telegram: loading…</a>
         </div>
       </div>
     </div>
@@ -112,12 +109,12 @@
           <p>Full system control with unlimited privileges.</p>
 
           <div class="field">
-            <label for="pin">Admin PIN (CMD_USER)</label>
-            <input id="pin" type="text" inputmode="text" placeholder="GENERALISIMO@2025" autocomplete="off" />
+            <label for="pin">Admin PIN</label>
+            <input id="pin" type="password" placeholder="Enter admin PIN" autocomplete="off" />
           </div>
 
           <button class="cta cta-gold" id="btnCommander" type="button">👑 Enter Commander Console</button>
-          <div class="note" id="savedNote">PIN saved. Redirecting…</div>
+          <div class="note" id="savedNote">Checking…</div>
         </div>
 
         <!-- User -->
@@ -133,29 +130,59 @@
   </div>
 
   <script>
-    // Tabs
+    // --- Tabs ---
     const tabCmd = document.getElementById('tabCmd');
     const tabUser = document.getElementById('tabUser');
     const cardCmd = document.getElementById('cardCmd');
     const cardUser = document.getElementById('cardUser');
-
     function showCmd(){ tabCmd.classList.add('active'); tabUser.classList.remove('active'); cardCmd.style.display='block'; cardUser.style.display='none'; }
     function showUser(){ tabUser.classList.add('active'); tabCmd.classList.remove('active'); cardUser.style.display='block'; cardCmd.style.display='none'; }
     tabCmd.onclick = showCmd; tabUser.onclick = showUser;
 
-    // Prefill from localStorage
+    // --- Telegram link (public) ---
+    (async () => {
+      try {
+        const r = await fetch('/.netlify/functions/public-config');
+        const cfg = await r.json();
+        const u = (cfg.telegramChannel || '').replace(/^@/,'');
+        const a = document.getElementById('tgLink');
+        a.textContent = `Telegram: @${u||'channel'}`;
+        a.href = u ? `https://t.me/${u}` : '#';
+      } catch { /* leave default text */ }
+    })();
+
+    // --- Commander Login (server-side check; never exposes PIN in HTML) ---
     const PIN_KEY = "CMD_USER";
     const pinInput = document.getElementById('pin');
     const note = document.getElementById('savedNote');
+
+    // Optional: remember last typed value locally (doesn't expose server secret)
     try { const v = localStorage.getItem(PIN_KEY); if (v) pinInput.value = v; } catch {}
 
-    // Save & go to /admin/
-    document.getElementById('btnCommander').addEventListener('click', () => {
+    document.getElementById('btnCommander').addEventListener('click', async () => {
       const val = (pinInput.value || "").trim();
       if (!val){ pinInput.focus(); return; }
-      try { localStorage.setItem(PIN_KEY, val); } catch {}
       note.style.display = "block";
-      setTimeout(() => { window.location.href = "/admin/"; }, 600);
+      note.textContent = "Checking…";
+      try {
+        const r = await fetch('/.netlify/functions/admin-login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pin: val })
+        });
+        const res = await r.json();
+        if (res.ok) {
+          try { localStorage.setItem(PIN_KEY, val); } catch {}
+          // Store a short-lived marker for gating
+          localStorage.setItem('empire_admin_token', res.token || 'ok');
+          note.textContent = "PIN accepted. Redirecting…";
+          setTimeout(() => { window.location.href = "/admin/"; }, 600);
+        } else {
+          note.textContent = res.error || "Invalid PIN";
+        }
+      } catch {
+        note.textContent = "Network error";
+      }
     });
   </script>
 </body>

@@ -94,7 +94,137 @@
     </div>
   </div>
 
-  <!-- Live data hook (logic only; no layout changes) -->
-  <script type="module" src="./app/assets/js/dashboard-live.js"></script>
+  <!-- Live data hook (inline, no external file) -->
+  <script type="module">
+    const $ = (s, r=document) => r.querySelector(s);
+    const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
+    const note = $("#note"), prof = $("#profile"), raw = $("#raw"), dbg = $("#debug");
+
+    const money = (n) =>
+      (typeof n === "number" ? n : Number(n||0))
+        .toLocaleString(undefined, { style:"currency", currency:"USD", maximumFractionDigits:2 });
+
+    function qs(k){ return new URL(location.href).searchParams.get(k); }
+
+    async function j(url, opts={}) {
+      try {
+        const res = await fetch(url, { credentials:"include", ...opts });
+        const data = await res.json();
+        return data;
+      } catch(e) {
+        return { ok:false, error:String(e) };
+      }
+    }
+
+    function setText(idOrSel, v) {
+      const el = (idOrSel.startsWith("#") || idOrSel.startsWith("[")) ? $(idOrSel) : $("#"+idOrSel);
+      if (el) el.textContent = (v ?? "—");
+    }
+
+    // ----- PROFILE (/me) -----
+    async function loadProfile() {
+      const i = qs('i'); // invite/session token supported by your /me
+      const url = i ? `/.netlify/functions/me?i=${encodeURIComponent(i)}` : '/.netlify/functions/me';
+      const out = await j(url);
+      if (!out?.ok) {
+        note.textContent = 'Could not load your dashboard: ' + (out?.error || 'Unknown error');
+        raw.style.display = 'block'; if (dbg) dbg.textContent = JSON.stringify(out, null, 2);
+        return false;
+      }
+      // show profile card
+      note.style.display = 'none';
+      prof.style.display = 'block';
+
+      const u = out.user || {};
+      setText("name", u.name || "—");
+      setText("contact", [u.email,u.phone].filter(Boolean).join(" · "));
+      const st = $("#status");
+      if (st) {
+        st.textContent = u.status || "—";
+        st.className = 'pill ' + ((u.status||'').toUpperCase().includes('APPROVED') ? 'ok':'');
+      }
+      setText("scale", (u.scale ?? "—"));
+      // debug view if ?debug=1
+      if (qs('debug') === '1') { raw.style.display = 'block'; if (dbg) dbg.textContent = JSON.stringify(out, null, 2); }
+      return true;
+    }
+
+    // ----- HEALTH (/monitor-health) -----
+    function badgeClass(s="") {
+      s = String(s).toUpperCase();
+      if (/(ONLINE|ACTIVE|OPERATIONAL|CONNECTED|OK|HEALTHY)/.test(s)) return "b-ok";
+      if (/(WARN|DEGRADED|PENDING)/.test(s)) return "b-warn";
+      return "b-down";
+    }
+    async function loadHealth() {
+      const out = await j("/.netlify/functions/monitor-health");
+      const row = $("#healthRow");
+      if (!row) return;
+      row.innerHTML = "";
+      const services = out?.services || out?.data || out || [];
+      if (Array.isArray(services)) {
+        for (const svc of services) {
+          const div = document.createElement("div");
+          const s = String(svc.status || "DOWN");
+          div.className = `badge ${badgeClass(s)}`;
+          div.textContent = `${svc.name || "Service"}: ${s}`;
+          row.appendChild(div);
+        }
+      } else {
+        // fallback if object map like {sheets:'OK',paystack:'OK',...}
+        Object.entries(services).forEach(([k,v])=>{
+          const div = document.createElement("div");
+          div.className = `badge ${badgeClass(v)}`;
+          div.textContent = `${k}: ${v}`;
+          row.appendChild(div);
+        });
+      }
+    }
+
+    // ----- FEED (/monitor-feed) -----
+    async function loadFeed() {
+      const out = await j("/.netlify/functions/monitor-feed");
+      const tbody = $("#feedTable tbody");
+      const empty = $("#feedEmpty");
+      if (!tbody) return;
+      const items = out?.items || out?.data || [];
+      tbody.innerHTML = "";
+      if (!items.length && empty) empty.style.display = "block";
+      items.slice(0,50).forEach(it=>{
+        const tr = document.createElement("tr");
+        const td = (t)=>{ const x=document.createElement("td"); x.textContent=t||"—"; return x; };
+        tr.appendChild(td(it.time || new Date(it.ts || Date.now()).toLocaleString()));
+        tr.appendChild(td(it.type));
+        tr.appendChild(td(it.message));
+        tr.appendChild(td(it.ref));
+        tr.appendChild(td(it.actor));
+        tbody.appendChild(tr);
+      });
+    }
+
+    // ----- KPIs from Sheets (optional) (/gs-bridge?action=summary) -----
+    async function loadKpis() {
+      const out = await j("/.netlify/functions/gs-bridge?action=summary");
+      if (!out?.ok || !out?.data) return;
+      const d = out.data;
+      if ($("#totalEarnings")) $("#totalEarnings").textContent = money(d.totalEarnings);
+      if ($("#activeUsers")) $("#activeUsers").textContent = (d.activeUsers ?? "—");
+      if ($("#aiApprovalRate")) $("#aiApprovalRate").textContent = (d.aiApprovalRate ?? "—") + "%";
+      if ($("#pendingReviews")) $("#pendingReviews").textContent = (d.pendingReviews ?? "—");
+    }
+
+    // Refresh button
+    $("#refreshBtn")?.addEventListener("click", async ()=>{
+      await Promise.all([loadHealth(), loadFeed(), loadKpis()]);
+    });
+
+    // Boot
+    (async ()=>{
+      await loadProfile();  // shows card & fills name/status/scale
+      await Promise.all([loadHealth(), loadFeed(), loadKpis()]);
+      // Auto-refresh health/feed every 15s
+      setInterval(async ()=>{ await Promise.all([loadHealth(), loadFeed()]); }, 15000);
+    })();
+  </script>
 </body>
 </html>

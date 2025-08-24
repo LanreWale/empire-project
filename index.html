@@ -2,174 +2,161 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Empire – Login</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-
-  <!-- Favicons & Social (static; no secrets) -->
-  <link rel="icon" href="/app/assets/brand/logo.svg" type="image/svg+xml">
-  <meta name="theme-color" content="#0b1220">
-  <meta property="og:title" content="Empire – Login">
-  <meta property="og:description" content="Secure entry for Commander, Approved Users, and Onboarding.">
-  <meta property="og:image" content="https://empireaffiliatemarketinghub.com/app/assets/brand/logo.svg">
-
+  <title>Empire Hub — Supreme Command & User Access</title>
+  <meta name="color-scheme" content="dark" />
   <style>
-    :root {
-      --bg:#0b1220; --card:#111827; --muted:#97a0b6; --ok:#18b26b; --bad:#de524c;
-      --txt:#e7ecf7; --accent:#4bb1ff;
+    :root{
+      --bg:#0a1220; --panel:#0f182a; --panel-2:#101b31;
+      --ink:#e8eefc; --muted:#9fb2d1; --line:#1f2b44;
+      --gold-1:#ffd24d; --gold-2:#ffb11a;
+      --blue-1:#367cff; --blue-2:#215de7;
+      --ok:#16a34a; --ring:#293757;
+      --radius:18px;
     }
     *{box-sizing:border-box}
-    body{margin:0;background:var(--bg);color:var(--txt);font:15px/1.55 system-ui,Segoe UI,Roboto,Helvetica,Arial}
-    .wrap{max-width:760px;margin:0 auto;padding:18px}
-    .card{background:var(--card);border-radius:14px;box-shadow:0 6px 40px rgba(0,0,0,.25);padding:16px}
-    h1{margin:0 0 6px;font-size:22px}
-    h2{margin:0 0 8px;font-size:16px}
-    .muted{color:var(--muted)}
-    label{display:block;margin:10px 0 6px;font-size:13px}
-    input,select,textarea{
-      width:100%;padding:12px 12px;border:1px solid #22304e;background:#0d1525;color:var(--txt);border-radius:10px;
+    body{
+      margin:0; background:radial-gradient(1200px 800px at 10% -10%, #14223f 0%, #0a1220 50%), var(--bg);
+      color:var(--ink); font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,sans-serif;
     }
-    button{width:100%;padding:12px 14px;border:0;border-radius:12px;background:var(--accent);color:#051225;font-weight:700;cursor:pointer}
-    .row{display:grid;gap:10px;grid-template-columns:1fr 1fr}
-    .tabs{display:flex;gap:8px;margin:12px 0}
-    .tab{flex:1;text-align:center;padding:10px;border-radius:10px;background:#0d1a2a;border:1px solid #2a3d5c;color:#cfe1ff;cursor:pointer}
-    .tab.active{background:linear-gradient(135deg,#4bb1ff,#34d399);color:#051225;border-color:transparent}
-    .msg{padding:10px 12px;border-radius:12px;margin:8px 0;font-size:13px}
-    .ok{background:#0f2b21;border:1px solid #166c4a;color:#b9f4d8}
-    .bad{background:#2a1414;border:1px solid #944040;color:#ffd6d5}
-    .footer{color:#7d879b;text-align:center;margin:18px 0 4px;font-size:12px}
-    .brand-hero {
-      position: relative; border-radius: 18px; overflow: hidden; padding: 16px 18px; margin-bottom: 14px;
-      background: linear-gradient(180deg, rgba(75,177,255,.20), rgba(24,178,107,.12)), url("/app/assets/brand/bg-texture.png");
-      background-size: cover; background-position: center; outline: 1px solid #1b2740;
+    .wrap{max-width:980px; margin:28px auto 60px; padding:0 14px;}
+    .hero{
+      background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.00)) , var(--panel);
+      border:1px solid var(--line); border-radius:24px; padding:18px 18px 14px;
+      box-shadow:0 10px 30px rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.02);
     }
-    .brand-hero .brandbar { display:flex; align-items:center; gap:12px; }
-    .brand-hero img.brandlogo { width: 140px; height:auto; display:block; }
-    .brand-hero .subtitle { margin-top:8px; color:#b9c3d9; font-size:13px; }
-    .ghost{ background:#334155; color:#dbe4f7; width:auto; }
-    .links { display:flex; gap:10px; flex-wrap:wrap; margin-top:8px; }
-    .links a { color:#cfe1ff; text-decoration:underline; font-size:12px }
-    .tc { line-height:1.55; font-size:14px; color:#d7def0; }
+    .hero-top{display:flex; gap:14px; align-items:center; justify-content:space-between; flex-wrap:wrap}
+    .brand{display:flex; align-items:center; gap:12px}
+    .badge{
+      width:44px; height:44px; border-radius:12px;
+      display:grid; place-items:center;
+      background:linear-gradient(135deg, #22c55e, #60a5fa);
+      box-shadow:0 8px 18px rgba(0,0,0,.35);
+      font-weight:800; color:#001; letter-spacing:.5px;
+    }
+    .title{
+      font-size:18px; font-weight:700;
+    }
+    .sub{
+      color:var(--muted); line-height:1.45; margin-top:6px;
+    }
+    .links a{color:#a7c8ff; text-decoration:none; margin-right:16px}
+    .panel{
+      margin-top:16px; padding:18px; border-radius:24px;
+      background:var(--panel-2); border:1px solid var(--line);
+    }
+    .grid{display:grid; gap:18px; grid-template-columns:1fr; }
+    @media(min-width:760px){ .grid{grid-template-columns:1fr 1fr} }
+    .card{
+      padding:20px; border-radius:20px; background:rgba(10,17,31,.6);
+      border:1px solid var(--line);
+      box-shadow:inset 0 0 0 1px rgba(255,255,255,.02);
+    }
+    .card h3{margin:0 0 10px; font-size:22px; color:var(--gold-1); letter-spacing:.2px}
+    .card p{margin:0 0 16px; color:var(--muted)}
+    .cta{
+      display:block; width:100%; text-align:center; padding:14px 16px; border-radius:12px;
+      font-weight:800; text-decoration:none; border:0; cursor:pointer;
+      transition:transform .04s ease;
+    }
+    .cta:active{ transform:translateY(1px) }
+    .cta-gold{ color:#1b1606; background:linear-gradient(180deg, var(--gold-1), var(--gold-2)); }
+    .cta-blue{ color:#fff; background:linear-gradient(180deg, var(--blue-1), var(--blue-2)); }
+    .tabs{display:flex; gap:10px; margin:0 0 14px}
+    .tab{
+      flex:1; text-align:center; padding:12px 10px; border-radius:14px;
+      background:#121f39; border:1px solid var(--ring); color:#cfe0ff; font-weight:700; cursor:pointer;
+    }
+    .tab.active{ background:linear-gradient(135deg, #22c55e33, #60a5fa22); border-color:#3962ff; color:#fff }
+    .field{margin:12px 0 10px}
+    label{display:block; font-size:13px; color:#cfe0ff; margin-bottom:8px}
+    input{
+      width:100%; background:#0b162a; color:#e8eefc; border:1px solid var(--ring);
+      border-radius:12px; padding:14px 12px; outline:none;
+    }
+    .note{margin-top:10px; color:#b7f7c3; background:#0f2a18; border:1px solid #1e5d38; padding:12px; border-radius:12px; display:none}
+    .footer{opacity:.7; text-align:center; margin-top:26px; font-size:13px}
   </style>
 </head>
 <body>
   <div class="wrap">
-
-    <!-- BRAND -->
-    <div class="brand-hero">
-      <div class="brandbar">
-        <img src="/app/assets/brand/logo.svg" alt="Empire Hub" class="brandlogo" />
-        <div style="margin-left:auto;text-align:right">
-          <div style="font-weight:700">Empire Affiliate Marketing Hub</div>
-          <div class="subtitle">Secure entry for Commander, Approved Users, and Onboarding</div>
+    <!-- HERO -->
+    <div class="hero">
+      <div class="hero-top">
+        <div class="brand">
+          <div class="badge">▲</div>
+          <div>
+            <div class="title">Empire Hub</div>
+            <div class="sub">Secure entry for Commander, Approved Users, and Onboarding.</div>
+          </div>
+        </div>
+        <div class="links">
+          <a href="/admin/">Commander Console</a>
+          <a href="/dashboard.html">User Dashboard</a>
+          <a href="https://t.me/TheEmpireHq" target="_blank" rel="noopener">Telegram: @TheEmpireHq</a>
         </div>
       </div>
-      <div class="links">
-        <a href="/app/index.html">Commander Console</a>
-        <a href="/app/user.html">User Dashboard</a>
-        <a href="https://t.me/TheEmpireHq" target="_blank" rel="noopener">Telegram: &#64;TheEmpireHq</a>
-      </div>
     </div>
 
-    <!-- TABS (Commander / User) -->
-    <div id="tabShell" class="card" style="display:none">
+    <!-- ENTRY PANELS -->
+    <div class="panel">
       <div class="tabs">
-        <div id="tabCommander" class="tab active">Commander Login</div>
-        <div id="tabUser" class="tab">User Login</div>
+        <button class="tab active" id="tabCmd" type="button">Commander Login</button>
+        <button class="tab" id="tabUser" type="button">User Login</button>
       </div>
 
-      <!-- Commander Login -->
-      <div id="paneCommander">
-        <label>Admin PIN (CMD_USER)</label>
-        <input id="pin" placeholder="Enter your Commander PIN" />
-        <button id="btnCommander">Enter Commander Console</button>
-        <div id="msgCmd" class="msg" style="display:none"></div>
-      </div>
+      <div class="grid">
+        <!-- Commander -->
+        <div class="card" id="cardCmd">
+          <h3>Supreme Command Access</h3>
+          <p>Full system control with unlimited privileges.</p>
 
-      <!-- User Login -->
-      <div id="paneUser" style="display:none">
-        <label>Email</label>
-        <input id="user_email" placeholder="you@example.com" type="email" />
-        <button id="btnUser">Go to User Dashboard</button>
-        <div id="msgUser" class="msg" style="display:none"></div>
-      </div>
-    </div>
+          <div class="field">
+            <label for="pin">Admin PIN (CMD_USER)</label>
+            <input id="pin" type="text" inputmode="text" placeholder="GENERALISIMO@2025" autocomplete="off" />
+          </div>
 
-    <!-- Onboarding (T&C) -->
-    <div id="tcShell" class="card" style="display:none">
-      <h1>Terms & Conditions</h1>
-      <div class="tc">
-        <p>Welcome to Empire. Please review and accept our Terms & Conditions to proceed to registration.</p>
-        <ul>
-          <li>Adhere to all program rules and quality guidelines.</li>
-          <li>No fraudulent traffic, misrepresentation, or policy breaches.</li>
-          <li>Payouts are subject to performance validation and compliance.</li>
-        </ul>
+          <button class="cta cta-gold" id="btnCommander" type="button">👑 Enter Commander Console</button>
+          <div class="note" id="savedNote">PIN saved. Redirecting…</div>
+        </div>
+
+        <!-- User -->
+        <div class="card" id="cardUser" style="display:none">
+          <h3>User Access</h3>
+          <p>Personal dashboard with earnings tracking.</p>
+          <a class="cta cta-blue" href="/dashboard.html" id="btnUser">👤 User Login</a>
+        </div>
       </div>
-      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px">
-        <button id="btnAccept">Accept & Continue</button>
-        <button id="btnDecline" class="ghost">Decline</button>
-      </div>
-      <div id="msgTC" class="msg" style="display:none"></div>
     </div>
 
     <div class="footer">© Empire Affiliate Marketing Hub</div>
   </div>
 
   <script>
-    const $ = (id) => document.getElementById(id);
-    const qs = new URLSearchParams(location.search);
-    const token = qs.get("i") || qs.get("code") || "";
+    // Tabs
+    const tabCmd = document.getElementById('tabCmd');
+    const tabUser = document.getElementById('tabUser');
+    const cardCmd = document.getElementById('cardCmd');
+    const cardUser = document.getElementById('cardUser');
 
-    const LS_CMD = "empire_cmd_user";
-    const LS_USER = "empire_user_email";
+    function showCmd(){ tabCmd.classList.add('active'); tabUser.classList.remove('active'); cardCmd.style.display='block'; cardUser.style.display='none'; }
+    function showUser(){ tabUser.classList.add('active'); tabCmd.classList.remove('active'); cardUser.style.display='block'; cardCmd.style.display='none'; }
+    tabCmd.onclick = showCmd; tabUser.onclick = showUser;
 
-    function showTab(which){
-      $("tabCommander").classList.toggle("active", which==="cmd");
-      $("tabUser").classList.toggle("active", which==="user");
-      $("paneCommander").style.display = (which==="cmd") ? "" : "none";
-      $("paneUser").style.display = (which==="user") ? "" : "none";
-    }
+    // Prefill from localStorage
+    const PIN_KEY = "CMD_USER";
+    const pinInput = document.getElementById('pin');
+    const note = document.getElementById('savedNote');
+    try { const v = localStorage.getItem(PIN_KEY); if (v) pinInput.value = v; } catch {}
 
-    (function init(){
-      if (token) {
-        $("tcShell").style.display = "";
-        $("tabShell").style.display = "none";
-      } else {
-        $("tcShell").style.display = "none";
-        $("tabShell").style.display = "";
-        $("pin").value = localStorage.getItem(LS_CMD) || "";
-        $("user_email").value = localStorage.getItem(LS_USER) || "";
-        showTab("cmd");
-      }
-    })();
-
-    $("tabCommander").onclick = () => showTab("cmd");
-    $("tabUser").onclick = () => showTab("user");
-
-    $("btnCommander").onclick = () => {
-      const pin = ($("pin").value || "").trim();
-      if (!pin) { const el=$("msgCmd"); el.className="msg bad"; el.style.display=""; el.textContent="Please enter your Commander PIN."; return; }
-      localStorage.setItem(LS_CMD, pin);
-      const el=$("msgCmd"); el.className="msg ok"; el.style.display=""; el.textContent="PIN saved. Redirecting…";
-      setTimeout(()=>location.href="/app/index.html",500);
-    };
-
-    $("btnUser").onclick = () => {
-      const email = ($("user_email").value || "").trim();
-      if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { const el=$("msgUser"); el.className="msg bad"; el.style.display=""; el.textContent="Enter a valid email."; return; }
-      localStorage.setItem(LS_USER,email);
-      const el=$("msgUser"); el.className="msg ok"; el.style.display=""; el.textContent="Email saved. Redirecting…";
-      setTimeout(()=>location.href="/app/user.html",500);
-    };
-
-    $("btnAccept").onclick = () => {
-      if (!token) return;
-      // Use short redirect path instead of hard-coded SHORT_BASE_URL
-      location.href = "/i/" + encodeURIComponent(token);
-    };
-    $("btnDecline").onclick = () => {
-      const el=$("msgTC"); el.className="msg bad"; el.style.display=""; el.textContent="You must accept the T&C to register.";
-    };
+    // Save & go to /admin/
+    document.getElementById('btnCommander').addEventListener('click', () => {
+      const val = (pinInput.value || "").trim();
+      if (!val){ pinInput.focus(); return; }
+      try { localStorage.setItem(PIN_KEY, val); } catch {}
+      note.style.display = "block";
+      setTimeout(() => { window.location.href = "/admin/"; }, 600);
+    });
   </script>
 </body>
 </html>

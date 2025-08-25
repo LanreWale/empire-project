@@ -1,226 +1,290 @@
-// app/assets/js/dashboard-live.js
-// ONE file to drive Profile + Health + Feed + KPIs + Payout + Telegram + Sheets.
-// Calls only your Netlify Functions. No secrets in HTML. Tolerant to missing DOM.
+/* app/assets/js/dashboard-live.js
+   Empire Dashboard – production-ready client (robust parsing)
+   - Uses stored token (EMPIRE_TOKEN or CMD_USER)
+   - Talks directly to Netlify functions (no /api remap)
+   - Tolerant to different backend payload shapes
+   - Populates Profile, KPIs, Health, Feed, Banks, Payout
+   - Debug dump with ?debug=1
+*/
 
-(() => {
-  // --- CONFIG --------------------------------------------------------------
-// ---- TOKEN HELPERS (add this) ----
-const STORAGE_KEYS = { user: 'EMPIRE_TOKEN', cmd: 'CMD_USER' };
+/* ============= 0) Utilities & constants ============= */
+const STORAGE_KEYS = { user: "EMPIRE_TOKEN", cmd: "CMD_USER" };
+const API = {
+  me:               "/.netlify/functions/me",
+  health:           "/.netlify/functions/monitor-health",
+  feed:             "/.netlify/functions/monitor-feed",
+  summary:          "/.netlify/functions/gs-bridge?action=summary",
+  banks:            "/.netlify/functions/paystack-banks",
+  payoutQuote:      "/.netlify/functions/paystack-transfer?dryrun=1",
+  payoutRequest:    "/.netlify/functions/paystack-transfer",
+  sheetsPing:       "/.netlify/functions/gs-bridge?action=ping",
+  sheetsAppend:     "/.netlify/functions/gs-bridge",
+};
 
 function getAuthToken() {
-  // Prefer user session token; fall back to Commander PIN
-  let t = null;
+  let t = "";
   try {
-    t = localStorage.getItem(STORAGE_KEYS.user);
-    if (!t) t = localStorage.getItem(STORAGE_KEYS.cmd);
+    t = localStorage.getItem(STORAGE_KEYS.user) || localStorage.getItem(STORAGE_KEYS.cmd) || "";
   } catch {}
-  return (t || '').trim();
-}  
-const ENDPOINTS = {
-    me:        '/.netlify/functions/me',
-    health:    '/.netlify/functions/monitor-health',
-    feed:      '/.netlify/functions/monitor-feed',
-    summary:   '/.netlify/functions/gs-bridge?action=summary',
-    banks:     '/.netlify/functions/paystack-banks',
-    paystackX: '/.netlify/functions/paystack-transfer',
-    flwX:      '/.netlify/functions/flw-transfer',
-    telegram:  '/.netlify/functions/test-telegram',
-    gsBridge:  '/.netlify/functions/gs-bridge'
-  };
-  const POLL_MS = 15000;
+  return (t || "").trim();
+}
 
-  // --- HELPERS -------------------------------------------------------------
-  const el = (id) => document.getElementById(id);
-  const qs = (k) => new URL(location.href).searchParams.get(k);
-  const $  = (sel) => document.querySelector(sel);
+async function fetchJson(url, opts = {}) {
+  const token = getAuthToken();
+  const headers = Object.assign(
+    { "Content-Type": "application/json" },
+    opts.headers || {},
+    token ? { "x-empire-token": token } : {}
+  );
+  const res = await fetch(url, { ...opts, headers, cache: "no-store" });
+  const text = await res.text();
+  let data;
+  try { data = JSON.parse(text); } catch { data = { ok: res.ok, raw: text }; }
+  if (!res.ok) throw new Error(data?.error || `HTTP ${res.status}`);
+  return data;
+}
 
-  function setText(node, v){ if (node) node.textContent = v; }
-  function pill(node, text, ok){ if (!node) return; node.textContent = text||'—'; node.className = 'pill' + (ok?' ok':''); }
-  function badge(node, text, state){ if (!node) return; node.textContent = text||'—'; node.className = 'badge ' + (state==='ok'?'b-ok':state==='warn'?'b-warn':'b-down'); }
-  const fmt = {
-    money(n){ try{ return (Number(n)||0).toLocaleString(undefined,{style:'currency',currency:'NGN'}) }catch{ return `₦${n}`; } },
-    pct(n){ const x=Number(n); return Number.isFinite(x)?`${x.toFixed(1)}%`:'—'; }
-  };
-  async function j(url, opts){ const r = await fetch(url, { credentials:'include', ...opts }); try { return await r.json(); } catch { return { ok:false, error:`Non-JSON from ${url}`, status:r.status }; } }
+function $(id){ return document.getElementById(id); }
+function show(el){ if (el) el.style.display = ""; }
+function hide(el){ if (el) el.style.display = "none"; }
+function setText(id, val){ const el=$(id); if (el) el.textContent = (val ?? "—"); }
+function fmtMoney(n, curr="NGN"){
+  const v = Number(n || 0);
+  try { return new Intl.NumberFormat("en-NG", { style:"currency", currency: curr }).format(v); }
+  catch { return `${curr} ${v.toFixed(2)}`; }
+}
+function ts(x){ try { return new Date(x).toLocaleString(); } catch { return x || "—"; } }
+function qp(k){ return new URL(location.href).searchParams.get(k); }
+function el(tag, attrs={}, ...children){
+  const e=document.createElement(tag);
+  Object.entries(attrs).forEach(([k,v])=>{ if(k==="class") e.className=v; else e.setAttribute(k,v); });
+  children.forEach(c=>e.append(c));
+  return e;
+}
 
-  // --- PROFILE -------------------------------------------------------------
-  async function loadProfile(){
-    const note = el('note'); const prof = el('profile');
-    try {
-      const out = await j(ENDPOINTS.me);
-      if (!out?.ok) throw new Error(out?.error || 'Profile load failed');
-      if (note) note.style.display='none'; if (prof) prof.style.display='block';
-      const u = out.user || {};
-      setText(el('name'), u.name||'—');
-      setText(el('contact'), [u.email,u.phone].filter(Boolean).join(' · ') || '—');
-      pill(el('status'), u.status||'—', String(u.status||'').toUpperCase().includes('APPROVED'));
-      setText(el('scale'), (u.scale ?? '—'));
-    } catch (e) { if (note) note.textContent = 'Could not load your dashboard: ' + e.message; }
+/* ============= 1) Profile (/me) ============= */
+async function loadMe() {
+  const note = $("note");
+  const profile = $("profile");
+  const token = getAuthToken();
+
+  if (!token) {
+    if (note) { show(note); note.textContent = "No session token. Go to Login."; }
+    if (profile) hide(profile);
+    return { ok:false, error:"No token" };
   }
 
-  // --- HEALTH --------------------------------------------------------------
-  async function loadHealth(){
-    const row = el('healthRow'); if (!row) return; row.innerHTML='';
-    try {
-      const out = await j(ENDPOINTS.health);
-      const items = Array.isArray(out?.checks) ? out.checks : Array.isArray(out?.items) ? out.items : [];
-      for (const c of items){
-        const span = document.createElement('span');
-        const label = c.label || c.name || c.id || '—';
-        const status = (c.status||'warn').toLowerCase();
-        badge(span, label + (c.value?`: ${c.value}`:''), status);
-        if (c.note) span.title = c.note;
-        row.appendChild(span);
-      }
-    } catch {}
+  try {
+    const me = await fetchJson(API.me);
+    // Accept either { ok,true, user:{...} } or flattened fields
+    const u = me.user || me || {};
+    const status = u.status || (u.approved ? "APPROVED" : "PENDING");
+
+    // Populate
+    setText("name", u.name || u.fullName || "—");
+    setText("contact", [u.email, u.phone].filter(Boolean).join(" • "));
+    setText("status", status);
+    setText("scale",  (u.scale != null ? String(u.scale) : "—"));
+
+    if (note) hide(note);
+    if (profile) show(profile);
+    return { ok:true, user:u };
+  } catch (e) {
+    if (note) { note.textContent = `Profile error: ${e.message}`; show(note); }
+    if (profile) hide(profile);
+    return { ok:false, error:String(e.message||e) };
   }
+}
 
-  // --- FEED ----------------------------------------------------------------
-  async function loadFeed(){
-    const tbody = $('#feedTable tbody'); const empty = el('feedEmpty'); if (!tbody) return;
-    tbody.innerHTML='';
-    try {
-      const out = await j(ENDPOINTS.feed);
-      const items = (out && out.ok && Array.isArray(out.items)) ? out.items : [];
-      if (!items.length){ if (empty) empty.style.display='block'; return; }
-      if (empty) empty.style.display='none';
-      for (const ev of items){
-        const tr = document.createElement('tr');
-        const raw = ev.ts || ev.time || '';
-        const date = raw ? new Date(raw) : null;
-        const when = (date && !isNaN(+date)) ? date.toLocaleString() : (typeof raw==='string'?raw:'—');
-        const type = ev.type || '—';
-        const msg  = (ev.msg || ev.message || '—').toString().replace(/</g,'&lt;');
-        const ref  = ev.ref || ev.reference || '—';
-        const who  = ev.actor || ev.user || '—';
-        tr.innerHTML = `<td>${when}</td><td>${type}</td><td>${msg}</td><td>${ref}</td><td>${who}</td>`;
-        tbody.appendChild(tr);
-      }
-    } catch { if (empty) empty.style.display='block'; }
+/* ============= 2) Health (/monitor-health) ============= */
+function badge(text, cls="badge-sm"){ return el("span", { class: cls }, text); }
+function stateBadge(s){
+  const v = String(s || "UNKNOWN").toUpperCase();
+  if (["ONLINE","CONNECTED","OPERATIONAL","ACTIVE","OK"].includes(v)) return badge(v,"badge-sm ok");
+  if (["WARN","DEGRADED","LAGGING"].includes(v)) return badge(v,"badge-sm warn");
+  return badge(v,"badge-sm down");
+}
+
+async function loadHealth() {
+  const row = $("healthRow");
+  if (!row) return { ok:false, error:"no healthRow" };
+  row.innerHTML = "";
+  try {
+    const h = await fetchJson(API.health);
+    // Accept either top-level fields or nested
+    const d = h.data || h || {};
+    row.append(
+      stateBadge(d.server),
+      stateBadge(d.db || d.database),
+      stateBadge(d.sheets),
+      stateBadge(d.ai || d.model || "AI"),
+      badge(`Sync: ${d.sync ?? d.sheetSync ?? "—"}`, "badge-sm")
+    );
+    return { ok:true, ...d };
+  } catch (e) {
+    row.append(badge("Health error","badge-sm down"));
+    return { ok:false, error:String(e.message||e) };
   }
+}
 
-  // --- KPIs (optional) -----------------------------------------------------
-  async function loadKPIs(){
-    const need = el('kpi_total_earnings') || el('kpi_active_users') || el('kpi_approval_rate') || el('kpi_pending');
-    if (!need) return;
-    try {
-      const out = await j(ENDPOINTS.summary);
-      if (!out?.ok) return;
-      if (el('kpi_total_earnings')) setText(el('kpi_total_earnings'), fmt.money(out.totalEarnings ?? 0));
-      if (el('kpi_active_users'))   setText(el('kpi_active_users'),   String(out.activeUsers ?? 0));
-      if (el('kpi_approval_rate'))  setText(el('kpi_approval_rate'),  out.approvalRate!=null ? fmt.pct(out.approvalRate) : '—');
-      if (el('kpi_pending'))        setText(el('kpi_pending'),        String(out.pendingReviews ?? 0));
-    } catch {}
+/* ============= 3) Event feed (/monitor-feed) ============= */
+async function loadFeed() {
+  const tb = $("feedTable")?.querySelector("tbody");
+  const empty = $("feedEmpty");
+  if (!tb) return { ok:false, error:"no feedTable" };
+  tb.innerHTML = "";
+  try {
+    const data = await fetchJson(API.feed);
+    // Accept: { events: [...] } or { events:{ items:[] } } or { items:[] }
+    const events =
+      (Array.isArray(data.events) ? data.events : null) ||
+      (Array.isArray(data.items) ? data.items : null) ||
+      (Array.isArray(data?.events?.items) ? data.events.items : null) ||
+      [];
+
+    if (!events.length) { if (empty) show(empty); return { ok:true, count:0 }; }
+    if (empty) hide(empty);
+
+    events.slice(0,100).forEach(ev=>{
+      const tr = el("tr");
+      tr.append(
+        el("td",{}, ts(ev.ts || ev.time || ev.date)),
+        el("td",{}, ev.type || ev.kind || "—"),
+        el("td",{}, ev.message || ev.msg || ev.note || "—"),
+        el("td",{}, ev.ref || ev.id || "—"),
+        el("td",{}, ev.actor || ev.user || ev.by || "—")
+      );
+      tb.append(tr);
+    });
+    return { ok:true, count: events.length };
+  } catch (e) {
+    tb.append(el("tr",{}, el("td",{colspan:"5"}, `Feed error: ${e.message}`)));
+    return { ok:false, error:String(e.message||e) };
   }
+}
 
-  // --- PAYOUTS -------------------------------------------------------------
-  async function loadBanks(){
-    const sel = el('paystackBanks'); if (!sel) return;
-    sel.innerHTML = `<option>Loading…</option>`;
-    try {
-      const out = await j(ENDPOINTS.banks);
-      const banks = out?.data || out?.banks || [];
-      sel.innerHTML = `<option value="">Select bank</option>` + banks.map(b => `<option value="${b.code || b.bank_code}">${b.name}</option>`).join('');
-    } catch {
-      sel.innerHTML = `<option value="">Bank list unavailable</option>`;
-    }
+/* ============= 4) KPIs (/gs-bridge?action=summary) ============= */
+async function loadSummary() {
+  try {
+    const s = await fetchJson(API.summary);
+    const d = s.data || s || {};
+    // Accept multiple field names
+    const total   = d.totalEarnings ?? d.total ?? d.earnings ?? 0;
+    const users   = d.activeUsers   ?? d.users ?? d.members ?? 0;
+    const rate    = d.approvalRate  ?? d.rate  ?? null; // expect number or string
+    const pending = d.pendingReviews ?? d.pending ?? 0;
+    const curr    = d.currency || "NGN";
+
+    setText("kpi_total",  fmtMoney(total, curr));
+    setText("kpi_users",  users);
+    setText("kpi_rate",   (rate != null && rate !== "") ? `${String(rate).replace(/%$/,"")}%` : "—");
+    setText("kpi_pending", pending);
+    return { ok:true, total, users, rate, pending, currency: curr };
+  } catch (e) {
+    // Don’t block page on KPI error
+    return { ok:false, error:String(e.message||e) };
   }
+}
 
-  async function sendPayout(){
-    const note = el('payoutNote');
-    const provider = (el('provider')?.value || 'paystack').toLowerCase();
-    const bankCode = el('paystackBanks')?.value || '';
-    const acct     = el('acct')?.value?.trim() || '';
-    const acctName = el('acctName')?.value?.trim() || '';
-    const amount   = Number(el('amt')?.value || 0);
-
-    if (!acct || !acctName || !amount || !bankCode){ setText(note, 'Missing payout fields'); return; }
-    setText(note, 'Submitting…');
-
-    try {
-      const url = provider === 'flutterwave' ? ENDPOINTS.flwX : ENDPOINTS.paystackX;
-      const body = provider === 'flutterwave'
-        ? { bank_code: bankCode, account_number: acct, account_name: acctName, amount }
-        : { bank_code: bankCode, account_number: acct, account_name: acctName, amount };
-
-      const out = await j(url, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
-      if (out?.ok) {
-        setText(note, `Payout queued: ${out.reference || out.id || 'success'}`);
-      } else {
-        setText(note, `Error: ${out?.error || 'failed'}`);
-      }
-    } catch (e) {
-      setText(note, 'Network error');
-    }
+/* ============= 5) Banks & payout ============= */
+async function loadBanks() {
+  const sel = $("bankSelect");
+  if (!sel) return { ok:false, error:"no bankSelect" };
+  sel.innerHTML = `<option value="">Select bank</option>`;
+  try {
+    const data = await fetchJson(API.banks);
+    // Accept: { banks:[...] } or Paystack-style { status:true, data:[...] }
+    const arr = (Array.isArray(data.banks) ? data.banks :
+                Array.isArray(data.data) ? data.data : []);
+    arr.forEach(b=>{
+      const code = b.code || b.slug || b.id;
+      const name = b.name || b.slug || `#${b.id}`;
+      if (!code) return;
+      sel.append(el("option", { value: code }, name));
+    });
+    return { ok:true, count: arr.length };
+  } catch (e) {
+    return { ok:false, error:String(e.message||e) };
   }
+}
 
-  // --- MESSAGING (Telegram test) ------------------------------------------
-  async function pingTelegram(){
-    const note = el('msgNote'); setText(note, 'Sending…');
-    try {
-      const out = await j(ENDPOINTS.telegram, { method:'POST' });
-      setText(note, out?.ok ? 'Telegram sent' : `Error: ${out?.error || 'failed'}`);
-    } catch { setText(note, 'Network error'); }
-  }
+async function requestPayout() {
+  const provider = $("providerSelect")?.value || "Paystack";
+  const bankCode = $("bankSelect")?.value || "";
+  const acct = $("acctInput")?.value || "";
+  const name = $("acctName")?.value || "";
+  const amt = parseFloat(($("amountInput")?.value || "").trim()) || 0;
 
-  // --- SHEETS QUICK ACTIONS -----------------------------------------------
-  async function sheetPing(){
-    const note = el('sheetNote'); setText(note, 'Pinging…');
-    try {
-      const out = await j(`${ENDPOINTS.gsBridge}?action=ping`);
-      setText(note, out?.ok ? 'Sheets OK' : `Error: ${out?.error || 'failed'}`);
-    } catch { setText(note, 'Network error'); }
-  }
-  async function sheetAppend(){
-    const note = el('sheetNote'); setText(note, 'Appending…');
-    try {
-      const payload = { action:'append', sheet:'Event_Log', values:[Date.now(), 'Dashboard', 'Manual append', 'UI', 'system'] };
-      const out = await j(ENDPOINTS.gsBridge, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
-      setText(note, out?.ok ? 'Event appended' : `Error: ${out?.error || 'failed'}`);
-    } catch { setText(note, 'Network error'); }
-  }
+  if (!amt || !bankCode || !acct) { alert("Enter amount, select bank, and account number."); return; }
 
-  // --- DEBUG ---------------------------------------------------------------
-  async function loadDebug(){
-    if (qs('debug') !== '1') return;
-    const raw = el('raw'); const dbg = el('debug'); if (!raw || !dbg) return;
-    try {
-      const [me, health, feed, summary] = await Promise.all([
-        j(ENDPOINTS.me).catch(e=>({ok:false,error:String(e)})),
-        j(ENDPOINTS.health).catch(e=>({ok:false,error:String(e)})),
-        j(ENDPOINTS.feed).catch(e=>({ok:false,error:String(e)})),
-        j(ENDPOINTS.summary).catch(e=>({ok:false,error:String(e)})),
-      ]);
-      raw.style.display = 'block';
-      dbg.textContent = JSON.stringify({ me, health, feed, summary }, null, 2);
-    } catch (e) {
-      raw.style.display = 'block';
-      dbg.textContent = JSON.stringify({ error:String(e) }, null, 2);
-    }
-  }
+  try {
+    // optional dry run / quote
+    await fetchJson(API.payoutQuote, {
+      method: "POST",
+      body: JSON.stringify({ provider, bankCode, accountNumber: acct, accountName: name, amount: amt }),
+    });
 
-  // --- MASTER --------------------------------------------------------------
-  async function loadAll(){
-    await Promise.allSettled([
-      loadProfile(),
-      loadHealth(),
-      loadFeed(),
-      loadKPIs(),
-      loadDebug(),
-      loadBanks(), // load banks once; harmless if called again
-    ]);
-  }
+    const r = await fetchJson(API.payoutRequest, {
+      method: "POST",
+      body: JSON.stringify({ provider, bankCode, accountNumber: acct, accountName: name, amount: amt }),
+    });
 
+    if (r?.ok === false) throw new Error(r?.error || "Payout failed");
+    alert("Payout submitted.");
+  } catch (e) {
+    alert(`Payout error: ${e.message || e}`);
+  }
+}
+
+/* ============= 6) Sheets ops (Users tab) ============= */
+async function sheetsPing() {
+  try {
+    const r = await fetchJson(API.sheetsPing);
+    alert(r?.ok ? "Sheets ping OK" : (r?.error || "Ping failed"));
+  } catch (e) {
+    alert(`Ping error: ${e.message || e}`);
+  }
+}
+async function sheetsAppendSample() {
+  try {
+    const r = await fetchJson(API.sheetsAppend, {
+      method: "POST",
+      body: JSON.stringify({ action:"append", sheet:"Event_Log", values: [Date.now(),"dashboard_test","Manual append from dashboard"] }),
+    });
+    alert(r?.ok ? "Event appended." : (r?.error || "Append failed"));
+  } catch (e) {
+    alert(`Append error: ${e.message || e}`);
+  }
+}
+
+/* ============= 7) Debug panel ============= */
+function updateDebug(payload) {
+  if (qp("debug") !== "1") return;
+  const box = $("debug"), raw=$("raw");
+  if (!box || !raw) return;
+  show(raw);
+  try { box.textContent = JSON.stringify(payload, null, 2); }
+  catch { box.textContent = String(payload); }
+}
+
+/* ============= 8) Init ============= */
+async function init() {
   // Wire buttons if present
-  el('refreshBtn')?.addEventListener('click', loadAll);
-  el('btnPayout')?.addEventListener('click', sendPayout);
-  el('btnPingTG')?.addEventListener('click', pingTelegram);
-  el('btnSheetPing')?.addEventListener('click', sheetPing);
-  el('btnSheetAppend')?.addEventListener('click', sheetAppend);
+  const refreshBtn = $("refreshBtn");
+  if (refreshBtn) refreshBtn.addEventListener("click", loadHealth);
+  const payoutBtn = $("payoutBtn");
+  if (payoutBtn) payoutBtn.addEventListener("click", requestPayout);
+  const pingBtn = $("sheetsPingBtn");
+  if (pingBtn) pingBtn.addEventListener("click", sheetsPing);
+  const appendBtn = $("sheetsAppendBtn");
+  if (appendBtn) appendBtn.addEventListener("click", sheetsAppendSample);
 
-  // Init & poll
-  document.addEventListener('DOMContentLoaded', () => {
-    loadAll();
-    setInterval(loadAll, POLL_MS);
-  });
-})();
+  // Load all data
+  const me      = await loadMe();
+  const [health, feed, summary] = await Promise.all([loadHealth(), loadFeed(), loadSummary()]);
+  await loadBanks();
+
+  updateDebug({ me, health, feed, summary });
+}
+
+document.addEventListener("DOMContentLoaded", init);

@@ -6,8 +6,9 @@
   <title>Empire Hub — Login</title>
   <meta name="color-scheme" content="dark" />
   <style>
-    :root{--bg:#0b1220;--panel:#101a2c;--ink:#e8eefc;--muted:#9fb2d1;--line:#1f2b44;--ring:#2f3b58;--gold1:#ffd24d;--gold2:#ffb11a;--blue1:#367cff;--blue2:#215de7}
-    *{box-sizing:border-box} body{margin:0;background:#0b1220;color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,sans-serif}
+    :root{--bg:#0b1220;--panel:#101a2c;--ink:#e8eefc;--muted:#9fb2d1;--line:#1f2b44;--ring:#2f3b58;--gold1:#ffd24d;--gold2:#ffb11a}
+    *{box-sizing:border-box}
+    body{margin:0;background:#0b1220;color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,sans-serif}
     .wrap{max-width:720px;margin:0 auto;padding:28px 14px 48px}
     .hero{background:linear-gradient(180deg, rgba(255,255,255,.02), transparent),var(--panel);border:1px solid var(--line);border-radius:24px;padding:20px}
     .brand{display:flex;gap:12px;align-items:center}
@@ -19,8 +20,10 @@
     label{display:block;font-size:13px;color:#cfe0ff;margin:10px 0 6px}
     input{width:100%;background:#0b162a;color:#e8eefc;border:1px solid var(--ring);border-radius:12px;padding:14px 12px}
     .btn{display:block;width:100%;text-align:center;padding:14px 16px;border-radius:12px;border:0;cursor:pointer;font-weight:800;color:#1b1606;background:linear-gradient(180deg,var(--gold1),var(--gold2))}
-    .muted{color:var(--muted)} .note{margin-top:10px;padding:12px;border-radius:12px;display:none}
-    .ok{background:#0f2a18;border:1px solid #1e5d38;color:#b7f7c3} .err{background:#2a0f13;border:1px solid #5d1e28;color:#ffb4c0}
+    .muted{color:var(--muted)}
+    .note{margin-top:10px;padding:12px;border-radius:12px;display:none}
+    .ok{background:#0f2a18;border:1px solid #1e5d38;color:#b7f7c3}
+    .err{background:#2a0f13;border:1px solid #5d1e28;color:#ffb4c0}
     .footer{opacity:.7;text-align:center;margin-top:24px;font-size:13px}
   </style>
 </head>
@@ -36,6 +39,7 @@
       </div>
       <div class="links" style="margin-top:10px">
         <a href="/dashboard.html">User Dashboard</a>
+        <!-- Use a public link; do NOT inject TELEGRAM_CHANNEL_USERNAME from env into HTML -->
         <a href="https://t.me/TheEmpireHq" target="_blank" rel="noopener">Telegram: @TheEmpireHq</a>
       </div>
     </div>
@@ -45,7 +49,7 @@
       <p class="muted" style="margin:0 0 12px">Enter Admin PIN to access the dashboard.</p>
 
       <label for="pin">Admin PIN</label>
-      <input id="pin" placeholder="GENERALISIMO@2025" autocomplete="off" />
+      <input id="pin" placeholder="Enter PIN" autocomplete="off" />
       <button id="loginBtn" class="btn" type="button">Enter Command Center</button>
 
       <div id="msgOk" class="note ok">PIN accepted. Redirecting…</div>
@@ -56,11 +60,12 @@
   </div>
 
   <script>
-    // 🔧 Set this to your auth endpoint that exchanges PIN → token.
-    // It must return JSON: { ok: true, token: "..." } on success.
-    const AUTH_URL = "/api/auth/login"; // <-- adjust if different
+    // IMPORTANT:
+    // - Do NOT put CMD_PASS or any secret value in this HTML.
+    // - This page posts the typed PIN to the backend. The backend validates the PIN against server-side env and returns a token.
+
+    const AUTH_URL = "/.netlify/functions/auth-login"; // Your PIN→token endpoint (server-side)
     const TOKEN_KEY = "EMPIRE_TOKEN";
-    const PIN_KEY   = "CMD_USER"; // still keep for compatibility
 
     async function login() {
       const pin = (document.getElementById('pin').value || "").trim();
@@ -71,21 +76,18 @@
       if (!pin) { errEl.textContent = "Enter your PIN."; errEl.style.display="block"; return; }
 
       try {
-        // Call backend to get token
         const res = await fetch(AUTH_URL, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ pin })
         });
         const data = await res.json().catch(()=>({ok:false,error:"Bad JSON"}));
+
         if (!res.ok || !data.ok || !data.token) {
           throw new Error(data?.error || "Invalid PIN");
         }
 
-        // Save token (+ PIN for legacy endpoints if needed)
         try { localStorage.setItem(TOKEN_KEY, data.token); } catch {}
-        try { localStorage.setItem(PIN_KEY, pin); } catch {}
-
         okEl.style.display = "block";
         setTimeout(()=>{ window.location.href = "/dashboard.html"; }, 600);
       } catch (e) {
@@ -104,4 +106,3 @@
     } catch {}
   </script>
 </body>
-</html>

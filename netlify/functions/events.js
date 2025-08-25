@@ -1,34 +1,40 @@
-"use strict";
-
-exports.handler = async (event) => {
+// Public: proxy to Apps Script EVENTS (no token required)
+export default async function handler(req, context) {
   try {
-    const token = (event.headers.authorization || "").replace(/^Bearer\s+/i, "");
-    if (!token) return j(401, { ok:false, error:"No token" });
+    const direct = process.env.SHEETS_EVENTS_URL;
+    const base = process.env.SHEETS_BASE_URL;
 
-    const base = process.env.GOOGLE_SHEETS_WEBAPP_URL || "";
-    const key  = process.env.GS_WEBAPP_KEY || "";
-    const sid  = process.env.GS_SHEET_ID || "";
-    if (!base || !key) return j(500, { ok:false, error:"Missing GOOGLE_SHEETS_WEBAPP_URL / GS_WEBAPP_KEY" });
+    // forward simple filters
+    const u = new URL(req.url);
+    const limit = u.searchParams.get("limit") || "";
+    const since = u.searchParams.get("since") || "";
 
-    const qs = new URLSearchParams(event.queryStringParameters || {});
-    const limit = Math.max(1, Math.min(100, Number(qs.get("limit")) || 50));
+    let url = direct || (base ? `${base}?action=events` : null);
+    if (!url) {
+      return new Response(JSON.stringify({ ok: false, error: "SHEETS_* env not set" }), {
+        status: 500,
+        headers: { "content-type": "application/json", "access-control-allow-origin": "*" },
+      });
+    }
+    // attach optional params
+    const qs = new URL(url);
+    if (limit) qs.searchParams.set("limit", limit);
+    if (since) qs.searchParams.set("since", since);
+    url = qs.toString();
 
-    const r = await fetch(base, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ action:"events", key, sheetId:sid, limit }),
+    const r = await fetch(url, { method: "GET", headers: { "accept": "application/json" } });
+    const text = await r.text();
+    let body;
+    try { body = JSON.parse(text); } catch { body = { ok: true, raw: text }; }
+
+    return new Response(JSON.stringify(body), {
+      status: r.ok ? 200 : r.status,
+      headers: { "content-type": "application/json", "access-control-allow-origin": "*" },
     });
-
-    const data = await r.json().catch(()=>({ ok:false, error:"Bad JSON from Apps Script" }));
-    if (!data.ok) return j(502, { ok:false, error:data.error || "Apps Script error" });
-
-    // Normalize to { ok:true, events:{ items:[...] } }
-    return j(200, { ok:true, events: data });
   } catch (e) {
-    return j(500, { ok:false, error:String(e.message||e) });
+    return new Response(JSON.stringify({ ok: false, error: String(e?.message || e) }), {
+      status: 500,
+      headers: { "content-type": "application/json", "access-control-allow-origin": "*" },
+    });
   }
-};
-
-function j(code, body){
-  return { statusCode:code, headers:{ "content-type":"application/json" }, body:JSON.stringify(body) };
 }

@@ -1,13 +1,19 @@
-// /summary -> proxy to Apps Script ?action=summary and normalize
-export default async (req, ctx) => {
+// netlify/functions/summary.js
+"use strict";
+
+exports.handler = async () => {
   try {
-    const base = process.env.SHEETS_BASE;        // MUST be your /exec URL
-    if (!base) return Response.json({ ok:false, error:"Missing SHEETS_BASE" }, { status:500 });
+    const base = process.env.SHEETS_BASE || process.env.EMPIRE_APPS_SCRIPT_BASE || "";
+    if (!base) return json(500, { ok:false, error:"Missing SHEETS_BASE (Apps Script /exec URL)" });
 
-    const r = await fetch(`${base}?action=summary`, { headers:{ "Accept":"application/json" }});
-    const data = await r.json().catch(() => ({}));
+    const r = await fetch(`${base}?action=summary`, { headers: { Accept: "application/json" } });
+    const text = await r.text();
 
-    return Response.json({
+    // Try parse; normalize shape the dashboard expects
+    let data;
+    try { data = JSON.parse(text); } catch { return json(502, { ok:false, error:"Bad JSON from Apps Script", raw:text }); }
+
+    return json(200, {
       ok: !!data.ok,
       totalEarnings: Number(data.totalEarnings || 0),
       activeUsers: Number(data.activeUsers || 0),
@@ -15,6 +21,10 @@ export default async (req, ctx) => {
       pendingReviews: Number(data.pendingReviews || 0)
     });
   } catch (e) {
-    return Response.json({ ok:false, error:String(e) }, { status:500 });
+    return json(500, { ok:false, error:String(e) });
   }
 };
+
+function json(code, body){
+  return { statusCode: code, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) };
+}

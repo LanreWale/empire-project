@@ -1,10 +1,15 @@
-"use strict";
-
+// netlify/functions/public-config.js
 exports.handler = async () => {
-  const tg = (process.env.TELEGRAM_CHANNEL_USERNAME || "TheEmpireHq").replace(/^@/, "");
+  const raw = String(process.env.TELEGRAM_CHANNEL_USERNAME || "");
+  const handle = raw.replace(/^@/, ""); // sanitize
+  const url = handle ? `https://t.me/${handle}` : "";
+
   return {
     statusCode: 200,
-    headers: { "Content-Type": "application/json", "Cache-Control": "public, max-age=300" },
-    body: JSON.stringify({ telegramChannel: tg })
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      telegramChannelUrl: url,
+      telegramHandle: handle ? `@${handle}` : ""
+    }),
   };
 };

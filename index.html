@@ -3,187 +3,105 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Empire Hub — Supreme Command & User Access</title>
+  <title>Empire Hub — Login</title>
   <meta name="color-scheme" content="dark" />
   <style>
-    :root{
-      --bg:#0a1220; --panel:#0f182a; --panel-2:#101b31;
-      --ink:#e8eefc; --muted:#9fb2d1; --line:#1f2b44;
-      --gold-1:#ffd24d; --gold-2:#ffb11a;
-      --blue-1:#367cff; --blue-2:#215de7;
-      --ok:#16a34a; --ring:#293757;
-      --radius:18px;
-    }
-    *{box-sizing:border-box}
-    body{
-      margin:0; background:radial-gradient(1200px 800px at 10% -10%, #14223f 0%, #0a1220 50%), var(--bg);
-      color:var(--ink); font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,sans-serif;
-    }
-    .wrap{max-width:980px; margin:28px auto 60px; padding:0 14px;}
-    .hero{
-      background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.00)) , var(--panel);
-      border:1px solid var(--line); border-radius:24px; padding:18px 18px 14px;
-      box-shadow:0 10px 30px rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.02);
-    }
-    .hero-top{display:flex; gap:14px; align-items:center; justify-content:space-between; flex-wrap:wrap}
-    .brand{display:flex; align-items:center; gap:12px}
-    .badge{
-      width:44px; height:44px; border-radius:12px;
-      display:grid; place-items:center;
-      background:linear-gradient(135deg, #22c55e, #60a5fa);
-      box-shadow:0 8px 18px rgba(0,0,0,.35);
-      font-weight:800; color:#001; letter-spacing:.5px;
-    }
-    .title{ font-size:18px; font-weight:700; }
-    .sub{ color:var(--muted); line-height:1.45; margin-top:6px; }
-    .links a{color:#a7c8ff; text-decoration:none; margin-right:16px}
-    .panel{
-      margin-top:16px; padding:18px; border-radius:24px;
-      background:var(--panel-2); border:1px solid var(--line);
-    }
-    .grid{display:grid; gap:18px; grid-template-columns:1fr; }
-    @media(min-width:760px){ .grid{grid-template-columns:1fr 1fr} }
-    .card{
-      padding:20px; border-radius:20px; background:rgba(10,17,31,.6);
-      border:1px solid var(--line);
-      box-shadow:inset 0 0 0 1px rgba(255,255,255,.02);
-    }
-    .card h3{margin:0 0 10px; font-size:22px; color:var(--gold-1); letter-spacing:.2px}
-    .card p{margin:0 0 16px; color:var(--muted)}
-    .cta{
-      display:block; width:100%; text-align:center; padding:14px 16px; border-radius:12px;
-      font-weight:800; text-decoration:none; border:0; cursor:pointer;
-      transition:transform .04s ease;
-    }
-    .cta:active{ transform:translateY(1px) }
-    .cta-gold{ color:#1b1606; background:linear-gradient(180deg, var(--gold-1), var(--gold-2)); }
-    .cta-blue{ color:#fff; background:linear-gradient(180deg, var(--blue-1), var(--blue-2)); }
-    .tabs{display:flex; gap:10px; margin:0 0 14px}
-    .tab{
-      flex:1; text-align:center; padding:12px 10px; border-radius:14px;
-      background:#121f39; border:1px solid var(--ring); color:#cfe0ff; font-weight:700; cursor:pointer;
-    }
-    .tab.active{ background:linear-gradient(135deg, #22c55e33, #60a5fa22); border-color:#3962ff; color:#fff }
-    .field{margin:12px 0 10px}
-    label{display:block; font-size:13px; color:#cfe0ff; margin-bottom:8px}
-    input{
-      width:100%; background:#0b162a; color:#e8eefc; border:1px solid var(--ring);
-      border-radius:12px; padding:14px 12px; outline:none;
-    }
-    .note{margin-top:10px; color:#b7f7c3; background:#0f2a18; border:1px solid #1e5d38; padding:12px; border-radius:12px; display:none}
-    .footer{opacity:.7; text-align:center; margin-top:26px; font-size:13px}
+    :root{--bg:#0b1220;--panel:#101a2c;--ink:#e8eefc;--muted:#9fb2d1;--line:#1f2b44;--ring:#2f3b58;--gold1:#ffd24d;--gold2:#ffb11a;--blue1:#367cff;--blue2:#215de7}
+    *{box-sizing:border-box} body{margin:0;background:#0b1220;color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,sans-serif}
+    .wrap{max-width:720px;margin:0 auto;padding:28px 14px 48px}
+    .hero{background:linear-gradient(180deg, rgba(255,255,255,.02), transparent),var(--panel);border:1px solid var(--line);border-radius:24px;padding:20px}
+    .brand{display:flex;gap:12px;align-items:center}
+    .badge{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;background:linear-gradient(135deg,#22c55e,#60a5fa);color:#001;font-weight:800}
+    .title{font-size:18px;font-weight:700}
+    .sub{color:var(--muted);margin-top:6px}
+    .links a{color:#a7c8ff;text-decoration:none;margin-right:16px}
+    .card{background:#0f182a;border:1px solid var(--line);border-radius:16px;padding:18px;margin-top:16px}
+    label{display:block;font-size:13px;color:#cfe0ff;margin:10px 0 6px}
+    input{width:100%;background:#0b162a;color:#e8eefc;border:1px solid var(--ring);border-radius:12px;padding:14px 12px}
+    .btn{display:block;width:100%;text-align:center;padding:14px 16px;border-radius:12px;border:0;cursor:pointer;font-weight:800;color:#1b1606;background:linear-gradient(180deg,var(--gold1),var(--gold2))}
+    .muted{color:var(--muted)} .note{margin-top:10px;padding:12px;border-radius:12px;display:none}
+    .ok{background:#0f2a18;border:1px solid #1e5d38;color:#b7f7c3} .err{background:#2a0f13;border:1px solid #5d1e28;color:#ffb4c0}
+    .footer{opacity:.7;text-align:center;margin-top:24px;font-size:13px}
   </style>
 </head>
 <body>
   <div class="wrap">
-    <!-- HERO -->
     <div class="hero">
-      <div class="hero-top">
-        <div class="brand">
-          <div class="badge">▲</div>
-          <div>
-            <div class="title">Empire Hub</div>
-            <div class="sub">Secure entry for Commander, Approved Users, and Onboarding.</div>
-          </div>
+      <div class="brand">
+        <div class="badge">▲</div>
+        <div>
+          <div class="title">Empire Hub</div>
+          <div class="sub">Secure entry for Commander, Approved Users, and Onboarding.</div>
         </div>
-        <div class="links">
-          <a href="/admin/">Commander Console</a>
-          <a href="/dashboard.html">User Dashboard</a>
-          <!-- Telegram link populated from public-config function -->
-          <a id="tgLink" href="#" target="_blank" rel="noopener">Telegram: loading…</a>
-        </div>
+      </div>
+      <div class="links" style="margin-top:10px">
+        <a href="/dashboard.html">User Dashboard</a>
+        <a href="https://t.me/TheEmpireHq" target="_blank" rel="noopener">Telegram: @TheEmpireHq</a>
       </div>
     </div>
 
-    <!-- ENTRY PANELS -->
-    <div class="panel">
-      <div class="tabs">
-        <button class="tab active" id="tabCmd" type="button">Commander Login</button>
-        <button class="tab" id="tabUser" type="button">User Login</button>
-      </div>
+    <div class="card">
+      <h2 style="margin:0 0 8px">Supreme Command Login</h2>
+      <p class="muted" style="margin:0 0 12px">Enter Admin PIN to access the dashboard.</p>
 
-      <div class="grid">
-        <!-- Commander -->
-        <div class="card" id="cardCmd">
-          <h3>Supreme Command Access</h3>
-          <p>Full system control with unlimited privileges.</p>
+      <label for="pin">Admin PIN</label>
+      <input id="pin" placeholder="GENERALISIMO@2025" autocomplete="off" />
+      <button id="loginBtn" class="btn" type="button">Enter Command Center</button>
 
-          <div class="field">
-            <label for="pin">Admin PIN</label>
-            <input id="pin" type="password" placeholder="Enter admin PIN" autocomplete="off" />
-          </div>
-
-          <button class="cta cta-gold" id="btnCommander" type="button">👑 Enter Commander Console</button>
-          <div class="note" id="savedNote">Checking…</div>
-        </div>
-
-        <!-- User -->
-        <div class="card" id="cardUser" style="display:none">
-          <h3>User Access</h3>
-          <p>Personal dashboard with earnings tracking.</p>
-          <a class="cta cta-blue" href="/dashboard.html" id="btnUser">👤 User Login</a>
-        </div>
-      </div>
+      <div id="msgOk" class="note ok">PIN accepted. Redirecting…</div>
+      <div id="msgErr" class="note err">Login failed.</div>
     </div>
 
     <div class="footer">© Empire Affiliate Marketing Hub</div>
   </div>
 
   <script>
-    // --- Tabs ---
-    const tabCmd = document.getElementById('tabCmd');
-    const tabUser = document.getElementById('tabUser');
-    const cardCmd = document.getElementById('cardCmd');
-    const cardUser = document.getElementById('cardUser');
-    function showCmd(){ tabCmd.classList.add('active'); tabUser.classList.remove('active'); cardCmd.style.display='block'; cardUser.style.display='none'; }
-    function showUser(){ tabUser.classList.add('active'); tabCmd.classList.remove('active'); cardUser.style.display='block'; cardCmd.style.display='none'; }
-    tabCmd.onclick = showCmd; tabUser.onclick = showUser;
+    // 🔧 Set this to your auth endpoint that exchanges PIN → token.
+    // It must return JSON: { ok: true, token: "..." } on success.
+    const AUTH_URL = "/api/auth/login"; // <-- adjust if different
+    const TOKEN_KEY = "EMPIRE_TOKEN";
+    const PIN_KEY   = "CMD_USER"; // still keep for compatibility
 
-    // --- Telegram link (public) ---
-    (async () => {
+    async function login() {
+      const pin = (document.getElementById('pin').value || "").trim();
+      const okEl = document.getElementById('msgOk');
+      const errEl = document.getElementById('msgErr');
+      okEl.style.display = "none"; errEl.style.display = "none";
+
+      if (!pin) { errEl.textContent = "Enter your PIN."; errEl.style.display="block"; return; }
+
       try {
-        const r = await fetch('/.netlify/functions/public-config');
-        const cfg = await r.json();
-        const u = (cfg.telegramChannel || '').replace(/^@/,'');
-        const a = document.getElementById('tgLink');
-        a.textContent = `Telegram: @${u||'channel'}`;
-        a.href = u ? `https://t.me/${u}` : '#';
-      } catch { /* leave default text */ }
-    })();
-
-    // --- Commander Login (server-side check; never exposes PIN in HTML) ---
-    const PIN_KEY = "CMD_USER";
-    const pinInput = document.getElementById('pin');
-    const note = document.getElementById('savedNote');
-
-    // Optional: remember last typed value locally (doesn't expose server secret)
-    try { const v = localStorage.getItem(PIN_KEY); if (v) pinInput.value = v; } catch {}
-
-    document.getElementById('btnCommander').addEventListener('click', async () => {
-      const val = (pinInput.value || "").trim();
-      if (!val){ pinInput.focus(); return; }
-      note.style.display = "block";
-      note.textContent = "Checking…";
-      try {
-        const r = await fetch('/.netlify/functions/admin-login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ pin: val })
+        // Call backend to get token
+        const res = await fetch(AUTH_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ pin })
         });
-        const res = await r.json();
-        if (res.ok) {
-          try { localStorage.setItem(PIN_KEY, val); } catch {}
-          // Store a short-lived marker for gating
-          localStorage.setItem('empire_admin_token', res.token || 'ok');
-          note.textContent = "PIN accepted. Redirecting…";
-          setTimeout(() => { window.location.href = "/dashboard.html/"; }, 600);
-        } else {
-          note.textContent = res.error || "Invalid PIN";
+        const data = await res.json().catch(()=>({ok:false,error:"Bad JSON"}));
+        if (!res.ok || !data.ok || !data.token) {
+          throw new Error(data?.error || "Invalid PIN");
         }
-      } catch {
-        note.textContent = "Network error";
+
+        // Save token (+ PIN for legacy endpoints if needed)
+        try { localStorage.setItem(TOKEN_KEY, data.token); } catch {}
+        try { localStorage.setItem(PIN_KEY, pin); } catch {}
+
+        okEl.style.display = "block";
+        setTimeout(()=>{ window.location.href = "/dashboard.html"; }, 600);
+      } catch (e) {
+        errEl.textContent = e.message || "Login failed.";
+        errEl.style.display = "block";
       }
-    });
+    }
+
+    document.getElementById('loginBtn').addEventListener('click', login);
+    document.getElementById('pin').addEventListener('keydown', (e)=>{ if(e.key==="Enter"){ login(); }});
+
+    // If already logged in, go straight to dashboard
+    try {
+      const existing = localStorage.getItem(TOKEN_KEY);
+      if (existing) window.location.replace("/dashboard.html");
+    } catch {}
   </script>
 </body>
 </html>

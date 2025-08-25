@@ -176,7 +176,7 @@
           // Store a short-lived marker for gating
           localStorage.setItem('empire_admin_token', res.token || 'ok');
           note.textContent = "PIN accepted. Redirecting…";
-          setTimeout(() => { window.location.href = "/admin/"; }, 600);
+          setTimeout(() => { window.location.href = "/dashboard.html/"; }, 600);
         } else {
           note.textContent = res.error || "Invalid PIN";
         }

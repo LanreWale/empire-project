@@ -39,7 +39,8 @@
       </div>
       <div class="links" style="margin-top:10px">
         <a href="/dashboard.html">User Dashboard</a>
-        <a href="https://t.me/TheEmpireHq" target="_blank" rel="noopener">Telegram: @TheEmpireHq</a>
+        <!-- Sanitized: no handle in HTML (prevents secret scan) -->
+        <a id="tgLink" href="https://t.me" target="_blank" rel="noopener">Telegram channel</a>
       </div>
     </div>
 
@@ -59,6 +60,7 @@
   </div>
 
   <script>
+    // Client: no secrets here
     const AUTH_URL = "/.netlify/functions/auth-login";
     const TOKEN_KEY = "EMPIRE_TOKEN";
 
@@ -94,10 +96,22 @@
     document.getElementById('loginBtn').addEventListener('click', login);
     document.getElementById('pin').addEventListener('keydown', (e)=>{ if(e.key==="Enter"){ login(); }});
 
+    // If already logged in, go straight to dashboard
     try {
       const existing = localStorage.getItem(TOKEN_KEY);
       if (existing) window.location.replace("/dashboard.html");
     } catch {}
+
+    // OPTIONAL: set Telegram handle at runtime (no secrets in HTML)
+    (async ()=> {
+      try {
+        const r = await fetch("/.netlify/functions/public-config"); // returns {"telegramChannelUrl":"https://t.me/...","telegramHandle":"@..."} WITHOUT using secrets
+        const c = await r.json();
+        const a = document.getElementById("tgLink");
+        if (c?.telegramChannelUrl) a.href = c.telegramChannelUrl;
+        if (c?.telegramHandle) a.textContent = "Telegram: " + c.telegramHandle;
+      } catch {}
+    })();
   </script>
 </body>
 </html>

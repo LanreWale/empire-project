@@ -6,20 +6,31 @@
   <title>Empire Hub — Login</title>
   <meta name="color-scheme" content="dark" />
   <style>
-    :root{--bg:#0b1220;--panel:#101a2c;--ink:#e8eefc;--muted:#9fb2d1;--line:#1f2b44;--ring:#2f3b58;--gold1:#ffd24d;--gold2:#ffb11a}
+    :root{
+      --bg:#0b1220; --panel:#101a2c; --panel2:#0f182a;
+      --ink:#e8eefc; --muted:#9fb2d1; --line:#1f2b44; --ring:#2f3b58;
+      --gold1:#ffd24d; --gold2:#ffb11a; --blue1:#367cff; --blue2:#215de7;
+      --radius:18px;
+    }
     *{box-sizing:border-box}
     body{margin:0;background:#0b1220;color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,sans-serif}
-    .wrap{max-width:720px;margin:0 auto;padding:28px 14px 48px}
+    .wrap{max-width:780px;margin:0 auto;padding:28px 14px 48px}
     .hero{background:linear-gradient(180deg, rgba(255,255,255,.02), transparent),var(--panel);border:1px solid var(--line);border-radius:24px;padding:20px}
-    .brand{display:flex;gap:12px;align-items:center}
+    .brand{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+    .left{display:flex;gap:12px;align-items:center}
     .badge{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;background:linear-gradient(135deg,#22c55e,#60a5fa);color:#001;font-weight:800}
     .title{font-size:18px;font-weight:700}
     .sub{color:var(--muted);margin-top:6px}
-    .links a{color:#a7c8ff;text-decoration:none;margin-right:16px}
-    .card{background:#0f182a;border:1px solid var(--line);border-radius:16px;padding:18px;margin-top:16px}
+    .links a{color:#a7c8ff;text-decoration:none;margin-left:16px}
+    .card{background:var(--panel2);border:1px solid var(--line);border-radius:16px;padding:18px;margin-top:16px}
+    .tabs{display:flex;gap:10px;margin:12px 0}
+    .tab{flex:1;text-align:center;padding:12px;border-radius:12px;background:#121c31;border:1px solid var(--ring);color:#cfe0ff;font-weight:700;cursor:pointer}
+    .tab.active{background:linear-gradient(135deg,#22c55e33,#60a5fa22);border-color:#3962ff;color:#fff}
     label{display:block;font-size:13px;color:#cfe0ff;margin:10px 0 6px}
     input{width:100%;background:#0b162a;color:#e8eefc;border:1px solid var(--ring);border-radius:12px;padding:14px 12px}
-    .btn{display:block;width:100%;text-align:center;padding:14px 16px;border-radius:12px;border:0;cursor:pointer;font-weight:800;color:#1b1606;background:linear-gradient(180deg,var(--gold1),var(--gold2))}
+    .btn{display:block;width:100%;text-align:center;padding:14px 16px;border-radius:12px;border:0;cursor:pointer;font-weight:800}
+    .btn-gold{color:#1b1606;background:linear-gradient(180deg,var(--gold1),var(--gold2))}
+    .btn-blue{color:#fff;background:linear-gradient(180deg,var(--blue1),var(--blue2))}
     .muted{color:var(--muted)}
     .note{margin-top:10px;padding:12px;border-radius:12px;display:none}
     .ok{background:#0f2a18;border:1px solid #1e5d38;color:#b7f7c3}
@@ -29,48 +40,74 @@
 </head>
 <body>
   <div class="wrap">
+    <!-- Header -->
     <div class="hero">
       <div class="brand">
-        <div class="badge">▲</div>
-        <div>
-          <div class="title">Empire Hub</div>
-          <div class="sub">Secure entry for Commander, Approved Users, and Onboarding.</div>
+        <div class="left">
+          <div class="badge">▲</div>
+          <div>
+            <div class="title">Empire Hub</div>
+            <div class="sub">Secure entry for Commander, Approved Users, and Onboarding.</div>
+          </div>
         </div>
-      </div>
-      <div class="links" style="margin-top:10px">
-        <a href="/dashboard.html">User Dashboard</a>
-        <!-- Sanitized: no handle in HTML (prevents secret scan) -->
-        <a id="tgLink" href="https://t.me" target="_blank" rel="noopener">Telegram channel</a>
+        <div class="links">
+          <a href="/dashboard.html">User Dashboard</a>
+          <!-- Secret-safe Telegram link (real handle filled at runtime) -->
+          <a id="tgLink" href="https://t.me" target="_blank" rel="noopener">Telegram channel</a>
+        </div>
       </div>
     </div>
 
+    <!-- Tabs -->
     <div class="card">
-      <h2 style="margin:0 0 8px">Supreme Command Login</h2>
-      <p class="muted" style="margin:0 0 12px">Enter Admin PIN to access the dashboard.</p>
+      <div class="tabs">
+        <button class="tab active" id="tabCmd" type="button">Commander Login</button>
+        <button class="tab" id="tabUser" type="button">User Login</button>
+      </div>
 
-      <label for="pin">Admin PIN</label>
-      <input id="pin" placeholder="Enter PIN" autocomplete="off" />
-      <button id="loginBtn" class="btn" type="button">Enter Command Center</button>
+      <!-- Commander -->
+      <div id="paneCmd">
+        <h2 style="margin:0 0 8px">Supreme Command Access</h2>
+        <p class="muted" style="margin:0 0 12px">Enter Admin PIN to open the dashboard.</p>
+        <label for="pin">Admin PIN</label>
+        <input id="pin" placeholder="Enter PIN" autocomplete="off" />
+        <button id="loginBtn" class="btn btn-gold" type="button">👑 Enter Command Center</button>
+        <div id="msgOk" class="note ok">PIN accepted. Redirecting…</div>
+        <div id="msgErr" class="note err">Login failed.</div>
+      </div>
 
-      <div id="msgOk" class="note ok">PIN accepted. Redirecting…</div>
-      <div id="msgErr" class="note err">Login failed.</div>
+      <!-- User -->
+      <div id="paneUser" style="display:none">
+        <h2 style="margin:0 0 8px">User Access</h2>
+        <p class="muted" style="margin:0 0 12px">Open your personal dashboard with live earnings & events.</p>
+        <button id="userBtn" class="btn btn-blue" type="button">👤 Open Dashboard</button>
+      </div>
     </div>
 
     <div class="footer">© Empire Affiliate Marketing Hub</div>
   </div>
 
   <script>
-    // Client: no secrets here
-    const AUTH_URL = "/.netlify/functions/auth-login";
+    // ---- Tabs ----
+    const tabCmd  = document.getElementById('tabCmd');
+    const tabUser = document.getElementById('tabUser');
+    const paneCmd = document.getElementById('paneCmd');
+    const paneUser= document.getElementById('paneUser');
+    function showCmd(){ tabCmd.classList.add('active'); tabUser.classList.remove('active'); paneCmd.style.display='block'; paneUser.style.display='none'; }
+    function showUser(){ tabUser.classList.add('active'); tabCmd.classList.remove('active'); paneUser.style.display='block'; paneCmd.style.display='none'; }
+    tabCmd.onclick = showCmd; tabUser.onclick = showUser;
+
+    // ---- Auth ----
+    const AUTH_URL  = "/.netlify/functions/admin-login";   // matches your repo function name
     const TOKEN_KEY = "EMPIRE_TOKEN";
 
-    async function login() {
+    async function commanderLogin(){
       const pin = (document.getElementById('pin').value || "").trim();
       const okEl = document.getElementById('msgOk');
       const errEl = document.getElementById('msgErr');
       okEl.style.display = "none"; errEl.style.display = "none";
 
-      if (!pin) { errEl.textContent = "Enter your PIN."; errEl.style.display="block"; return; }
+      if (!pin){ errEl.textContent = "Enter your PIN."; errEl.style.display="block"; return; }
 
       try {
         const res = await fetch(AUTH_URL, {
@@ -79,10 +116,7 @@
           body: JSON.stringify({ pin })
         });
         const data = await res.json().catch(()=>({ok:false,error:"Bad JSON"}));
-
-        if (!res.ok || !data.ok || !data.token) {
-          throw new Error(data?.error || "Invalid PIN");
-        }
+        if (!res.ok || !data.ok || !data.token) throw new Error(data?.error || "Invalid PIN");
 
         try { localStorage.setItem(TOKEN_KEY, data.token); } catch {}
         okEl.style.display = "block";
@@ -93,19 +127,19 @@
       }
     }
 
-    document.getElementById('loginBtn').addEventListener('click', login);
-    document.getElementById('pin').addEventListener('keydown', (e)=>{ if(e.key==="Enter"){ login(); }});
+    document.getElementById('loginBtn').addEventListener('click', commanderLogin);
+    document.getElementById('pin').addEventListener('keydown', (e)=>{ if(e.key==="Enter"){ commanderLogin(); }});
+
+    // User button: simple open
+    document.getElementById('userBtn').addEventListener('click', ()=>{ window.location.href = "/dashboard.html"; });
 
     // If already logged in, go straight to dashboard
-    try {
-      const existing = localStorage.getItem(TOKEN_KEY);
-      if (existing) window.location.replace("/dashboard.html");
-    } catch {}
+    try { const existing = localStorage.getItem(TOKEN_KEY); if (existing) window.location.replace("/dashboard.html"); } catch {}
 
-    // OPTIONAL: set Telegram handle at runtime (no secrets in HTML)
+    // ---- Telegram link without exposing handle in HTML ----
     (async ()=> {
       try {
-        const r = await fetch("/.netlify/functions/public-config"); // returns {"telegramChannelUrl":"https://t.me/...","telegramHandle":"@..."} WITHOUT using secrets
+        const r = await fetch("/.netlify/functions/public-config");
         const c = await r.json();
         const a = document.getElementById("tgLink");
         if (c?.telegramChannelUrl) a.href = c.telegramChannelUrl;

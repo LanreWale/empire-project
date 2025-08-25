@@ -4,7 +4,19 @@
 
 (() => {
   // --- CONFIG --------------------------------------------------------------
-  const ENDPOINTS = {
+// ---- TOKEN HELPERS (add this) ----
+const STORAGE_KEYS = { user: 'EMPIRE_TOKEN', cmd: 'CMD_USER' };
+
+function getAuthToken() {
+  // Prefer user session token; fall back to Commander PIN
+  let t = null;
+  try {
+    t = localStorage.getItem(STORAGE_KEYS.user);
+    if (!t) t = localStorage.getItem(STORAGE_KEYS.cmd);
+  } catch {}
+  return (t || '').trim();
+}  
+const ENDPOINTS = {
     me:        '/.netlify/functions/me',
     health:    '/.netlify/functions/monitor-health',
     feed:      '/.netlify/functions/monitor-feed',

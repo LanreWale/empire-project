@@ -3,14 +3,13 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Empire — Dashboard</title>
+  <title>Empire — Command Dashboard</title>
   <meta name="color-scheme" content="dark" />
   <style>
     :root{
       --bg:#0a1220; --panel:#0f182a; --panel2:#0e1a31; --ink:#e8eefc; --muted:#9fb2d1; --line:#1f2b44;
       --gold1:#ffd24d; --gold2:#ffb11a; --accent1:#367cff; --accent2:#215de7;
       --ok:#16a34a; --warn:#f59e0b; --bad:#dc2626; --ring:#2a3a5a;
-      --radius:18px;
     }
     *{box-sizing:border-box}
     body{
@@ -18,43 +17,49 @@
       background:radial-gradient(1200px 800px at 10% -10%, #14223f 0%, #0a1220 50%), var(--bg);
       font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,sans-serif;
     }
-    .wrap{max-width:1080px;margin:24px auto 64px;padding:0 14px;}
+    .wrap{max-width:1180px;margin:20px auto 64px;padding:0 14px;}
 
-    /* Header / Hero */
+    /* Hero */
     .hero{
-      background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,0)) , var(--panel);
-      border:1px solid var(--line); border-radius:24px; padding:18px;
+      background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,0)), var(--panel);
+      border:1px solid var(--line); border-radius:24px; padding:16px;
       box-shadow:0 10px 28px rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.02);
     }
-    .hero-top{display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap;}
-    .brand{display:flex; align-items:center; gap:12px}
-    .badge{
-      width:44px; height:44px; border-radius:12px; display:grid; place-items:center;
-      background:linear-gradient(135deg, #22c55e, #60a5fa); color:#001; font-weight:800;
-      box-shadow:0 8px 18px rgba(0,0,0,.35);
+    .hero-top{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
+    .brand{display:flex;align-items:center;gap:12px}
+    .emblem{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;background:linear-gradient(135deg,#22c55e,#60a5fa);color:#001;font-weight:800}
+    .title{font-weight:800;letter-spacing:.2px}
+    .sub{color:var(--muted)}
+    .links a{color:#a7c8ff;text-decoration:none;margin-left:16px}
+
+    /* Tabs */
+    .tabs{
+      display:flex; gap:8px; margin:14px 0 0; overflow:auto; scrollbar-width:none;
+      background:var(--panel2); border:1px solid var(--line); border-radius:16px; padding:8px;
     }
-    .title{font-size:22px; font-weight:800; letter-spacing:.2px}
-    .sub{color:var(--muted); margin-top:6px}
-    .links a{color:#a7c8ff; text-decoration:none; margin-left:16px}
+    .tab{
+      padding:10px 12px; white-space:nowrap; border-radius:12px; border:1px solid var(--ring);
+      background:#0c1730; color:#cfe0ff; font-weight:700; cursor:pointer;
+    }
+    .tab.active{ background:linear-gradient(135deg,#ffd24d22,#ffb11a22); border-color:#ffd24d; color:#fff }
 
-    /* Page title / note */
-    h1{margin:20px 0 12px; font-size:34px; letter-spacing:.2px}
-    .note{margin:8px 0 16px; color:#fda4af}
-
-    /* Cards & grid */
-    .card{background:var(--panel2); border:1px solid var(--line); border-radius:20px; padding:16px; box-shadow:inset 0 0 0 1px rgba(255,255,255,.02)}
-    .section{margin:16px 0}
-    .section h2{margin:0 0 12px; color:var(--gold1); letter-spacing:.3px}
-    .grid{display:grid; gap:16px}
-    @media(min-width:860px){ .grid.cols-4{grid-template-columns:repeat(4,1fr);} .grid.cols-2{grid-template-columns:1fr 1fr;} }
+    /* Sections */
+    .section{margin:16px 0; background:var(--panel2); border:1px solid var(--line); border-radius:20px; padding:16px; box-shadow:inset 0 0 0 1px rgba(255,255,255,.02)}
+    .section h2{margin:0 0 12px; color:var(--gold1)}
+    .tabpage{display:none}
+    .tabpage.active{display:block}
 
     /* KPI cards */
-    .kpi{background:#0c1730; border:1px solid var(--ring); padding:16px; border-radius:16px}
+    .grid{display:grid; gap:16px}
+    @media(min-width:920px){ .grid.cols-4{grid-template-columns:repeat(4,1fr)} .grid.cols-2{grid-template-columns:repeat(2,1fr)} }
+    .kpi{background:#0b162a; border:1px solid var(--ring); padding:16px; border-radius:16px}
     .kpi .label{color:#c9d8f8; font-size:13px}
     .kpi .value{font-size:24px; font-weight:800; margin-top:6px}
 
-    /* Profile pill row */
-    .pill{display:inline-block; padding:4px 10px; border:1px solid var(--ring); border-radius:999px; font-size:12px; color:#cfe0ff}
+    /* Profile row */
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    .grow{flex:1 1 auto}
+    .pill{display:inline-block;padding:4px 10px;border:1px solid var(--ring);border-radius:999px;font-size:12px;color:#cfe0ff}
 
     /* Health badges */
     .badges{display:flex; gap:10px; flex-wrap:wrap}
@@ -63,24 +68,19 @@
     .warn{background:#3a2a0f; border-color:#b45309; color:#ffe0a3}
     .down{background:#2a1010; border-color:#991b1b; color:#ffc2c2}
 
-    /* Buttons */
-    .btn{display:inline-block; padding:10px 14px; border-radius:12px; border:1px solid var(--ring); background:#142448; color:#e6eeff; text-decoration:none; cursor:pointer}
-    .btn-primary{background:linear-gradient(180deg, var(--gold1), var(--gold2)); color:#111; border:0; font-weight:800}
-    .btn-ghost{background:#0b162a}
-
     /* Table */
     table{width:100%; border-collapse:collapse; font-size:14px}
     th,td{padding:10px; border-top:1px solid var(--line); text-align:left}
     thead th{color:#9fb2d1}
 
-    /* Form bits */
-    .row{display:flex; gap:10px; flex-wrap:wrap}
-    .grow{flex:1 1 auto}
+    /* Buttons & forms */
+    .btn{display:inline-block; padding:10px 14px; border-radius:12px; border:1px solid var(--ring); background:#142448; color:#e6eeff; text-decoration:none; cursor:pointer}
+    .btn-primary{background:linear-gradient(180deg, var(--gold1), var(--gold2)); color:#111; border:0; font-weight:800}
     label{display:block; font-size:13px; color:#cfe0ff; margin:8px 0 6px}
-    input, select{
-      width:100%; background:#0b162a; color:#e8eefc; border:1px solid var(--ring);
-      border-radius:12px; padding:12px 10px; outline:none;
-    }
+    input,select{width:100%; background:#0b162a; color:#e8eefc; border:1px solid var(--ring); border-radius:12px; padding:12px 10px; outline:none}
+
+    /* Note */
+    .note{margin:8px 0 16px; color:#fda4af}
 
     /* Footer */
     .footer{opacity:.7; text-align:center; margin-top:26px; font-size:13px}
@@ -92,10 +92,10 @@
     <div class="hero">
       <div class="hero-top">
         <div class="brand">
-          <div class="badge">▲</div>
+          <div class="emblem">▲</div>
           <div>
-            <div class="title">Empire Dashboard</div>
-            <div class="sub">AI-powered performance, payouts & live monitoring</div>
+            <div class="title">Empire Command Dashboard</div>
+            <div class="sub">Intelligence • Real-Time Earnings • Global Performance</div>
           </div>
         </div>
         <div class="links">
@@ -104,14 +104,25 @@
           <a href="https://t.me/TheEmpireHq" target="_blank" rel="noopener">Telegram</a>
         </div>
       </div>
+
+      <!-- NAV TABS -->
+      <div class="tabs" id="tabs">
+        <button class="tab active" data-tab="dashboard">Dashboard</button>
+        <button class="tab" data-tab="cpa">CPA Accounts</button>
+        <button class="tab" data-tab="users">Users</button>
+        <button class="tab" data-tab="approvals">AI Approvals</button>
+        <button class="tab" data-tab="analytics">Analytics</button>
+        <button class="tab" data-tab="payments">Payments/Wallet</button>
+        <button class="tab" data-tab="monitoring">Monitoring</button>
+      </div>
     </div>
 
-    <h1>Empire — Dashboard</h1>
+    <!-- STATUS / ERR NOTE -->
     <div id="note" class="note" style="display:none"></div>
 
-    <!-- Profile -->
-    <div id="profile" class="card section" style="display:none">
-      <div class="row" style="align-items:center">
+    <!-- PROFILE (Dashboard tab) -->
+    <div id="profile" class="section tabpage active" data-tabpage="dashboard" style="display:none">
+      <div class="row">
         <div class="grow">
           <div id="name" style="font-weight:800; font-size:18px">—</div>
           <div id="contact" style="color:#9fb2d1">—</div>
@@ -121,8 +132,8 @@
       </div>
     </div>
 
-    <!-- KPIs -->
-    <div class="card section">
+    <!-- KPI BLOCK (Dashboard tab) -->
+    <div class="section tabpage active" data-tabpage="dashboard">
       <h2>Performance</h2>
       <div class="grid cols-4">
         <div class="kpi"><div class="label">Total Earnings</div><div id="kpi_total" class="value">NGN 0.00</div></div>
@@ -132,18 +143,42 @@
       </div>
     </div>
 
-    <!-- Health -->
-    <div class="card section">
-      <div class="row" style="justify-content:space-between;align-items:center">
-        <h2 style="margin:0">System Health</h2>
-        <button class="btn" id="refreshBtn" type="button">Refresh</button>
+    <!-- PAYMENTS (Payments/Wallet tab) -->
+    <div class="section tabpage" data-tabpage="payments">
+      <h2>Payments & Wallet</h2>
+      <div class="grid cols-2">
+        <div>
+          <div class="kpi">
+            <div class="label">Available Balance</div>
+            <div id="wallet_balance" class="value">NGN 0.00</div>
+          </div>
+          <div style="height:8px"></div>
+          <label>Provider</label>
+          <select id="providerSelect"><option>Paystack</option></select>
+          <label>Bank</label>
+          <select id="bankSelect"><option value="">Select bank</option></select>
+          <label>Account Number</label>
+          <input id="acctInput" placeholder="e.g., 0123456789" />
+          <label>Account Name (optional)</label>
+          <input id="acctName" placeholder="Account name" />
+          <label>Amount (NGN)</label>
+          <input id="amountInput" type="number" min="0" step="0.01" placeholder="0.00" />
+          <div style="margin-top:12px"><button id="payoutBtn" class="btn btn-primary" type="button">Request Withdrawal</button></div>
+        </div>
+        <div>
+          <h3 style="margin:0 0 8px;color:#cfe0ff">Transaction History</h3>
+          <div id="txHistory" style="font-size:14px;color:#cfe0ff">—</div>
+        </div>
       </div>
-      <div id="healthRow" class="badges" style="margin-top:10px"><!-- badges via JS --></div>
     </div>
 
-    <!-- Feed -->
-    <div class="card section">
-      <h2>Event Feed</h2>
+    <!-- MONITORING (Monitoring tab) -->
+    <div class="section tabpage" data-tabpage="monitoring">
+      <h2>System Monitoring</h2>
+      <div class="badges" id="healthRow"></div>
+      <div style="margin-top:12px"><button class="btn" id="refreshBtn" type="button">Refresh</button></div>
+      <div style="height:12px"></div>
+      <h3 style="margin:0 0 8px;color:#cfe0ff">Live Event Feed</h3>
       <div id="feedEmpty" style="color:#9fb2d1; padding:6px 2px; display:none">No events yet.</div>
       <div style="overflow:auto">
         <table id="feedTable">
@@ -153,51 +188,33 @@
       </div>
     </div>
 
-    <!-- Payout -->
-    <div class="card section">
-      <h2>Payout</h2>
+    <!-- SHEETS (Users tab) -->
+    <div class="section tabpage" data-tabpage="users">
+      <h2>Users Management</h2>
       <div class="row">
-        <div class="grow">
-          <label>Provider</label>
-          <select id="providerSelect">
-            <option>Paystack</option>
-          </select>
-        </div>
-        <div class="grow">
-          <label>Bank</label>
-          <select id="bankSelect"><option value="">Select bank</option></select>
-        </div>
-        <div class="grow">
-          <label>Account Number</label>
-          <input id="acctInput" placeholder="e.g., 0123456789" />
-        </div>
-        <div class="grow">
-          <label>Account Name (optional)</label>
-          <input id="acctName" placeholder="Account name" />
-        </div>
-        <div class="grow">
-          <label>Amount (NGN)</label>
-          <input id="amountInput" type="number" min="0" step="0.01" placeholder="0.00" />
-        </div>
+        <button id="sheetsPingBtn" class="btn" type="button">Sheets: Ping</button>
+        <button id="sheetsAppendBtn" class="btn" type="button">Sheets: Append Event</button>
       </div>
-      <div style="margin-top:12px">
-        <button id="payoutBtn" class="btn btn-primary" type="button">Request Withdrawal</button>
-      </div>
+      <div id="usersPane" style="margin-top:12px; color:#9fb2d1">Commander manages full users table; this tab triggers live ops.</div>
     </div>
 
-    <!-- Sheets ops (optional) -->
-    <div class="card section">
-      <h2>Google Sheets</h2>
+    <!-- AI Approvals -->
+    <div class="section tabpage" data-tabpage="approvals">
+      <h2>AI-Powered Approvals</h2>
       <div class="row">
-        <button id="sheetsPingBtn" class="btn btn-ghost" type="button">Sheets: Ping</button>
-        <button id="sheetsAppendBtn" class="btn btn-ghost" type="button">Sheets: Append Event</button>
+        <button id="aiScanBtn" class="btn" type="button" disabled>Run AI Analysis (coming online)</button>
       </div>
+      <div id="approvalsPane" style="margin-top:12px; color:#9fb2d1">This will hook into your Sheets review rows.</div>
     </div>
 
-    <!-- Debug -->
-    <div class="card section" id="raw" style="display:none">
+    <!-- CPA & Analytics placeholders (non-blocking) -->
+    <div class="section tabpage" data-tabpage="cpa"><h2>CPA Accounts</h2><div style="color:#9fb2d1">Managed in Commander; readouts will display here.</div></div>
+    <div class="section tabpage" data-tabpage="analytics"><h2>Analytics</h2><div style="color:#9fb2d1">Charts live in your genspark module; embeddable slot reserved.</div></div>
+
+    <!-- DEBUG (stays in Monitoring tab) -->
+    <div class="section tabpage" data-tabpage="monitoring" id="raw" style="display:none">
       <h2>Debug</h2>
-      <pre id="debug" style="background:#0b162a; border:1px solid var(--ring); padding:12px; border-radius:12px; overflow:auto; max-height:360px; margin:0"></pre>
+      <pre id="debug" style="background:#0b162a;border:1px solid var(--ring);padding:12px;border-radius:12px;overflow:auto;max-height:360px;margin:0"></pre>
     </div>
 
     <div class="section">
@@ -207,7 +224,53 @@
     <div class="footer">© Empire Affiliate Marketing Hub</div>
   </div>
 
-  <!-- Live logic -->
+  <!-- Tabs + Compatibility bridge -->
+  <script>
+    (function(){
+      // Tabs
+      const tabs = document.querySelectorAll('.tab');
+      const pages = document.querySelectorAll('.tabpage');
+      function show(tab){
+        tabs.forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+        pages.forEach(p => p.classList.toggle('active', p.dataset.tabpage === tab));
+      }
+      tabs.forEach(t => t.addEventListener('click', () => show(t.dataset.tab)));
+      show('dashboard');
+
+      // Compatibility bridge: allow /api/* or /.netlify/functions/* seamlessly
+      const MAP = {
+        '/api/me': '/.netlify/functions/me',
+        '/api/health': '/.netlify/functions/monitor-health',
+        '/api/feed': '/.netlify/functions/monitor-feed',
+        '/api/summary': '/.netlify/functions/gs-bridge?action=summary',
+        '/api/banks': '/.netlify/functions/paystack-banks',
+        '/api/payout/quote': '/.netlify/functions/paystack-transfer?dryrun=1',
+        '/api/payout/request': '/.netlify/functions/paystack-transfer',
+        '/api/sheets/ping': '/.netlify/functions/gs-bridge?action=ping',
+        '/api/sheets/append_event': '/.netlify/functions/gs-bridge',
+        '/api/telegram/test': '/.netlify/functions/test-telegram'
+      };
+      const origFetch = window.fetch;
+      window.fetch = function(input, init) {
+        try {
+          let url = (typeof input === 'string') ? input : input.url;
+          if (url && url.startsWith('/api/')) {
+            // remap to functions
+            const base = url.split('?')[0];
+            const q = url.includes('?') ? url.substring(url.indexOf('?')) : '';
+            const mapped = MAP[base] || base; // fallback: leave as-is
+            const finalUrl = mapped + (mapped.includes('?') || !q ? q : '?' + q);
+            if (typeof input === 'string') return origFetch(finalUrl, init);
+            const req = new Request(finalUrl, input);
+            return origFetch(req, init);
+          }
+        } catch {}
+        return origFetch(input, init);
+      };
+    })();
+  </script>
+
+  <!-- Live logic (already in your repo) -->
   <script type="module" src="./app/assets/js/dashboard-live.js"></script>
 </body>
 </html>

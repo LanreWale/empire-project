@@ -52,8 +52,10 @@ async function notifyWhatsApp(toPhoneE164, message) {
 // --- EMAIL (optional, via SMTP creds if you have nodemailer configured) ---
 async function notifyEmail({ to, subject, text }) {
   // Lazy require nodemailer only when needed to keep bundle small
-  let nodemailer;
-  try { nodemailer = require("nodemailer"); } catch { return { ok: false, error: "nodemailer not installed" }; }
+  // --- EMAIL disabled: stub only (to avoid Netlify dependency install) ---
+async function notifyEmail(/* { to, subject, text } */) {
+  return { ok: false, error: "Email sending disabled in this build" };
+}
 
   const host = process.env.SMTP_HOST;
   const port = Number(process.env.SMTP_PORT || "587");

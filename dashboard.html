@@ -3,274 +3,217 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Empire — Command Dashboard</title>
+  <title>Empire — Dashboard</title>
   <meta name="color-scheme" content="dark" />
   <style>
-    :root{
-      --bg:#0a1220; --panel:#0f182a; --panel2:#0e1a31; --ink:#e8eefc; --muted:#9fb2d1; --line:#1f2b44;
-      --gold1:#ffd24d; --gold2:#ffb11a; --accent1:#367cff; --accent2:#215de7;
-      --ok:#16a34a; --warn:#f59e0b; --bad:#dc2626; --ring:#2a3a5a;
-    }
-    *{box-sizing:border-box}
-    body{
-      margin:0; color:var(--ink);
-      background:radial-gradient(1200px 800px at 10% -10%, #14223f 0%, #0a1220 50%), var(--bg);
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,sans-serif;
-    }
-    .wrap{max-width:1180px;margin:20px auto 64px;padding:0 14px;}
-
-    /* Hero */
-    .hero{
-      background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,0)), var(--panel);
-      border:1px solid var(--line); border-radius:24px; padding:16px;
-      box-shadow:0 10px 28px rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.02);
-    }
-    .hero-top{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
-    .brand{display:flex;align-items:center;gap:12px}
-    .emblem{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;background:linear-gradient(135deg,#22c55e,#60a5fa);color:#001;font-weight:800}
-    .title{font-weight:800;letter-spacing:.2px}
-    .sub{color:var(--muted)}
-    .links a{color:#a7c8ff;text-decoration:none;margin-left:16px}
-
-    /* Tabs */
-    .tabs{
-      display:flex; gap:8px; margin:14px 0 0; overflow:auto; scrollbar-width:none;
-      background:var(--panel2); border:1px solid var(--line); border-radius:16px; padding:8px;
-    }
-    .tab{
-      padding:10px 12px; white-space:nowrap; border-radius:12px; border:1px solid var(--ring);
-      background:#0c1730; color:#cfe0ff; font-weight:700; cursor:pointer;
-    }
-    .tab.active{ background:linear-gradient(135deg,#ffd24d22,#ffb11a22); border-color:#ffd24d; color:#fff }
-
-    /* Sections */
-    .section{margin:16px 0; background:var(--panel2); border:1px solid var(--line); border-radius:20px; padding:16px; box-shadow:inset 0 0 0 1px rgba(255,255,255,.02)}
-    .section h2{margin:0 0 12px; color:var(--gold1)}
-    .tabpage{display:none}
-    .tabpage.active{display:block}
-
-    /* KPI cards */
-    .grid{display:grid; gap:16px}
-    @media(min-width:920px){ .grid.cols-4{grid-template-columns:repeat(4,1fr)} .grid.cols-2{grid-template-columns:repeat(2,1fr)} }
-    .kpi{background:#0b162a; border:1px solid var(--ring); padding:16px; border-radius:16px}
-    .kpi .label{color:#c9d8f8; font-size:13px}
-    .kpi .value{font-size:24px; font-weight:800; margin-top:6px}
-
-    /* Profile row */
-    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-    .grow{flex:1 1 auto}
-    .pill{display:inline-block;padding:4px 10px;border:1px solid var(--ring);border-radius:999px;font-size:12px;color:#cfe0ff}
-
-    /* Health badges */
-    .badges{display:flex; gap:10px; flex-wrap:wrap}
-    .badge-sm{padding:6px 10px; border-radius:10px; font-size:12px; border:1px solid var(--ring); background:#172446}
-    .ok{background:#0f2a18; border-color:#1e5d38; color:#b7f7c3}
-    .warn{background:#3a2a0f; border-color:#b45309; color:#ffe0a3}
-    .down{background:#2a1010; border-color:#991b1b; color:#ffc2c2}
-
-    /* Table */
-    table{width:100%; border-collapse:collapse; font-size:14px}
-    th,td{padding:10px; border-top:1px solid var(--line); text-align:left}
-    thead th{color:#9fb2d1}
-
-    /* Buttons & forms */
-    .btn{display:inline-block; padding:10px 14px; border-radius:12px; border:1px solid var(--ring); background:#142448; color:#e6eeff; text-decoration:none; cursor:pointer}
-    .btn-primary{background:linear-gradient(180deg, var(--gold1), var(--gold2)); color:#111; border:0; font-weight:800}
-    label{display:block; font-size:13px; color:#cfe0ff; margin:8px 0 6px}
-    input,select{width:100%; background:#0b162a; color:#e8eefc; border:1px solid var(--ring); border-radius:12px; padding:12px 10px; outline:none}
-
-    /* Note */
-    .note{margin:8px 0 16px; color:#fda4af}
-
-    /* Footer */
-    .footer{opacity:.7; text-align:center; margin-top:26px; font-size:13px}
+    :root{--bg:#0b1220;--card:#111a2b;--ink:#e8eefc;--muted:#9ab;--line:#1f2b44;--ring:#2f3b58;--ok:#16a34a;--warn:#f59e0b;--down:#dc2626;--blue:#2b66f6}
+    *{box-sizing:border-box} body{margin:0;background:#0b1220;color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,sans-serif}
+    .wrap{max-width:1120px;margin:0 auto;padding:22px 14px 48px}
+    h1{margin:8px 0 12px;font-size:32px}
+    .muted{color:var(--muted)}
+    .tabs{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 18px}
+    .tab{padding:10px 12px;border:1px solid var(--ring);border-radius:12px;background:#0f1a2c;color:#cfe0ff;font-weight:700;cursor:pointer}
+    .tab.active{background:#173054;border-color:#3962ff;color:#fff}
+    .section{display:none}
+    .section.active{display:block}
+    .grid{display:grid;gap:14px;grid-template-columns:1fr} @media(min-width:760px){.grid{grid-template-columns:repeat(4,1fr)}}
+    .kpi{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px}
+    .kpi .label{color:var(--muted);font-size:13px}
+    .kpi .value{font-size:24px;font-weight:800;margin-top:6px}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin:12px 0}
+    .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .btn{display:inline-block;background:var(--blue);color:#fff;padding:10px 14px;border-radius:10px;border:0;text-decoration:none;cursor:pointer}
+    .btn-secondary{display:inline-block;background:#25304a;color:#d1d5db;padding:8px 12px;border-radius:10px;border:1px solid var(--ring);cursor:pointer}
+    .pill{display:inline-block;padding:4px 10px;border-radius:999px;border:1px solid var(--ring);font-size:12px}
+    .badge{padding:6px 10px;border-radius:10px;font-size:12px;background:#25304a;border:1px solid var(--ring)}
+    .b-ok{background:var(--ok)} .b-warn{background:var(--warn)} .b-down{background:var(--down)}
+    table{width:100%;border-collapse:collapse;font-size:14px}
+    th,td{padding:10px;border-top:1px solid var(--line);text-align:left}
+    label{display:block;font-size:13px;color:#cfe0ff;margin:10px 0 6px}
+    input,select{width:100%;background:#0b162a;color:#e8eefc;border:1px solid var(--ring);border-radius:12px;padding:12px}
+    .two{display:grid;grid-template-columns:1fr;gap:12px} @media(min-width:760px){.two{grid-template-columns:1fr 1fr}}
+    .three{display:grid;grid-template-columns:1fr;gap:12px} @media(min-width:980px){.three{grid-template-columns:repeat(3,1fr)}}
+    pre{background:#0a1426;border:1px solid var(--line);padding:12px;border-radius:12px;overflow:auto}
+    .footer{opacity:.7;text-align:center;margin-top:22px;font-size:13px}
   </style>
 </head>
 <body>
   <div class="wrap">
-    <!-- HERO -->
-    <div class="hero">
-      <div class="hero-top">
-        <div class="brand">
-          <div class="emblem">▲</div>
+    <h1>Empire — Dashboard</h1>
+    <div id="note" class="muted">Loading…</div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab active" data-tab="overview">Overview</button>
+      <button class="tab" data-tab="health">Health</button>
+      <button class="tab" data-tab="users">Users</button>
+      <button class="tab" data-tab="events">Events</button>
+      <button class="tab" data-tab="wallet">Wallet</button>
+    </div>
+
+    <!-- OVERVIEW -->
+    <section id="tab-overview" class="section active">
+      <!-- Profile -->
+      <div id="profile" class="card" style="display:none">
+        <div class="row" style="justify-content:space-between">
           <div>
-            <div class="title">Empire Command Dashboard</div>
-            <div class="sub">Intelligence • Real-Time Earnings • Global Performance</div>
+            <div id="name" style="font-weight:800;font-size:18px"></div>
+            <div class="muted" id="contact"></div>
+          </div>
+          <div class="pill" id="status">—</div>
+        </div>
+        <div style="margin-top:10px">Scale: <span id="scale" style="font-weight:700">—</span>×</div>
+      </div>
+
+      <!-- KPIs -->
+      <div class="grid">
+        <div class="kpi"><div class="label">Total Earnings</div><div id="kpiEarnings" class="value">NGN 0.00</div></div>
+        <div class="kpi"><div class="label">Active Users</div><div id="kpiUsers" class="value">0</div></div>
+        <div class="kpi"><div class="label">Approval Rate</div><div id="kpiApproval" class="value">—</div></div>
+        <div class="kpi"><div class="label">Pending Reviews</div><div id="kpiPending" class="value">0</div></div>
+      </div>
+    </section>
+
+    <!-- HEALTH -->
+    <section id="tab-health" class="section">
+      <div class="card">
+        <div class="row" style="justify-content:space-between">
+          <div style="font-weight:700">System Health</div>
+          <button class="btn-secondary" id="refreshBtn" type="button">Refresh</button>
+        </div>
+        <div class="row" id="healthRow"></div>
+      </div>
+
+      <div class="card muted" id="raw" style="display:none">
+        <div style="font-weight:700;margin-bottom:6px">Debug</div>
+        <pre id="debug"></pre>
+      </div>
+    </section>
+
+    <!-- USERS (old /admin merged here) -->
+    <section id="tab-users" class="section">
+      <div class="three">
+        <!-- Create Invite -->
+        <div class="card">
+          <div style="font-weight:700;margin-bottom:6px">Create Invite</div>
+          <form id="inviteForm">
+            <label>Name</label><input id="inv-name" required />
+            <label>Email</label><input id="inv-email" type="email" required />
+            <label>Phone (WhatsApp, optional)</label><input id="inv-phone" />
+            <label>Telegram (optional)</label><input id="inv-telegram" placeholder="@channel" />
+            <div style="margin-top:12px" class="row"><button class="btn" type="submit">Generate Invite</button></div>
+          </form>
+          <div id="inviteLinkWrap" style="display:none;margin-top:10px">
+            <label>Your Invite Link</label>
+            <input id="inviteLink" readonly />
+            <div class="row" style="margin-top:8px">
+              <button class="btn-secondary" id="copyInvite" type="button">Copy</button>
+              <a class="btn" id="waInvite" href="#" target="_blank" rel="noopener">Share on WhatsApp</a>
+            </div>
           </div>
         </div>
-        <div class="links">
-          <a href="/admin/">Commander Console</a>
-          <a href="/index.html">Login</a>
-          <a href="https://t.me/TheEmpireHq" target="_blank" rel="noopener">Telegram</a>
+
+        <!-- Approve User -->
+        <div class="card">
+          <div style="font-weight:700;margin-bottom:6px">Approve User</div>
+          <form id="approveForm">
+            <label>Name</label><input id="app-name" />
+            <label>Email</label><input id="app-email" type="email" />
+            <label>Phone (WhatsApp)</label><input id="app-phone" />
+            <label>Approve?</label>
+            <select id="app-decision">
+              <option value="approve">Approve</option>
+              <option value="reject">Reject</option>
+            </select>
+            <div style="margin-top:12px" class="row"><button class="btn" type="submit">Send Approval</button></div>
+          </form>
+        </div>
+
+        <!-- Set Level -->
+        <div class="card">
+          <div style="font-weight:700;margin-bottom:6px">Set User Level</div>
+          <form id="levelForm">
+            <label>Email</label><input id="lvl-email" type="email" required />
+            <label>Level</label>
+            <select id="lvl-level">
+              <option value="1">1x</option>
+              <option value="2">2x</option>
+              <option value="5">5x</option>
+              <option value="10">10x</option>
+            </select>
+            <div style="margin-top:12px" class="row"><button class="btn" type="submit">Update Level</button></div>
+          </form>
         </div>
       </div>
+    </section>
 
-      <!-- NAV TABS -->
-      <div class="tabs" id="tabs">
-        <button class="tab active" data-tab="dashboard">Dashboard</button>
-        <button class="tab" data-tab="cpa">CPA Accounts</button>
-        <button class="tab" data-tab="users">Users</button>
-        <button class="tab" data-tab="approvals">AI Approvals</button>
-        <button class="tab" data-tab="analytics">Analytics</button>
-        <button class="tab" data-tab="payments">Payments/Wallet</button>
-        <button class="tab" data-tab="monitoring">Monitoring</button>
-      </div>
-    </div>
-
-    <!-- STATUS / ERR NOTE -->
-    <div id="note" class="note" style="display:none"></div>
-
-    <!-- PROFILE (Dashboard tab) -->
-    <div id="profile" class="section tabpage active" data-tabpage="dashboard" style="display:none">
-      <div class="row">
-        <div class="grow">
-          <div id="name" style="font-weight:800; font-size:18px">—</div>
-          <div id="contact" style="color:#9fb2d1">—</div>
+    <!-- EVENTS -->
+    <section id="tab-events" class="section">
+      <div class="card">
+        <div style="font-weight:700;margin-bottom:6px">Event Feed</div>
+        <div id="feedEmpty" class="muted" style="padding:8px;display:none">No events yet.</div>
+        <div style="overflow:auto">
+          <table id="feedTable">
+            <thead><tr class="muted"><th>Time</th><th>Type</th><th>Message</th><th>Ref</th><th>Actor</th></tr></thead>
+            <tbody></tbody>
+          </table>
         </div>
-        <div class="pill" id="status">—</div>
-        <div class="pill">Scale: <span id="scale" style="font-weight:800">—</span>×</div>
       </div>
-    </div>
+    </section>
 
-    <!-- KPI BLOCK (Dashboard tab) -->
-    <div class="section tabpage active" data-tabpage="dashboard">
-      <h2>Performance</h2>
-      <div class="grid cols-4">
-        <div class="kpi"><div class="label">Total Earnings</div><div id="kpi_total" class="value">NGN 0.00</div></div>
-        <div class="kpi"><div class="label">Active Users</div><div id="kpi_users" class="value">0</div></div>
-        <div class="kpi"><div class="label">Approval Rate</div><div id="kpi_rate" class="value">—</div></div>
-        <div class="kpi"><div class="label">Pending Reviews</div><div id="kpi_pending" class="value">0</div></div>
-      </div>
-    </div>
+    <!-- WALLET -->
+    <section id="tab-wallet" class="section">
+      <div class="two">
+        <div class="card">
+          <div style="font-weight:700;margin-bottom:6px">Payout</div>
+          <form id="payoutForm">
+            <label>Provider</label>
+            <select id="provider"><option value="paystack">Paystack</option></select>
+            <label>Bank</label>
+            <select id="bankSelect"><option value="">Select bank</option></select>
+            <label>Account Number</label><input id="acctNumber" inputmode="numeric" />
+            <label>Amount (NGN)</label><input id="amount" inputmode="decimal" />
+            <div style="margin-top:12px" class="row"><button class="btn" type="submit">Request Withdrawal</button></div>
+          </form>
+        </div>
 
-    <!-- PAYMENTS (Payments/Wallet tab) -->
-    <div class="section tabpage" data-tabpage="payments">
-      <h2>Payments & Wallet</h2>
-      <div class="grid cols-2">
-        <div>
-          <div class="kpi">
-            <div class="label">Available Balance</div>
-            <div id="wallet_balance" class="value">NGN 0.00</div>
+        <div class="card">
+          <div style="font-weight:700;margin-bottom:6px">Sheets Utilities</div>
+          <div class="row" style="gap:10px">
+            <button class="btn-secondary" id="btnSheetsPing" type="button">Sheets: Ping</button>
+            <button class="btn-secondary" id="btnSheetsAppend" type="button">Sheets: Append Event</button>
           </div>
-          <div style="height:8px"></div>
-          <label>Provider</label>
-          <select id="providerSelect"><option>Paystack</option></select>
-          <label>Bank</label>
-          <select id="bankSelect"><option value="">Select bank</option></select>
-          <label>Account Number</label>
-          <input id="acctInput" placeholder="e.g., 0123456789" />
-          <label>Account Name (optional)</label>
-          <input id="acctName" placeholder="Account name" />
-          <label>Amount (NGN)</label>
-          <input id="amountInput" type="number" min="0" step="0.01" placeholder="0.00" />
-          <div style="margin-top:12px"><button id="payoutBtn" class="btn btn-primary" type="button">Request Withdrawal</button></div>
-        </div>
-        <div>
-          <h3 style="margin:0 0 8px;color:#cfe0ff">Transaction History</h3>
-          <div id="txHistory" style="font-size:14px;color:#cfe0ff">—</div>
+          <div id="sheetsMsg" class="muted" style="margin-top:10px"></div>
         </div>
       </div>
-    </div>
-
-    <!-- MONITORING (Monitoring tab) -->
-    <div class="section tabpage" data-tabpage="monitoring">
-      <h2>System Monitoring</h2>
-      <div class="badges" id="healthRow"></div>
-      <div style="margin-top:12px"><button class="btn" id="refreshBtn" type="button">Refresh</button></div>
-      <div style="height:12px"></div>
-      <h3 style="margin:0 0 8px;color:#cfe0ff">Live Event Feed</h3>
-      <div id="feedEmpty" style="color:#9fb2d1; padding:6px 2px; display:none">No events yet.</div>
-      <div style="overflow:auto">
-        <table id="feedTable">
-          <thead><tr><th>Time</th><th>Type</th><th>Message</th><th>Ref</th><th>Actor</th></tr></thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- SHEETS (Users tab) -->
-    <div class="section tabpage" data-tabpage="users">
-      <h2>Users Management</h2>
-      <div class="row">
-        <button id="sheetsPingBtn" class="btn" type="button">Sheets: Ping</button>
-        <button id="sheetsAppendBtn" class="btn" type="button">Sheets: Append Event</button>
-      </div>
-      <div id="usersPane" style="margin-top:12px; color:#9fb2d1">Commander manages full users table; this tab triggers live ops.</div>
-    </div>
-
-    <!-- AI Approvals -->
-    <div class="section tabpage" data-tabpage="approvals">
-      <h2>AI-Powered Approvals</h2>
-      <div class="row">
-        <button id="aiScanBtn" class="btn" type="button" disabled>Run AI Analysis (coming online)</button>
-      </div>
-      <div id="approvalsPane" style="margin-top:12px; color:#9fb2d1">This will hook into your Sheets review rows.</div>
-    </div>
-
-    <!-- CPA & Analytics placeholders (non-blocking) -->
-    <div class="section tabpage" data-tabpage="cpa"><h2>CPA Accounts</h2><div style="color:#9fb2d1">Managed in Commander; readouts will display here.</div></div>
-    <div class="section tabpage" data-tabpage="analytics"><h2>Analytics</h2><div style="color:#9fb2d1">Charts live in your genspark module; embeddable slot reserved.</div></div>
-
-    <!-- DEBUG (stays in Monitoring tab) -->
-    <div class="section tabpage" data-tabpage="monitoring" id="raw" style="display:none">
-      <h2>Debug</h2>
-      <pre id="debug" style="background:#0b162a;border:1px solid var(--ring);padding:12px;border-radius:12px;overflow:auto;max-height:360px;margin:0"></pre>
-    </div>
-
-    <div class="section">
-      <a class="btn" href="/index.html">Back to Login</a>
-    </div>
+    </section>
 
     <div class="footer">© Empire Affiliate Marketing Hub</div>
   </div>
 
-  <!-- Tabs + Compatibility bridge -->
   <script>
-    (function(){
-      // Tabs
-      const tabs = document.querySelectorAll('.tab');
-      const pages = document.querySelectorAll('.tabpage');
-      function show(tab){
-        tabs.forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
-        pages.forEach(p => p.classList.toggle('active', p.dataset.tabpage === tab));
-      }
-      tabs.forEach(t => t.addEventListener('click', () => show(t.dataset.tab)));
-      show('dashboard');
-
-      // Compatibility bridge: allow /api/* or /.netlify/functions/* seamlessly
-      const MAP = {
-        '/api/me': '/.netlify/functions/me',
-        '/api/health': '/.netlify/functions/monitor-health',
-        '/api/feed': '/.netlify/functions/monitor-feed',
-        '/api/summary': '/.netlify/functions/gs-bridge?action=summary',
-        '/api/banks': '/.netlify/functions/paystack-banks',
-        '/api/payout/quote': '/.netlify/functions/paystack-transfer?dryrun=1',
-        '/api/payout/request': '/.netlify/functions/paystack-transfer',
-        '/api/sheets/ping': '/.netlify/functions/gs-bridge?action=ping',
-        '/api/sheets/append_event': '/.netlify/functions/gs-bridge',
-        '/api/telegram/test': '/.netlify/functions/test-telegram'
-      };
-      const origFetch = window.fetch;
-      window.fetch = function(input, init) {
-        try {
-          let url = (typeof input === 'string') ? input : input.url;
-          if (url && url.startsWith('/api/')) {
-            // remap to functions
-            const base = url.split('?')[0];
-            const q = url.includes('?') ? url.substring(url.indexOf('?')) : '';
-            const mapped = MAP[base] || base; // fallback: leave as-is
-            const finalUrl = mapped + (mapped.includes('?') || !q ? q : '?' + q);
-            if (typeof input === 'string') return origFetch(finalUrl, init);
-            const req = new Request(finalUrl, input);
-            return origFetch(req, init);
-          }
-        } catch {}
-        return origFetch(input, init);
-      };
-    })();
+    // Simple tab router
+    const tabs = document.querySelectorAll('.tab');
+    const sections = {
+      overview: document.getElementById('tab-overview'),
+      health: document.getElementById('tab-health'),
+      users: document.getElementById('tab-users'),
+      events: document.getElementById('tab-events'),
+      wallet: document.getElementById('tab-wallet'),
+    };
+    function activate(key){
+      tabs.forEach(t=>t.classList.toggle('active', t.dataset.tab===key));
+      Object.entries(sections).forEach(([k,el])=>{ el.classList.toggle('active', k===key); });
+      // Let dashboard-live.js know which section is visible (optional)
+      window.dispatchEvent(new CustomEvent('empire:tab', {detail:key}));
+    }
+    tabs.forEach(t=>t.addEventListener('click',()=>activate(t.dataset.tab)));
+    // Deep-link ?tab=users etc.
+    const urlTab = new URLSearchParams(location.search).get('tab');
+    if (urlTab && sections[urlTab]) activate(urlTab);
   </script>
 
-  <!-- Live logic (already in your repo) -->
+  <!-- Wire to the live data/logic -->
   <script type="module" src="./app/assets/js/dashboard-live.js"></script>
 </body>
 </html>

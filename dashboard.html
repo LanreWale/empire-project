@@ -4,162 +4,210 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Empire — Dashboard</title>
+  <meta name="color-scheme" content="dark" />
   <style>
-    :root { color-scheme: dark; }
-    body { margin:0; background:#0b1220; color:#e8eefc; font-family: system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,sans-serif; }
-    .wrap { max-width:1080px; margin:0 auto; padding:20px 14px 40px; }
-    h1 { margin:8px 0 16px; font-size:28px; }
-    h2 { margin:0 0 10px; font-size:20px; }
-    .card { background:#111a2b; border:1px solid #1f2b44; border-radius:14px; padding:14px; margin:12px 0; }
-    .muted { color:#9ab; }
-    .row { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
-    .grid { display:grid; gap:12px; grid-template-columns: 1fr; }
-    @media (min-width: 900px){ .grid{ grid-template-columns: 1fr 1fr; } }
-    .grow { flex:1 1 auto; }
-    .pill { display:inline-block; padding:2px 10px; border:1px solid #2b395a; border-radius:999px; font-size:12px; }
-    .ok { color:#48e088; }
-    .err { color:#ff6767; }
-    .badge { padding:6px 10px; border-radius:10px; font-size:12px; background:#25304a; border:1px solid #2f3b58; }
-    .b-ok   { background:#16a34a; border-color:#166534; }
-    .b-warn { background:#f59e0b; border-color:#b45309; }
-    .b-down { background:#dc2626; border-color:#991b1b; }
-    .btn, button, .btn-secondary { display:inline-block; background:#2b66f6; color:#fff; padding:10px 14px; border-radius:10px; text-decoration:none; border:0; cursor:pointer; }
-    .btn-secondary { background:#25304a; color:#d1d5db; border:1px solid #2f3b58; }
-    pre { background:#0a1426; border:1px solid #1f2b44; padding:10px; border-radius:10px; overflow:auto; }
-    input, select { width:100%; padding:10px; border-radius:10px; border:1px solid #2b395a; background:#0a1426; color:#e8eefc; }
-    label { display:block; font-size:12px; color:#9ab; margin:6px 0 4px; }
-    table { width:100%; border-collapse:collapse; font-size:14px; }
-    th, td { padding:10px; border-top:1px solid #1f2b44; text-align:left; }
-    .kpis { display:grid; grid-template-columns: repeat(4, 1fr); gap:8px; }
-    .kpi { background:#0a1426; border:1px solid #1f2b44; border-radius:12px; padding:10px; text-align:center; }
-    .kpi .label { color:#9ab; font-size:12px; }
-    .kpi .value { font-weight:800; font-size:18px; margin-top:6px; }
-    .two { display:grid; grid-template-columns:1fr; gap:12px; }
-    @media (min-width: 900px){ .two{ grid-template-columns: 1fr 1fr; } }
+    :root{
+      --bg:#0a1220; --panel:#0f182a; --panel2:#0e1a31; --ink:#e8eefc; --muted:#9fb2d1; --line:#1f2b44;
+      --gold1:#ffd24d; --gold2:#ffb11a; --accent1:#367cff; --accent2:#215de7;
+      --ok:#16a34a; --warn:#f59e0b; --bad:#dc2626; --ring:#2a3a5a;
+      --radius:18px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; color:var(--ink);
+      background:radial-gradient(1200px 800px at 10% -10%, #14223f 0%, #0a1220 50%), var(--bg);
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,sans-serif;
+    }
+    .wrap{max-width:1080px;margin:24px auto 64px;padding:0 14px;}
+
+    /* Header / Hero */
+    .hero{
+      background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,0)) , var(--panel);
+      border:1px solid var(--line); border-radius:24px; padding:18px;
+      box-shadow:0 10px 28px rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.02);
+    }
+    .hero-top{display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap;}
+    .brand{display:flex; align-items:center; gap:12px}
+    .badge{
+      width:44px; height:44px; border-radius:12px; display:grid; place-items:center;
+      background:linear-gradient(135deg, #22c55e, #60a5fa); color:#001; font-weight:800;
+      box-shadow:0 8px 18px rgba(0,0,0,.35);
+    }
+    .title{font-size:22px; font-weight:800; letter-spacing:.2px}
+    .sub{color:var(--muted); margin-top:6px}
+    .links a{color:#a7c8ff; text-decoration:none; margin-left:16px}
+
+    /* Page title / note */
+    h1{margin:20px 0 12px; font-size:34px; letter-spacing:.2px}
+    .note{margin:8px 0 16px; color:#fda4af}
+
+    /* Cards & grid */
+    .card{background:var(--panel2); border:1px solid var(--line); border-radius:20px; padding:16px; box-shadow:inset 0 0 0 1px rgba(255,255,255,.02)}
+    .section{margin:16px 0}
+    .section h2{margin:0 0 12px; color:var(--gold1); letter-spacing:.3px}
+    .grid{display:grid; gap:16px}
+    @media(min-width:860px){ .grid.cols-4{grid-template-columns:repeat(4,1fr);} .grid.cols-2{grid-template-columns:1fr 1fr;} }
+
+    /* KPI cards */
+    .kpi{background:#0c1730; border:1px solid var(--ring); padding:16px; border-radius:16px}
+    .kpi .label{color:#c9d8f8; font-size:13px}
+    .kpi .value{font-size:24px; font-weight:800; margin-top:6px}
+
+    /* Profile pill row */
+    .pill{display:inline-block; padding:4px 10px; border:1px solid var(--ring); border-radius:999px; font-size:12px; color:#cfe0ff}
+
+    /* Health badges */
+    .badges{display:flex; gap:10px; flex-wrap:wrap}
+    .badge-sm{padding:6px 10px; border-radius:10px; font-size:12px; border:1px solid var(--ring); background:#172446}
+    .ok{background:#0f2a18; border-color:#1e5d38; color:#b7f7c3}
+    .warn{background:#3a2a0f; border-color:#b45309; color:#ffe0a3}
+    .down{background:#2a1010; border-color:#991b1b; color:#ffc2c2}
+
+    /* Buttons */
+    .btn{display:inline-block; padding:10px 14px; border-radius:12px; border:1px solid var(--ring); background:#142448; color:#e6eeff; text-decoration:none; cursor:pointer}
+    .btn-primary{background:linear-gradient(180deg, var(--gold1), var(--gold2)); color:#111; border:0; font-weight:800}
+    .btn-ghost{background:#0b162a}
+
+    /* Table */
+    table{width:100%; border-collapse:collapse; font-size:14px}
+    th,td{padding:10px; border-top:1px solid var(--line); text-align:left}
+    thead th{color:#9fb2d1}
+
+    /* Form bits */
+    .row{display:flex; gap:10px; flex-wrap:wrap}
+    .grow{flex:1 1 auto}
+    label{display:block; font-size:13px; color:#cfe0ff; margin:8px 0 6px}
+    input, select{
+      width:100%; background:#0b162a; color:#e8eefc; border:1px solid var(--ring);
+      border-radius:12px; padding:12px 10px; outline:none;
+    }
+
+    /* Footer */
+    .footer{opacity:.7; text-align:center; margin-top:26px; font-size:13px}
   </style>
 </head>
 <body>
   <div class="wrap">
-    <h1>Empire — Dashboard</h1>
+    <!-- HERO -->
+    <div class="hero">
+      <div class="hero-top">
+        <div class="brand">
+          <div class="badge">▲</div>
+          <div>
+            <div class="title">Empire Dashboard</div>
+            <div class="sub">AI-powered performance, payouts & live monitoring</div>
+          </div>
+        </div>
+        <div class="links">
+          <a href="/admin/">Commander Console</a>
+          <a href="/index.html">Login</a>
+          <a href="https://t.me/TheEmpireHq" target="_blank" rel="noopener">Telegram</a>
+        </div>
+      </div>
+    </div>
 
-    <div id="note" class="muted">Loading…</div>
+    <h1>Empire — Dashboard</h1>
+    <div id="note" class="note" style="display:none"></div>
 
     <!-- Profile -->
-    <div id="profile" class="card" style="display:none">
-      <div class="row">
+    <div id="profile" class="card section" style="display:none">
+      <div class="row" style="align-items:center">
         <div class="grow">
-          <div id="name" style="font-weight:700;font-size:18px;"></div>
-          <div class="muted" id="contact"></div>
+          <div id="name" style="font-weight:800; font-size:18px">—</div>
+          <div id="contact" style="color:#9fb2d1">—</div>
         </div>
         <div class="pill" id="status">—</div>
-      </div>
-      <div style="margin-top:10px;">
-        <div>Scale: <span id="scale" style="font-weight:700;">—</span>×</div>
+        <div class="pill">Scale: <span id="scale" style="font-weight:800">—</span>×</div>
       </div>
     </div>
 
     <!-- KPIs -->
-    <div class="card">
-      <div style="font-weight:700; margin-bottom:6px;">Performance</div>
-      <div class="kpis">
-        <div class="kpi"><div class="label">Total Earnings</div><div class="value" id="kpi_total_earnings">—</div></div>
-        <div class="kpi"><div class="label">Active Users</div><div class="value" id="kpi_active_users">—</div></div>
-        <div class="kpi"><div class="label">Approval Rate</div><div class="value" id="kpi_approval_rate">—</div></div>
-        <div class="kpi"><div class="label">Pending Reviews</div><div class="value" id="kpi_pending">—</div></div>
+    <div class="card section">
+      <h2>Performance</h2>
+      <div class="grid cols-4">
+        <div class="kpi"><div class="label">Total Earnings</div><div id="kpi_total" class="value">NGN 0.00</div></div>
+        <div class="kpi"><div class="label">Active Users</div><div id="kpi_users" class="value">0</div></div>
+        <div class="kpi"><div class="label">Approval Rate</div><div id="kpi_rate" class="value">—</div></div>
+        <div class="kpi"><div class="label">Pending Reviews</div><div id="kpi_pending" class="value">0</div></div>
       </div>
     </div>
 
-    <!-- System Health + Event Feed -->
-    <div class="two">
-      <div class="card">
-        <div class="row" style="justify-content:space-between;align-items:center">
-          <div style="font-weight:700;">System Health</div>
-          <button class="btn-secondary" id="refreshBtn" type="button">Refresh</button>
-        </div>
-        <div class="row" id="healthRow"><!-- badges via JS --></div>
+    <!-- Health -->
+    <div class="card section">
+      <div class="row" style="justify-content:space-between;align-items:center">
+        <h2 style="margin:0">System Health</h2>
+        <button class="btn" id="refreshBtn" type="button">Refresh</button>
       </div>
+      <div id="healthRow" class="badges" style="margin-top:10px"><!-- badges via JS --></div>
+    </div>
 
-      <div class="card">
-        <div style="font-weight:700; margin-bottom:6px;">Event Feed</div>
-        <div id="feedEmpty" class="muted" style="padding:8px;display:none">No events yet.</div>
-        <div style="overflow:auto;">
-          <table id="feedTable">
-            <thead>
-              <tr class="muted"><th>Time</th><th>Type</th><th>Message</th><th>Ref</th><th>Actor</th></tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div>
+    <!-- Feed -->
+    <div class="card section">
+      <h2>Event Feed</h2>
+      <div id="feedEmpty" style="color:#9fb2d1; padding:6px 2px; display:none">No events yet.</div>
+      <div style="overflow:auto">
+        <table id="feedTable">
+          <thead><tr><th>Time</th><th>Type</th><th>Message</th><th>Ref</th><th>Actor</th></tr></thead>
+          <tbody></tbody>
+        </table>
       </div>
     </div>
 
-    <!-- Payouts (Paystack or Flutterwave) -->
-    <div class="card">
-      <div style="font-weight:700; margin-bottom:6px;">Payout</div>
-      <div class="grid">
-        <div>
-          <label for="provider">Provider</label>
-          <select id="provider">
-            <option value="paystack">Paystack</option>
-            <option value="flutterwave">Flutterwave</option>
+    <!-- Payout -->
+    <div class="card section">
+      <h2>Payout</h2>
+      <div class="row">
+        <div class="grow">
+          <label>Provider</label>
+          <select id="providerSelect">
+            <option>Paystack</option>
           </select>
         </div>
-        <div>
-          <label for="paystackBanks">Bank</label>
-          <select id="paystackBanks">
-            <option value="">Loading…</option>
-          </select>
+        <div class="grow">
+          <label>Bank</label>
+          <select id="bankSelect"><option value="">Select bank</option></select>
         </div>
-        <div>
-          <label for="acct">Account Number</label>
-          <input id="acct" placeholder="0123456789" />
+        <div class="grow">
+          <label>Account Number</label>
+          <input id="acctInput" placeholder="e.g., 0123456789" />
         </div>
-        <div>
-          <label for="acctName">Account Name</label>
-          <input id="acctName" placeholder="John Doe" />
+        <div class="grow">
+          <label>Account Name (optional)</label>
+          <input id="acctName" placeholder="Account name" />
         </div>
-        <div>
-          <label for="amt">Amount (NGN)</label>
-          <input id="amt" placeholder="5000" />
-        </div>
-        <div style="display:flex;align-items:flex-end">
-          <button id="btnPayout" class="btn" type="button">Send Payout</button>
+        <div class="grow">
+          <label>Amount (NGN)</label>
+          <input id="amountInput" type="number" min="0" step="0.01" placeholder="0.00" />
         </div>
       </div>
-      <div id="payoutNote" class="muted" style="margin-top:8px"></div>
+      <div style="margin-top:12px">
+        <button id="payoutBtn" class="btn btn-primary" type="button">Request Withdrawal</button>
+      </div>
     </div>
 
-    <!-- Messaging / Sheets -->
-    <div class="two">
-      <div class="card">
-        <div style="font-weight:700; margin-bottom:6px;">Messaging</div>
-        <button id="btnPingTG" class="btn-secondary" type="button">Send Test Telegram</button>
-        <div id="msgNote" class="muted" style="margin-top:8px"></div>
-      </div>
-
-      <div class="card">
-        <div style="font-weight:700; margin-bottom:6px;">Google Sheets</div>
-        <div class="row" style="gap:8px; flex-wrap:wrap">
-          <button id="btnSheetPing" class="btn-secondary" type="button">Sheets: Ping</button>
-          <button id="btnSheetAppend" class="btn-secondary" type="button">Sheets: Append Event</button>
-        </div>
-        <div id="sheetNote" class="muted" style="margin-top:8px"></div>
+    <!-- Sheets ops (optional) -->
+    <div class="card section">
+      <h2>Google Sheets</h2>
+      <div class="row">
+        <button id="sheetsPingBtn" class="btn btn-ghost" type="button">Sheets: Ping</button>
+        <button id="sheetsAppendBtn" class="btn btn-ghost" type="button">Sheets: Append Event</button>
       </div>
     </div>
 
     <!-- Debug -->
-    <div class="card muted" id="raw" style="display:none">
-      <div style="font-weight:700;margin-bottom:6px;">Debug</div>
-      <pre id="debug"></pre>
+    <div class="card section" id="raw" style="display:none">
+      <h2>Debug</h2>
+      <pre id="debug" style="background:#0b162a; border:1px solid var(--ring); padding:12px; border-radius:12px; overflow:auto; max-height:360px; margin:0"></pre>
     </div>
 
-    <!-- Back -->
-    <div class="card">
-      <a class="btn" href="/login">Back to Login</a>
+    <div class="section">
+      <a class="btn" href="/index.html">Back to Login</a>
     </div>
+
+    <div class="footer">© Empire Affiliate Marketing Hub</div>
   </div>
 
-  <!-- Live data hook -->
+  <!-- Live logic -->
   <script type="module" src="./app/assets/js/dashboard-live.js"></script>
 </body>
 </html>

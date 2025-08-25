@@ -1,225 +1,60 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <title>Empire – User Dashboard</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-
-  <!-- Favicons & Social -->
-  <link rel="icon" href="/app/assets/brand/logo.svg" type="image/svg+xml">
-  <meta name="theme-color" content="#0b1220">
-  <meta property="og:title" content="Empire – User Dashboard">
-  <meta property="og:description" content="Log clicks, conversions and revenue. See your current level and quick links.">
-  <meta property="og:image" content="https://empireaffiliatemarketinghub.com/app/assets/brand/logo.svg">
-
-  <style>
-    :root {
-      --bg:#0b1220; --card:#111827; --muted:#97a0b6; --ok:#18b26b; --bad:#de524c;
-      --txt:#e7ecf7; --accent:#4bb1ff;
-    }
-    *{box-sizing:border-box}
-    body{margin:0;background:var(--bg);color:var(--txt);font:15px/1.55 system-ui,Segoe UI,Roboto,Helvetica,Arial}
-    .wrap{max-width:760px;margin:0 auto;padding:18px}
-    .grid{display:grid;gap:14px}
-    .card{background:var(--card);border-radius:14px;box-shadow:0 6px 40px rgba(0,0,0,.25);padding:14px}
-    h1{margin:0 0 6px;font-size:20px}
-    h2{margin:0 0 8px;font-size:16px}
-    .muted{color:var(--muted)}
-    label{display:block;margin:10px 0 6px;font-size:13px}
-    input,select,textarea{
-      width:100%;padding:12px;border:1px solid #22304e;background:#0d1525;color:var(--txt);border-radius:10px;
-    }
-    textarea{min-height:84px;resize:vertical}
-    button{width:100%;padding:12px 14px;border:0;border-radius:12px;background:var(--accent);color:#051225;font-weight:700;cursor:pointer}
-    .row{display:grid;gap:10px;grid-template-columns:1fr 1fr}
-    .msg{padding:10px 12px;border-radius:12px;margin:8px 0;font-size:13px}
-    .ok{background:#0f2b21;border:1px solid #166c4a;color:#b9f4d8}
-    .bad{background:#2a1414;border:1px solid #944040;color:#ffd6d5}
-    .pill{display:inline-block;padding:4px 8px;border-radius:999px;background:#0d1a2a;color:#cfe1ff;border:1px solid #2a3d5c;font-size:12px}
-    .small{font-size:12px}
-    .footer{color:#7d879b;text-align:center;margin:18px 0 4px;font-size:12px}
-    .flex{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-
-    /* Branding */
-    .brand-hero {
-      position: relative; border-radius: 18px; overflow: hidden; padding: 16px 18px; margin-bottom: 14px;
-      background: linear-gradient(180deg, rgba(75,177,255,.20), rgba(24,178,107,.12)), url("/app/assets/brand/bg-texture.png");
-      background-size: cover; background-position: center; outline: 1px solid #1b2740;
-    }
-    .brand-hero .brandbar { display:flex; align-items:center; gap:12px; }
-    .brand-hero img.brandlogo { width: 140px; height:auto; display:block; }
-    .brand-hero .subtitle { margin-top:8px; color:#b9c3d9; font-size:13px; }
-    .brand-hero .right { margin-left:auto; text-align:right; }
-    .brand-watermark { position:absolute; right:10px; bottom:10px; opacity:.07; }
-    .brand-watermark img { width:120px; }
-    a.link{ color:#cfe1ff; text-decoration:underline; }
-    .ghost{ background:#334155; color:#dbe4f7; width:auto; }
-    .primary{ background:linear-gradient(135deg,#4bb1ff,#34d399); }
-  </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Empire – User</title>
+  <link rel="stylesheet" href="styles.css" />
 </head>
-<body>
-  <div class="wrap grid">
+<body class="bg-gray-900 text-white">
+  <div class="container mx-auto p-6">
+    <header class="mb-8">
+      <h1 class="text-3xl font-bold">Empire – User Dashboard</h1>
+    </header>
 
-    <!-- Brand header -->
-    <div class="brand-hero">
-      <div class="brandbar">
-        <img src="/app/assets/brand/logo.svg" alt="Empire Hub" class="brandlogo" />
-        <div class="right">
-          <div style="font-weight:700">Empire Affiliate Marketing Hub</div>
-          <div class="subtitle">Your User Dashboard</div>
-        </div>
-      </div>
-      <div class="flex" style="margin-top:10px">
-        <span id="who" class="pill">—</span>
-        <a class="link" href="/index.html">Back to Login</a>
-        <button id="logout" class="ghost">Log out</button>
-      </div>
-      <div class="brand-watermark"><img src="/app/assets/brand/watermark.svg" alt=""></div>
-    </div>
+    <main>
+      <section class="mb-6">
+        <h2 class="text-xl font-semibold mb-2">Welcome</h2>
+        <p>Manage your account and access resources here.</p>
+      </section>
 
-    <!-- Quick info -->
-    <div class="card">
-      <h2>Overview</h2>
-      <div class="muted small">Log performance daily. Notifications go to the team channel; Sheets update automatically.</div>
-      <div class="row" style="margin-top:10px">
-        <div>
-          <label>Your Email</label>
-          <input id="email" placeholder="you@example.com" />
-        </div>
-        <div>
-          <label>WhatsApp (optional)</label>
-          <input id="phone" placeholder="+234803..." />
-        </div>
-      </div>
-      <div class="row">
-        <div>
-          <label>Current Level (snapshot)</label>
-          <select id="level">
-            <option>1x</option><option>2x</option><option>3x</option><option>4x</option><option>5x</option>
-          </select>
-        </div>
-        <div class="small muted" style="display:flex;align-items:end">Commander can upgrade you as performance improves.</div>
-      </div>
-      <div class="flex" style="margin-top:6px">
-        <button id="saveProfile" class="ghost">Save Profile</button>
-      </div>
-      <div id="profileMsg" class="msg" style="display:none"></div>
-    </div>
+      <section class="mb-6">
+        <h2 class="text-xl font-semibold mb-2">Links</h2>
+        <ul class="list-disc list-inside space-y-2">
+          <li>
+            <!-- Telegram link will be dynamically set -->
+            <a id="tgLink" href="#" target="_blank" rel="noopener" class="text-blue-400 hover:underline">
+              Telegram Channel
+            </a>
+          </li>
+          <li>
+            <a href="/docs/help.html" class="text-blue-400 hover:underline">Help Docs</a>
+          </li>
+          <li>
+            <a href="/dashboard.html" class="text-blue-400 hover:underline">Back to Dashboard</a>
+          </li>
+        </ul>
+      </section>
+    </main>
 
-    <!-- Log Performance -->
-    <div class="card">
-      <h2>Log Performance</h2>
-      <div class="row">
-        <div><label>Clicks</label><input id="clicks" type="number" value="0" /></div>
-        <div><label>Conversions</label><input id="conversions" type="number" value="0" /></div>
-      </div>
-      <div class="row">
-        <div><label>Revenue (USD)</label><input id="revenue" type="number" step="0.01" value="0" /></div>
-        <div>
-          <label>Notify</label>
-          <select id="notify"><option value="true">Yes</option><option value="false">No</option></select>
-        </div>
-      </div>
-      <label>Notes</label><textarea id="notes" placeholder="e.g., morning push, new offer"></textarea>
-      <button id="send" class="primary">Submit</button>
-      <div id="msg" class="msg" style="display:none"></div>
-    </div>
-
-    <!-- Links -->
-    <div class="card">
-      <h2>Quick Links</h2>
-      <div class="flex">
-        <a href="/app/index.html" class="link">Commander Console (admins)</a>
-        <a href="https://t.me/TheEmpireHq" target="_blank" rel="noopener" class="link">Telegram Channel</a>
-      </div>
-    </div>
-
-    <div class="footer">© Empire Affiliate Marketing Hub</div>
+    <footer class="mt-8 text-sm text-gray-500">
+      &copy; Empire Affiliate Marketing Hub
+    </footer>
   </div>
 
   <script>
-    const $ = id => document.getElementById(id);
-    const LS_USER = "empire_user_email";
-    const LS_PHONE = "empire_user_phone";
-    const LS_LEVEL = "empire_user_level";
-
-    function setMsg(el, ok, text){
-      el.className = "msg " + (ok ? "ok" : "bad");
-      el.textContent = text;
-      el.style.display = "";
-    }
-
-    // Load profile from localStorage
-    function loadProfile(){
-      const email = localStorage.getItem(LS_USER) || "";
-      const phone = localStorage.getItem(LS_PHONE) || "";
-      const level = localStorage.getItem(LS_LEVEL) || "1x";
-      $("email").value = email;
-      $("phone").value = phone;
-      $("level").value = level;
-      $("who").textContent = email ? ("Signed in as " + email) : "—";
-    }
-
-    // Save profile (client only)
-    $("saveProfile").onclick = () => {
-      const email = $("email").value.trim();
-      if (!email || !/^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$/.test(email)) {
-        setMsg($("profileMsg"), false, "Enter a valid email.");
-        return;
-      }
-      localStorage.setItem(LS_USER, email);
-      localStorage.setItem(LS_PHONE, $("phone").value.trim());
-      localStorage.setItem(LS_LEVEL, $("level").value.trim());
-      loadProfile();
-      setMsg($("profileMsg"), true, "Profile saved.");
-    };
-
-    // Logout
-    $("logout").onclick = () => {
-      localStorage.removeItem(LS_USER);
-      localStorage.removeItem(LS_PHONE);
-      localStorage.removeItem(LS_LEVEL);
-      location.href = "/index.html";
-    };
-
-    // Submit performance to Netlify function
-    $("send").onclick = async () => {
-      const email = $("email").value.trim();
-      if (!email) {
-        setMsg($("msg"), false, "Please set your email in the profile section.");
-        return;
-      }
-      const payload = {
-        email,
-        clicks: Number($("clicks").value || 0),
-        conversions: Number($("conversions").value || 0),
-        revenueUSD: Number($("revenue").value || 0),
-        level: $("level").value.trim(),
-        notes: $("notes").value.trim(),
-        phone: $("phone").value.trim(),
-        notify: $("notify").value === "true"
-      };
-
+    // Dynamically fetch Telegram channel info from serverless function
+    (async () => {
       try {
-        const r = await fetch("/.netlify/functions/log-performance", {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify(payload)
-        });
-        const data = await r.json();
-        if (data.ok !== false) {
-          setMsg($("msg"), true, "Logged! Telegram ping & sheet write scheduled.");
-          $("clicks").value = 0; $("conversions").value = 0; $("revenue").value = 0; $("notes").value = "";
-        } else {
-          setMsg($("msg"), false, data.error || "Failed to log.");
-        }
-      } catch (e) {
-        setMsg($("msg"), false, String(e));
+        const r = await fetch("/.netlify/functions/public-config");
+        const c = await r.json();
+        const a = document.getElementById("tgLink");
+        if (c?.telegramChannelUrl) a.href = c.telegramChannelUrl;
+        if (c?.telegramHandle) a.textContent = "Telegram: " + c.telegramHandle;
+      } catch (err) {
+        console.error("Failed to load Telegram config", err);
       }
-    };
-
-    // Init
-    loadProfile();
+    })();
   </script>
 </body>
 </html>

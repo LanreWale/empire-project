@@ -7,26 +7,35 @@
   <style>
     :root { color-scheme: dark; }
     body { margin:0; background:#0b1220; color:#e8eefc; font-family: system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,sans-serif; }
-    .wrap { max-width:720px; margin:0 auto; padding:20px 14px 40px; }
+    .wrap { max-width:1080px; margin:0 auto; padding:20px 14px 40px; }
     h1 { margin:8px 0 16px; font-size:28px; }
+    h2 { margin:0 0 10px; font-size:20px; }
     .card { background:#111a2b; border:1px solid #1f2b44; border-radius:14px; padding:14px; margin:12px 0; }
     .muted { color:#9ab; }
     .row { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+    .grid { display:grid; gap:12px; grid-template-columns: 1fr; }
+    @media (min-width: 900px){ .grid{ grid-template-columns: 1fr 1fr; } }
     .grow { flex:1 1 auto; }
     .pill { display:inline-block; padding:2px 10px; border:1px solid #2b395a; border-radius:999px; font-size:12px; }
     .ok { color:#48e088; }
     .err { color:#ff6767; }
-    a.btn { display:inline-block; background:#2b66f6; color:#fff; padding:10px 14px; border-radius:10px; text-decoration:none; }
-    pre { background:#0a1426; border:1px solid #1f2b44; padding:10px; border-radius:10px; overflow:auto; }
-
-    /* Monitoring additions (match your style) */
     .badge { padding:6px 10px; border-radius:10px; font-size:12px; background:#25304a; border:1px solid #2f3b58; }
     .b-ok   { background:#16a34a; border-color:#166534; }
     .b-warn { background:#f59e0b; border-color:#b45309; }
     .b-down { background:#dc2626; border-color:#991b1b; }
-    .btn-secondary { display:inline-block; background:#25304a; color:#d1d5db; padding:8px 12px; border-radius:10px; border:1px solid #2f3b58; text-decoration:none; cursor:pointer; }
+    .btn, button, .btn-secondary { display:inline-block; background:#2b66f6; color:#fff; padding:10px 14px; border-radius:10px; text-decoration:none; border:0; cursor:pointer; }
+    .btn-secondary { background:#25304a; color:#d1d5db; border:1px solid #2f3b58; }
+    pre { background:#0a1426; border:1px solid #1f2b44; padding:10px; border-radius:10px; overflow:auto; }
+    input, select { width:100%; padding:10px; border-radius:10px; border:1px solid #2b395a; background:#0a1426; color:#e8eefc; }
+    label { display:block; font-size:12px; color:#9ab; margin:6px 0 4px; }
     table { width:100%; border-collapse:collapse; font-size:14px; }
     th, td { padding:10px; border-top:1px solid #1f2b44; text-align:left; }
+    .kpis { display:grid; grid-template-columns: repeat(4, 1fr); gap:8px; }
+    .kpi { background:#0a1426; border:1px solid #1f2b44; border-radius:12px; padding:10px; text-align:center; }
+    .kpi .label { color:#9ab; font-size:12px; }
+    .kpi .value { font-weight:800; font-size:18px; margin-top:6px; }
+    .two { display:grid; grid-template-columns:1fr; gap:12px; }
+    @media (min-width: 900px){ .two{ grid-template-columns: 1fr 1fr; } }
   </style>
 </head>
 <body>
@@ -49,36 +58,92 @@
       </div>
     </div>
 
-    <!-- Next steps -->
+    <!-- KPIs -->
     <div class="card">
-      <div style="font-weight:700; margin-bottom:6px;">Next steps</div>
-      <ol class="muted" style="padding-left:18px;">
-        <li>Stay available on your WhatsApp; approvals and updates arrive there.</li>
-        <li>Watch <a href="https://t.me/TheEmpireHq" target="_blank">The Empire Live Updates</a> for offers and announcements.</li>
-        <li>Your scale controls how many/top offers reach you.</li>
-      </ol>
-    </div>
-
-    <!-- System Health -->
-    <div class="card">
-      <div class="row" style="justify-content:space-between;align-items:center">
-        <div style="font-weight:700;">System Health</div>
-        <button class="btn-secondary" id="refreshBtn" type="button">Refresh</button>
+      <div style="font-weight:700; margin-bottom:6px;">Performance</div>
+      <div class="kpis">
+        <div class="kpi"><div class="label">Total Earnings</div><div class="value" id="kpi_total_earnings">—</div></div>
+        <div class="kpi"><div class="label">Active Users</div><div class="value" id="kpi_active_users">—</div></div>
+        <div class="kpi"><div class="label">Approval Rate</div><div class="value" id="kpi_approval_rate">—</div></div>
+        <div class="kpi"><div class="label">Pending Reviews</div><div class="value" id="kpi_pending">—</div></div>
       </div>
-      <div class="row" id="healthRow"><!-- badges via JS --></div>
     </div>
 
-    <!-- Event Feed -->
+    <!-- System Health + Event Feed -->
+    <div class="two">
+      <div class="card">
+        <div class="row" style="justify-content:space-between;align-items:center">
+          <div style="font-weight:700;">System Health</div>
+          <button class="btn-secondary" id="refreshBtn" type="button">Refresh</button>
+        </div>
+        <div class="row" id="healthRow"><!-- badges via JS --></div>
+      </div>
+
+      <div class="card">
+        <div style="font-weight:700; margin-bottom:6px;">Event Feed</div>
+        <div id="feedEmpty" class="muted" style="padding:8px;display:none">No events yet.</div>
+        <div style="overflow:auto;">
+          <table id="feedTable">
+            <thead>
+              <tr class="muted"><th>Time</th><th>Type</th><th>Message</th><th>Ref</th><th>Actor</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Payouts (Paystack or Flutterwave) -->
     <div class="card">
-      <div style="font-weight:700; margin-bottom:6px;">Event Feed</div>
-      <div id="feedEmpty" class="muted" style="padding:8px;display:none">No events yet.</div>
-      <div style="overflow:auto;">
-        <table id="feedTable">
-          <thead>
-            <tr class="muted"><th>Time</th><th>Type</th><th>Message</th><th>Ref</th><th>Actor</th></tr>
-          </thead>
-          <tbody></tbody>
-        </table>
+      <div style="font-weight:700; margin-bottom:6px;">Payout</div>
+      <div class="grid">
+        <div>
+          <label for="provider">Provider</label>
+          <select id="provider">
+            <option value="paystack">Paystack</option>
+            <option value="flutterwave">Flutterwave</option>
+          </select>
+        </div>
+        <div>
+          <label for="paystackBanks">Bank</label>
+          <select id="paystackBanks">
+            <option value="">Loading…</option>
+          </select>
+        </div>
+        <div>
+          <label for="acct">Account Number</label>
+          <input id="acct" placeholder="0123456789" />
+        </div>
+        <div>
+          <label for="acctName">Account Name</label>
+          <input id="acctName" placeholder="John Doe" />
+        </div>
+        <div>
+          <label for="amt">Amount (NGN)</label>
+          <input id="amt" placeholder="5000" />
+        </div>
+        <div style="display:flex;align-items:flex-end">
+          <button id="btnPayout" class="btn" type="button">Send Payout</button>
+        </div>
+      </div>
+      <div id="payoutNote" class="muted" style="margin-top:8px"></div>
+    </div>
+
+    <!-- Messaging / Sheets -->
+    <div class="two">
+      <div class="card">
+        <div style="font-weight:700; margin-bottom:6px;">Messaging</div>
+        <button id="btnPingTG" class="btn-secondary" type="button">Send Test Telegram</button>
+        <div id="msgNote" class="muted" style="margin-top:8px"></div>
+      </div>
+
+      <div class="card">
+        <div style="font-weight:700; margin-bottom:6px;">Google Sheets</div>
+        <div class="row" style="gap:8px; flex-wrap:wrap">
+          <button id="btnSheetPing" class="btn-secondary" type="button">Sheets: Ping</button>
+          <button id="btnSheetAppend" class="btn-secondary" type="button">Sheets: Append Event</button>
+        </div>
+        <div id="sheetNote" class="muted" style="margin-top:8px"></div>
       </div>
     </div>
 
@@ -94,137 +159,7 @@
     </div>
   </div>
 
-  <!-- Live data hook (inline, no external file) -->
-  <script type="module">
-    const $ = (s, r=document) => r.querySelector(s);
-    const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
-    const note = $("#note"), prof = $("#profile"), raw = $("#raw"), dbg = $("#debug");
-
-    const money = (n) =>
-      (typeof n === "number" ? n : Number(n||0))
-        .toLocaleString(undefined, { style:"currency", currency:"USD", maximumFractionDigits:2 });
-
-    function qs(k){ return new URL(location.href).searchParams.get(k); }
-
-    async function j(url, opts={}) {
-      try {
-        const res = await fetch(url, { credentials:"include", ...opts });
-        const data = await res.json();
-        return data;
-      } catch(e) {
-        return { ok:false, error:String(e) };
-      }
-    }
-
-    function setText(idOrSel, v) {
-      const el = (idOrSel.startsWith("#") || idOrSel.startsWith("[")) ? $(idOrSel) : $("#"+idOrSel);
-      if (el) el.textContent = (v ?? "—");
-    }
-
-    // ----- PROFILE (/me) -----
-    async function loadProfile() {
-      const i = qs('i'); // invite/session token supported by your /me
-      const url = i ? `/.netlify/functions/me?i=${encodeURIComponent(i)}` : '/.netlify/functions/me';
-      const out = await j(url);
-      if (!out?.ok) {
-        note.textContent = 'Could not load your dashboard: ' + (out?.error || 'Unknown error');
-        raw.style.display = 'block'; if (dbg) dbg.textContent = JSON.stringify(out, null, 2);
-        return false;
-      }
-      // show profile card
-      note.style.display = 'none';
-      prof.style.display = 'block';
-
-      const u = out.user || {};
-      setText("name", u.name || "—");
-      setText("contact", [u.email,u.phone].filter(Boolean).join(" · "));
-      const st = $("#status");
-      if (st) {
-        st.textContent = u.status || "—";
-        st.className = 'pill ' + ((u.status||'').toUpperCase().includes('APPROVED') ? 'ok':'');
-      }
-      setText("scale", (u.scale ?? "—"));
-      // debug view if ?debug=1
-      if (qs('debug') === '1') { raw.style.display = 'block'; if (dbg) dbg.textContent = JSON.stringify(out, null, 2); }
-      return true;
-    }
-
-    // ----- HEALTH (/monitor-health) -----
-    function badgeClass(s="") {
-      s = String(s).toUpperCase();
-      if (/(ONLINE|ACTIVE|OPERATIONAL|CONNECTED|OK|HEALTHY)/.test(s)) return "b-ok";
-      if (/(WARN|DEGRADED|PENDING)/.test(s)) return "b-warn";
-      return "b-down";
-    }
-    async function loadHealth() {
-      const out = await j("/.netlify/functions/monitor-health");
-      const row = $("#healthRow");
-      if (!row) return;
-      row.innerHTML = "";
-      const services = out?.services || out?.data || out || [];
-      if (Array.isArray(services)) {
-        for (const svc of services) {
-          const div = document.createElement("div");
-          const s = String(svc.status || "DOWN");
-          div.className = `badge ${badgeClass(s)}`;
-          div.textContent = `${svc.name || "Service"}: ${s}`;
-          row.appendChild(div);
-        }
-      } else {
-        // fallback if object map like {sheets:'OK',paystack:'OK',...}
-        Object.entries(services).forEach(([k,v])=>{
-          const div = document.createElement("div");
-          div.className = `badge ${badgeClass(v)}`;
-          div.textContent = `${k}: ${v}`;
-          row.appendChild(div);
-        });
-      }
-    }
-
-    // ----- FEED (/monitor-feed) -----
-    async function loadFeed() {
-      const out = await j("/.netlify/functions/monitor-feed");
-      const tbody = $("#feedTable tbody");
-      const empty = $("#feedEmpty");
-      if (!tbody) return;
-      const items = out?.items || out?.data || [];
-      tbody.innerHTML = "";
-      if (!items.length && empty) empty.style.display = "block";
-      items.slice(0,50).forEach(it=>{
-        const tr = document.createElement("tr");
-        const td = (t)=>{ const x=document.createElement("td"); x.textContent=t||"—"; return x; };
-        tr.appendChild(td(it.time || new Date(it.ts || Date.now()).toLocaleString()));
-        tr.appendChild(td(it.type));
-        tr.appendChild(td(it.message));
-        tr.appendChild(td(it.ref));
-        tr.appendChild(td(it.actor));
-        tbody.appendChild(tr);
-      });
-    }
-
-    // ----- KPIs from Sheets (optional) (/gs-bridge?action=summary) -----
-    async function loadKpis() {
-      const out = await j("/.netlify/functions/gs-bridge?action=summary");
-      if (!out?.ok || !out?.data) return;
-      const d = out.data;
-      if ($("#totalEarnings")) $("#totalEarnings").textContent = money(d.totalEarnings);
-      if ($("#activeUsers")) $("#activeUsers").textContent = (d.activeUsers ?? "—");
-      if ($("#aiApprovalRate")) $("#aiApprovalRate").textContent = (d.aiApprovalRate ?? "—") + "%";
-      if ($("#pendingReviews")) $("#pendingReviews").textContent = (d.pendingReviews ?? "—");
-    }
-
-    // Refresh button
-    $("#refreshBtn")?.addEventListener("click", async ()=>{
-      await Promise.all([loadHealth(), loadFeed(), loadKpis()]);
-    });
-
-    // Boot
-    (async ()=>{
-      await loadProfile();  // shows card & fills name/status/scale
-      await Promise.all([loadHealth(), loadFeed(), loadKpis()]);
-      // Auto-refresh health/feed every 15s
-      setInterval(async ()=>{ await Promise.all([loadHealth(), loadFeed()]); }, 15000);
-    })();
-  </script>
+  <!-- Live data hook -->
+  <script type="module" src="./app/assets/js/dashboard-live.js"></script>
 </body>
 </html>

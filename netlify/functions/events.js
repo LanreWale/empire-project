@@ -1,17 +1,26 @@
-// /events?limit=20 -> proxy to Apps Script ?action=events&limit=...
-export default async (req, ctx) => {
+// netlify/functions/events.js
+"use strict";
+
+exports.handler = async (event) => {
   try {
-    const base = process.env.SHEETS_BASE;
-    if (!base) return Response.json({ ok:false, error:"Missing SHEETS_BASE" }, { status:500 });
+    const base = process.env.SHEETS_BASE || process.env.EMPIRE_APPS_SCRIPT_BASE || "";
+    if (!base) return json(500, { ok:false, error:"Missing SHEETS_BASE (Apps Script /exec URL)" });
 
-    const url = new URL(req.url);
-    const limit = Math.max(1, Math.min(200, Number(url.searchParams.get("limit") || 20)));
+    const q = new URLSearchParams(event.queryStringParameters || {});
+    const limit = Math.max(1, Math.min(200, Number(q.get("limit") || 20)));
 
-    const r = await fetch(`${base}?action=events&limit=${limit}`, { headers:{ "Accept":"application/json" }});
-    const data = await r.json().catch(() => ({}));
+    const r = await fetch(`${base}?action=events&limit=${limit}`, { headers: { Accept: "application/json" } });
+    const text = await r.text();
 
-    return Response.json({ ok: !!data.ok, events: Array.isArray(data.events) ? data.events : [] });
+    let data;
+    try { data = JSON.parse(text); } catch { return json(502, { ok:false, error:"Bad JSON from Apps Script", raw:text }); }
+
+    return json(200, { ok: !!data.ok, events: Array.isArray(data.events) ? data.events : [] });
   } catch (e) {
-    return Response.json({ ok:false, error:String(e) }, { status:500 });
+    return json(500, { ok:false, error:String(e) });
   }
 };
+
+function json(code, body){
+  return { statusCode: code, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) };
+}

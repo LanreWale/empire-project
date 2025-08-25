@@ -1,201 +1,199 @@
-/* app/assets/js/dashboard-live.js
-   Glue only: binds your styled dashboard to Netlify Functions.
-   No layout/CSS changes. Safe to include on every dashboard page.
-*/
+// app/assets/js/dashboard-live.js
+// One file. Profile + System Health + Event Feed + Debug + optional KPIs.
+// No layout/CSS changes required. Safe even if some elements don’t exist.
+
 (() => {
-  const PIN_KEY = "CMD_USER";                     // Commander PIN storage
-  const ADMIN = () => (localStorage.getItem(PIN_KEY) || "").trim();
-  const BASE  = "";                               // same origin
+  // --- CONFIG --------------------------------------------------------------
+  const ENDPOINTS = {
+    me:      '/.netlify/functions/me',
+    health:  '/.netlify/functions/monitor-health',
+    feed:    '/.netlify/functions/monitor-feed',
+    summary: '/.netlify/functions/gs-bridge?action=summary', // optional
+  };
+  const POLL_MS = 15000; // 15s periodic refresh
 
-  // --- tiny helpers --------------------------------------------------------
+  // --- DOM HELPERS ---------------------------------------------------------
+  const el = (id) => document.getElementById(id);
+  const qs = (k) => new URL(location.href).searchParams.get(k);
   const $  = (sel) => document.querySelector(sel);
-  const $$ = (sel) => Array.from(document.querySelectorAll(sel));
-  const setText = (sel, v) => { const el = $(sel); if (el) el.textContent = v; };
-  const setHTML = (sel, v) => { const el = $(sel); if (el) el.innerHTML = v; };
+
+  function setText(node, v) { if (node) node.textContent = v; }
+  function pill(node, text, ok) {
+    if (!node) return;
+    node.textContent = text || '—';
+    node.className = 'pill' + (ok ? ' ok' : '');
+  }
+  function badge(node, text, state) {
+    if (!node) return;
+    node.textContent = text || '—';
+    node.className = 'badge ' + (state==='ok'?'b-ok':state==='warn'?'b-warn':'b-down');
+  }
   const fmt = {
-    money(n){ try{ return (Number(n)||0).toLocaleString(undefined,{style:"currency",currency:"USD"}); }catch{ return `$${n}`; } },
-    pct(n){ const x = Number(n); return Number.isFinite(x) ? `${x.toFixed(1)}%` : "—"; }
-  };
-  const h = async (path, {method="GET", body=null, headers={}}={}) => {
-    const res = await fetch(`${BASE}/.netlify/functions${path}`, {
-      method,
-      headers: { "Content-Type":"application/json", "x-admin-secret": ADMIN(), ...headers },
-      body: body ? JSON.stringify(body) : null
-    });
-    if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
-    return res.json().catch(()=> ({}));
+    money(n){ try{ return (Number(n)||0).toLocaleString(undefined,{style:'currency',currency:'USD'}); }catch{ return `$${n}`; } },
+    pct(n){ const x = Number(n); return Number.isFinite(x) ? `${x.toFixed(1)}%` : '—'; }
   };
 
-  // --- RENDERERS (only write into placeholders if they exist) --------------
-  async function loadSummary(){
-    // your backend should aggregate fast stats; if not, this composes them
-    const [me, health, feed] = await Promise.allSettled([
-      h("/me").catch(()=>({})),
-      h("/monitor-health").catch(()=>({})),
-      h("/monitor-feed").catch(()=>({items:[]})),
-    ]);
-
-    // Stats tiles
-    const total   = me.value?.earnings ?? me.value?.totalEarnings ?? 0;
-    const users   = me.value?.activeUsers ?? 0;
-    const appr    = me.value?.aiApprovalRate ?? 0;
-    const pending = me.value?.pendingReviews ?? 0;
-
-    setText("#stat-earnings", fmt.money(total));
-    setText("#stat-users", String(users));
-    setText("#stat-approvalRate", fmt.pct(appr));
-    setText("#stat-pending", String(pending));
-
-    // Health badges
-    const row = $("#health-badges");
-    if (row && health.value){
-      const items = [
-        ["Server",     health.value.server || "ONLINE"],
-        ["Database",   health.value.db || "CONNECTED"],
-        ["Sheets API", health.value.sheets || "OPERATIONAL"],
-        ["AI",         health.value.ai || "ACTIVE"],
-        ["Sync",       health.value.sync || "15 SECONDS"]
-      ];
-      row.innerHTML = items.map(([k,v]) => `
-        <span class="badge ${/OK|ON|ACTIVE|CONNECT/i.test(v) ? "b-ok" : /WARN|DEGRADED/i.test(v) ? "b-warn" : "b-down"}">
-          <strong>${k}:</strong> ${v}
-        </span>
-      `).join("");
-    }
-
-    // Activity feed
-    const tbody = $("#feed-body");
-    if (tbody && feed.value?.items?.length){
-      tbody.innerHTML = feed.value.items.map(it => `
-        <tr>
-          <td>${it.time || it.ts || ""}</td>
-          <td>${it.type || ""}</td>
-          <td>${(it.message||it.msg||"").replace(/</g,"&lt;")}</td>
-          <td>${it.ref || ""}</td>
-          <td>${it.actor || ""}</td>
-        </tr>
-      `).join("");
-      const empty = $("#feed-empty"); if (empty) empty.style.display = "none";
-    }
+  // Basic JSON fetch (same-origin, include cookies if any)
+  async function j(url) {
+    const r = await fetch(url, { credentials: 'include' });
+    // tolerate non-JSON
+    try { return await r.json(); } catch { return { ok:false, error:`Non-JSON from ${url}`, status:r.status }; }
   }
 
-  async function loadCPA(){
-    const list = $("#cpa-list");
-    if (!list) return;
-    const data = await h("/cpa-accounts").catch(()=>({items:[]}));
-    list.innerHTML = (data.items||[]).map(acc => `
-      <div class="cpa-card">
-        <div class="cpa-title">${acc.name || `CPA #${acc.id||""}`}</div>
-        <div class="cpa-sub">${acc.domain || ""}</div>
-        <div class="cpa-row"><span>Active Offers:</span> <b>${acc.offers ?? "—"}</b></div>
-        <div class="cpa-row"><span>Revenue:</span> <b>${fmt.money(acc.revenue || 0)}</b></div>
-        <div class="cpa-row"><span>Clicks:</span> <b>${(acc.clicks||0).toLocaleString()}</b></div>
-        <div class="cpa-row"><span>Conversion:</span> <b>${fmt.pct(acc.conv || 0)}</b></div>
-        <button class="btn view" data-id="${acc.id||""}">View Details</button>
-      </div>
-    `).join("");
-  }
+  // --- PROFILE -------------------------------------------------------------
+  async function loadProfile() {
+    const note = el('note');
+    const prof = el('profile');
 
-  async function loadUsers(){
-    const body = $("#users-tbody");
-    if (!body) return;
-    const data = await h("/users-list").catch(()=>({items:[]}));
-    body.innerHTML = (data.items||[]).map(u => `
-      <tr>
-        <td>${u.username || ""}</td>
-        <td>${u.authority || u.level || ""}</td>
-        <td>${fmt.money(u.earnings || 0)}</td>
-        <td>${u.status || "ACTIVE"}</td>
-        <td><a href="#" data-user="${u.id||""}" class="user-view">View</a></td>
-      </tr>
-    `).join("");
-  }
-
-  async function wireApprovals(){
-    // “Sync Google Sheets” and “Run AI Analysis” buttons (IDs must exist in your HTML)
-    const btnSync = $("#btn-sync-sheets");
-    if (btnSync) btnSync.onclick = async () => {
-      btnSync.disabled = true;
-      try { await h("/admin-pending?reload=1"); toast("Google Sheets synced successfully!"); }
-      catch(e){ toast("Failed to sync Google Sheets","err"); }
-      finally { btnSync.disabled = false; refreshPending(); }
-    };
-
-    const btnAI = $("#btn-run-ai");
-    if (btnAI) btnAI.onclick = async () => {
-      btnAI.disabled = true;
-      try { await h("/ai-run-approvals", {method:"POST"}); toast("AI analysis complete!"); }
-      catch(e){ toast("AI analysis failed","err"); }
-      finally { btnAI.disabled = false; refreshPending(); }
-    };
-
-    async function refreshPending(){
-      const box = $("#pending-list");
-      if (!box) return;
-      const data = await h("/admin-pending").catch(()=>({items:[]}));
-      box.innerHTML = (data.items||[]).map(p => `
-        <div class="pending-row">
-          <div class="name">${p.name||""}</div>
-          <div class="meta">${p.email||""} • ${p.phone||""} • ${p.telegram||""}</div>
-          <div class="actions">
-            <button class="approve" data-id="${p.id}">Approve</button>
-            <button class="dismiss" data-id="${p.id}">Dismiss</button>
-          </div>
-        </div>
-      `).join("");
-
-      box.querySelectorAll("button.approve").forEach(b => b.onclick = () => mark(b.dataset.id,"approved"));
-      box.querySelectorAll("button.dismiss").forEach(b => b.onclick = () => mark(b.dataset.id,"dismissed"));
-    }
-
-    async function mark(id, status){
-      try {
-        await h("/admin-pending", {method:"POST", body:{action:"mark", id, status}});
-        toast(`Marked ${status}`);
-        await refreshPending();
-      } catch {
-        toast("Action failed","err");
-      }
-    }
-
-    await refreshPending();
-  }
-
-  // simple toast (non-blocking)
-  function toast(msg, kind="ok"){
-    let el = $("#emp-toast");
-    if (!el) {
-      el = document.createElement("div");
-      el.id = "emp-toast";
-      el.style.cssText = "position:fixed;right:12px;top:12px;z-index:9999;max-width:340px;padding:10px 12px;border-radius:10px;border:1px solid #2f3b58;background:#0f1a2f;color:#cfe0ff;box-shadow:0 10px 20px rgba(0,0,0,.3)";
-      document.body.appendChild(el);
-    }
-    el.textContent = msg;
-    el.style.borderColor = kind==="err" ? "#991b1b" : "#166534";
-    el.style.background  = kind==="err" ? "#2a0f0f" : "#0f2a18";
-    clearTimeout(el._t); el._t = setTimeout(()=> el.remove(), 2600);
-  }
-
-  // refresh button (optional)
-  const refreshBtn = $("#refreshBtn");
-  if (refreshBtn) refreshBtn.onclick = () => { init(true); };
-
-  // master init
-  async function init(burst=false){
     try {
-      await Promise.allSettled([
-        loadSummary(),
-        loadCPA(),
-        loadUsers(),
-        wireApprovals()
-      ]);
-      if (burst) toast("Refreshed");
-    } catch(e) {
-      // keep UI quiet; show subtle error only if needed
-      // console.warn(e);
+      const out = await j(ENDPOINTS.me);
+      if (!out || !out.ok) throw new Error(out?.error || 'Failed to load profile');
+
+      // Hide "Loading…", show profile card
+      if (note) note.style.display = 'none';
+      if (prof) prof.style.display = 'block';
+
+      const u = out.user || {};
+      setText(el('name'),    u.name || '—');
+      setText(el('contact'), [u.email,u.phone].filter(Boolean).join(' · ') || '—');
+
+      const isApproved = String(u.status||'').toUpperCase().includes('APPROVED');
+      pill(el('status'), u.status || '—', isApproved);
+
+      setText(el('scale'), (u.scale ?? '—'));
+
+    } catch (e) {
+      if (note) note.textContent = 'Could not load your dashboard: ' + e.message;
+      // keep profile hidden on error
     }
   }
 
-  // run
-  document.addEventListener("DOMContentLoaded", init);
+  // --- SYSTEM HEALTH -------------------------------------------------------
+  async function loadHealth() {
+    const row = el('healthRow');
+    if (!row) return; // page may not have this section
+    row.innerHTML = '';
+
+    try {
+      const out = await j(ENDPOINTS.health);
+
+      // Support both shapes: {ok:true, checks:[{label,status,note}]}
+      // or legacy {ok:true, items:[{name,status}]}
+      const items = Array.isArray(out?.checks) ? out.checks
+                   : Array.isArray(out?.items)  ? out.items
+                   : [];
+
+      if (!items.length) return;
+
+      for (const c of items) {
+        const span = document.createElement('span');
+        // Normalize fields
+        const label  = c.label || c.name || c.id || '—';
+        const status = (c.status || '').toLowerCase();
+        badge(span, label + (c.value ? `: ${c.value}` : ''), status || 'warn');
+        if (c.note) span.title = c.note;
+        row.appendChild(span);
+      }
+    } catch {
+      // leave row empty on error
+    }
+  }
+
+  // --- EVENT FEED ----------------------------------------------------------
+  async function loadFeed() {
+    const tbody = $('#feedTable tbody');
+    const empty = el('feedEmpty');
+    if (!tbody) return;
+
+    tbody.innerHTML = '';
+    try {
+      const out = await j(ENDPOINTS.feed);
+      const items = (out && out.ok && Array.isArray(out.items)) ? out.items : [];
+
+      if (!items.length) {
+        if (empty) empty.style.display = 'block';
+        return;
+      }
+      if (empty) empty.style.display = 'none';
+
+      for (const ev of items) {
+        const tr = document.createElement('tr');
+        // tolerate different field names (ts/time, msg/message)
+        const ts = ev.ts || ev.time || '';
+        const date = ts ? new Date(ts) : null;
+        const when = (date && !isNaN(+date)) ? date.toLocaleString() : (typeof ts === 'string' ? ts : '—');
+
+        const type = ev.type || '—';
+        const msg  = (ev.msg || ev.message || '—').toString().replace(/</g,'&lt;');
+        const ref  = ev.ref || ev.reference || '—';
+        const who  = ev.actor || ev.user || '—';
+
+        tr.innerHTML = `<td>${when}</td><td>${type}</td><td>${msg}</td><td>${ref}</td><td>${who}</td>`;
+        tbody.appendChild(tr);
+      }
+    } catch {
+      if (empty) empty.style.display = 'block';
+    }
+  }
+
+  // --- OPTIONAL KPI TILES --------------------------------------------------
+  async function loadSummaryTiles() {
+    // Only runs if elements exist. If your function is not implemented, it silently skips.
+    const needAny =
+      el('kpi_total_earnings') || el('kpi_active_users') || el('kpi_approval_rate');
+    if (!needAny) return;
+
+    try {
+      const out = await j(ENDPOINTS.summary);
+      if (!out || !out.ok) return;
+
+      if (el('kpi_total_earnings')) setText(el('kpi_total_earnings'), fmt.money(out.totalEarnings ?? 0));
+      if (el('kpi_active_users'))   setText(el('kpi_active_users'),   String(out.activeUsers ?? 0));
+      if (el('kpi_approval_rate'))  setText(el('kpi_approval_rate'),  out.approvalRate != null ? fmt.pct(out.approvalRate) : '—');
+    } catch {
+      // silent
+    }
+  }
+
+  // --- DEBUG PANEL (?debug=1) ----------------------------------------------
+  async function loadDebug() {
+    if (qs('debug') !== '1') return;
+    const raw = el('raw');
+    const dbg = el('debug');
+    if (!raw || !dbg) return;
+
+    try {
+      const [me, health, feed, summary] = await Promise.all([
+        j(ENDPOINTS.me).catch(e=>({ok:false,error:String(e)})),
+        j(ENDPOINTS.health).catch(e=>({ok:false,error:String(e)})),
+        j(ENDPOINTS.feed).catch(e=>({ok:false,error:String(e)})),
+        j(ENDPOINTS.summary).catch(e=>({ok:false,error:String(e)})),
+      ]);
+      raw.style.display = 'block';
+      dbg.textContent = JSON.stringify({ me, health, feed, summary }, null, 2);
+    } catch (e) {
+      raw.style.display = 'block';
+      dbg.textContent = JSON.stringify({ error: String(e) }, null, 2);
+    }
+  }
+
+  // --- MASTER LOAD + POLLING -----------------------------------------------
+  async function loadAll() {
+    await Promise.allSettled([
+      loadProfile(),
+      loadHealth(),
+      loadFeed(),
+      loadSummaryTiles(),
+      loadDebug(),
+    ]);
+  }
+
+  // Manual refresh button (if present)
+  el('refreshBtn')?.addEventListener('click', loadAll);
+
+  // Kick off + periodic refresh
+  document.addEventListener('DOMContentLoaded', () => {
+    loadAll();
+    setInterval(loadAll, POLL_MS);
+  });
 })();

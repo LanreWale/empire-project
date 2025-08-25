@@ -39,7 +39,6 @@
       </div>
       <div class="links" style="margin-top:10px">
         <a href="/dashboard.html">User Dashboard</a>
-        <!-- Use a public link; do NOT inject TELEGRAM_CHANNEL_USERNAME from env into HTML -->
         <a href="https://t.me/TheEmpireHq" target="_blank" rel="noopener">Telegram: @TheEmpireHq</a>
       </div>
     </div>
@@ -60,11 +59,7 @@
   </div>
 
   <script>
-    // IMPORTANT:
-    // - Do NOT put CMD_PASS or any secret value in this HTML.
-    // - This page posts the typed PIN to the backend. The backend validates the PIN against server-side env and returns a token.
-
-    const AUTH_URL = "/.netlify/functions/auth-login"; // Your PIN→token endpoint (server-side)
+    const AUTH_URL = "/.netlify/functions/auth-login";
     const TOKEN_KEY = "EMPIRE_TOKEN";
 
     async function login() {
@@ -99,10 +94,10 @@
     document.getElementById('loginBtn').addEventListener('click', login);
     document.getElementById('pin').addEventListener('keydown', (e)=>{ if(e.key==="Enter"){ login(); }});
 
-    // If already logged in, go straight to dashboard
     try {
       const existing = localStorage.getItem(TOKEN_KEY);
       if (existing) window.location.replace("/dashboard.html");
     } catch {}
   </script>
 </body>
+</html>

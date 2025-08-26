@@ -1,30 +1,32 @@
-// netlify/functions/summary.js
-"use strict";
-
+// Proxy to Apps Script: returns numbers the dashboard expects (USD)
 exports.handler = async () => {
   try {
-    const base = process.env.SHEETS_BASE || process.env.EMPIRE_APPS_SCRIPT_BASE || "";
-    if (!base) return json(500, { ok:false, error:"Missing SHEETS_BASE (Apps Script /exec URL)" });
+    const base = process.env.GSCRIPT_WEBAPP_URL;
+    if (!base) throw new Error("GSCRIPT_WEBAPP_URL not set");
 
-    const r = await fetch(`${base}?action=summary`, { headers: { Accept: "application/json" } });
-    const text = await r.text();
-
-    // Try parse; normalize shape the dashboard expects
+    const r = await fetch(`${base}?action=summary`, { method: "GET" });
+    const raw = await r.text();
     let data;
-    try { data = JSON.parse(text); } catch { return json(502, { ok:false, error:"Bad JSON from Apps Script", raw:text }); }
+    try { data = JSON.parse(raw); } catch { throw new Error("Bad JSON from Apps Script"); }
+    if (!r.ok || !data?.ok) throw new Error(data?.error || `Script HTTP ${r.status}`);
 
-    return json(200, {
-      ok: !!data.ok,
-      totalEarnings: Number(data.totalEarnings || 0),
-      activeUsers: Number(data.activeUsers || 0),
-      approvalRate: Number(data.approvalRate || 0),
-      pendingReviews: Number(data.pendingReviews || 0)
-    });
+    const {
+      totalEarnings = 0,
+      activeUsers = 0,
+      approvalRate = 0,
+      pendingReviews = 0
+    } = data;
+
+    return {
+      statusCode: 200,
+      headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
+      body: JSON.stringify({ ok: true, totalEarnings, activeUsers, approvalRate, pendingReviews })
+    };
   } catch (e) {
-    return json(500, { ok:false, error:String(e) });
+    return {
+      statusCode: 500,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ok: false, error: String(e) })
+    };
   }
 };
-
-function json(code, body){
-  return { statusCode: code, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) };
-}

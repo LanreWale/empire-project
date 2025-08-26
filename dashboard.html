@@ -15,21 +15,25 @@
     .tab{padding:10px 16px;border-radius:14px;background:#0f182a;border:1px solid var(--line);cursor:pointer}
     .tab.active{outline:2px solid var(--ring)}
     .panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;margin:12px 0}
-    .kpi{font-size:40px;font-weight:900;letter-spacing:0.5px}
-    .muted{color:var(--muted)}
+
     .grid{display:grid;gap:14px}
     @media(min-width:700px){.grid.cols-2{grid-template-columns:1fr 1fr}}
     table{width:100%;border-collapse:collapse;font-size:14px}
     th,td{padding:10px;border-bottom:1px solid var(--line)}
     th{color:#cfe0ff;text-align:left}
     .chip{display:inline-block;border:1px solid var(--line);border-radius:999px;padding:4px 10px;background:#0f182a}
+    .muted{color:var(--muted)}
+    .kpi{font-size:40px;font-weight:900;letter-spacing:.5px}
     .footer{opacity:.7;text-align:center;margin-top:28px;font-size:12px}
 
-    /* Wallet extras */
+    /* Wallet cards */
     .cards{display:grid;gap:14px}
-    @media(min-width:700px){.cards{grid-template-columns:repeat(3,1fr)}}
-    .big{font-size:28px;font-weight:800}
+    @media(min-width:760px){.cards{grid-template-columns:1fr 1fr 1fr}}
+    .card{background:#0f182a;border:1px solid var(--line);border-radius:14px;padding:16px}
+    .card-title{color:#cfe0ff;margin-bottom:6px}
+    .big{font-size:32px;font-weight:900}
     .table-scroll{overflow:auto}
+    .mt{margin-top:14px}
   </style>
 </head>
 <body>
@@ -94,25 +98,25 @@
       </div>
     </section>
 
-    <!-- WALLET -->
+    <!-- WALLET (LIVE) -->
     <section id="tab-wallet" class="panel" hidden>
       <div class="cards">
-        <div class="panel">
-          <div class="muted">Total Inflow (USD)</div>
+        <div class="card">
+          <div class="card-title">Total Inflow (USD)</div>
           <div id="w-inflow" class="big">$0.00</div>
         </div>
-        <div class="panel">
-          <div class="muted">Total Outflow (USD)</div>
+        <div class="card">
+          <div class="card-title">Total Outflow (USD)</div>
           <div id="w-outflow" class="big">$0.00</div>
         </div>
-        <div class="panel">
-          <div class="muted">Net (USD)</div>
+        <div class="card">
+          <div class="card-title">Net (USD)</div>
           <div id="w-net" class="big">$0.00</div>
         </div>
       </div>
 
-      <div class="muted" style="margin-top:10px">Recent Wallet Activity</div>
-      <div class="panel table-scroll">
+      <h3 class="mt">Recent Wallet Activity</h3>
+      <div class="table-scroll">
         <table class="table" id="wallet-table">
           <thead>
             <tr>
@@ -125,13 +129,14 @@
           <tbody><!-- filled by JS --></tbody>
         </table>
       </div>
+      <div id="wallet-note" class="muted mt">Loading…</div>
     </section>
 
     <div class="footer">© Empire Affiliate Marketing Hub</div>
   </div>
 
   <script>
-    // --- Tab logic
+    // Tabs
     const tabs = document.querySelectorAll('.tab');
     const sections = {
       overview: document.getElementById('tab-overview'),
@@ -146,34 +151,35 @@
         b.classList.add('active');
         const k = b.dataset.tab;
         Object.entries(sections).forEach(([id,el])=> el.hidden = id!==k );
-        if (k === 'wallet') ensureWalletLoaded(); // lazy-load wallet
+        // Lazy refresh when switching tabs
+        if (k === 'wallet') loadWallet();
+        if (k === 'users') loadUsers();
+        if (k === 'events') loadEvents();
+        if (k === 'health') loadHealth();
       });
     });
 
-    // --- Helpers
-    const fmtUSD = (n)=> {
-      try { return new Intl.NumberFormat('en-US', { style:'currency', currency:'USD' }).format(+n||0); }
-      catch { return '$' + (Number(n||0).toFixed(2)); }
-    };
+    // Helpers
     const el = (id)=> document.getElementById(id);
     const setText = (id, v)=> { const e = el(id); if (e) e.textContent = v; };
-    function escapeHtml(s){
-      return String(s||'').replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
-    }
-
-    // --- Fetchers
+    const escapeHtml = (s)=> String(s||'').replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
+    const fmtUSD = (n)=> {
+      try { return new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(+n||0); }
+      catch { return '$' + (Number(n||0).toFixed(2)); }
+    };
     async function fetchJSON(url){
       const r = await fetch(url, { headers: { 'Cache-Control': 'no-cache' }});
       if (!r.ok) throw new Error(`${r.status} ${url}`);
       return r.json();
     }
 
+    // Overview
     async function loadSummary(){
       try{
         const s = await fetchJSON('/.netlify/functions/summary');
         setText('kpi-earn',    fmtUSD(s.totalEarnings||0));
         setText('kpi-active',  String(s.activeUsers ?? 0));
-        setText('kpi-approval', (s.approvalRate!=null) ? (Math.round((s.approvalRate*100)||0)+'%') : '—');
+        setText('kpi-approval',(s.approvalRate!=null) ? (Math.round((s.approvalRate*100)||0)+'%') : '—');
         setText('kpi-pending', String(s.pendingReviews ?? 0));
         el('summary-note').textContent = 'Synced from Google Sheets.';
       }catch(e){
@@ -181,6 +187,7 @@
       }
     }
 
+    // Health
     async function loadHealth(){
       try{
         const h = await fetchJSON('/.netlify/functions/health');
@@ -190,6 +197,7 @@
       }
     }
 
+    // Users
     async function loadUsers(){
       const body = document.querySelector('#users-table tbody');
       body.innerHTML = '<tr><td class="muted" colspan="5">Loading…</td></tr>';
@@ -215,6 +223,7 @@
       }
     }
 
+    // Events
     async function loadEvents(){
       const body = document.querySelector('#events-table tbody');
       body.innerHTML = '<tr><td class="muted" colspan="4">Loading…</td></tr>';
@@ -240,58 +249,55 @@
       }
     }
 
-    // --- Wallet (lazy)
-    function usd(n){ return fmtUSD(n); }
+    // Wallet
+    async function loadWallet(){
+      const inflowEl  = el('w-inflow');
+      const outflowEl = el('w-outflow');
+      const netEl     = el('w-net');
+      const noteEl    = el('wallet-note');
+      const body      = document.querySelector('#wallet-table tbody');
 
-    async function fetchWallet(limit=50){
-      const url='/.netlify/functions/wallet?limit='+encodeURIComponent(limit);
-      const data=await fetchJSON(url);
-      if(!data?.ok) throw new Error(data?.error||'Wallet error');
-      return data;
-    }
+      inflowEl.textContent  = '$0.00';
+      outflowEl.textContent = '$0.00';
+      netEl.textContent     = '$0.00';
+      body.innerHTML = '<tr><td class="muted" colspan="4">Loading…</td></tr>';
+      noteEl.textContent = 'Loading…';
 
-    function renderWallet(data){
-      const t = data.totals || { inflowUSD:0, outflowUSD:0, netUSD:0 };
-      setText('w-inflow', usd(t.inflowUSD));
-      setText('w-outflow', usd(t.outflowUSD));
-      setText('w-net',    usd(t.netUSD));
-
-      const tbody=document.querySelector('#wallet-table tbody');
-      tbody.innerHTML='';
-      (data.items||[]).forEach(row=>{
-        const dt = row.ts ? new Date(row.ts) : null;
-        const tr=document.createElement('tr');
-        tr.innerHTML = `
-          <td>${dt ? dt.toLocaleString() : ''}</td>
-          <td>${usd(row.amount)}</td>
-          <td>${escapeHtml(row.method||'')}</td>
-          <td>${escapeHtml(row.status||'')}</td>
-        `;
-        tbody.appendChild(tr);
-      });
-      if(!data.items || data.items.length===0){
-        tbody.innerHTML = '<tr><td class="muted" colspan="4">No wallet activity yet.</td></tr>';
-      }
-    }
-
-    let walletLoaded=false;
-    async function ensureWalletLoaded(){
-      if(walletLoaded) return;
       try{
-        const data=await fetchWallet(50);
-        renderWallet(data);
-        walletLoaded=true;
+        const w = await fetchJSON('/.netlify/functions/wallet?limit=50');
+        inflowEl.textContent  = fmtUSD(w.inflow||0);
+        outflowEl.textContent = fmtUSD(w.outflow||0);
+        netEl.textContent     = fmtUSD(w.net||0);
+        noteEl.textContent    = 'Synced from Google Sheets.';
+
+        body.innerHTML = '';
+        (w.items||[]).forEach(row=>{
+          const when = row.ts ? new Date(row.ts).toLocaleString() : '';
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${escapeHtml(when)}</td>
+            <td>${fmtUSD(row.amount||0)}</td>
+            <td>${escapeHtml(row.method||'')}</td>
+            <td>${escapeHtml(row.status||'')}</td>
+          `;
+          body.appendChild(tr);
+        });
+        if (!w.items || w.items.length===0){
+          body.innerHTML = '<tr><td class="muted" colspan="4">No wallet entries yet.</td></tr>';
+        }
       }catch(e){
-        const tbody=document.querySelector('#wallet-table tbody');
-        tbody.innerHTML = `<tr><td class="muted" colspan="4">Failed to load wallet: ${escapeHtml(e.message)}</td></tr>`;
+        noteEl.textContent = 'Failed to load wallet: ' + e.message;
+        body.innerHTML = `<tr><td class="muted" colspan="4">Error: ${escapeHtml(e.message)}</td></tr>`;
       }
     }
 
-    // Kick off initial tabs
+    // Initial loads
     loadSummary();
     loadHealth();
     loadUsers();
     loadEvents();
+    // Wallet loads on first tab click; uncomment to eager load:
+    // loadWallet();
   </script>
 </body>
 </html>

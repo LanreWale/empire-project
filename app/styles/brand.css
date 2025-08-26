@@ -32,12 +32,11 @@ body{
   font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, "Helvetica Neue", Arial, sans-serif;
 }
 
-/* optional photo texture */
 body.brand-bg{
   background-image:
     radial-gradient(1200px 800px at 70% -10%, rgba(255,178,46,.12) 0%, rgba(255,178,46,0) 65%),
     linear-gradient(180deg, rgba(24,35,62,.55), rgba(24,35,62,.1)),
-    url("/app/assets/brand/empire_bg.jpg");
+    url("/app/assets/brand/welcome_banner.jpg");
   background-size: cover, cover, cover;
   background-position: center, center, center;
   background-attachment: fixed;
@@ -45,9 +44,7 @@ body.brand-bg{
 
 /* Shell & header */
 .emp-wrap{max-width:var(--container-w);margin:0 auto;padding:28px 14px 48px}
-.emp-header{
-  display:flex;align-items:center;gap:14px;margin-bottom:10px;
-}
+.emp-header{display:flex;align-items:center;gap:14px;margin-bottom:10px}
 .brand-logo{width:44px;height:44px;display:block}
 .emp-title{
   font-size:32px;font-weight:900;letter-spacing:.3px;
@@ -55,9 +52,10 @@ body.brand-bg{
   -webkit-background-clip:text;background-clip:text;color:transparent;
   text-shadow: 0 0 20px rgba(255,177,26,.15);
 }
+.emp-sub{color:var(--emp-muted);font-size:13px;margin-top:2px}
 
 /* Tabs */
-.tabs{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0 18px}
+.tabs{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0 18px}
 .tab{
   padding:10px 16px;border-radius:14px;background:#0f182a;border:1px solid var(--emp-line);
   color:var(--emp-ink);cursor:pointer;transition:all .18s ease;
@@ -95,25 +93,26 @@ body.brand-bg{
 /* Footer */
 .footer{opacity:.75;text-align:center;margin-top:28px;font-size:12px}
 
-/* Hero banner (optional) */
+/* Hero banner (image optional; falls back to gradient) */
 .hero{
   border-radius:var(--radius-lg);
-  background:linear-gradient( to right, rgba(35,45,80,.6), rgba(15,24,42,.85) ),
-             url("/app/assets/brand/welcome_banner.jpg") center/cover no-repeat;
+  background:
+    linear-gradient( to right, rgba(35,45,80,.6), rgba(15,24,42,.85) ),
+    url("/app/assets/brand/welcome_banner.jpg");
+  background-size: cover;
+  background-position:center;
   border:1px solid var(--emp-line);
   padding:18px;margin:10px 0 18px;
+  display:flex;align-items:center;gap:12px
 }
-.hero img{max-height:44px}
-/* --- Additions for health badges --- */
-.badges{display:flex;gap:8px;flex-wrap:wrap}
-.badge{
-  display:inline-block;
-  padding:6px 10px;
-  border-radius:12px;
-  font-size:12px;
-  border:1px solid var(--emp-line);
-  background:#16233d;
+.hero .badge{
+  width:48px;height:48px;border-radius:12px;display:grid;place-items:center;
+  background:linear-gradient(135deg, var(--emp-gold-1), var(--emp-gold-2));
+  color:#1b1606;font-weight:900;box-shadow:0 6px 16px rgba(0,0,0,.35)
 }
-.b-ok   { background:#12341f; border-color:#1e5d38; color:#b7f7c3; }
-.b-warn { background:#35270f; border-color:#7a4b12; color:#ffdca6; }
-.b-down { background:#3a1216; border-color:#6b1f2a; color:#ffb4c0; }
+.hero .title{font-weight:800;font-size:18px}
+.hero .sub{color:var(--emp-muted);font-size:13px}
+
+/* Utility */
+.mt{margin-top:16px}
+.flex{display:flex;gap:12px;align-items:center}

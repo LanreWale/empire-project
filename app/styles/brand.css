@@ -104,3 +104,16 @@ body.brand-bg{
   padding:18px;margin:10px 0 18px;
 }
 .hero img{max-height:44px}
+/* --- Additions for health badges --- */
+.badges{display:flex;gap:8px;flex-wrap:wrap}
+.badge{
+  display:inline-block;
+  padding:6px 10px;
+  border-radius:12px;
+  font-size:12px;
+  border:1px solid var(--emp-line);
+  background:#16233d;
+}
+.b-ok   { background:#12341f; border-color:#1e5d38; color:#b7f7c3; }
+.b-warn { background:#35270f; border-color:#7a4b12; color:#ffdca6; }
+.b-down { background:#3a1216; border-color:#6b1f2a; color:#ffb4c0; }

@@ -1,5 +1,6 @@
 // netlify/functions/admin-pending.js
-// Approvals + WhatsApp notify (zero deps). Also supports GET listPending.
+// Approvals + WhatsApp notify (zero deps). GET lists pending; POST marks + WhatsApp.
+// Telegram mirroring removed to satisfy Netlify secret scanning.
 
 "use strict";
 
@@ -15,10 +16,10 @@ const PUBLIC_SITE  = (process.env.PUBLIC_SITE_ORIGIN || process.env.URL || "").r
 const GAS_BASE     = (process.env.GOOGLE_SHEETS_WEBAPP_URL || "").trim();
 const GS_KEY       = (process.env.GS_WEBAPP_KEY || "").trim();
 const GS_SHEET_ID  = (process.env.GS_SHEET_ID || "").trim();
-const CC_DEFAULT   = (process.env.DEFAULT_COUNTRY_CODE || "234").replace(/^\+/, ""); // e.g. "234"
+const CC_DEFAULT   = (process.env.DEFAULT_COUNTRY_CODE || "234").replace(/^\+/, ""); // e.g., "234"
 
-// WhatsApp gateway (generic; already supported by lib/notify.js)
-const { notifyWhatsApp, notifyTelegram } = require("./lib/notify");
+// WhatsApp gateway (generic; implemented in lib/notify.js)
+const { notifyWhatsApp } = require("./lib/notify");
 
 // --- Helpers
 function ensureAdmin(event) {
@@ -39,7 +40,6 @@ function normalizeE164(raw) {
   let s = String(raw).replace(/[^\d+]/g, "");
   if (s.startsWith("+")) return s;
   if (s.startsWith("0")) s = s.replace(/^0+/, "");
-  // if it already looks like 234803..., keep; else prefix default cc
   if (!s.startsWith(CC_DEFAULT)) s = CC_DEFAULT + s;
   return "+" + s;
 }
@@ -57,7 +57,7 @@ function buildWelcomeText({ name, loginUrl }) {
     ``,
     `Tips:`,
     `• Stay on WhatsApp for approvals & updates`,
-    `• Watch Telegram: @TheEmpireHq for offers`,
+    `• Watch our Telegram channel for offers`,
     `• Your scale controls volume`,
   ].join("\n");
 }
@@ -71,7 +71,7 @@ async function gasListPending() {
   const r = await fetch(url);
   const data = await r.json().catch(() => ({}));
   if (!r.ok) return { ok: false, error: `GAS ${r.status}`, raw: data };
-  return data; // Expect {ok:true, items:[{id,name,email,phone,telegram}]}
+  return data; // Expect {ok:true, items:[{id,name,email,phone}]}
 }
 
 async function gasMark({ id, status }) {
@@ -79,16 +79,16 @@ async function gasMark({ id, status }) {
   const r = await fetch(url);
   const data = await r.json().catch(() => ({}));
   if (!r.ok) return { ok: false, error: `GAS ${r.status}`, raw: data };
-  return data; // Ideally returns {ok:true, item:{...}} but we handle both
+  return data; // Hopefully {ok:true, item:{...}}
 }
 
 async function gasGetById(id) {
-  // Optional helper in case your GAS supports it; if not, we’ll fallback.
+  // Optional; if your GAS supports action=get
   const url = q(GAS_BASE, { action: "get", id, sheetId: GS_SHEET_ID, key: GS_KEY });
   const r = await fetch(url);
   const data = await r.json().catch(() => ({}));
   if (!r.ok) return { ok: false, error: `GAS ${r.status}`, raw: data };
-  return data; // {ok:true, item:{...}}
+  return data;
 }
 
 // --- HTTP entry
@@ -115,44 +115,42 @@ exports.handler = async (event) => {
       const marked = await gasMark({ id, status: status || "approved" });
       if (!marked.ok) return RESP(502, marked);
 
-      // 2) If approved → notify via WhatsApp (primary)
+      // 2) If approved → WhatsApp welcome
       if (String(status || "approved").toLowerCase() === "approved") {
-        // prefer phone from body; else from GAS response; else try gasGetById
+        // Prefer phone/name from body; else fallback to GAS
         let phone =
           body.phone ||
           body.user?.phone ||
           marked.item?.phone ||
-          marked.data?.phone || // in case GAS returns {data:{...}}
+          marked.data?.phone ||
           "";
 
-        if (!phone && typeof gasGetById === "function") {
+        let name =
+          body.name ||
+          body.user?.name ||
+          marked.item?.name ||
+          marked.data?.name ||
+          "";
+
+        if ((!phone || !name) && typeof gasGetById === "function") {
           const fetched = await gasGetById(id).catch(() => ({}));
-          phone = fetched?.item?.phone || phone;
-          if (!body.name && fetched?.item?.name) body.name = fetched.item.name;
+          phone = phone || fetched?.item?.phone || "";
+          name  = name  || fetched?.item?.name  || "";
         }
 
         const to = normalizeE164(phone);
         const loginUrl = PUBLIC_SITE ? `${PUBLIC_SITE}/index.html` : "/index.html";
-        const text = buildWelcomeText({ name: body.name || marked.item?.name, loginUrl });
+        const text = buildWelcomeText({ name, loginUrl });
 
         let wa = { ok: false, skipped: true, reason: "no phone" };
         if (to) {
           wa = await notifyWhatsApp({ to, text });
         }
 
-        // Optional: Telegram mirror for your operations room (non-blocking)
-        let tg = { ok: true, skipped: true };
-        try {
-          tg = await notifyTelegram({
-            text: `✅ Approved: ${body.name || marked.item?.name || "User"}\nPhone: ${to || phone || "N/A"}\nLogin: ${loginUrl}`,
-            parse_mode: "HTML",
-          });
-        } catch {}
-
-        return RESP(200, { ok: true, marked, notify: { whatsapp: wa, telegram: tg } });
+        return RESP(200, { ok: true, marked, notify: { whatsapp: wa } });
       }
 
-      // 3) Dismissed → nothing to notify (return success)
+      // 3) Dismissed → done
       return RESP(200, { ok: true, marked, notify: { skipped: true, reason: "not approved" } });
     }
 

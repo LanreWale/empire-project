@@ -1,28 +1,22 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300">
+<!-- app/assets/brand/emblem.svg -->
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
   <defs>
-    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#FFD24D"/>
-      <stop offset="100%" stop-color="#FFB11A"/>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FFD24D"/>
+      <stop offset="1" stop-color="#FFB11A"/>
     </linearGradient>
+    <filter id="s" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#000" flood-opacity="0.35"/>
+    </filter>
   </defs>
-
-  <!-- Shield background -->
-  <path d="M150 10 L270 70 V160 C270 220 220 270 150 290 C80 270 30 220 30 160 V70 Z"
-        fill="url(#goldGrad)" stroke="#e6a800" stroke-width="6"/>
-
-  <!-- Crown -->
-  <polygon points="110,110 140,60 150,80 160,60 190,110"
-           fill="#fff9e5" stroke="#e6a800" stroke-width="4"/>
-
-  <!-- Initial E -->
-  <text x="150" y="190" text-anchor="middle" font-family="serif"
-        font-size="80" fill="#fff9e5" stroke="#c58b00" stroke-width="3">
-    E
-  </text>
-
-  <!-- Outer glow ring -->
-  <circle cx="150" cy="150" r="140"
-          stroke="url(#goldGrad)" stroke-width="10" fill="none"
-          opacity="0.4"/>
+  <!-- shield -->
+  <path filter="url(#s)" fill="url(#g)"
+        d="M128 20c25 18 58 26 92 26v76c0 62-41 98-92 114-51-16-92-52-92-114V46c34 0 67-8 92-26z"/>
+  <!-- crown -->
+  <path fill="#1b1606" opacity=".2"
+        d="M79 76l15 16 18-16 16 16 18-16 15 16 16-14c2 5 3 10 3 16 0 28-31 52-72 52S58 120 58 92c0-6 1-11 3-16l18 14z"/>
+  <!-- E letter -->
+  <path fill="#0b1220"
+        d="M88 98h80v16H104v16h56v16H88V98z"/>
+  <path fill="#0b1220" d="M88 82h80v12H88z" opacity=".85"/>
 </svg>

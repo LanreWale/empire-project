@@ -5,41 +5,27 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Empire — Dashboard</title>
   <meta name="color-scheme" content="dark" />
+  <link rel="icon" type="image/svg+xml" href="/app/assets/brand/logo.svg">
+  <link rel="preload" as="image" href="/app/assets/brand/empire_bg.jpg">
+  <link rel="stylesheet" href="/app/styles/brand.css">
   <style>
-    :root{--bg:#0b1220;--panel:#101a2c;--ink:#e8eefc;--muted:#9fb2d1;--line:#1f2b44;--ring:#2f3b58;--gold1:#ffd24d;--gold2:#ffb11a}
-    *{box-sizing:border-box}
-    body{margin:0;background:#0b1220;color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,sans-serif}
-    .wrap{max-width:980px;margin:0 auto;padding:28px 14px 48px}
-    .h1{font-size:36px;font-weight:800;margin:8px 0 18px}
-    .tabs{display:flex;gap:12px;margin-bottom:18px;flex-wrap:wrap}
-    .tab{padding:10px 16px;border-radius:14px;background:#0f182a;border:1px solid var(--line);cursor:pointer}
-    .tab.active{outline:2px solid var(--ring)}
-    .panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;margin:12px 0}
-
-    .grid{display:grid;gap:14px}
-    @media(min-width:700px){.grid.cols-2{grid-template-columns:1fr 1fr}}
-    table{width:100%;border-collapse:collapse;font-size:14px}
-    th,td{padding:10px;border-bottom:1px solid var(--line)}
-    th{color:#cfe0ff;text-align:left}
-    .chip{display:inline-block;border:1px solid var(--line);border-radius:999px;padding:4px 10px;background:#0f182a}
-    .muted{color:var(--muted)}
-    .kpi{font-size:40px;font-weight:900;letter-spacing:.5px}
-    .footer{opacity:.7;text-align:center;margin-top:28px;font-size:12px}
-
-    /* Wallet cards */
-    .cards{display:grid;gap:14px}
-    @media(min-width:760px){.cards{grid-template-columns:1fr 1fr 1fr}}
-    .card{background:#0f182a;border:1px solid var(--line);border-radius:14px;padding:16px}
-    .card-title{color:#cfe0ff;margin-bottom:6px}
-    .big{font-size:32px;font-weight:900}
-    .table-scroll{overflow:auto}
-    .mt{margin-top:14px}
+    /* Small local helpers (kept minimal, most styles live in brand.css) */
   </style>
 </head>
-<body>
-  <div class="wrap">
-    <div class="h1">Empire — Dashboard</div>
+<body class="brand-bg">
+  <div class="emp-wrap">
+    <!-- Header with logo -->
+    <header class="emp-header">
+      <img src="/app/assets/brand/logo.svg" alt="THE EMPIRE" class="brand-logo" />
+      <div class="emp-title">Empire — Dashboard</div>
+    </header>
 
+    <!-- Optional hero strip -->
+    <section class="hero" aria-hidden="true">
+      <img src="/app/assets/brand/live_updates.png" alt="Live Updates" />
+    </section>
+
+    <!-- Tabs -->
     <div class="tabs">
       <button class="tab active" data-tab="overview">Overview</button>
       <button class="tab" data-tab="health">Health</button>
@@ -51,20 +37,20 @@
     <!-- OVERVIEW -->
     <section id="tab-overview" class="panel">
       <div class="grid cols-2">
-        <div class="panel">
-          <div class="muted">Total Earnings (USD)</div>
+        <div class="card">
+          <div class="card-title">Total Earnings (USD)</div>
           <div id="kpi-earn" class="kpi">$0.00</div>
         </div>
-        <div class="panel">
-          <div class="muted">Active Users</div>
+        <div class="card">
+          <div class="card-title">Active Users</div>
           <div id="kpi-active" class="kpi">0</div>
         </div>
-        <div class="panel">
-          <div class="muted">Approval Rate</div>
+        <div class="card">
+          <div class="card-title">Approval Rate</div>
           <div id="kpi-approval" class="kpi">—</div>
         </div>
-        <div class="panel">
-          <div class="muted">Pending Reviews</div>
+        <div class="card">
+          <div class="card-title">Pending Reviews</div>
           <div id="kpi-pending" class="kpi">0</div>
         </div>
       </div>
@@ -79,8 +65,8 @@
     <!-- USERS -->
     <section id="tab-users" class="panel" hidden>
       <div class="muted" style="margin-bottom:8px">Registered Users</div>
-      <div class="panel" style="overflow:auto">
-        <table id="users-table">
+      <div class="table-scroll panel">
+        <table id="users-table" class="table">
           <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Status</th><th>Scale</th></tr></thead>
           <tbody></tbody>
         </table>
@@ -90,17 +76,17 @@
     <!-- EVENTS -->
     <section id="tab-events" class="panel" hidden>
       <div class="muted" style="margin-bottom:8px">Recent Activity</div>
-      <div class="panel" style="overflow:auto">
-        <table id="events-table">
+      <div class="table-scroll panel">
+        <table id="events-table" class="table">
           <thead><tr><th>When</th><th>Actor</th><th>Type</th><th>Message</th></tr></thead>
           <tbody></tbody>
         </table>
       </div>
     </section>
 
-    <!-- WALLET (LIVE) -->
+    <!-- WALLET -->
     <section id="tab-wallet" class="panel" hidden>
-      <div class="cards">
+      <div class="cards grid cols-2">
         <div class="card">
           <div class="card-title">Total Inflow (USD)</div>
           <div id="w-inflow" class="big">$0.00</div>
@@ -115,8 +101,8 @@
         </div>
       </div>
 
-      <h3 class="mt">Recent Wallet Activity</h3>
-      <div class="table-scroll">
+      <h3 class="muted" style="margin:14px 4px 6px">Recent Wallet Activity</h3>
+      <div class="table-scroll panel">
         <table class="table" id="wallet-table">
           <thead>
             <tr>
@@ -129,14 +115,14 @@
           <tbody><!-- filled by JS --></tbody>
         </table>
       </div>
-      <div id="wallet-note" class="muted mt">Loading…</div>
+      <div id="wallet-note" class="muted">Loading…</div>
     </section>
 
     <div class="footer">© Empire Affiliate Marketing Hub</div>
   </div>
 
   <script>
-    // Tabs
+    // --- Tab logic
     const tabs = document.querySelectorAll('.tab');
     const sections = {
       overview: document.getElementById('tab-overview'),
@@ -151,35 +137,30 @@
         b.classList.add('active');
         const k = b.dataset.tab;
         Object.entries(sections).forEach(([id,el])=> el.hidden = id!==k );
-        // Lazy refresh when switching tabs
-        if (k === 'wallet') loadWallet();
-        if (k === 'users') loadUsers();
-        if (k === 'events') loadEvents();
-        if (k === 'health') loadHealth();
       });
     });
 
-    // Helpers
+    // --- Helpers
     const el = (id)=> document.getElementById(id);
     const setText = (id, v)=> { const e = el(id); if (e) e.textContent = v; };
-    const escapeHtml = (s)=> String(s||'').replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
     const fmtUSD = (n)=> {
-      try { return new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(+n||0); }
+      try { return new Intl.NumberFormat('en-US', { style:'currency', currency:'USD' }).format(+n||0); }
       catch { return '$' + (Number(n||0).toFixed(2)); }
     };
+    function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m])); }
     async function fetchJSON(url){
       const r = await fetch(url, { headers: { 'Cache-Control': 'no-cache' }});
       if (!r.ok) throw new Error(`${r.status} ${url}`);
       return r.json();
     }
 
-    // Overview
+    // --- Overview
     async function loadSummary(){
       try{
         const s = await fetchJSON('/.netlify/functions/summary');
         setText('kpi-earn',    fmtUSD(s.totalEarnings||0));
         setText('kpi-active',  String(s.activeUsers ?? 0));
-        setText('kpi-approval',(s.approvalRate!=null) ? (Math.round((s.approvalRate*100)||0)+'%') : '—');
+        setText('kpi-approval',(s.approvalRate!=null)? (Math.round((s.approvalRate*100)||0)+'%'):'—');
         setText('kpi-pending', String(s.pendingReviews ?? 0));
         el('summary-note').textContent = 'Synced from Google Sheets.';
       }catch(e){
@@ -187,7 +168,7 @@
       }
     }
 
-    // Health
+    // --- Health
     async function loadHealth(){
       try{
         const h = await fetchJSON('/.netlify/functions/health');
@@ -197,7 +178,7 @@
       }
     }
 
-    // Users
+    // --- Users
     async function loadUsers(){
       const body = document.querySelector('#users-table tbody');
       body.innerHTML = '<tr><td class="muted" colspan="5">Loading…</td></tr>';
@@ -223,7 +204,7 @@
       }
     }
 
-    // Events
+    // --- Events
     async function loadEvents(){
       const body = document.querySelector('#events-table tbody');
       body.innerHTML = '<tr><td class="muted" colspan="4">Loading…</td></tr>';
@@ -249,27 +230,17 @@
       }
     }
 
-    // Wallet
+    // --- Wallet
     async function loadWallet(){
-      const inflowEl  = el('w-inflow');
-      const outflowEl = el('w-outflow');
-      const netEl     = el('w-net');
-      const noteEl    = el('wallet-note');
-      const body      = document.querySelector('#wallet-table tbody');
-
-      inflowEl.textContent  = '$0.00';
-      outflowEl.textContent = '$0.00';
-      netEl.textContent     = '$0.00';
+      const body = document.querySelector('#wallet-table tbody');
+      const note = el('wallet-note');
       body.innerHTML = '<tr><td class="muted" colspan="4">Loading…</td></tr>';
-      noteEl.textContent = 'Loading…';
-
       try{
         const w = await fetchJSON('/.netlify/functions/wallet?limit=50');
-        inflowEl.textContent  = fmtUSD(w.inflow||0);
-        outflowEl.textContent = fmtUSD(w.outflow||0);
-        netEl.textContent     = fmtUSD(w.net||0);
-        noteEl.textContent    = 'Synced from Google Sheets.';
-
+        setText('w-inflow', fmtUSD(w.inflow||0));
+        setText('w-outflow', fmtUSD(w.outflow||0));
+        setText('w-net', fmtUSD(w.net||0));
+        note.textContent = 'Synced from Google Sheets.';
         body.innerHTML = '';
         (w.items||[]).forEach(row=>{
           const when = row.ts ? new Date(row.ts).toLocaleString() : '';
@@ -278,26 +249,25 @@
             <td>${escapeHtml(when)}</td>
             <td>${fmtUSD(row.amount||0)}</td>
             <td>${escapeHtml(row.method||'')}</td>
-            <td>${escapeHtml(row.status||'')}</td>
+            <td><span class="chip">${escapeHtml(row.status||'')}</span></td>
           `;
           body.appendChild(tr);
         });
         if (!w.items || w.items.length===0){
-          body.innerHTML = '<tr><td class="muted" colspan="4">No wallet entries yet.</td></tr>';
+          body.innerHTML = '<tr><td class="muted" colspan="4">No wallet records yet.</td></tr>';
         }
       }catch(e){
-        noteEl.textContent = 'Failed to load wallet: ' + e.message;
+        note.textContent = 'Failed to load wallet: ' + e.message;
         body.innerHTML = `<tr><td class="muted" colspan="4">Error: ${escapeHtml(e.message)}</td></tr>`;
       }
     }
 
-    // Initial loads
+    // Kick off
     loadSummary();
     loadHealth();
     loadUsers();
     loadEvents();
-    // Wallet loads on first tab click; uncomment to eager load:
-    // loadWallet();
+    loadWallet();
   </script>
 </body>
 </html>

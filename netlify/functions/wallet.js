@@ -1,29 +1,83 @@
 // netlify/functions/wallet.js
-// Minimal wallet endpoint that returns JSON the dashboard expects.
+// Zero-deps. Proxies wallet data from your GAS Web App: ?wallet=1&limit=50
+
+"use strict";
+
+const ORIGIN = process.env.PUBLIC_SITE_ORIGIN || "*";
+const GAS_URL =
+  process.env.GAS_BRIDGE_URL ||
+  process.env.GAS_WEB_APP_URL ||
+  process.env.SHEETS_BRIDGE_URL; // put your Apps Script URL in one of these
+
+function corsHeaders() {
+  return {
+    "Access-Control-Allow-Origin": ORIGIN,
+    "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    "Access-Control-Allow-Methods": "GET, OPTIONS",
+    "Content-Type": "application/json",
+  };
+}
+
+function respond(status, body) {
+  return { statusCode: status, headers: corsHeaders(), body: JSON.stringify(body) };
+}
 
 exports.handler = async (event) => {
+  // CORS preflight
+  if (event.httpMethod === "OPTIONS") return { statusCode: 204, headers: corsHeaders(), body: "" };
+  if (event.httpMethod !== "GET") return respond(405, { ok: false, error: "Method not allowed" });
+
+  const limit = Math.max(1, Math.min(500, parseInt(event.queryStringParameters?.limit || "50", 10) || 50));
+
+  if (!GAS_URL) return respond(500, { ok: false, error: "Missing GAS_BRIDGE_URL (or GAS_WEB_APP_URL) env var" });
+
   try {
-    // You can change/extend this list or later wire it to Sheets.
-    const items = [
-      { date: "2025-08-22T10:30:00Z", amount: 500.00,  method: "Payoneer",      status: "Completed" },
-      { date: "2025-08-21T15:05:00Z", amount: -200.00, method: "Bank Transfer",  status: "Pending"   },
-      { date: "2025-08-20T09:00:00Z", amount: 150.00,  method: "Stripe",         status: "Completed" },
-    ];
+    // Build upstream URL: <GAS_URL>?wallet=1&limit=50
+    const u = new URL(GAS_URL);
+    u.searchParams.set("wallet", "1");
+    u.searchParams.set("limit", String(limit));
 
-    const inflow  = items.filter(x => x.amount > 0).reduce((a,b)=>a+b.amount, 0);
-    const outflow = items.filter(x => x.amount < 0).reduce((a,b)=>a+Math.abs(b.amount), 0);
-    const net     = inflow - outflow;
+    const r = await fetch(u.toString(), { headers: { "Cache-Control": "no-cache" } });
+    const data = await r.json().catch(() => ({}));
 
-    return {
-      statusCode: 200,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ok: true, inflow, outflow, net, items }),
-    };
+    if (!r.ok || data?.ok === false) {
+      return respond(r.status || 502, { ok: false, error: data?.error || "Upstream error", upstream: data });
+    }
+
+    // Accept a few shapes from GAS: items[] | wallet[] | rows[]
+    const rawItems = Array.isArray(data?.items)
+      ? data.items
+      : Array.isArray(data?.wallet)
+      ? data.wallet
+      : Array.isArray(data?.rows)
+      ? data.rows
+      : [];
+
+    // Normalize rows
+    const items = rawItems.map((x) => {
+      const amt = Number(x.amount ?? x.value ?? 0);
+      const dir =
+        x.dir ||
+        x.direction ||
+        // If no direction given, infer from sign (>=0 inflow, <0 outflow)
+        (amt >= 0 ? "in" : "out");
+
+      return {
+        ts: x.ts || x.date || x.timestamp || null,
+        amount: Math.abs(amt) || 0,
+        method: x.method || x.channel || "",
+        status: x.status || "",
+        dir: dir === "in" || dir === "out" ? dir : "in",
+      };
+    });
+
+    // Totals
+    const inflow = items.filter((i) => i.dir === "in").reduce((a, b) => a + (b.amount || 0), 0);
+    const outflow = items.filter((i) => i.dir === "out").reduce((a, b) => a + (b.amount || 0), 0);
+    const net = inflow - outflow;
+
+    return respond(200, { ok: true, inflow, outflow, net, items });
   } catch (e) {
-    return {
-      statusCode: 500,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ok: false, error: String(e) }),
-    };
+    return respond(502, { ok: false, error: String(e) });
   }
 };

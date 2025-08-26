@@ -1,60 +1,180 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Empire – User</title>
-  <link rel="stylesheet" href="styles.css" />
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Empire — User</title>
+  <meta name="color-scheme" content="dark"/>
+  <style>
+    :root{--bg:#0b1220;--panel:#101a2c;--ink:#e8eefc;--muted:#9fb2d1;--line:#1f2b44;--ring:#2f3b58;--gold1:#ffd24d;--gold2:#ffb11a}
+    *{box-sizing:border-box} body{margin:0;background:#0b1220;color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,sans-serif}
+    .wrap{max-width:900px;margin:0 auto;padding:28px 14px 48px}
+    .h1{font-size:28px;font-weight:800;margin:6px 0 16px}
+    .panel{background:#101a2c;border:1px solid var(--line);border-radius:16px;padding:16px;margin:10px 0}
+    .row{display:grid;grid-template-columns:140px 1fr;gap:10px;margin:10px 0}
+    .muted{color:var(--muted)}
+    .btn{padding:10px 14px;border-radius:12px;border:0;cursor:pointer;font-weight:800;color:#1b1606;background:linear-gradient(180deg,var(--gold1),var(--gold2))}
+    .btn.out{background:#0f182a;border:1px solid var(--line);color:#cfe0ff}
+    .grid{display:grid;gap:12px}
+    @media(min-width:720px){.grid.cols-2{grid-template-columns:1fr 1fr}}
+    input,select{width:100%;background:#0b162a;color:#e8eefc;border:1px solid var(--ring);border-radius:10px;padding:10px 12px}
+    label{font-size:12px;color:#cfe0ff;margin-bottom:6px;display:block}
+    .footer{opacity:.7;text-align:center;margin-top:28px;font-size:12px}
+    .bar{display:flex;gap:10px;align-items:center;justify-content:space-between;margin-bottom:10px}
+    a.link{color:#a7c8ff;text-decoration:none}
+  </style>
 </head>
-<body class="bg-gray-900 text-white">
-  <div class="container mx-auto p-6">
-    <header class="mb-8">
-      <h1 class="text-3xl font-bold">Empire – User Dashboard</h1>
-    </header>
+<body>
+  <div class="wrap">
+    <div class="bar">
+      <div class="h1">Empire — User</div>
+      <div>
+        <a class="link" href="/dashboard.html">← Back to Dashboard</a>
+        <button id="logoutBtn" class="btn out">Log out</button>
+      </div>
+    </div>
 
-    <main>
-      <section class="mb-6">
-        <h2 class="text-xl font-semibold mb-2">Welcome</h2>
-        <p>Manage your account and access resources here.</p>
-      </section>
+    <div class="panel">
+      <div id="status" class="muted">Loading user…</div>
+      <div id="userCard" hidden>
+        <div class="grid cols-2">
+          <div>
+            <label>Name</label>
+            <div id="u_name">—</div>
+          </div>
+          <div>
+            <label>Status</label>
+            <div id="u_status">—</div>
+          </div>
+          <div>
+            <label>Email</label>
+            <div id="u_email">—</div>
+          </div>
+          <div>
+            <label>Phone</label>
+            <div id="u_phone">—</div>
+          </div>
+          <div>
+            <label>Scale</label>
+            <div id="u_scale">—</div>
+          </div>
+        </div>
+      </div>
+    </div>
 
-      <section class="mb-6">
-        <h2 class="text-xl font-semibold mb-2">Links</h2>
-        <ul class="list-disc list-inside space-y-2">
-          <li>
-            <!-- Telegram link will be dynamically set -->
-            <a id="tgLink" href="#" target="_blank" rel="noopener" class="text-blue-400 hover:underline">
-              Telegram Channel
-            </a>
-          </li>
-          <li>
-            <a href="/docs/help.html" class="text-blue-400 hover:underline">Help Docs</a>
-          </li>
-          <li>
-            <a href="/dashboard.html" class="text-blue-400 hover:underline">Back to Dashboard</a>
-          </li>
-        </ul>
-      </section>
-    </main>
+    <div class="panel">
+      <div class="h1" style="font-size:20px">Admin Actions</div>
+      <div class="grid cols-2">
+        <div>
+          <label>Update Status</label>
+          <select id="inp_status">
+            <option value="Pending">Pending</option>
+            <option value="Confirmed">Confirmed</option>
+            <option value="Active">Active</option>
+            <option value="Suspended">Suspended</option>
+          </select>
+        </div>
+        <div>
+          <label>Set Scale/Grade</label>
+          <input id="inp_scale" placeholder="e.g. Bronze / Silver / Gold"/>
+        </div>
+      </div>
+      <div style="margin-top:12px;display:flex;gap:10px">
+        <button id="saveBtn" class="btn">Save Changes</button>
+        <button id="revokeBtn" class="btn out">Revoke Access</button>
+      </div>
+      <div id="actionMsg" class="muted" style="margin-top:10px"></div>
+    </div>
 
-    <footer class="mt-8 text-sm text-gray-500">
-      &copy; Empire Affiliate Marketing Hub
-    </footer>
+    <div class="footer">© Empire Affiliate Marketing Hub</div>
   </div>
 
+  <!-- Auth helper -->
+  <script src="/auth.js"></script>
   <script>
-    // Dynamically fetch Telegram channel info from serverless function
-    (async () => {
-      try {
-        const r = await fetch("/.netlify/functions/public-config");
-        const c = await r.json();
-        const a = document.getElementById("tgLink");
-        if (c?.telegramChannelUrl) a.href = c.telegramChannelUrl;
-        if (c?.telegramHandle) a.textContent = "Telegram: " + c.telegramHandle;
-      } catch (err) {
-        console.error("Failed to load Telegram config", err);
-      }
-    })();
+    const qs = new URLSearchParams(location.search);
+    const userEmail = (qs.get('email')||'').trim();
+    const userId = (qs.get('id')||'').trim();
+
+    // Require token for this page
+    if (!window.EmpireAuth?.has()) {
+      location.replace('/');
+    }
+
+    const S = {
+      set(t){ document.getElementById('status').textContent = t; },
+      ok(){ document.getElementById('status').textContent = ''; document.getElementById('userCard').hidden = false; },
+      msg(t){ document.getElementById('actionMsg').textContent = t; }
+    };
+
+    const U = { id:'', name:'', email:'', phone:'', status:'', scale:'' };
+
+    function fill(){
+      const set = (id,v)=>{ const el=document.getElementById(id); if (el) el.textContent = v||'—'; };
+      set('u_name', U.name);
+      set('u_email', U.email);
+      set('u_phone', U.phone);
+      set('u_status', U.status);
+      set('u_scale', U.scale);
+      document.getElementById('inp_status').value = U.status || 'Pending';
+      document.getElementById('inp_scale').value = U.scale || '';
+    }
+
+    async function fetchUser(){
+      S.set('Loading user…');
+      // Strategy: fetch list, then match by email or id (your users function returns the list)
+      const r = await EmpireAuth.authedFetch('/.netlify/functions/users?limit=1000');
+      const data = await r.json();
+      if (!data.ok) throw new Error('Users fetch failed');
+      let found = null;
+      if (userId) found = (data.users||[]).find(u => (u.id||'')===userId);
+      if (!found && userEmail) found = (data.users||[]).find(u => (u.email||'').toLowerCase()===userEmail.toLowerCase());
+      if (!found) throw new Error('User not found');
+      Object.assign(U, found);
+      S.ok(); fill();
+    }
+
+    async function saveChanges(){
+      S.msg('Saving…');
+      const payload = {
+        id: U.id || undefined,
+        email: U.email,
+        status: document.getElementById('inp_status').value,
+        scale: document.getElementById('inp_scale').value
+      };
+      try{
+        const r = await EmpireAuth.authedFetch('/.netlify/functions/user-set-grade', {
+          method:'POST',
+          body: JSON.stringify(payload)
+        });
+        const res = await r.json();
+        if (!r.ok || !res.ok) throw new Error(res.error || 'Update failed');
+        S.msg('Saved ✅');
+      }catch(e){ S.msg('Error: '+e.message); }
+    }
+
+    async function revoke(){
+      if (!confirm('Revoke this user?')) return;
+      S.msg('Revoking…');
+      try{
+        const r = await EmpireAuth.authedFetch('/.netlify/functions/revoke-user', {
+          method:'POST',
+          body: JSON.stringify({ id: U.id, email: U.email })
+        });
+        const res = await r.json();
+        if (!r.ok || !res.ok) throw new Error(res.error || 'Revoke failed');
+        S.msg('Revoked ✅');
+      }catch(e){ S.msg('Error: '+e.message); }
+    }
+
+    document.getElementById('logoutBtn').addEventListener('click', ()=>{
+      EmpireAuth.clear();
+      location.replace('/');
+    });
+    document.getElementById('saveBtn').addEventListener('click', saveChanges);
+    document.getElementById('revokeBtn').addEventListener('click', revoke);
+
+    fetchUser().catch(err=> S.set('Error: '+err.message));
   </script>
 </body>
 </html>

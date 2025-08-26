@@ -103,4 +103,195 @@
         </div>
         <div class="panel">
           <div class="muted">Total Outflow (USD)</div>
-          <div id="w-outflow" class="big">$0
+          <div id="w-outflow" class="big">$0.00</div>
+        </div>
+        <div class="panel">
+          <div class="muted">Net (USD)</div>
+          <div id="w-net" class="big">$0.00</div>
+        </div>
+      </div>
+
+      <div class="muted" style="margin-top:10px">Recent Wallet Activity</div>
+      <div class="panel table-scroll">
+        <table class="table" id="wallet-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Amount (USD)</th>
+              <th>Method</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody><!-- filled by JS --></tbody>
+        </table>
+      </div>
+    </section>
+
+    <div class="footer">© Empire Affiliate Marketing Hub</div>
+  </div>
+
+  <script>
+    // --- Tab logic
+    const tabs = document.querySelectorAll('.tab');
+    const sections = {
+      overview: document.getElementById('tab-overview'),
+      health:   document.getElementById('tab-health'),
+      users:    document.getElementById('tab-users'),
+      events:   document.getElementById('tab-events'),
+      wallet:   document.getElementById('tab-wallet'),
+    };
+    tabs.forEach(b=>{
+      b.addEventListener('click', ()=>{
+        tabs.forEach(x=>x.classList.remove('active'));
+        b.classList.add('active');
+        const k = b.dataset.tab;
+        Object.entries(sections).forEach(([id,el])=> el.hidden = id!==k );
+        if (k === 'wallet') ensureWalletLoaded(); // lazy-load wallet
+      });
+    });
+
+    // --- Helpers
+    const fmtUSD = (n)=> {
+      try { return new Intl.NumberFormat('en-US', { style:'currency', currency:'USD' }).format(+n||0); }
+      catch { return '$' + (Number(n||0).toFixed(2)); }
+    };
+    const el = (id)=> document.getElementById(id);
+    const setText = (id, v)=> { const e = el(id); if (e) e.textContent = v; };
+    function escapeHtml(s){
+      return String(s||'').replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
+    }
+
+    // --- Fetchers
+    async function fetchJSON(url){
+      const r = await fetch(url, { headers: { 'Cache-Control': 'no-cache' }});
+      if (!r.ok) throw new Error(`${r.status} ${url}`);
+      return r.json();
+    }
+
+    async function loadSummary(){
+      try{
+        const s = await fetchJSON('/.netlify/functions/summary');
+        setText('kpi-earn',    fmtUSD(s.totalEarnings||0));
+        setText('kpi-active',  String(s.activeUsers ?? 0));
+        setText('kpi-approval', (s.approvalRate!=null) ? (Math.round((s.approvalRate*100)||0)+'%') : '—');
+        setText('kpi-pending', String(s.pendingReviews ?? 0));
+        el('summary-note').textContent = 'Synced from Google Sheets.';
+      }catch(e){
+        el('summary-note').textContent = 'Failed to load summary: ' + e.message;
+      }
+    }
+
+    async function loadHealth(){
+      try{
+        const h = await fetchJSON('/.netlify/functions/health');
+        el('health-json').textContent = JSON.stringify(h, null, 2);
+      }catch(e){
+        el('health-json').textContent = 'Failed to load health: ' + e.message;
+      }
+    }
+
+    async function loadUsers(){
+      const body = document.querySelector('#users-table tbody');
+      body.innerHTML = '<tr><td class="muted" colspan="5">Loading…</td></tr>';
+      try{
+        const u = await fetchJSON('/.netlify/functions/users?limit=100');
+        body.innerHTML = '';
+        (u.users||[]).forEach(row=>{
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${escapeHtml(row.name||'')}</td>
+            <td>${escapeHtml(row.email||'')}</td>
+            <td>${escapeHtml(row.phone||'')}</td>
+            <td><span class="chip">${escapeHtml(row.status||'')}</span></td>
+            <td>${escapeHtml(row.scale||'')}</td>
+          `;
+          body.appendChild(tr);
+        });
+        if (!u.users || u.users.length===0){
+          body.innerHTML = '<tr><td class="muted" colspan="5">No users yet.</td></tr>';
+        }
+      }catch(e){
+        body.innerHTML = `<tr><td class="muted" colspan="5">Error: ${escapeHtml(e.message)}</td></tr>`;
+      }
+    }
+
+    async function loadEvents(){
+      const body = document.querySelector('#events-table tbody');
+      body.innerHTML = '<tr><td class="muted" colspan="4">Loading…</td></tr>';
+      try{
+        const ev = await fetchJSON('/.netlify/functions/events?limit=50');
+        body.innerHTML = '';
+        (ev.events||[]).forEach(item=>{
+          const when = item.ts ? new Date(item.ts).toLocaleString() : '';
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${escapeHtml(when)}</td>
+            <td>${escapeHtml(item.actor||'')}</td>
+            <td>${escapeHtml(item.type||'')}</td>
+            <td>${escapeHtml(item.msg||'')}</td>
+          `;
+          body.appendChild(tr);
+        });
+        if (!ev.events || ev.events.length===0){
+          body.innerHTML = '<tr><td class="muted" colspan="4">No events yet.</td></tr>';
+        }
+      }catch(e){
+        body.innerHTML = `<tr><td class="muted" colspan="4">Error: ${escapeHtml(e.message)}</td></tr>`;
+      }
+    }
+
+    // --- Wallet (lazy)
+    function usd(n){ return fmtUSD(n); }
+
+    async function fetchWallet(limit=50){
+      const url='/.netlify/functions/wallet?limit='+encodeURIComponent(limit);
+      const data=await fetchJSON(url);
+      if(!data?.ok) throw new Error(data?.error||'Wallet error');
+      return data;
+    }
+
+    function renderWallet(data){
+      const t = data.totals || { inflowUSD:0, outflowUSD:0, netUSD:0 };
+      setText('w-inflow', usd(t.inflowUSD));
+      setText('w-outflow', usd(t.outflowUSD));
+      setText('w-net',    usd(t.netUSD));
+
+      const tbody=document.querySelector('#wallet-table tbody');
+      tbody.innerHTML='';
+      (data.items||[]).forEach(row=>{
+        const dt = row.ts ? new Date(row.ts) : null;
+        const tr=document.createElement('tr');
+        tr.innerHTML = `
+          <td>${dt ? dt.toLocaleString() : ''}</td>
+          <td>${usd(row.amount)}</td>
+          <td>${escapeHtml(row.method||'')}</td>
+          <td>${escapeHtml(row.status||'')}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+      if(!data.items || data.items.length===0){
+        tbody.innerHTML = '<tr><td class="muted" colspan="4">No wallet activity yet.</td></tr>';
+      }
+    }
+
+    let walletLoaded=false;
+    async function ensureWalletLoaded(){
+      if(walletLoaded) return;
+      try{
+        const data=await fetchWallet(50);
+        renderWallet(data);
+        walletLoaded=true;
+      }catch(e){
+        const tbody=document.querySelector('#wallet-table tbody');
+        tbody.innerHTML = `<tr><td class="muted" colspan="4">Failed to load wallet: ${escapeHtml(e.message)}</td></tr>`;
+      }
+    }
+
+    // Kick off initial tabs
+    loadSummary();
+    loadHealth();
+    loadUsers();
+    loadEvents();
+  </script>
+</body>
+</html>

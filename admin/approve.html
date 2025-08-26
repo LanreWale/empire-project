@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Empire — Approvals</title>
+  <meta name="color-scheme" content="dark" />
+  <style>
+    :root{--bg:#0b1220;--panel:#101a2c;--ink:#e8eefc;--muted:#9fb2d1;--line:#1f2b44;--ring:#2f3b58}
+    *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,sans-serif}
+    .wrap{max-width:960px;margin:0 auto;padding:24px 14px 48px}
+    h1{margin:8px 0 16px;font-size:22px}
+    .card{background:#0f182a;border:1px solid var(--line);border-radius:16px;padding:14px;margin:12px 0}
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    input[type=text]{flex:1;background:#0b162a;color:#e8eefc;border:1px solid var(--ring);border-radius:10px;padding:10px 12px;min-width:240px}
+    button{background:#2b66f6;color:#fff;border:0;border-radius:10px;padding:10px 12px;cursor:pointer}
+    button.secondary{background:#25304a;border:1px solid #2f3b58;color:#d1d5db}
+    .muted{color:var(--muted)}
+    table{width:100%;border-collapse:collapse;font-size:14px}
+    th,td{padding:10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+    .pill{display:inline-block;padding:2px 8px;border-radius:999px;border:1px solid var(--line);background:#0d1730}
+    .ok{color:#48e088} .err{color:#ff7a7a}
+    .actions{display:flex;gap:8px}
+    .note{margin-top:8px}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Empire — Pending Approvals</h1>
+
+    <div class="card">
+      <div class="row">
+        <input id="secret" type="text" placeholder="Enter ADMIN_SECRET" />
+        <button id="save">Save</button>
+        <button class="secondary" id="refresh">Load pending</button>
+      </div>
+      <div class="note muted">Tip: this page uses <code>/.netlify/functions/admin-pending</code>. The secret is stored locally in your browser only.</div>
+      <div id="msg" class="note"></div>
+    </div>
+
+    <div class="card" style="overflow:auto">
+      <table id="tbl">
+        <thead>
+          <tr class="muted">
+            <th>ID</th><th>Name</th><th>Email</th><th>Phone</th><th>Telegram</th><th>Submitted</th><th>Action</th>
+          </tr>
+        </thead>
+        <tbody><tr><td class="muted" colspan="7">Click “Load pending”.</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    const LS_KEY = "ADMIN_SECRET";
+    const secretInp = document.getElementById("secret");
+    const msg = document.getElementById("msg");
+    const tbody = document.querySelector("#tbl tbody");
+
+    // Load saved secret
+    try { const v = localStorage.getItem(LS_KEY); if (v) secretInp.value = v; } catch {}
+
+    document.getElementById("save").onclick = () => {
+      try { localStorage.setItem(LS_KEY, (secretInp.value||"").trim()); } catch {}
+      flash("Saved.", true);
+    };
+    document.getElementById("refresh").onclick = loadPending;
+
+    function flash(text, ok){
+      msg.textContent = text;
+      msg.className = "note " + (ok ? "ok" : "err");
+    }
+
+    async function callPending(method, body){
+      const headers = { "x-admin-secret": (secretInp.value||"").trim() };
+      if (method === "POST") headers["Content-Type"] = "application/json";
+      const r = await fetch("/.netlify/functions/admin-pending", {
+        method, headers, body: method==="POST" ? JSON.stringify(body||{}) : undefined
+      });
+      const data = await r.json().catch(()=>({ ok:false, error:"Bad JSON" }));
+      return { ok: r.ok && data.ok !== false, data, status: r.status };
+    }
+
+    async function loadPending(){
+      tbody.innerHTML = '<tr><td class="muted" colspan="7">Loading…</td></tr>';
+      const res = await callPending("GET");
+      if (!res.ok){
+        tbody.innerHTML = `<tr><td class="err" colspan="7">Error ${res.status}: ${escapeHtml(res.data?.error||"Unauthorized/Invalid secret")}</td></tr>`;
+        if (res.status === 401) flash("Unauthorized — check ADMIN_SECRET.", false);
+        else flash(res.data?.error || "Failed to load", false);
+        return;
+      }
+      const items = res.data.items || [];
+      if (!items.length){
+        tbody.innerHTML = '<tr><td class="muted" colspan="7">No pending entries.</td></tr>';
+        flash("Loaded: 0 pending.", true);
+        return;
+      }
+      tbody.innerHTML = "";
+      items.forEach(row=>{
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${escapeHtml(row.id||"")}</td>
+          <td>${escapeHtml(row.name||"")}</td>
+          <td>${escapeHtml(row.email||"")}</td>
+          <td>${escapeHtml(row.phone||"")}</td>
+          <td>${escapeHtml(row.telegram||"")}</td>
+          <td><span class="pill">${escapeHtml(row.submittedAt||"")}</span></td>
+          <td class="actions">
+            <button data-id="${escapeHtml(row.id||"")}" data-act="approved">Approve</button>
+            <button class="secondary" data-id="${escapeHtml(row.id||"")}" data-act="dismissed">Reject</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      // wire buttons
+      tbody.querySelectorAll("button").forEach(b=>{
+        b.onclick = async () => {
+          const id = b.getAttribute("data-id");
+          const status = b.getAttribute("data-act");
+          b.disabled = true;
+          const res = await callPending("POST", { action:"mark", id, status });
+          b.disabled = false;
+          if (!res.ok){
+            flash(`Failed: ${res.data?.error || res.status}`, false);
+            return;
+          }
+          flash(status==="approved" ? "Approved + notified (if WA configured)" : "Rejected", true);
+          loadPending();
+        };
+      });
+    }
+
+    function escapeHtml(s){return String(s||"").replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));}
+  </script>
+</body>
+</html>

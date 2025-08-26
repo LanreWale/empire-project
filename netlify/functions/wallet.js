@@ -1,13 +1,18 @@
 // netlify/functions/wallet.js
-// Zero-deps. Proxies wallet data from your GAS Web App: ?wallet=1&limit=50
+// Wallet proxy → pulls rows from your Google Apps Script Web App.
+// Accepts ?limit=50. Zero external deps.
 
 "use strict";
 
 const ORIGIN = process.env.PUBLIC_SITE_ORIGIN || "*";
+
+// 1) Uses env vars if present
+// 2) Falls back to your GAS Web App URL (hardcoded below)
 const GAS_URL =
   process.env.GAS_BRIDGE_URL ||
   process.env.GAS_WEB_APP_URL ||
-  process.env.SHEETS_BRIDGE_URL; // put your Apps Script URL in one of these
+  process.env.SHEETS_BRIDGE_URL ||
+  "https://script.google.com/macros/s/AKfycbzN5K7h4KRGGuPXsGWo3-nuv28JflmcvrTNjqDSDmGRUrUn3x7s0fGNKc-lP-tZVUgU/exec";
 
 function corsHeaders() {
   return {
@@ -28,8 +33,6 @@ exports.handler = async (event) => {
   if (event.httpMethod !== "GET") return respond(405, { ok: false, error: "Method not allowed" });
 
   const limit = Math.max(1, Math.min(500, parseInt(event.queryStringParameters?.limit || "50", 10) || 50));
-
-  if (!GAS_URL) return respond(500, { ok: false, error: "Missing GAS_BRIDGE_URL (or GAS_WEB_APP_URL) env var" });
 
   try {
     // Build upstream URL: <GAS_URL>?wallet=1&limit=50

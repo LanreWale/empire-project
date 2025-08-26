@@ -6,34 +6,27 @@
   <title>Empire — Dashboard</title>
   <meta name="color-scheme" content="dark" />
   <style>
-    :root{--bg:#0b1220;--card:#111a2b;--ink:#e8eefc;--muted:#9ab;--line:#1f2b44;--ring:#2f3b58;--ok:#16a34a;--warn:#f59e0b;--down:#dc2626;--blue:#2b66f6}
+    :root{--bg:#0b1220;--panel:#101a2c;--ink:#e8eefc;--muted:#9fb2d1;--line:#1f2b44;--ring:#2f3b58;--gold1:#ffd24d;--gold2:#ffb11a}
     *{box-sizing:border-box} body{margin:0;background:#0b1220;color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,sans-serif}
-    .wrap{max-width:1120px;margin:0 auto;padding:22px 14px 48px}
-    h1{margin:8px 0 12px;font-size:32px} .muted{color:var(--muted)}
-    .tabs{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 18px}
-    .tab{padding:10px 12px;border:1px solid var(--ring);border-radius:12px;background:#0f1a2c;color:#cfe0ff;font-weight:700;cursor:pointer}
-    .tab.active{background:#173054;border-color:#3962ff;color:#fff}
-    .section{display:none}.section.active{display:block}
-    .grid{display:grid;gap:14px;grid-template-columns:1fr}@media(min-width:760px){.grid{grid-template-columns:repeat(4,1fr)}}
-    .kpi{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px}
-    .kpi .label{color:var(--muted);font-size:13px}.kpi .value{font-size:24px;font-weight:800;margin-top:6px}
-    .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin:12px 0}
-    .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-    .btn{display:inline-block;background:var(--blue);color:#fff;padding:10px 14px;border-radius:10px;border:0;text-decoration:none;cursor:pointer}
-    .btn-secondary{display:inline-block;background:#25304a;color:#d1d5db;padding:8px 12px;border-radius:10px;border:1px solid var(--ring);cursor:pointer}
-    .pill{display:inline-block;padding:4px 10px;border-radius:999px;border:1px solid var(--ring);font-size:12px}
-    table{width:100%;border-collapse:collapse;font-size:14px} th,td{padding:10px;border-top:1px solid var(--line);text-align:left}
-    label{display:block;font-size:13px;color:#cfe0ff;margin:10px 0 6px} input,select{width:100%;background:#0b162a;color:#e8eefc;border:1px solid var(--ring);border-radius:12px;padding:12px}
-    .two{display:grid;grid-template-columns:1fr;gap:12px}@media(min-width:760px){.two{grid-template-columns:1fr 1fr}}
-    .three{display:grid;grid-template-columns:1fr;gap:12px}@media(min-width:980px){.three{grid-template-columns:repeat(3,1fr)}}
-    pre{background:#0a1426;border:1px solid var(--line);padding:12px;border-radius:12px;overflow:auto}
-    .footer{opacity:.7;text-align:center;margin-top:22px;font-size:13px}
+    .wrap{max-width:980px;margin:0 auto;padding:28px 14px 48px}
+    .h1{font-size:36px;font-weight:800;margin:8px 0 18px}
+    .tabs{display:flex;gap:12px;margin-bottom:18px;flex-wrap:wrap}
+    .tab{padding:10px 16px;border-radius:14px;background:#0f182a;border:1px solid var(--line);cursor:pointer}
+    .tab.active{outline:2px solid var(--ring)}
+    .panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;margin:12px 0}
+    .kpi{font-size:40px;font-weight:900;letter-spacing:0.5px}
+    .muted{color:var(--muted)} .grid{display:grid;gap:14px}
+    @media(min-width:700px){.grid.cols-2{grid-template-columns:1fr 1fr}}
+    table{width:100%;border-collapse:collapse;font-size:14px}
+    th,td{padding:10px;border-bottom:1px solid var(--line)}
+    th{color:#cfe0ff;text-align:left}
+    .chip{display:inline-block;border:1px solid var(--line);border-radius:999px;padding:4px 10px;background:#0f182a}
+    .footer{opacity:.7;text-align:center;margin-top:28px;font-size:12px}
   </style>
 </head>
 <body>
   <div class="wrap">
-    <h1>Empire — Dashboard</h1>
-    <div id="note" class="muted">Loading…</div>
+    <div class="h1">Empire — Dashboard</div>
 
     <div class="tabs">
       <button class="tab active" data-tab="overview">Overview</button>
@@ -44,153 +37,178 @@
     </div>
 
     <!-- OVERVIEW -->
-    <section id="tab-overview" class="section active">
-      <div id="profile" class="card" style="display:none">
-        <div class="row" style="justify-content:space-between">
-          <div><div id="name" style="font-weight:800;font-size:18px"></div><div class="muted" id="contact"></div></div>
-          <div class="pill" id="status">—</div>
+    <section id="tab-overview" class="panel">
+      <div class="grid cols-2">
+        <div class="panel">
+          <div class="muted">Total Earnings (USD)</div>
+          <div id="kpi-earn" class="kpi">$0.00</div>
         </div>
-        <div style="margin-top:10px">Scale: <span id="scale" style="font-weight:700">—</span>×</div>
+        <div class="panel">
+          <div class="muted">Active Users</div>
+          <div id="kpi-active" class="kpi">0</div>
+        </div>
+        <div class="panel">
+          <div class="muted">Approval Rate</div>
+          <div id="kpi-approval" class="kpi">—</div>
+        </div>
+        <div class="panel">
+          <div class="muted">Pending Reviews</div>
+          <div id="kpi-pending" class="kpi">0</div>
+        </div>
       </div>
-      <div class="grid">
-        <div class="kpi"><div class="label">Total Earnings</div><div id="kpiEarnings" class="value">NGN 0.00</div></div>
-        <div class="kpi"><div class="label">Active Users</div><div id="kpiUsers" class="value">0</div></div>
-        <div class="kpi"><div class="label">Approval Rate</div><div id="kpiApproval" class="value">—</div></div>
-        <div class="kpi"><div class="label">Pending Reviews</div><div id="kpiPending" class="value">0</div></div>
-      </div>
+      <div class="muted" style="margin-top:10px" id="summary-note">Loading…</div>
     </section>
 
     <!-- HEALTH -->
-    <section id="tab-health" class="section">
-      <div class="card">
-        <div class="row" style="justify-content:space-between">
-          <div style="font-weight:700">System Health</div>
-          <button class="btn-secondary" id="refreshBtn" type="button">Refresh</button>
-        </div>
-        <div class="row" id="healthRow"></div>
-      </div>
-      <div class="card muted" id="raw" style="display:none">
-        <div style="font-weight:700;margin-bottom:6px">Debug</div>
-        <pre id="debug"></pre>
-      </div>
+    <section id="tab-health" class="panel" hidden>
+      <div id="health-json" class="muted">Loading…</div>
     </section>
 
     <!-- USERS -->
-    <section id="tab-users" class="section">
-      <div class="three">
-        <div class="card">
-          <div style="font-weight:700;margin-bottom:6px">Create Invite</div>
-          <form id="inviteForm">
-            <label>Name</label><input id="inv-name" required />
-            <label>Email</label><input id="inv-email" type="email" required />
-            <label>Phone (WhatsApp, optional)</label><input id="inv-phone" />
-            <label>Telegram (optional)</label><input id="inv-telegram" placeholder="@channel" />
-            <div style="margin-top:12px" class="row"><button class="btn" type="submit">Generate Invite</button></div>
-          </form>
-          <div id="inviteLinkWrap" style="display:none;margin-top:10px">
-            <label>Your Invite Link</label>
-            <input id="inviteLink" readonly />
-            <div class="row" style="margin-top:8px">
-              <button class="btn-secondary" id="copyInvite" type="button">Copy</button>
-              <a class="btn" id="waInvite" href="#" target="_blank" rel="noopener">Share on WhatsApp</a>
-            </div>
-          </div>
-        </div>
-
-        <div class="card">
-          <div style="font-weight:700;margin-bottom:6px">Approve User</div>
-          <form id="approveForm">
-            <label>Name</label><input id="app-name" />
-            <label>Email</label><input id="app-email" type="email" />
-            <label>Phone (WhatsApp)</label><input id="app-phone" />
-            <label>Approve?</label>
-            <select id="app-decision"><option value="approve">Approve</option><option value="reject">Reject</option></select>
-            <div style="margin-top:12px" class="row"><button class="btn" type="submit">Send Approval</button></div>
-          </form>
-        </div>
-
-        <div class="card">
-          <div style="font-weight:700;margin-bottom:6px">Set User Level</div>
-          <form id="levelForm">
-            <label>Email</label><input id="lvl-email" type="email" required />
-            <label>Level</label>
-            <select id="lvl-level"><option value="1">1x</option><option value="2">2x</option><option value="5">5x</option><option value="10">10x</option></select>
-            <div style="margin-top:12px" class="row"><button class="btn" type="submit">Update Level</button></div>
-          </form>
-        </div>
+    <section id="tab-users" class="panel" hidden>
+      <div class="muted" style="margin-bottom:8px">Registered Users</div>
+      <div class="panel" style="overflow:auto">
+        <table id="users-table">
+          <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Status</th><th>Scale</th></tr></thead>
+          <tbody></tbody>
+        </table>
       </div>
     </section>
 
     <!-- EVENTS -->
-    <section id="tab-events" class="section">
-      <div class="card">
-        <div style="font-weight:700;margin-bottom:6px">Event Feed</div>
-        <div id="feedEmpty" class="muted" style="padding:8px;display:none">No events yet.</div>
-        <div style="overflow:auto">
-          <table id="feedTable">
-            <thead><tr class="muted"><th>Time</th><th>Type</th><th>Message</th><th>Ref</th><th>Actor</th></tr></thead>
-            <tbody></tbody>
-          </table>
-        </div>
+    <section id="tab-events" class="panel" hidden>
+      <div class="muted" style="margin-bottom:8px">Recent Activity</div>
+      <div class="panel" style="overflow:auto">
+        <table id="events-table">
+          <thead><tr><th>When</th><th>Actor</th><th>Type</th><th>Message</th></tr></thead>
+          <tbody></tbody>
+        </table>
       </div>
     </section>
 
     <!-- WALLET -->
-    <section id="tab-wallet" class="section">
-      <div class="two">
-        <div class="card">
-          <div style="font-weight:700;margin-bottom:6px">Payout</div>
-          <form id="payoutForm">
-            <label>Provider</label><select id="provider"><option value="paystack">Paystack</option></select>
-            <label>Bank</label><select id="bankSelect"><option value="">Select bank</option></select>
-            <label>Account Number</label><input id="acctNumber" inputmode="numeric" />
-            <label>Amount (NGN)</label><input id="amount" inputmode="decimal" />
-            <div style="margin-top:12px" class="row"><button class="btn" type="submit">Request Withdrawal</button></div>
-          </form>
-        </div>
-        <div class="card">
-          <div style="font-weight:700;margin-bottom:6px">Sheets Utilities</div>
-          <div class="row" style="gap:10px">
-            <button class="btn-secondary" id="btnSheetsPing" type="button">Sheets: Ping</button>
-            <button class="btn-secondary" id="btnSheetsAppend" type="button">Sheets: Append Event</button>
-          </div>
-          <div id="sheetsMsg" class="muted" style="margin-top:10px"></div>
-        </div>
-      </div>
+    <section id="tab-wallet" class="panel" hidden>
+      <div class="muted">Coming soon…</div>
     </section>
 
     <div class="footer">© Empire Affiliate Marketing Hub</div>
   </div>
 
   <script>
-    // Require token in storage; if missing → go to login
-    (function requireToken(){
-      try{
-        const token = localStorage.getItem("EMPIRE_TOKEN");
-        if(!token){ window.location.replace("/"); }
-      }catch{ window.location.replace("/"); }
-    })();
-
-    // Simple tab router (for UX only)
+    // --- Tab logic
     const tabs = document.querySelectorAll('.tab');
     const sections = {
       overview: document.getElementById('tab-overview'),
-      health: document.getElementById('tab-health'),
-      users: document.getElementById('tab-users'),
-      events: document.getElementById('tab-events'),
-      wallet: document.getElementById('tab-wallet'),
+      health:   document.getElementById('tab-health'),
+      users:    document.getElementById('tab-users'),
+      events:   document.getElementById('tab-events'),
+      wallet:   document.getElementById('tab-wallet'),
     };
-    function activate(key){
-      tabs.forEach(t=>t.classList.toggle('active', t.dataset.tab===key));
-      Object.entries(sections).forEach(([k,el])=>el.classList.toggle('active', k===key));
-      window.dispatchEvent(new CustomEvent('empire:tab', {detail:key}));
-    }
-    tabs.forEach(t=>t.addEventListener('click',()=>activate(t.dataset.tab)));
-    const urlTab = new URLSearchParams(location.search).get('tab');
-    if (urlTab && sections[urlTab]) activate(urlTab);
-  </script>
+    tabs.forEach(b=>{
+      b.addEventListener('click', ()=>{
+        tabs.forEach(x=>x.classList.remove('active'));
+        b.classList.add('active');
+        const k = b.dataset.tab;
+        Object.entries(sections).forEach(([id,el])=> el.hidden = id!==k );
+      });
+    });
 
-  <!-- Live data/logic (already in your repo) -->
-  <script type="module" src="./app/assets/js/dashboard-live.js"></script>
+    // --- Helpers
+    const fmtUSD = (n)=> {
+      try { return new Intl.NumberFormat('en-US', { style:'currency', currency:'USD' }).format(+n||0); }
+      catch { return '$' + (Number(n||0).toFixed(2)); }
+    };
+    const el = (id)=> document.getElementById(id);
+    const setText = (id, v)=> { const e = el(id); if (e) e.textContent = v; };
+
+    // --- Fetchers
+    async function fetchJSON(url){
+      const r = await fetch(url, { headers: { 'Cache-Control': 'no-cache' }});
+      if (!r.ok) throw new Error(`${r.status} ${url}`);
+      return r.json();
+    }
+
+    async function loadSummary(){
+      try{
+        const s = await fetchJSON('/.netlify/functions/summary'); // {ok,true,totalEarnings,activeUsers,approvalRate,pendingReviews}
+        setText('kpi-earn',    fmtUSD(s.totalEarnings||0));
+        setText('kpi-active',  String(s.activeUsers ?? 0));
+        setText('kpi-approval', (s.approvalRate!=null) ? (Math.round((s.approvalRate*100)||0)+'%') : '—');
+        setText('kpi-pending', String(s.pendingReviews ?? 0));
+        el('summary-note').textContent = 'Synced from Google Sheets.';
+      }catch(e){
+        el('summary-note').textContent = 'Failed to load summary: ' + e.message;
+      }
+    }
+
+    async function loadHealth(){
+      try{
+        const h = await fetchJSON('/.netlify/functions/health');
+        el('health-json').textContent = JSON.stringify(h, null, 2);
+      }catch(e){
+        el('health-json').textContent = 'Failed to load health: ' + e.message;
+      }
+    }
+
+    async function loadUsers(){
+      const body = document.querySelector('#users-table tbody');
+      body.innerHTML = '<tr><td class="muted" colspan="5">Loading…</td></tr>';
+      try{
+        const u = await fetchJSON('/.netlify/functions/users?limit=100'); // {ok,true,users:[...]}
+        body.innerHTML = '';
+        (u.users||[]).forEach(row=>{
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${escapeHtml(row.name||'')}</td>
+            <td>${escapeHtml(row.email||'')}</td>
+            <td>${escapeHtml(row.phone||'')}</td>
+            <td><span class="chip">${escapeHtml(row.status||'')}</span></td>
+            <td>${escapeHtml(row.scale||'')}</td>
+          `;
+          body.appendChild(tr);
+        });
+        if (!u.users || u.users.length===0){
+          body.innerHTML = '<tr><td class="muted" colspan="5">No users yet.</td></tr>';
+        }
+      }catch(e){
+        body.innerHTML = `<tr><td class="muted" colspan="5">Error: ${escapeHtml(e.message)}</td></tr>`;
+      }
+    }
+
+    async function loadEvents(){
+      const body = document.querySelector('#events-table tbody');
+      body.innerHTML = '<tr><td class="muted" colspan="4">Loading…</td></tr>';
+      try{
+        const ev = await fetchJSON('/.netlify/functions/events?limit=50'); // {ok,true,events:[...]}
+        body.innerHTML = '';
+        (ev.events||[]).forEach(item=>{
+          const when = item.ts ? new Date(item.ts).toLocaleString() : '';
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${escapeHtml(when)}</td>
+            <td>${escapeHtml(item.actor||'')}</td>
+            <td>${escapeHtml(item.type||'')}</td>
+            <td>${escapeHtml(item.msg||'')}</td>
+          `;
+          body.appendChild(tr);
+        });
+        if (!ev.events || ev.events.length===0){
+          body.innerHTML = '<tr><td class="muted" colspan="4">No events yet.</td></tr>';
+        }
+      }catch(e){
+        body.innerHTML = `<tr><td class="muted" colspan="4">Error: ${escapeHtml(e.message)}</td></tr>`;
+      }
+    }
+
+    function escapeHtml(s){
+      return String(s||'').replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
+    }
+
+    // Kick off
+    loadSummary();
+    loadHealth();
+    loadUsers();
+    loadEvents();
+  </script>
 </body>
 </html>

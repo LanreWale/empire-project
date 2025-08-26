@@ -1,43 +1,33 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Empire — Dashboard</title>
-  <meta name="color-scheme" content="dark" />
-  <link rel="stylesheet" href="/app/styles/brand.css" />
+  <meta name="color-scheme" content="dark"/>
+  <link rel="stylesheet" href="/app/styles/brand.css"/>
 </head>
 <body class="brand-bg">
-  <div class="wrap">
-
-    <!-- ===== Header / Hero ===== -->
+  <div class="emp-wrap">
+    <!-- Header -->
     <header class="emp-header">
-      <div class="brand-side">
-        <div class="brand-badge">
-          <!-- your insignia -->
-          <img src="/app/assets/brand/logo.svg" alt="Empire" onerror="this.closest('.brand-badge').textContent='▲'">
-        </div>
-        <div>
-          <div class="brand-title">Empire Command & Earnings Center</div>
-          <div class="brand-sub">Live Offers · User Ops · Wallet · Events</div>
-        </div>
+      <img src="/app/assets/brand/emblem.svg" alt="Empire Emblem" class="brand-logo"/>
+      <div>
+        <div class="emp-title">Empire — Dashboard</div>
+        <div class="emp-sub">Live command overview · Sheets + Paystack + Telegram</div>
       </div>
-      <nav class="emp-links">
-        <a href="/index.html">Login</a>
-        <a href="https://t.me/TheEmpireHq" target="_blank" rel="noopener">Telegram (Live Updates)</a>
-      </nav>
     </header>
 
-    <!-- Optional live banner / emblem row -->
-    <div class="panel" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
-      <img src="/app/assets/brand/live_updates.png" alt="LIVE" style="height:32px" onerror="this.style.display='none'">
-      <span class="badge b-ok">Server Online</span>
-      <span class="badge b-ok">Sheets Operational</span>
-      <span class="badge b-ok">AI Active</span>
-      <span class="muted" id="live-ts">—</span>
+    <!-- Optional hero -->
+    <div class="hero">
+      <div class="badge">▲</div>
+      <div>
+        <div class="title">Live Operations</div>
+        <div class="sub">Tracking users, events, system health and wallet in real time.</div>
+      </div>
     </div>
 
-    <!-- ===== Tabs ===== -->
+    <!-- Tabs -->
     <div class="tabs">
       <button class="tab active" data-tab="overview">Overview</button>
       <button class="tab" data-tab="health">Health</button>
@@ -46,50 +36,38 @@
       <button class="tab" data-tab="wallet">Wallet</button>
     </div>
 
-    <!-- ===== OVERVIEW ===== -->
+    <!-- OVERVIEW -->
     <section id="tab-overview" class="panel">
-      <div class="grid cols-3">
+      <div class="grid cols-2">
         <div class="card">
           <div class="card-title">Total Earnings (USD)</div>
-          <div id="kpi-earn" class="big">$0.00</div>
+          <div id="kpi-earn" class="kpi">$0.00</div>
         </div>
         <div class="card">
           <div class="card-title">Active Users</div>
-          <div id="kpi-active" class="big">0</div>
+          <div id="kpi-active" class="kpi">0</div>
         </div>
         <div class="card">
           <div class="card-title">Approval Rate</div>
-          <div id="kpi-approval" class="big">—</div>
+          <div id="kpi-approval" class="kpi">—</div>
         </div>
-      </div>
-      <div class="grid cols-3" style="margin-top:12px">
         <div class="card">
           <div class="card-title">Pending Reviews</div>
-          <div id="kpi-pending" class="big">0</div>
-        </div>
-        <div class="card">
-          <div class="card-title">Last Sync</div>
-          <div id="kpi-sync" class="big muted" style="font-size:20px">—</div>
-        </div>
-        <div class="card">
-          <div class="card-title">Status</div>
-          <div id="kpi-status" class="big muted" style="font-size:20px">Checking…</div>
+          <div id="kpi-pending" class="kpi">0</div>
         </div>
       </div>
+      <div class="muted mt" id="summary-note">Loading…</div>
     </section>
 
-    <!-- ===== HEALTH ===== -->
+    <!-- HEALTH -->
     <section id="tab-health" class="panel" hidden>
-      <div class="card">
-        <div class="card-title">System Health</div>
-        <pre id="health-json" class="muted" style="margin:0;white-space:pre-wrap">Loading…</pre>
-      </div>
+      <pre id="health-json" class="muted" style="white-space:pre-wrap;margin:0">Loading…</pre>
     </section>
 
-    <!-- ===== USERS ===== -->
+    <!-- USERS -->
     <section id="tab-users" class="panel" hidden>
-      <div class="card-title">Registered Users</div>
-      <div class="table-scroll panel" style="margin-top:8px">
+      <div class="muted" style="margin-bottom:8px">Registered Users</div>
+      <div class="card table-scroll">
         <table class="table" id="users-table">
           <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Status</th><th>Scale</th></tr></thead>
           <tbody></tbody>
@@ -97,10 +75,10 @@
       </div>
     </section>
 
-    <!-- ===== EVENTS ===== -->
+    <!-- EVENTS -->
     <section id="tab-events" class="panel" hidden>
-      <div class="card-title">Recent Activity</div>
-      <div class="table-scroll panel" style="margin-top:8px">
+      <div class="muted" style="margin-bottom:8px">Recent Activity</div>
+      <div class="card table-scroll">
         <table class="table" id="events-table">
           <thead><tr><th>When</th><th>Actor</th><th>Type</th><th>Message</th></tr></thead>
           <tbody></tbody>
@@ -108,25 +86,25 @@
       </div>
     </section>
 
-    <!-- ===== WALLET ===== -->
+    <!-- WALLET -->
     <section id="tab-wallet" class="panel" hidden>
-      <div class="cards">
+      <div class="grid cols-2">
         <div class="card">
           <div class="card-title">Total Inflow (USD)</div>
-          <div id="w-inflow" class="big">$0.00</div>
+          <div id="w-inflow" class="big">—</div>
         </div>
         <div class="card">
           <div class="card-title">Total Outflow (USD)</div>
-          <div id="w-outflow" class="big">$0.00</div>
+          <div id="w-outflow" class="big">—</div>
         </div>
         <div class="card">
           <div class="card-title">Net (USD)</div>
-          <div id="w-net" class="big">$0.00</div>
+          <div id="w-net" class="big">—</div>
         </div>
       </div>
 
-      <h3 class="mt">Recent Wallet Activity</h3>
-      <div class="table-scroll panel">
+      <h3 class="mt" style="margin-bottom:8px">Recent Wallet Activity</h3>
+      <div class="card table-scroll">
         <table class="table" id="wallet-table">
           <thead>
             <tr><th>Date</th><th>Amount (USD)</th><th>Method</th><th>Status</th></tr>
@@ -140,128 +118,159 @@
   </div>
 
   <script>
-    // ===== Tabs =====
+    // Tabs
     const tabs = document.querySelectorAll('.tab');
-    const views = {
+    const sections = {
       overview: document.getElementById('tab-overview'),
       health:   document.getElementById('tab-health'),
       users:    document.getElementById('tab-users'),
       events:   document.getElementById('tab-events'),
       wallet:   document.getElementById('tab-wallet'),
     };
-    tabs.forEach(b => b.addEventListener('click', () => {
-      tabs.forEach(x=>x.classList.remove('active')); b.classList.add('active');
-      const k = b.dataset.tab;
-      Object.entries(views).forEach(([id,el]) => el.hidden = id !== k);
-    }));
+    tabs.forEach(b=>{
+      b.addEventListener('click', ()=>{
+        tabs.forEach(x=>x.classList.remove('active'));
+        b.classList.add('active');
+        const k = b.dataset.tab;
+        Object.entries(sections).forEach(([id,el])=> el.hidden = id!==k );
+        // lazy load per tab
+        if (k==='health') loadHealth();
+        if (k==='users')  loadUsers();
+        if (k==='events') loadEvents();
+        if (k==='wallet') loadWallet();
+      });
+    });
 
-    // ===== Helpers =====
-    const $ = (id)=>document.getElementById(id);
-    const setText = (id,v)=>{ const e=$(id); if(e) e.textContent=v; };
-    const fmtUSD = (n)=> new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(+n||0);
-    const safe = (s)=> String(s||'').replace(/[&<>"']/g,m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
-
-    async function j(url){
-      const r = await fetch(url, { headers:{'Cache-Control':'no-cache'} });
-      if (!r.ok) throw new Error(r.status + ' ' + url);
+    // Helpers
+    const el = (id)=> document.getElementById(id);
+    const setText = (id, v)=> { const e = el(id); if (e) e.textContent = v; };
+    const escapeHtml = (s)=> String(s||'').replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
+    const fmtUSD = (n)=> {
+      try { return new Intl.NumberFormat('en-US', { style:'currency', currency:'USD' }).format(+n||0); }
+      catch { return '$' + (Number(n||0).toFixed(2)); }
+    };
+    async function fetchJSON(url){
+      const r = await fetch(url, { headers: { 'Cache-Control': 'no-cache' }});
+      if (!r.ok) throw new Error(`${r.status} ${url}`);
       return r.json();
     }
 
-    // ===== Loaders (live) =====
+    // Overview
     async function loadSummary(){
       try{
-        const s = await j('/.netlify/functions/summary');
-        setText('kpi-earn', fmtUSD(s.totalEarnings||0));
-        setText('kpi-active', String(s.activeUsers ?? 0));
+        const s = await fetchJSON('/.netlify/functions/summary');
+        setText('kpi-earn',    fmtUSD(s.totalEarnings||0));
+        setText('kpi-active',  String(s.activeUsers ?? 0));
         setText('kpi-approval', (s.approvalRate!=null) ? (Math.round((s.approvalRate*100)||0)+'%') : '—');
         setText('kpi-pending', String(s.pendingReviews ?? 0));
-        setText('kpi-sync', new Date().toLocaleString());
-      }catch(e){ setText('kpi-status','Summary error'); }
-    }
-
-    async function loadHealth(){
-      try{
-        const h = await j('/.netlify/functions/health');
-        $('health-json').textContent = JSON.stringify(h, null, 2);
-        const ts = new Date().toLocaleString();
-        setText('live-ts', 'Updated ' + ts);
-        // badges
-        // (kept static in header; you can wire dynamic classes if you like)
+        el('summary-note').textContent = 'Synced from Google Sheets.';
       }catch(e){
-        $('health-json').textContent = 'Health error: ' + e.message;
+        el('summary-note').textContent = 'Failed to load summary: ' + e.message;
       }
     }
 
-    async function loadUsers(){
-      const tbody = document.querySelector('#users-table tbody'); tbody.innerHTML = '<tr><td class="muted" colspan="5">Loading…</td></tr>';
+    // Health
+    let healthOnce=false;
+    async function loadHealth(){
+      if (healthOnce) return; healthOnce=true;
       try{
-        const u = await j('/.netlify/functions/users?limit=200');
-        tbody.innerHTML = '';
+        const h = await fetchJSON('/.netlify/functions/health');
+        el('health-json').textContent = JSON.stringify(h, null, 2);
+      }catch(e){
+        el('health-json').textContent = 'Failed to load health: ' + e.message;
+      }
+    }
+
+    // Users
+    let usersOnce=false;
+    async function loadUsers(){
+      const body = document.querySelector('#users-table tbody');
+      body.innerHTML = '<tr><td class="muted" colspan="5">Loading…</td></tr>';
+      try{
+        const u = await fetchJSON('/.netlify/functions/users?limit=100');
+        body.innerHTML = '';
         (u.users||[]).forEach(row=>{
           const tr = document.createElement('tr');
           tr.innerHTML = `
-            <td>${safe(row.name)}</td>
-            <td>${safe(row.email)}</td>
-            <td>${safe(row.phone)}</td>
-            <td><span class="chip">${safe(row.status)}</span></td>
-            <td>${safe(row.scale)}</td>
+            <td>${escapeHtml(row.name||'')}</td>
+            <td>${escapeHtml(row.email||'')}</td>
+            <td>${escapeHtml(row.phone||'')}</td>
+            <td><span class="chip">${escapeHtml(row.status||'')}</span></td>
+            <td>${escapeHtml(row.scale||'')}</td>
           `;
-          tbody.appendChild(tr);
+          body.appendChild(tr);
         });
-        if (!u.users || u.users.length===0) tbody.innerHTML = '<tr><td class="muted" colspan="5">No users yet.</td></tr>';
+        if (!u.users || u.users.length===0){
+          body.innerHTML = '<tr><td class="muted" colspan="5">No users yet.</td></tr>';
+        }
+        usersOnce=true;
       }catch(e){
-        tbody.innerHTML = `<tr><td class="muted" colspan="5">Users error: ${safe(e.message)}</td></tr>`;
+        body.innerHTML = `<tr><td class="muted" colspan="5">Error: ${escapeHtml(e.message)}</td></tr>`;
       }
     }
 
+    // Events
+    let eventsOnce=false;
     async function loadEvents(){
-      const tbody = document.querySelector('#events-table tbody'); tbody.innerHTML = '<tr><td class="muted" colspan="4">Loading…</td></tr>';
+      const body = document.querySelector('#events-table tbody');
+      body.innerHTML = '<tr><td class="muted" colspan="4">Loading…</td></tr>';
       try{
-        const ev = await j('/.netlify/functions/events?limit=100');
-        tbody.innerHTML = '';
-        (ev.events||[]).forEach(x=>{
-          const when = x.ts ? new Date(x.ts).toLocaleString() : '';
+        const ev = await fetchJSON('/.netlify/functions/events?limit=50');
+        body.innerHTML = '';
+        (ev.events||[]).forEach(item=>{
+          const when = item.ts ? new Date(item.ts).toLocaleString() : '';
           const tr = document.createElement('tr');
           tr.innerHTML = `
-            <td>${safe(when)}</td>
-            <td>${safe(x.actor)}</td>
-            <td>${safe(x.type)}</td>
-            <td>${safe(x.msg)}</td>
+            <td>${escapeHtml(when)}</td>
+            <td>${escapeHtml(item.actor||'')}</td>
+            <td>${escapeHtml(item.type||'')}</td>
+            <td>${escapeHtml(item.msg||'')}</td>
           `;
-          tbody.appendChild(tr);
+          body.appendChild(tr);
         });
-        if (!ev.events || ev.events.length===0) tbody.innerHTML = '<tr><td class="muted" colspan="4">No events yet.</td></tr>';
+        if (!ev.events || ev.events.length===0){
+          body.innerHTML = '<tr><td class="muted" colspan="4">No events yet.</td></tr>';
+        }
+        eventsOnce=true;
       }catch(e){
-        tbody.innerHTML = `<tr><td class="muted" colspan="4">Events error: ${safe(e.message)}</td></tr>`;
+        body.innerHTML = `<tr><td class="muted" colspan="4">Error: ${escapeHtml(e.message)}</td></tr>`;
       }
     }
 
+    // Wallet
+    let walletOnce=false;
     async function loadWallet(){
-      const tbody = document.querySelector('#wallet-table tbody'); tbody.innerHTML = '<tr><td class="muted" colspan="4">Loading…</td></tr>';
+      const body = document.querySelector('#wallet-table tbody');
+      body.innerHTML = '<tr><td class="muted" colspan="4">Loading…</td></tr>';
       try{
-        const w = await j('/.netlify/functions/wallet?limit=50');
+        const w = await fetchJSON('/.netlify/functions/wallet?limit=50'); // {ok,inflow,outflow,net,items[]}
         setText('w-inflow',  fmtUSD(w.inflow||0));
         setText('w-outflow', fmtUSD(w.outflow||0));
         setText('w-net',     fmtUSD(w.net||0));
-        tbody.innerHTML = '';
-        (w.items||[]).forEach(x=>{
+
+        body.innerHTML = '';
+        (w.items||[]).forEach(row=>{
+          const when = row.ts ? new Date(row.ts).toLocaleString() : '';
           const tr = document.createElement('tr');
           tr.innerHTML = `
-            <td>${safe(x.ts ? new Date(x.ts).toLocaleString() : '')}</td>
-            <td>${fmtUSD(+x.amount || 0)}</td>
-            <td>${safe(x.method||'')}</td>
-            <td><span class="chip">${safe(x.status||'')}</span></td>
+            <td>${escapeHtml(when)}</td>
+            <td>${fmtUSD(row.amount||0)}</td>
+            <td>${escapeHtml(row.method||'')}</td>
+            <td><span class="chip">${escapeHtml(row.status||'')}</span></td>
           `;
-          tbody.appendChild(tr);
+          body.appendChild(tr);
         });
-        if (!w.items || w.items.length===0) tbody.innerHTML = '<tr><td class="muted" colspan="4">No wallet items yet.</td></tr>';
+        if (!w.items || w.items.length===0){
+          body.innerHTML = '<tr><td class="muted" colspan="4">No wallet activity yet.</td></tr>';
+        }
+        walletOnce=true;
       }catch(e){
-        tbody.innerHTML = `<tr><td class="muted" colspan="4">Wallet error: ${safe(e.message)}</td></tr>`;
+        body.innerHTML = `<tr><td class="muted" colspan="4">Error: ${escapeHtml(e.message)}</td></tr>`;
       }
     }
 
-    // Kickoff
-    loadSummary(); loadHealth(); loadUsers(); loadEvents(); loadWallet();
+    // Kick off Overview immediately
+    loadSummary();
   </script>
 </body>
 </html>

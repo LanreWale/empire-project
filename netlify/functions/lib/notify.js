@@ -1,84 +1,78 @@
 // netlify/functions/lib/notify.js
-// Lightweight notification helpers used by serverless functions.
-// Telegram + (optional) WhatsApp supported. Email intentionally stubbed
-// to avoid bundler installing extra dependencies on Netlify.
+// Zero-deps notification helpers (Telegram + optional WhatsApp). No axios, no nodemailer.
 
-const axios = require("axios");
+"use strict";
 
-// ---- env helpers -----------------------------------------------------------
-const reqEnv = (k) => {
+// --- small helpers
+const val = (k) => {
   const v = process.env[k];
-  if (v && String(v).trim() !== "") return String(v).trim();
-  return null;
+  return v && String(v).trim() !== "" ? String(v).trim() : "";
 };
 
-// ---- TELEGRAM --------------------------------------------------------------
-// Supports either a numeric chat id or a channel username like "@TheEmpireHq".
+// --- TELEGRAM: sendMessage via Bot API using global fetch
 async function notifyTelegram({ text, parse_mode = "HTML", disable_web_page_preview = true }) {
-  const BOT = reqEnv("TELEGRAM_BOT_TOKEN");
-  const CHAT = reqEnv("TELEGRAM_CHAT_ID") || reqEnv("TELEGRAM_CHANNEL_USERNAME"); // allow either
+  const BOT  = val("TELEGRAM_BOT_TOKEN");
+  const CHAT = val("TELEGRAM_CHAT_ID") || val("TELEGRAM_CHANNEL_USERNAME");
+
   if (!BOT || !CHAT) {
     return { ok: false, error: "Missing TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID/TELEGRAM_CHANNEL_USERNAME" };
   }
+  const chat = CHAT.startsWith("@") || /^-?\d+$/.test(CHAT) ? CHAT : `@${CHAT}`;
 
-  const url = `https://api.telegram.org/bot${BOT}/sendMessage`;
   try {
-    const res = await axios.post(
-      url,
-      {
-        chat_id: CHAT.startsWith("@") || /^-?\d+$/.test(CHAT) ? CHAT : `@${CHAT}`,
-        text,
-        parse_mode,
-        disable_web_page_preview
-      },
-      { timeout: 15000 }
-    );
-    return { ok: true, message_id: res.data?.result?.message_id, data: res.data };
-  } catch (err) {
-    return { ok: false, status: err.response?.status, error: JSON.stringify(err.response?.data || String(err)) };
+    const r = await fetch(`https://api.telegram.org/bot${BOT}/sendMessage`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ chat_id: chat, text, parse_mode, disable_web_page_preview })
+    });
+    const data = await r.json().catch(()=> ({}));
+    if (!r.ok) return { ok: false, status: r.status, error: JSON.stringify(data) };
+    return { ok: true, data };
+  } catch (e) {
+    return { ok: false, error: String(e) };
   }
 }
 
-// ---- WHATSAPP (optional) ---------------------------------------------------
-// Generic gateway using username/password (e.g., Vonage/Nexmo, Termii, etc.)
-// Configure with: WA_API_URL, WA_SID, WA_AUTH, WA_SENDER (or leave unset to skip)
+// --- WHATSAPP (optional generic gateway) using basic auth + x-www-form-urlencoded
 async function notifyWhatsApp({ to, text }) {
-  const url = reqEnv("WA_API_URL");
-  const sid = reqEnv("WA_SID");
-  const auth = reqEnv("WA_AUTH");
-  const from = reqEnv("WA_SENDER") || "";
+  const URL  = val("WA_API_URL");
+  const SID  = val("WA_SID");
+  const AUTH = val("WA_AUTH");
+  const FROM = val("WA_SENDER");
 
-  if (!url || !sid || !auth) {
+  if (!URL || !SID || !AUTH) {
     return { ok: false, error: "WhatsApp gateway not configured (WA_API_URL/WA_SID/WA_AUTH)" };
   }
 
-  // Most providers accept x-www-form-urlencoded; adjust keys to your gateway.
-  const params = new URLSearchParams();
-  params.append("from", from);
-  params.append("to", to);
-  params.append("text", text);
+  const form = new URLSearchParams();
+  if (FROM) form.set("from", FROM);
+  form.set("to", to);
+  form.set("text", text);
 
   try {
-    const res = await axios.post(url, params, {
-      auth: { username: sid, password: auth },
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      timeout: 15000
+    const r = await fetch(URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        "Authorization": "Basic " + Buffer.from(`${SID}:${AUTH}`).toString("base64"),
+      },
+      body: form
     });
-    return { ok: true, sid: res.data?.sid, data: res.data };
-  } catch (err) {
-    return { ok: false, status: err.response?.status, error: JSON.stringify(err.response?.data || String(err)) };
+    const data = await r.json().catch(()=> ({}));
+    if (!r.ok) return { ok: false, status: r.status, error: JSON.stringify(data) };
+    return { ok: true, data };
+  } catch (e) {
+    return { ok: false, error: String(e) };
   }
 }
 
-// ---- EMAIL (disabled stub) -------------------------------------------------
-// Intentionally stubbed so Netlify's bundler doesn't try to resolve nodemailer.
+// --- EMAIL disabled (to avoid nodemailer dep)
 async function notifyEmail(/* { to, subject, text } */) {
   return { ok: false, error: "Email sending disabled in this build" };
 }
 
-// ---- exports ---------------------------------------------------------------
 module.exports = { notifyTelegram, notifyWhatsApp, notifyEmail };
-// Back-compat aliases (some older code may call module.exports.telegram)
+// Back-compat alias
 if (!module.exports.telegram && module.exports.notifyTelegram) {
   module.exports.telegram = module.exports.notifyTelegram;
 }

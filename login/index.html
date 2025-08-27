@@ -1,33 +1,95 @@
-<!doctype html><html lang="en"><head>
-<meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>Empire – Login</title>
 <style>
-:root{--bg:#0b1220;--card:#121a2b;--muted:#96a0b5;--ok:#18b26b;--bad:#de524c;--txt:#e7ecf7;--accent:#4bb1ff}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--txt);font:16px/1.5 system-ui,Segoe UI,Roboto,Helvetica,Arial}
-.wrap{max-width:720px;margin:0 auto;padding:24px}
-.card{background:var(--card);border-radius:16px;box-shadow:0 6px 40px rgba(0,0,0,.25);padding:24px}
-h1{margin:0 0 8px}.muted{color:var(--muted)}
-.msg{padding:12px 14px;border-radius:12px;margin:12px 0}
-.msg.bad{background:#2a1414;border:1px solid #7a3431;color:#ffd7d5}
-button{background:var(--accent);border:0;color:#07111f;padding:12px 16px;border-radius:12px;font-weight:600;cursor:pointer}
-input{width:100%;padding:12px 14px;border:1px solid #1f2a42;background:#0d1525;color:#dfe8fb;border-radius:10px}
-label{display:block;margin:10px 0 6px}
-a{color:var(--accent);text-decoration:none}
+:root {
+  --bg:#0b1220;
+  --card:#121a2b;
+  --muted:#96a0b5;
+  --ok:#18b26b;
+  --bad:#de524c;
+  --txt:#e7ecf7;
+  --accent:#4bb1ff
+}
+*{box-sizing:border-box}
+body {
+  margin:0;
+  background:var(--bg);
+  color:var(--txt);
+  font:16px/1.5 system-ui,Segoe UI,Roboto,Helvetica,Arial
+}
+.wrap {
+  max-width:720px;
+  margin:0 auto;
+  padding:24px
+}
+.card {
+  background:var(--card);
+  border-radius:16px;
+  box-shadow:0 6px 40px rgba(0,0,0,.25);
+  padding:24px;
+  text-align:center;
+}
+h1 {margin:12px 0 8px}
+.muted {color:var(--muted)}
+.msg {
+  padding:12px 14px;
+  border-radius:12px;
+  margin:12px 0
+}
+.msg.bad {
+  background:#2a1414;
+  border:1px solid #7a3431;
+  color:#ffd7d5
+}
+button {
+  background:var(--accent);
+  border:0;
+  color:#07111f;
+  padding:12px 16px;
+  border-radius:12px;
+  font-weight:600;
+  cursor:pointer
+}
+input {
+  width:100%;
+  padding:12px 14px;
+  border:1px solid #1f2a42;
+  background:#0d1525;
+  color:#dfe8fb;
+  border-radius:10px
+}
+label {display:block;margin:10px 0 6px}
+a {color:var(--accent);text-decoration:none}
+.logo-badge {
+  margin-bottom: 12px;
+}
 </style>
-</head><body>
-<div class="wrap"><div class="card">
-  <h1>Empire Login</h1>
-  <p class="muted">Enter your email or phone to begin. You must have a valid invite.</p>
-  <div id="msg" class="msg bad" style="display:none"></div>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <!-- Commander Badge -->
+    <div class="logo-badge">
+      <img src="/app/assets/brand/commander_badge.png" alt="Supreme Command" width="84">
+    </div>
 
-  <label for="identifier">Email or phone</label>
-  <input id="identifier" autocomplete="email" placeholder="you@example.com or +234..." />
+    <h1>Empire Login</h1>
+    <p class="muted">Enter your email or phone to begin. You must have a valid invite.</p>
+    <div id="msg" class="msg bad" style="display:none"></div>
 
-  <div style="margin-top:16px;display:flex;gap:12px;align-items:center">
-    <button id="nextBtn">Continue</button>
-    <a id="goRegister" href="/register">Skip to registration</a>
+    <label for="identifier">Email or phone</label>
+    <input id="identifier" autocomplete="email" placeholder="you@example.com or +234..." />
+
+    <div style="margin-top:16px;display:flex;gap:12px;align-items:center;justify-content:center">
+      <button id="nextBtn">Continue</button>
+      <a id="goRegister" href="/register">Skip to registration</a>
+    </div>
   </div>
-</div></div>
+</div>
 
 <script>
 (function(){
@@ -48,4 +110,5 @@ a{color:var(--accent);text-decoration:none}
   if(token){ document.getElementById('goRegister').href = '/register?i='+encodeURIComponent(token); }
 })();
 </script>
-</body></html>
+</body>
+</html>

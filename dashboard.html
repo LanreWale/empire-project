@@ -1,180 +1,203 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Empire — Dashboard</title>
-  <meta name="color-scheme" content="dark" />
-  <link rel="stylesheet" href="/app/styles/brand.css" />
+  <meta name="color-scheme" content="dark"/>
+  <!-- Brand styles you already have -->
+  <link rel="stylesheet" href="/app/styles/brand.css"/>
   <style>
-    /* Minimal layout helpers on top of brand.css */
-    .layout{display:grid;grid-template-columns:260px 1fr;min-height:100vh}
-    .sidebar{background:#0e1729;border-right:1px solid var(--emp-line);padding:18px 14px}
-    .nav-title{font-weight:900;color:#ffd24d;letter-spacing:.4px;margin:4px 0 12px}
-    .nav a{display:block;padding:10px 12px;margin:6px 0;border-radius:12px;border:1px solid var(--emp-line);color:var(--emp-ink);text-decoration:none}
-    .nav a.active,.nav a:hover{outline:2px solid var(--emp-ring)}
-    .content{padding:24px 18px}
-    .page-title{display:flex;align-items:center;gap:10px;margin:0 0 12px}
-    .page-title .badge{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--emp-line);background:#0f182a;border-radius:999px;padding:6px 10px;color:var(--emp-muted);font-size:12px}
-    .grid{display:grid;gap:14px}
-    @media(min-width:760px){.grid.cols-2{grid-template-columns:1fr 1fr}.grid.cols-3{grid-template-columns:1fr 1fr 1fr}}
-    .tab-panel{margin-top:12px}
-    .btn{cursor:pointer;border:1px solid var(--emp-line);background:#14203a;color:var(--emp-ink);padding:9px 14px;border-radius:12px}
-    .btn.gold{background:linear-gradient(90deg,var(--emp-gold-1),var(--emp-gold-2));color:#10151f;border:none}
-    .input{width:100%;background:#0f182a;border:1px solid var(--emp-line);color:var(--emp-ink);padding:10px 12px;border-radius:12px}
-    .mt{margin-top:16px}
-    .muted{color:var(--emp-muted)}
-    .right{display:flex;gap:10px;align-items:center}
+    /* layout bits just for this page */
+    .shell{display:grid;grid-template-columns:260px 1fr;min-height:100vh}
+    .side{
+      background:#0e182a;border-right:1px solid var(--emp-line);padding:20px 14px
+    }
+    .brand-box{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+    .brand-box img{width:36px;height:36px}
+    .nav{display:flex;flex-direction:column;gap:8px}
+    .nav a{
+      display:block;padding:11px 12px;border-radius:12px;border:1px solid var(--emp-line);
+      background:#0f182a;color:var(--emp-ink);text-decoration:none
+    }
+    .nav a.active{outline:2px solid var(--emp-ring)}
+    .main{padding:28px 14px}
+    .title{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+    .title .t{font-size:28px;font-weight:900;letter-spacing:.2px}
+    .title .badge{border:1px solid var(--emp-line);border-radius:999px;padding:6px 10px;background:#0f182a;color:var(--emp-muted)}
+    .cards{display:grid;gap:14px}
+    @media(min-width:760px){.cards.cols-3{grid-template-columns:1fr 1fr 1fr}}
+    @media(min-width:900px){.cards.cols-2{grid-template-columns:1fr 1fr}}
+    .card{background:var(--emp-panel);border:1px solid var(--emp-line);border-radius:16px;padding:16px}
+    .card-title{color:var(--emp-muted);font-size:13px;margin-bottom:6px}
+    .big{font-size:34px;font-weight:900}
+    .mt{margin-top:10px}
+    .tab-btn{padding:10px 16px;border-radius:14px;background:#0f182a;border:1px solid var(--emp-line);cursor:pointer}
+    .tab-btn:hover{border-color:var(--emp-ring)}
+    .tab-panel{background:rgba(15,24,42,.9);border:1px solid var(--emp-line);border-radius:16px;padding:16px;margin:12px 0;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+    .row{display:flex;gap:8px;align-items:center}
+    .input{flex:1;padding:10px;border-radius:10px;border:1px solid var(--emp-line);background:#0f182a;color:var(--emp-ink)}
     .table{width:100%;border-collapse:collapse;font-size:14px}
     .table th,.table td{padding:10px;border-bottom:1px solid var(--emp-line);text-align:left}
-    .chip{display:inline-block;border:1px solid var(--emp-line);border-radius:999px;padding:4px 10px;background:#0f182a}
+    .table th{color:#cfe0ff}
+    .table-scroll{overflow:auto}
+    .footer{opacity:.75;text-align:center;margin-top:28px;font-size:12px}
   </style>
 </head>
 <body class="brand-bg">
-  <div class="layout">
-
-    <!-- SIDEBAR -->
-    <aside class="sidebar">
-      <div class="nav-title">EMPIRE</div>
-      <nav class="nav">
-        <a href="#overview" class="active">Dashboard Overview</a>
-        <a href="#accounts">CPA Accounts</a>
-        <a href="#users">User Management</a>
-        <a href="#analytics">Performance Analytics</a>
-        <a href="#wallet">Wallet</a>
-        <a href="#security">System Security & Monitoring</a>
+  <div class="shell">
+    <!-- ============ SIDEBAR ============ -->
+    <aside class="side">
+      <div class="brand-box">
+        <img src="/app/assets/brand/emblem.svg" alt="Empire"/>
+        <div class="emp-title" style="font-size:20px">EMPIRE</div>
+      </div>
+      <nav class="nav" id="nav">
+        <a href="#overview"  data-tab="overview"  class="active">Dashboard Overview</a>
+        <a href="#accounts"  data-tab="accounts">CPA Accounts</a>
+        <a href="#users"     data-tab="users">User Management</a>
+        <a href="#analytics" data-tab="analytics">Performance Analytics</a>
+        <a href="#wallet"    data-tab="wallet">Wallet</a>
+        <a href="#security"  data-tab="security">Security & Monitoring</a>
       </nav>
     </aside>
 
-    <!-- MAIN -->
-    <main class="content">
-      <header class="page-title">
-        <img src="/app/assets/brand/emblem.svg" alt="Empire" class="brand-logo" />
-        <h1 class="emp-title" style="margin:0">Command Dashboard</h1>
-        <span class="badge">Live metrics • Accounts • Users • Analytics • Monitoring</span>
-      </header>
+    <!-- ============ MAIN ============ -->
+    <main class="main">
+      <div class="title">
+        <img src="/app/assets/brand/emblem.svg" alt="E" width="28" height="28"/>
+        <div class="t">Command Dashboard</div>
+        <div class="badge">Live metrics • Accounts • Users • Analytics • Monitoring</div>
+      </div>
 
-      <!-- NAV-TABS via hash -->
-      <section id="panel-overview" class="tab-panel">
-        <div class="grid cols-2">
-          <div class="panel">
+      <!-- ===== OVERVIEW ===== -->
+      <section id="tab-overview" class="tab-panel">
+        <div class="cards cols-2">
+          <div class="card">
             <div class="card-title">Total Earnings (USD)</div>
-            <div id="kpi-earn" class="kpi">$0.00</div>
+            <div id="kpi-earn" class="big">$0.00</div>
           </div>
-          <div class="panel">
+          <div class="card">
             <div class="card-title">Active Users</div>
-            <div id="kpi-active" class="kpi">0</div>
+            <div id="kpi-active" class="big">0</div>
           </div>
-          <div class="panel">
+          <div class="card">
             <div class="card-title">Approval Rate</div>
-            <div id="kpi-approval" class="kpi">—</div>
+            <div id="kpi-approval" class="big">—</div>
           </div>
-          <div class="panel">
+          <div class="card">
             <div class="card-title">Pending Reviews</div>
-            <div id="kpi-pending" class="kpi">0</div>
+            <div id="kpi-pending" class="big">0</div>
           </div>
         </div>
-        <div class="muted mt" id="summary-note">Loading…</div>
+        <div id="summary-note" class="muted mt">Loading…</div>
       </section>
 
-      <!-- ACCOUNTS (placeholder structure) -->
-      <section id="panel-accounts" class="tab-panel" hidden>
-        <div class="panel">
-          <div class="right">
-            <h3 style="margin:0">CPA Accounts</h3>
-            <button class="btn gold" id="btn-add-account">Add New Account</button>
+      <!-- ===== CPA ACCOUNTS (placeholder UI) ===== -->
+      <section id="tab-accounts" class="tab-panel" hidden>
+        <div class="card-title">CPA Accounts Management</div>
+        <div id="accounts-msg" class="muted mt">Coming online (uses your /users & sheets later).</div>
+        <div class="mt">
+          <div class="card-title">Add New CPA Account</div>
+          <div class="cards cols-2">
+            <input id="acc-name" class="input" placeholder="Account name"/>
+            <input id="acc-domain" class="input" placeholder="Domain/URL (https://)"/>
+            <input id="acc-userid" class="input" placeholder="User ID"/>
+            <input id="acc-apikey" class="input" placeholder="API Key"/>
           </div>
-          <div class="muted mt">Coming soon: live metrics per account and add-account modal.</div>
+          <button class="tab-btn mt" id="btn-add-acc">Add Account</button>
+          <div id="add-acc-note" class="muted mt"></div>
         </div>
       </section>
 
-      <!-- USERS (Admin approvals) -->
-      <section id="panel-users" class="tab-panel" hidden>
-        <div class="panel">
-          <h3 style="margin:0 0 10px">Awaiting Approval</h3>
-
-          <div class="right" style="gap:8px;margin-bottom:10px">
-            <input id="admin-secret" class="input" placeholder="Enter admin secret…" style="max-width:320px" />
-            <button id="save-secret" class="btn">Save</button>
-            <button id="load-pending" class="btn">Load pending</button>
-            <span id="secret-status" class="muted"></span>
+      <!-- ===== USER MANAGEMENT (Admin approvals) ===== -->
+      <section id="tab-users" class="tab-panel" hidden>
+        <div class="emp-header" style="justify-content:space-between;align-items:center">
+          <div>
+            <div class="emp-title" style="font-size:22px">User Management</div>
+            <div class="muted">Approve or reject new registrations and manage approved users.</div>
           </div>
+          <div class="card" style="min-width:280px">
+            <div class="card-title">Admin secret</div>
+            <div class="row">
+              <input id="admin-secret" type="password" class="input" placeholder="Enter admin secret"/>
+              <button id="btn-save-secret" class="tab-btn">Save</button>
+            </div>
+            <div id="admin-secret-note" class="muted mt"></div>
+          </div>
+        </div>
 
-          <div class="table-scroll">
-            <table class="table">
+        <div class="card">
+          <div class="row">
+            <div class="card-title">Awaiting Approval</div>
+            <button id="btn-load-pending" class="tab-btn">Load pending</button>
+            <div id="pending-msg" class="muted"></div>
+          </div>
+          <div class="table-scroll mt">
+            <table class="table" id="pending-table">
               <thead>
-                <tr><th>Name</th><th>Email</th><th>Phone</th><th>Telegram</th><th>Actions</th></tr>
+                <tr><th>ID</th><th>Name</th><th>Email</th><th>Phone</th><th>Telegram</th><th>Actions</th></tr>
               </thead>
-              <tbody id="pending-body"><tr><td class="muted" colspan="5">Click “Load pending”.</td></tr></tbody>
+              <tbody><tr><td class="muted" colspan="6">Click “Load pending”.</td></tr></tbody>
             </table>
           </div>
         </div>
 
-        <div class="panel">
-          <h3 style="margin:0 0 10px">Approved Users</h3>
-          <div class="table-scroll">
-            <table class="table" id="users-table">
-              <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Status</th><th>Scale</th></tr></thead>
-              <tbody></tbody>
+        <div class="card">
+          <div class="row">
+            <div class="card-title">Approved Users</div>
+            <button id="btn-load-approved" class="tab-btn">Refresh</button>
+            <div id="approved-msg" class="muted"></div>
+          </div>
+          <div class="table-scroll mt">
+            <table class="table" id="approved-table">
+              <thead>
+                <tr><th>Name</th><th>Email</th><th>Phone</th><th>Scale</th><th>Status</th></tr>
+              </thead>
+              <tbody><tr><td class="muted" colspan="5">No data loaded yet.</td></tr></tbody>
             </table>
           </div>
         </div>
 
-        <div class="panel">
-          <h3 style="margin:0 0 10px">Add Approved User</h3>
-          <div class="grid cols-3">
-            <input id="au-name" class="input" placeholder="Full name" />
-            <input id="au-email" class="input" placeholder="Email" />
-            <input id="au-phone" class="input" placeholder="Phone (+234…)" />
+        <div class="card">
+          <div class="card-title">Add Approved User</div>
+          <div class="cards cols-2">
+            <input id="add-name"  class="input" placeholder="Full name"/>
+            <input id="add-email" class="input" placeholder="Email"/>
+            <input id="add-phone" class="input" placeholder="Phone (+234…)"/>
+            <input id="add-tele"  class="input" placeholder="Telegram @handle"/>
           </div>
-          <input id="au-telegram" class="input mt" placeholder="Telegram @handle" />
-          <button id="add-user" class="btn gold mt">Add User</button>
-          <div id="add-user-status" class="muted mt"></div>
+          <button id="btn-add-user" class="tab-btn mt">Add User</button>
+          <div id="add-user-msg" class="muted mt"></div>
         </div>
       </section>
 
-      <!-- ANALYTICS (placeholder scaffolding) -->
-      <section id="panel-analytics" class="tab-panel" hidden>
-        <div class="panel">
-          <h3 style="margin:0 0 10px">Performance Analytics</h3>
-          <div class="muted">Daily / Weekly / Monthly summaries with projected growth — coming soon.</div>
-        </div>
+      <!-- ===== ANALYTICS (placeholder; hook your charts later) ===== -->
+      <section id="tab-analytics" class="tab-panel" hidden>
+        <div class="card-title">Performance Analytics</div>
+        <div class="muted">Daily / Weekly / Monthly summaries & projections will render here.</div>
       </section>
 
-      <!-- WALLET -->
-      <section id="panel-wallet" class="tab-panel" hidden>
-        <div class="grid cols-3">
-          <div class="card">
-            <div class="card-title">Total Inflow (USD)</div>
-            <div id="w-inflow" class="big">$0.00</div>
-          </div>
-          <div class="card">
-            <div class="card-title">Total Outflow (USD)</div>
-            <div id="w-outflow" class="big">$0.00</div>
-          </div>
-          <div class="card">
-            <div class="card-title">Net (USD)</div>
-            <div id="w-net" class="big">$0.00</div>
-          </div>
+      <!-- ===== WALLET ===== -->
+      <section id="tab-wallet" class="tab-panel" hidden>
+        <div class="cards cols-3">
+          <div class="card"><div class="card-title">Total Inflow (USD)</div><div id="w-inflow" class="big">$0.00</div></div>
+          <div class="card"><div class="card-title">Total Outflow (USD)</div><div id="w-outflow" class="big">$0.00</div></div>
+          <div class="card"><div class="card-title">Net (USD)</div><div id="w-net" class="big">$0.00</div></div>
         </div>
-
         <h3 class="mt">Recent Wallet Activity</h3>
         <div class="table-scroll">
           <table class="table" id="wallet-table">
-            <thead>
-              <tr><th>Date</th><th>Amount (USD)</th><th>Method</th><th>Status</th></tr>
-            </thead>
-            <tbody><!-- filled by JS --></tbody>
+            <thead><tr><th>Date</th><th>Amount (USD)</th><th>Method</th><th>Status</th></tr></thead>
+            <tbody><tr><td class="muted" colspan="4">Loading…</td></tr></tbody>
           </table>
         </div>
       </section>
 
-      <!-- SECURITY / HEALTH -->
-      <section id="panel-security" class="tab-panel" hidden>
-        <div class="panel">
-          <h3 style="margin:0 0 10px">System Security & Monitoring</h3>
-          <pre id="health-json" class="muted" style="white-space:pre-wrap">Loading…</pre>
-        </div>
+      <!-- ===== SECURITY ===== -->
+      <section id="tab-security" class="tab-panel" hidden>
+        <div class="card-title">System Security & Monitoring</div>
+        <div id="health-json" class="muted">Loading…</div>
       </section>
 
       <div class="footer">© Empire Affiliate Marketing Hub</div>
@@ -182,88 +205,51 @@
   </div>
 
   <script>
-    // --------- routing via hash (sidebar)
-    const hashToPanel = {
-      '#overview':'panel-overview',
-      '#accounts':'panel-accounts',
-      '#users':'panel-users',
-      '#analytics':'panel-analytics',
-      '#wallet':'panel-wallet',
-      '#security':'panel-security',
-    };
-    function showPanelFromHash(){
-      const h = location.hash || '#overview';
-      document.querySelectorAll('.nav a').forEach(a=> a.classList.toggle('active', a.getAttribute('href')===h));
-      Object.values(hashToPanel).forEach(id=> document.getElementById(id).hidden = true);
-      (document.getElementById(hashToPanel[h])||document.getElementById('panel-overview')).hidden = false;
+    // ---------- tabs
+    const views = ['overview','accounts','users','analytics','wallet','security'];
+    const panels = Object.fromEntries(views.map(v=>[v, document.getElementById('tab-'+v)]));
+    const nav = document.getElementById('nav');
+    function show(tab){
+      views.forEach(v => { panels[v].hidden = (v!==tab); });
+      nav.querySelectorAll('a').forEach(a=>a.classList.toggle('active', a.dataset.tab===tab));
+      location.hash = '#'+tab;
+      if (tab==='wallet') loadWallet();
+      if (tab==='security') loadHealth();
     }
-    window.addEventListener('hashchange', showPanelFromHash);
-    showPanelFromHash();
+    nav.querySelectorAll('a').forEach(a=>a.addEventListener('click', e=>{
+      e.preventDefault(); show(a.dataset.tab);
+    }));
+    show(location.hash.replace('#','')||'overview');
 
-    // --------- helpers
-    const el = (id)=> document.getElementById(id);
-    const setText = (id,v)=> { const e=el(id); if(e) e.textContent=v; };
-    const fmtUSD = (n)=> {
+    // ---------- helpers
+    const fmtUSD = n => {
       try { return new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(+n||0); }
-      catch { return '$'+Number(n||0).toFixed(2); }
+      catch { return '$'+(Number(n||0).toFixed(2)); }
     };
-    const escapeHtml = (s)=> String(s||'').replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
+    const setText = (id,v)=>{ const e=document.getElementById(id); if(e) e.textContent=v; };
+    const escapeHtml = s => String(s||'').replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 
-    async function fetchJSON(url, opts){
-      const r = await fetch(url, opts || { headers:{'Cache-Control':'no-cache'} });
-      const data = await r.json().catch(()=> ({}));
-      if(!r.ok) throw new Error(data?.error || r.status);
-      return data;
+    async function fetchJSON(url){
+      const r = await fetch(url, {headers:{'Cache-Control':'no-cache'}});
+      if(!r.ok) throw new Error(r.status+' '+url);
+      return r.json();
     }
 
-    // --------- Overview
-    async function loadSummary(){
+    // ---------- Overview
+    (async function loadSummary(){
       try{
         const s = await fetchJSON('/.netlify/functions/summary');
         setText('kpi-earn', fmtUSD(s.totalEarnings||0));
-        setText('kpi-active', String(s.activeUsers ?? 0));
-        setText('kpi-approval', (s.approvalRate!=null) ? (Math.round((s.approvalRate*100)||0)+'%') : '—');
-        setText('kpi-pending', String(s.pendingReviews ?? 0));
-        el('summary-note').textContent = 'Synced from Google Sheets.';
+        setText('kpi-active', String(s.activeUsers??0));
+        setText('kpi-approval', (s.approvalRate!=null)? (Math.round((s.approvalRate*100)||0)+'%') : '—');
+        setText('kpi-pending', String(s.pendingReviews??0));
+        setText('summary-note','Synced from Google Sheets.');
       }catch(e){
-        el('summary-note').textContent = 'Failed to load summary: '+e.message;
+        setText('summary-note','Failed to load summary: '+e.message);
       }
-    }
+    })();
 
-    // --------- Health (also used by Security)
-    async function loadHealth(){
-      try{
-        const h = await fetchJSON('/.netlify/functions/health');
-        el('health-json').textContent = JSON.stringify(h, null, 2);
-      }catch(e){
-        el('health-json').textContent = 'Failed to load health: '+e.message;
-      }
-    }
-
-    // --------- Users (approved list only)
-    async function loadUsersTable(){
-      const body = document.querySelector('#users-table tbody');
-      body.innerHTML = '<tr><td class="muted" colspan="5">Loading…</td></tr>';
-      try{
-        const u = await fetchJSON('/.netlify/functions/users?limit=100');
-        body.innerHTML = '';
-        (u.users||[]).forEach(row=>{
-          const tr = document.createElement('tr');
-          tr.innerHTML = `
-            <td>${escapeHtml(row.name||'')}</td>
-            <td>${escapeHtml(row.email||'')}</td>
-            <td>${escapeHtml(row.phone||'')}</td>
-            <td><span class="chip">${escapeHtml(row.status||'')}</span></td>
-            <td>${escapeHtml(row.scale||'')}</td>`;
-          body.appendChild(tr);
-        });
-        if(!u.users || u.users.length===0) body.innerHTML = '<tr><td class="muted" colspan="5">No users yet.</td></tr>';
-      }catch(e){
-        body.innerHTML = `<tr><td class="muted" colspan="5">Error: ${escapeHtml(e.message)}</td></tr>`;
-      }
-    }
-
-    // --------- Wallet
+    // ---------- Wallet
     async function loadWallet(){
       const body = document.querySelector('#wallet-table tbody');
       body.innerHTML = '<tr><td class="muted" colspan="4">Loading…</td></tr>';
@@ -271,99 +257,134 @@
         const w = await fetchJSON('/.netlify/functions/wallet?limit=50');
         setText('w-inflow', fmtUSD(w.inflow||0));
         setText('w-outflow', fmtUSD(w.outflow||0));
-        setText('w-net',    fmtUSD(w.net||0));
-        body.innerHTML = '';
-        (w.items||[]).forEach(it=>{
-          const tr = document.createElement('tr');
-          const when = it.ts ? new Date(it.ts).toLocaleString() : '';
-          tr.innerHTML = `
-            <td>${escapeHtml(when)}</td>
-            <td>${fmtUSD(it.amount||0)}</td>
-            <td>${escapeHtml(it.method||'')}</td>
-            <td>${escapeHtml(it.status||'')}</td>`;
-          body.appendChild(tr);
+        setText('w-net', fmtUSD(w.net||0));
+        const rows = (w.items||[]).map(i=>{
+          const when = i.ts ? new Date(i.ts).toLocaleString() : '';
+          return `<tr><td>${escapeHtml(when)}</td><td>${fmtUSD(i.amount||0)}</td><td>${escapeHtml(i.method||'')}</td><td>${escapeHtml(i.status||'')}</td></tr>`;
         });
-        if(!w.items || w.items.length===0) body.innerHTML = '<tr><td class="muted" colspan="4">No wallet activity yet.</td></tr>';
+        body.innerHTML = rows.length? rows.join('') : '<tr><td class="muted" colspan="4">No wallet entries.</td></tr>';
       }catch(e){
         body.innerHTML = `<tr><td class="muted" colspan="4">Failed to load wallet: ${escapeHtml(e.message)}</td></tr>`;
       }
     }
 
-    // --------- ADMIN (Pending approvals) — matches admin-pending.js
-    const AdminKey = {
-      set(v){ try{ localStorage.setItem('emp_admin_secret', v); }catch{} },
-      get(){ try{ return localStorage.getItem('emp_admin_secret') || ''; }catch{ return ''; } }
-    };
-    async function adminCall(method='GET', payload=null){
-      const opts = { method, headers:{ 'X-Admin-Secret': AdminKey.get() } };
-      if(payload){ opts.headers['Content-Type']='application/json'; opts.body = JSON.stringify(payload); }
-      const r = await fetch('/.netlify/functions/admin-pending', opts);
-      const data = await r.json().catch(()=> ({}));
-      if(!r.ok || data?.ok===false) throw new Error(data?.error || r.status);
-      return data;
-    }
-    async function loadPendingInto(sel){
-      const body = document.querySelector(sel);
-      body.innerHTML = `<tr><td class="muted" colspan="5">Loading…</td></tr>`;
+    // ---------- Health (security)
+    async function loadHealth(){
       try{
-        const res = await adminCall('GET');
-        const rows = Array.isArray(res.items) ? res.items : (res.rows || []);
-        body.innerHTML = '';
-        if(!rows.length){ body.innerHTML = `<tr><td class="muted" colspan="5">No pending approvals.</td></tr>`; return; }
-        rows.forEach(row=>{
-          const tr = document.createElement('tr');
-          tr.innerHTML = `
-            <td>${escapeHtml(row.name||'')}</td>
-            <td>${escapeHtml(row.email||'')}</td>
-            <td>${escapeHtml(row.phone||'')}</td>
-            <td>${escapeHtml(row.telegram||'')}</td>
-            <td>
-              <button class="btn" data-act="approve">Approve</button>
-              <button class="btn" data-act="reject">Reject</button>
-            </td>`;
-          tr.querySelector('[data-act="approve"]').onclick = async ()=>{
-            const b = tr.querySelector('[data-act="approve"]'); b.disabled = true;
-            try{
-              await adminCall('POST', { action:'mark', id:row.id, status:'approved', name:row.name, email:row.email, phone:row.phone });
-              tr.remove();
-            }catch(e){ alert('Approve failed: '+e.message); b.disabled=false; }
-          };
-          tr.querySelector('[data-act="reject"]').onclick = async ()=>{
-            const b = tr.querySelector('[data-act="reject"]'); b.disabled = true;
-            try{
-              await adminCall('POST', { action:'mark', id:row.id, status:'rejected' });
-              tr.remove();
-            }catch(e){ alert('Reject failed: '+e.message); b.disabled=false; }
-          };
-          body.appendChild(tr);
-        });
+        const h = await fetchJSON('/.netlify/functions/health');
+        document.getElementById('health-json').textContent = JSON.stringify(h,null,2);
       }catch(e){
-        body.innerHTML = `<tr><td class="muted" colspan="5">Pending endpoint not available (${escapeHtml(e.message)}).</td></tr>`;
+        document.getElementById('health-json').textContent = 'Failed: '+e.message;
       }
     }
 
-    // wire controls
+    // ---------- Admin / approvals
+    const ADMIN_FN = '/.netlify/functions/admin-pending';
+    const admin = {
+      get secret(){ return localStorage.getItem('EMP_ADMIN_SECRET') || ''; },
+      set secret(v){ localStorage.setItem('EMP_ADMIN_SECRET', v || ''); }
+    };
+    const setNote = (id,msg)=>{ const e=document.getElementById(id); if(e) e.textContent = msg||''; };
+
     (function initAdminUI(){
-      const sec = el('admin-secret'); if(sec) sec.value = AdminKey.get();
-      const save = el('save-secret'); if(save) save.onclick = ()=>{ AdminKey.set(el('admin-secret').value.trim()); el('secret-status').textContent='Saved.'; };
-      const load = el('load-pending'); if(load) load.onclick = ()=>{ el('secret-status').textContent=''; loadPendingInto('#pending-body'); };
+      const inp = document.getElementById('admin-secret');
+      if (inp){ inp.value = admin.secret; setNote('admin-secret-note', admin.secret ? 'Saved locally.' : 'Enter your admin secret and click Save.'); }
+      const saveBtn = document.getElementById('btn-save-secret');
+      if (saveBtn) saveBtn.addEventListener('click', ()=>{
+        admin.secret = (document.getElementById('admin-secret').value||'').trim();
+        setNote('admin-secret-note', admin.secret ? 'Saved locally.' : 'Cleared.');
+      });
+      const loadPending = document.getElementById('btn-load-pending');
+      if (loadPending) loadPending.addEventListener('click', loadPendingRows);
+      const loadApproved = document.getElementById('btn-load-approved');
+      if (loadApproved) loadApproved.addEventListener('click', loadApprovedRows);
+      const addUser = document.getElementById('btn-add-user');
+      if (addUser) addUser.addEventListener('click', addApprovedUser);
     })();
 
-    // simple “Add Approved User” stub (extend to your function if desired)
-    el('add-user')?.addEventListener('click', ()=>{
-      const name = el('au-name').value.trim();
-      const email= el('au-email').value.trim();
-      const phone= el('au-phone').value.trim();
-      const tgm  = el('au-telegram').value.trim();
-      if(!name || !email){ el('add-user-status').textContent='Name and Email required.'; return; }
-      el('add-user-status').textContent = 'This button is a stub — wire to your users function if needed.';
-    });
+    async function adminFetch(path='', opts={}){
+      const headers = Object.assign({'Content-Type':'application/json','x-admin-secret': admin.secret}, opts.headers||{});
+      const r = await fetch(ADMIN_FN + path, Object.assign({}, opts, { headers }));
+      let data = null; try{ data = await r.json(); }catch{}
+      if (!r.ok) throw new Error((data && (data.error||data.message)) || ''+r.status);
+      return data;
+    }
 
-    // kick off loads
-    loadSummary();
-    loadHealth();
-    loadUsersTable();
-    loadWallet();
+    function td(s){ return `<td>${escapeHtml(s ?? '')}</td>`; }
+    function btn(label, cls){ return `<button class="tab-btn ${cls||''}" style="padding:6px 10px">${label}</button>`; }
+
+    async function loadPendingRows(){
+      setNote('pending-msg','Loading…');
+      const body = document.querySelector('#pending-table tbody');
+      body.innerHTML = `<tr><td class="muted" colspan="6">Loading…</td></tr>`;
+      try{
+        const res = await adminFetch('', { method:'GET' });
+        if (!res.ok) throw new Error(res.error||'Failed');
+        const items = res.items || [];
+        if (!items.length){
+          body.innerHTML = `<tr><td class="muted" colspan="6">No pending approvals.</td></tr>`;
+        }else{
+          body.innerHTML = items.map(row=>{
+            const actions = `<div class="row">${btn('Approve','btn-approve')}${btn('Reject','btn-reject')}</div>`;
+            return `<tr data-id="${escapeHtml(row.id||'')}" data-name="${escapeHtml(row.name||'')}" data-email="${escapeHtml(row.email||'')}" data-phone="${escapeHtml(row.phone||'')}" data-tele="${escapeHtml(row.telegram||row.tele||'')}">
+                      ${td(row.id)}${td(row.name)}${td(row.email)}${td(row.phone)}${td(row.telegram||row.tele||'')}${td(actions)}
+                    </tr>`;
+          }).join('');
+          body.querySelectorAll('.btn-approve').forEach(b=>b.addEventListener('click', ()=> markRow(b,'approved')));
+          body.querySelectorAll('.btn-reject').forEach(b=>b.addEventListener('click', ()=> markRow(b,'dismissed')));
+        }
+        setNote('pending-msg','');
+      }catch(e){
+        setNote('pending-msg',`Error: ${e.message}${admin.secret?'':' (Set admin secret first.)'}`);
+        body.innerHTML = `<tr><td class="muted" colspan="6">Failed to load.</td></tr>`;
+      }
+    }
+
+    async function markRow(button, status){
+      const tr = button.closest('tr');
+      const id = tr?.dataset?.id || ''; if (!id) return;
+      const name = tr?.dataset?.name || ''; const phone = tr?.dataset?.phone || '';
+      const old = tr.innerHTML; tr.innerHTML = `<td colspan="6" class="muted">Processing ${escapeHtml(status)}…</td>`;
+      try{
+        const payload = { action:'mark', id, status, user:{ name, phone } };
+        const res = await adminFetch('', { method:'POST', body: JSON.stringify(payload) });
+        if (!res.ok) throw new Error(res.error||'Failed');
+        tr.remove(); loadApprovedRows();
+      }catch(e){
+        tr.innerHTML = old; alert('Action failed: '+e.message);
+      }
+    }
+
+    async function loadApprovedRows(){
+      setNote('approved-msg','Loading…');
+      const body = document.querySelector('#approved-table tbody');
+      body.innerHTML = `<tr><td class="muted" colspan="5">Loading…</td></tr>`;
+      try{
+        const r = await fetch('/.netlify/functions/users?status=approved',{headers:{'Cache-Control':'no-cache'}});
+        const d = await r.json();
+        const rows = (d.users||[]).map(u=>`<tr>${td(u.name)}${td(u.email)}${td(u.phone)}${td(u.scale||'')}${td(u.status||'approved')}</tr>`);
+        body.innerHTML = rows.length? rows.join('') : `<tr><td class="muted" colspan="5">No approved users yet.</td></tr>`;
+        setNote('approved-msg','');
+      }catch(e){
+        setNote('approved-msg','Could not load approved users.');
+        body.innerHTML = `<tr><td class="muted" colspan="5">Failed.</td></tr>`;
+      }
+    }
+
+    async function addApprovedUser(){
+      setNote('add-user-msg','Submitting…');
+      const name = document.getElementById('add-name').value.trim();
+      const email= document.getElementById('add-email').value.trim();
+      const phone= document.getElementById('add-phone').value.trim();
+      const tele = document.getElementById('add-tele').value.trim();
+      if(!name||!email){ setNote('add-user-msg','Name and email are required.'); return; }
+      try{
+        // Optional: if you add a handler for /create on the admin function
+        const res = await adminFetch('/create', { method:'POST', body: JSON.stringify({action:'createApproved', user:{name,email,phone,telegram:tele}})});
+        if(res.ok){ setNote('add-user-msg','User added.'); loadApprovedRows(); }
+        else { setNote('add-user-msg', res.error || 'Create API not implemented yet.'); }
+      }catch(e){ setNote('add-user-msg','Error: '+e.message); }
+    }
   </script>
 </body>
 </html>

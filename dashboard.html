@@ -5,41 +5,35 @@
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Empire — Dashboard</title>
 
+  <!-- Brand skin -->
   <link rel="stylesheet" href="/app/styles/brand.css"/>
 
   <style>
     body{min-height:100vh;display:grid;grid-template-columns:260px 1fr;gap:0}
     aside{background:rgba(8,14,26,.7);border-right:1px solid var(--emp-line)}
     main{min-height:100vh}
-
     .side-wrap{position:sticky;top:0;padding:18px 14px 22px}
     .brand-row{display:flex;align-items:center;gap:10px;margin-bottom:16px}
     .brand-title{font-weight:900;letter-spacing:.2px}
-
     .tabs{display:flex;flex-direction:column;gap:10px;margin-top:12px}
-    .tab{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:14px;background:#0f182a;
-         border:1px solid var(--emp-line);color:var(--emp-ink);cursor:pointer}
+    .tab{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:14px;background:#0f182a;border:1px solid var(--emp-line);color:var(--emp-ink);cursor:pointer}
     .tab:hover{border-color:var(--emp-ring)}
     .tab.active{outline:2px solid var(--emp-ring)}
-
     .emp-wrap{max-width:var(--container-w);margin:0 auto;padding:28px 14px 48px}
     .view[hidden]{display:none !important}
-
     .emp-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
     .emp-kicker{color:var(--emp-muted);font-size:12px}
-
     .panel{background:rgba(15,24,42,.9);border:1px solid var(--emp-line);border-radius:16px;padding:16px;margin:12px 0}
     .grid{display:grid;gap:14px}
     @media(min-width:860px){.grid.cols-2{grid-template-columns:1fr 1fr}}
     @media(min-width:1100px){.grid.cols-3{grid-template-columns:1fr 1fr 1fr}}
-
     .kpi{font-size:34px;font-weight:900}
     .muted{color:var(--emp-muted)}
     .table{width:100%;border-collapse:collapse}
     .table th,.table td{padding:10px;border-bottom:1px solid var(--emp-line);text-align:left}
     .card-title{color:#cfe0ff;font-size:13px;margin-bottom:6px}
-
-    .brand-overlay,.hero:before,.hero:after{pointer-events:none}
+    .note{color:var(--emp-muted);font-size:13px;margin-top:8px}
+    .table-scroll{overflow:auto}
   </style>
 </head>
 <body class="brand-bg">
@@ -83,26 +77,51 @@
           <div class="panel"><div class="card-title">Active Users</div><div class="kpi" id="kpi-users">0</div></div>
           <div class="panel"><div class="card-title">Pending Reviews</div><div class="kpi" id="kpi-pending">0</div></div>
         </div>
+        <div class="note" id="summary-note">Loading…</div>
       </section>
 
       <!-- Accounts -->
       <section id="view-accounts" class="view" hidden>
-        <div class="panel"><div class="card-title">CPA Accounts</div><div id="accounts-grid">Live metrics will load here.</div></div>
+        <div class="panel">
+          <div class="card-title">CPA Accounts (5)</div>
+          <div id="accounts-grid" class="grid cols-2"></div>
+          <div class="note" id="accounts-note">Loading…</div>
+        </div>
       </section>
 
       <!-- Users -->
       <section id="view-users" class="view" hidden>
-        <div class="panel"><div class="card-title">User Management</div><div class="muted">Approval, scaling, invite links…</div></div>
+        <div class="panel">
+          <div class="card-title">Awaiting Approval</div>
+          <div class="table-scroll">
+            <table class="table" id="pending-table">
+              <thead><tr><th>Name</th><th>Phone</th><th>Email</th><th></th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div class="note" id="pending-note">Loading…</div>
+        </div>
+
+        <div class="panel">
+          <div class="card-title">Approved Users</div>
+          <div class="table-scroll">
+            <table class="table" id="users-table">
+              <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Status</th><th>Scale</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div class="note" id="users-note">Loading…</div>
+        </div>
       </section>
 
       <!-- Promotion -->
       <section id="view-promotion" class="view" hidden>
-        <div class="panel"><div class="card-title">User Promotion</div><div class="muted">Promotion thresholds and rules.</div></div>
+        <div class="panel"><div class="card-title">User Promotion</div><div class="note">Configure promotion thresholds and rules (coming soon).</div></div>
       </section>
 
       <!-- Analytics -->
       <section id="view-analytics" class="view" hidden>
-        <div class="panel"><div class="card-title">Performance Analytics</div><div class="muted">Charts & growth projections.</div></div>
+        <div class="panel"><div class="card-title">Performance Analytics</div><div class="note">Charts & growth projections (coming soon).</div></div>
       </section>
 
       <!-- Wallet -->
@@ -112,11 +131,21 @@
           <div class="panel"><div class="card-title">Total Outflow</div><div class="kpi" id="wallet-out">$0.00</div></div>
           <div class="panel"><div class="card-title">Net</div><div class="kpi" id="wallet-net">$0.00</div></div>
         </div>
+        <div class="panel">
+          <div class="card-title">Recent Wallet Activity</div>
+          <div class="table-scroll">
+            <table class="table" id="wallet-table">
+              <thead><tr><th>Date</th><th>Amount (USD)</th><th>Method</th><th>Status</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div class="note" id="wallet-note">Loading…</div>
+        </div>
       </section>
 
       <!-- Maintenance -->
       <section id="view-maintenance" class="view" hidden>
-        <div class="panel"><div class="card-title">Predictive Maintenance</div><div class="muted">Automation schedules here.</div></div>
+        <div class="panel"><div class="card-title">Predictive Maintenance</div><div class="note">Automation schedules here (coming soon).</div></div>
       </section>
 
       <!-- Security -->
@@ -130,6 +159,7 @@
 
   <script>
   (function(){
+    // ---------------- Tabs / routing ----------------
     const tabs  = Array.from(document.querySelectorAll('[data-tab]'));
     const views = Array.from(document.querySelectorAll('.view'));
     function showTab(name){
@@ -140,6 +170,193 @@
     tabs.forEach(btn=>btn.onclick=()=>showTab(btn.dataset.tab));
     window.addEventListener('hashchange',()=>showTab(location.hash.replace('#','')||'overview'));
     document.addEventListener('DOMContentLoaded',()=>showTab(location.hash.replace('#','')||'overview'));
+
+    // ---------------- Helpers ----------------
+    const $ = (id)=>document.getElementById(id);
+    const set = (id,v)=>{ const e=$(id); if(e) e.textContent=v; };
+    const esc = (s)=>String(s||'').replace(/[&<>"']/g,m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
+    const fmtUSD = (n)=> {
+      try { return new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(+n||0); }
+      catch { return '$'+(Number(n||0).toFixed(2)); }
+    };
+    async function j(url){
+      const r=await fetch(url,{headers:{'Cache-Control':'no-cache'}});
+      if(!r.ok) throw new Error(r.status+' '+url);
+      return r.json();
+    }
+
+    // ---------------- Overview ----------------
+    async function loadSummary(){
+      try{
+        const s = await j('/.netlify/functions/summary'); // {ok,totalEarnings,activeUsers,approvalRate,pendingReviews}
+        set('kpi-earnings', fmtUSD(s.totalEarnings||0));
+        set('kpi-users', String(s.activeUsers ?? 0));
+        set('kpi-pending', String(s.pendingReviews ?? 0));
+        $('summary-note').textContent = 'Synced from Google Sheets.';
+      }catch(e){
+        $('summary-note').textContent = 'Failed to load summary: '+e.message;
+      }
+    }
+
+    // ---------------- Accounts (placeholder wire) ----------------
+    async function loadAccounts(){
+      const box = $('accounts-grid'); const note=$('accounts-note');
+      box.innerHTML = '';
+      try{
+        // If you have a function, swap the URL below:
+        // const acc = await j('/.netlify/functions/accounts');
+        // Demo cards (until real endpoint exists)
+        const demo = [
+          {name:'CPA Grip #1', clicks: 0, leads: 0, epc: 0},
+          {name:'CPA Grip #2', clicks: 0, leads: 0, epc: 0},
+          {name:'CPA Grip #3', clicks: 0, leads: 0, epc: 0},
+          {name:'CPA Grip #4', clicks: 0, leads: 0, epc: 0},
+          {name:'CPA Grip #5', clicks: 0, leads: 0, epc: 0}
+        ];
+        demo.forEach(a=>{
+          const div=document.createElement('div');
+          div.className='panel';
+          div.innerHTML=`<div class="card-title">${esc(a.name)}</div>
+            <div class="muted">Clicks: ${esc(a.clicks)} · Leads: ${esc(a.leads)} · EPC: ${fmtUSD(a.epc)}</div>`;
+          box.appendChild(div);
+        });
+        note.textContent = 'Connect /.netlify/functions/accounts to show live metrics.';
+      }catch(e){
+        note.textContent = 'Failed to load accounts: '+e.message;
+      }
+    }
+
+    // ---------------- Users ----------------
+    async function loadPending(){
+      const body = document.querySelector('#pending-table tbody');
+      const note = $('pending-note');
+      body.innerHTML = '<tr><td class="muted" colspan="4">Loading…</td></tr>';
+      try{
+        const r = await j('/.netlify/functions/admin-pending'); // GET requires X-Admin-Secret (add in functions if you want public view)
+        if(!r.items || !Array.isArray(r.items) || r.items.length===0){
+          body.innerHTML = '<tr><td class="muted" colspan="4">No pending approvals.</td></tr>';
+        }else{
+          body.innerHTML='';
+          r.items.forEach(it=>{
+            const tr=document.createElement('tr');
+            tr.innerHTML = `
+              <td>${esc(it.name||'')}</td>
+              <td>${esc(it.phone||'')}</td>
+              <td>${esc(it.email||'')}</td>
+              <td>
+                <button class="tab" data-approve="${esc(it.id)}">Approve</button>
+                <button class="tab" data-dismiss="${esc(it.id)}">Reject</button>
+              </td>`;
+            body.appendChild(tr);
+          });
+        }
+        note.textContent='';
+      }catch(e){
+        note.textContent='Pending load failed (likely missing X-Admin-Secret): '+e.message;
+      }
+    }
+
+    async function loadUsers(){
+      const body = document.querySelector('#users-table tbody');
+      const note = $('users-note');
+      body.innerHTML = '<tr><td class="muted" colspan="5">Loading…</td></tr>';
+      try{
+        const u = await j('/.netlify/functions/users?limit=200'); // {ok,users:[...]}
+        body.innerHTML='';
+        (u.users||[]).forEach(row=>{
+          const tr=document.createElement('tr');
+          tr.innerHTML = `
+            <td>${esc(row.name||'')}</td>
+            <td>${esc(row.email||'')}</td>
+            <td>${esc(row.phone||'')}</td>
+            <td>${esc(row.status||'')}</td>
+            <td>${esc(row.scale||'')}</td>`;
+          body.appendChild(tr);
+        });
+        if(!u.users || u.users.length===0){
+          body.innerHTML = '<tr><td class="muted" colspan="5">No users yet.</td></tr>';
+        }
+        note.textContent='';
+      }catch(e){
+        note.textContent='Failed to load users: '+e.message;
+      }
+    }
+
+    // Approve / Reject (calls admin-pending POST)
+    document.addEventListener('click', async (e)=>{
+      const ap = e.target.getAttribute && e.target.getAttribute('data-approve');
+      const rm = e.target.getAttribute && e.target.getAttribute('data-dismiss');
+      if(!ap && !rm) return;
+
+      const id = ap || rm;
+      const status = ap ? 'approved' : 'dismissed';
+      try{
+        const r = await fetch('/.netlify/functions/admin-pending', {
+          method:'POST',
+          headers:{
+            'Content-Type':'application/json',
+            // If your function requires header auth, uncomment and set it:
+            // 'X-Admin-Secret': '<YOUR_ADMIN_SECRET>'
+          },
+          body: JSON.stringify({ action:'mark', id, status })
+        });
+        const data = await r.json().catch(()=>({ok:false,error:'Bad JSON'}));
+        if(!r.ok || !data.ok) throw new Error(data.error||('HTTP '+r.status));
+        await loadPending(); // refresh list
+        await loadUsers();   // refresh users after approval
+      }catch(err){
+        alert('Failed: '+err.message);
+      }
+    });
+
+    // ---------------- Wallet ----------------
+    async function loadWallet(){
+      const note = $('wallet-note');
+      const body = document.querySelector('#wallet-table tbody');
+      body.innerHTML = '<tr><td class="muted" colspan="4">Loading…</td></tr>';
+      try{
+        const w = await j('/.netlify/functions/wallet'); // {ok,inflow,outflow,net,items:[...]}
+        set('wallet-in',  fmtUSD(w.inflow||0));
+        set('wallet-out', fmtUSD(w.outflow||0));
+        set('wallet-net', fmtUSD(w.net||0));
+
+        body.innerHTML='';
+        (w.items||[]).forEach(x=>{
+          const tr=document.createElement('tr');
+          const when = x.ts ? new Date(x.ts).toLocaleString() : '';
+          tr.innerHTML = `
+            <td>${esc(when)}</td>
+            <td>${fmtUSD(x.amount||0)}</td>
+            <td>${esc(x.method||'')}</td>
+            <td>${esc(x.status||'')}</td>`;
+          body.appendChild(tr);
+        });
+        if(!w.items || w.items.length===0){
+          body.innerHTML = '<tr><td class="muted" colspan="4">No wallet entries.</td></tr>';
+        }
+        note.textContent='';
+      }catch(e){
+        note.textContent='Failed to load wallet: '+e.message;
+      }
+    }
+
+    // ---------------- Security / Health ----------------
+    async function loadHealth(){
+      try{
+        const h = await j('/.netlify/functions/health');
+        $('security-json').textContent = JSON.stringify(h,null,2);
+      }catch(e){
+        $('security-json').textContent = 'Health load failed: '+e.message;
+      }
+    }
+
+    // Initial loads (run once on open)
+    loadSummary();
+    loadAccounts();
+    loadPending();
+    loadUsers();
+    loadWallet();
+    loadHealth();
   })();
   </script>
 </body>

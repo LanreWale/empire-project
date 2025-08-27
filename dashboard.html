@@ -2,389 +2,477 @@
 <html lang="en">
 <head>
   <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Empire — Dashboard</title>
-  <meta name="color-scheme" content="dark"/>
-  <!-- Brand styles you already have -->
   <link rel="stylesheet" href="/app/styles/brand.css"/>
   <style>
-    /* layout bits just for this page */
-    .shell{display:grid;grid-template-columns:260px 1fr;min-height:100vh}
-    .side{
-      background:#0e182a;border-right:1px solid var(--emp-line);padding:20px 14px
-    }
-    .brand-box{display:flex;align-items:center;gap:12px;margin-bottom:18px}
-    .brand-box img{width:36px;height:36px}
-    .nav{display:flex;flex-direction:column;gap:8px}
-    .nav a{
-      display:block;padding:11px 12px;border-radius:12px;border:1px solid var(--emp-line);
-      background:#0f182a;color:var(--emp-ink);text-decoration:none
-    }
+    /* page-specific micro styles */
+    .rail{position:fixed;left:0;top:0;bottom:0;width:240px;padding:18px 12px;background:#0d1527;border-right:1px solid var(--emp-line)}
+    .rail h2{margin:6px 10px 16px;font-size:14px;letter-spacing:.3px;color:var(--emp-muted)}
+    .rail .nav{display:flex;flex-direction:column;gap:10px}
+    .nav a{display:block;padding:12px 14px;border-radius:14px;border:1px solid var(--emp-line);background:#0f182a;color:var(--emp-ink);text-decoration:none}
     .nav a.active{outline:2px solid var(--emp-ring)}
-    .main{padding:28px 14px}
-    .title{display:flex;align-items:center;gap:10px;margin-bottom:14px}
-    .title .t{font-size:28px;font-weight:900;letter-spacing:.2px}
-    .title .badge{border:1px solid var(--emp-line);border-radius:999px;padding:6px 10px;background:#0f182a;color:var(--emp-muted)}
-    .cards{display:grid;gap:14px}
-    @media(min-width:760px){.cards.cols-3{grid-template-columns:1fr 1fr 1fr}}
-    @media(min-width:900px){.cards.cols-2{grid-template-columns:1fr 1fr}}
-    .card{background:var(--emp-panel);border:1px solid var(--emp-line);border-radius:16px;padding:16px}
-    .card-title{color:var(--emp-muted);font-size:13px;margin-bottom:6px}
-    .big{font-size:34px;font-weight:900}
-    .mt{margin-top:10px}
-    .tab-btn{padding:10px 16px;border-radius:14px;background:#0f182a;border:1px solid var(--emp-line);cursor:pointer}
-    .tab-btn:hover{border-color:var(--emp-ring)}
-    .tab-panel{background:rgba(15,24,42,.9);border:1px solid var(--emp-line);border-radius:16px;padding:16px;margin:12px 0;box-shadow:0 10px 30px rgba(0,0,0,.25)}
-    .row{display:flex;gap:8px;align-items:center}
-    .input{flex:1;padding:10px;border-radius:10px;border:1px solid var(--emp-line);background:#0f182a;color:var(--emp-ink)}
-    .table{width:100%;border-collapse:collapse;font-size:14px}
+    .main{margin-left:260px}
+    .hdr{display:flex;align-items:center;gap:10px;margin:18px 0}
+    .hdr .emblem{width:36px;height:36px}
+    .kpis{display:grid;gap:14px;grid-template-columns:repeat(4,minmax(0,1fr))}
+    .tile{background:var(--emp-panel);border:1px solid var(--emp-line);border-radius:var(--radius);padding:14px}
+    .tile small{color:var(--emp-muted)}
+    .tile .val{font-size:28px;font-weight:900;margin-top:6px}
+    .two{display:grid;gap:14px;grid-template-columns:2fr 1fr}
+    .cards{display:grid;gap:14px;grid-template-columns:repeat(3,minmax(0,1fr))}
+    .card .kv{display:flex;justify-content:space-between;margin:4px 0}
+    .btn{background:linear-gradient(90deg,var(--emp-gold-1),var(--emp-gold-2));border:none;border-radius:12px;padding:10px 14px;font-weight:700;cursor:pointer}
+    .btn.secondary{background:#12203a;border:1px solid var(--emp-ring)}
+    .table{width:100%;border-collapse:collapse}
     .table th,.table td{padding:10px;border-bottom:1px solid var(--emp-line);text-align:left}
-    .table th{color:#cfe0ff}
-    .table-scroll{overflow:auto}
-    .footer{opacity:.75;text-align:center;margin-top:28px;font-size:12px}
+    .panel .head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+    .badges{display:flex;gap:6px;flex-wrap:wrap}
+    .badge{border:1px solid var(--emp-line);border-radius:999px;padding:4px 10px}
+    .form-grid{display:grid;gap:10px}
+    .form-grid.cols-2{grid-template-columns:1fr 1fr}
+    input,select{width:100%;background:#0f182a;border:1px solid var(--emp-line);border-radius:10px;color:var(--emp-ink);padding:10px}
+    dialog{border:none;border-radius:16px;background:#0f182a;color:var(--emp-ink);padding:0;max-width:560px}
+    dialog .body{padding:16px}
+    dialog .foot{display:flex;justify-content:flex-end;gap:10px;padding:14px;border-top:1px solid var(--emp-line)}
+    .muted{color:var(--emp-muted)}
+    .hero{margin-top:10px}
+    .right{display:flex;gap:10px}
+    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace}
   </style>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 </head>
 <body class="brand-bg">
-  <div class="shell">
-    <!-- ============ SIDEBAR ============ -->
-    <aside class="side">
-      <div class="brand-box">
-        <img src="/app/assets/brand/emblem.svg" alt="Empire"/>
-        <div class="emp-title" style="font-size:20px">EMPIRE</div>
-      </div>
-      <nav class="nav" id="nav">
-        <a href="#overview"  data-tab="overview"  class="active">Dashboard Overview</a>
-        <a href="#accounts"  data-tab="accounts">CPA Accounts</a>
-        <a href="#users"     data-tab="users">User Management</a>
-        <a href="#analytics" data-tab="analytics">Performance Analytics</a>
-        <a href="#wallet"    data-tab="wallet">Wallet</a>
-        <a href="#security"  data-tab="security">Security & Monitoring</a>
-      </nav>
-    </aside>
+  <aside class="rail">
+    <div class="brand">
+      <img src="/app/assets/brand/emblem.svg" class="brand-logo" alt="Empire"/>
+    </div>
+    <h2>EMPIRE</h2>
+    <nav class="nav" id="nav">
+      <a href="#overview" class="active">Dashboard Overview</a>
+      <a href="#accounts">CPA Accounts</a>
+      <a href="#users">User Management</a>
+      <a href="#analytics">Performance Analytics</a>
+      <a href="#wallet">Wallet</a>
+      <a href="#monitor">System Security & Monitoring</a>
+      <a href="#maint">Predictive Maintenance</a>
+      <a href="#promote">User Promotion</a>
+    </nav>
+  </aside>
 
-    <!-- ============ MAIN ============ -->
-    <main class="main">
-      <div class="title">
-        <img src="/app/assets/brand/emblem.svg" alt="E" width="28" height="28"/>
-        <div class="t">Command Dashboard</div>
-        <div class="badge">Live metrics • Accounts • Users • Analytics • Monitoring</div>
-      </div>
+  <main class="emp-wrap main">
+    <header class="hdr">
+      <img src="/app/assets/brand/emblem.svg" class="emblem" alt=""/>
+      <h1 class="emp-title">Command Dashboard</h1>
+      <div class="muted">Live metrics · Accounts · Users · Analytics · Monitoring</div>
+    </header>
 
-      <!-- ===== OVERVIEW ===== -->
-      <section id="tab-overview" class="tab-panel">
-        <div class="cards cols-2">
-          <div class="card">
-            <div class="card-title">Total Earnings (USD)</div>
-            <div id="kpi-earn" class="big">$0.00</div>
-          </div>
-          <div class="card">
-            <div class="card-title">Active Users</div>
-            <div id="kpi-active" class="big">0</div>
-          </div>
-          <div class="card">
-            <div class="card-title">Approval Rate</div>
-            <div id="kpi-approval" class="big">—</div>
-          </div>
-          <div class="card">
-            <div class="card-title">Pending Reviews</div>
-            <div id="kpi-pending" class="big">0</div>
-          </div>
+    <!-- Overview -->
+    <section class="panel" id="panel-overview">
+      <div class="kpis">
+        <div class="tile"><small>Total Earnings (USD)</small><div id="ov-earn" class="val">$0.00</div></div>
+        <div class="tile"><small>Active Users</small><div id="ov-users" class="val">0</div></div>
+        <div class="tile"><small>Approval Rate</small><div id="ov-approve" class="val">0%</div></div>
+        <div class="tile"><small>Pending Reviews</small><div id="ov-pending" class="val">0</div></div>
+      </div>
+      <div class="two" style="margin-top:14px">
+        <div class="card">
+          <div class="head"><div class="card-title">Performance Trends</div></div>
+          <canvas id="ov-line" height="120"></canvas>
         </div>
-        <div id="summary-note" class="muted mt">Loading…</div>
-      </section>
+        <div class="card">
+          <div class="head"><div class="card-title">Geographic Distribution</div></div>
+          <canvas id="ov-geo" height="120"></canvas>
+        </div>
+      </div>
+    </section>
 
-      <!-- ===== CPA ACCOUNTS (placeholder UI) ===== -->
-      <section id="tab-accounts" class="tab-panel" hidden>
+    <!-- Accounts -->
+    <section class="panel" id="panel-accounts" hidden>
+      <div class="head">
         <div class="card-title">CPA Accounts Management</div>
-        <div id="accounts-msg" class="muted mt">Coming online (uses your /users & sheets later).</div>
-        <div class="mt">
-          <div class="card-title">Add New CPA Account</div>
-          <div class="cards cols-2">
-            <input id="acc-name" class="input" placeholder="Account name"/>
-            <input id="acc-domain" class="input" placeholder="Domain/URL (https://)"/>
-            <input id="acc-userid" class="input" placeholder="User ID"/>
-            <input id="acc-apikey" class="input" placeholder="API Key"/>
-          </div>
-          <button class="tab-btn mt" id="btn-add-acc">Add Account</button>
-          <div id="add-acc-note" class="muted mt"></div>
+        <div class="right">
+          <button class="btn secondary" id="btn-acc-refresh">Refresh</button>
+          <button class="btn" id="btn-acc-new">Add New Account</button>
         </div>
-      </section>
+      </div>
+      <div class="cards" id="acc-cards"></div>
+    </section>
 
-      <!-- ===== USER MANAGEMENT (Admin approvals) ===== -->
-      <section id="tab-users" class="tab-panel" hidden>
-        <div class="emp-header" style="justify-content:space-between;align-items:center">
-          <div>
-            <div class="emp-title" style="font-size:22px">User Management</div>
-            <div class="muted">Approve or reject new registrations and manage approved users.</div>
-          </div>
-          <div class="card" style="min-width:280px">
-            <div class="card-title">Admin secret</div>
-            <div class="row">
-              <input id="admin-secret" type="password" class="input" placeholder="Enter admin secret"/>
-              <button id="btn-save-secret" class="tab-btn">Save</button>
-            </div>
-            <div id="admin-secret-note" class="muted mt"></div>
-          </div>
+    <!-- Users -->
+    <section class="panel" id="panel-users" hidden>
+      <div class="head">
+        <div class="card-title">Users Management</div>
+        <div class="badges">
+          <span class="badge mono" id="invite-link">https://superlative-pothos-ebf5f2.netlify.app/?ref=SUPREME_COMMANDER</span>
+          <button class="btn secondary" id="btn-share-wa">Share on WhatsApp</button>
+          <button class="btn" id="btn-user-add">Add New User</button>
         </div>
+      </div>
+      <div class="card">
+        <div class="head"><div class="card-title">Active Users</div><button class="btn secondary" id="btn-users-refresh">Refresh</button></div>
+        <div class="table-scroll">
+          <table class="table" id="users-table">
+            <thead><tr><th>Name</th><th>Email</th><th>WhatsApp</th><th>Bank</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
 
+    <!-- Analytics -->
+    <section class="panel" id="panel-analytics" hidden>
+      <div class="head"><div class="card-title">Performance Analytics</div></div>
+      <div class="two">
         <div class="card">
-          <div class="row">
-            <div class="card-title">Awaiting Approval</div>
-            <button id="btn-load-pending" class="tab-btn">Load pending</button>
-            <div id="pending-msg" class="muted"></div>
-          </div>
-          <div class="table-scroll mt">
-            <table class="table" id="pending-table">
-              <thead>
-                <tr><th>ID</th><th>Name</th><th>Email</th><th>Phone</th><th>Telegram</th><th>Actions</th></tr>
-              </thead>
-              <tbody><tr><td class="muted" colspan="6">Click “Load pending”.</td></tr></tbody>
-            </table>
-          </div>
+          <div class="card-title">Performance Overview (Monthly)</div>
+          <canvas id="an-bar" height="120"></canvas>
         </div>
-
         <div class="card">
-          <div class="row">
-            <div class="card-title">Approved Users</div>
-            <button id="btn-load-approved" class="tab-btn">Refresh</button>
-            <div id="approved-msg" class="muted"></div>
-          </div>
-          <div class="table-scroll mt">
-            <table class="table" id="approved-table">
-              <thead>
-                <tr><th>Name</th><th>Email</th><th>Phone</th><th>Scale</th><th>Status</th></tr>
-              </thead>
-              <tbody><tr><td class="muted" colspan="5">No data loaded yet.</td></tr></tbody>
-            </table>
-          </div>
+          <div class="card-title">Geographic Distribution</div>
+          <canvas id="an-geo" height="120"></canvas>
         </div>
-
-        <div class="card">
-          <div class="card-title">Add Approved User</div>
-          <div class="cards cols-2">
-            <input id="add-name"  class="input" placeholder="Full name"/>
-            <input id="add-email" class="input" placeholder="Email"/>
-            <input id="add-phone" class="input" placeholder="Phone (+234…)"/>
-            <input id="add-tele"  class="input" placeholder="Telegram @handle"/>
-          </div>
-          <button id="btn-add-user" class="tab-btn mt">Add User</button>
-          <div id="add-user-msg" class="muted mt"></div>
+      </div>
+      <div class="card" style="margin-top:14px">
+        <div class="card-title">Live Performance Data</div>
+        <div class="table-scroll">
+          <table class="table" id="an-live">
+            <thead><tr><th>Date & Time</th><th>Country</th><th>Offer Type</th><th>Device</th><th>Clicks</th><th>Leads</th><th>Earnings ($)</th></tr></thead>
+            <tbody></tbody>
+          </table>
         </div>
-      </section>
+      </div>
+    </section>
 
-      <!-- ===== ANALYTICS (placeholder; hook your charts later) ===== -->
-      <section id="tab-analytics" class="tab-panel" hidden>
-        <div class="card-title">Performance Analytics</div>
-        <div class="muted">Daily / Weekly / Monthly summaries & projections will render here.</div>
-      </section>
-
-      <!-- ===== WALLET ===== -->
-      <section id="tab-wallet" class="tab-panel" hidden>
-        <div class="cards cols-3">
-          <div class="card"><div class="card-title">Total Inflow (USD)</div><div id="w-inflow" class="big">$0.00</div></div>
-          <div class="card"><div class="card-title">Total Outflow (USD)</div><div id="w-outflow" class="big">$0.00</div></div>
-          <div class="card"><div class="card-title">Net (USD)</div><div id="w-net" class="big">$0.00</div></div>
-        </div>
-        <h3 class="mt">Recent Wallet Activity</h3>
+    <!-- Wallet -->
+    <section class="panel" id="panel-wallet" hidden>
+      <div class="kpis">
+        <div class="tile"><small>Total Inflow (USD)</small><div id="w-inflow" class="val">$0.00</div></div>
+        <div class="tile"><small>Total Outflow (USD)</small><div id="w-outflow" class="val">$0.00</div></div>
+        <div class="tile"><small>Net (USD)</small><div id="w-net" class="val">$0.00</div></div>
+        <div class="tile"><small>Remaining Balance</small><div id="w-balance" class="val">$0.00</div></div>
+      </div>
+      <div class="card" style="margin-top:14px">
+        <div class="head"><div class="card-title">Recent Wallet Activity</div><button class="btn secondary" id="btn-w-refresh">Refresh</button></div>
         <div class="table-scroll">
           <table class="table" id="wallet-table">
             <thead><tr><th>Date</th><th>Amount (USD)</th><th>Method</th><th>Status</th></tr></thead>
-            <tbody><tr><td class="muted" colspan="4">Loading…</td></tr></tbody>
+            <tbody></tbody>
           </table>
         </div>
-      </section>
+      </div>
+      <div class="card" style="margin-top:14px">
+        <div class="head"><div class="card-title">Universal Withdrawal Request</div></div>
+        <div class="form-grid cols-2" id="withdraw-form">
+          <div><label class="card-title">Amount (USD)</label><input id="wd-amt" type="number" min="1" value="200"/></div>
+          <div><label class="card-title">Payout Category</label>
+            <select id="wd-cat"><option>Traditional Banks</option><option>Fintechs</option><option>Wallets</option></select>
+          </div>
+          <div><label class="card-title">Country/Region</label><select id="wd-country"><option>Nigeria</option><option>Ghana</option><option>USA</option><option>UK</option></select></div>
+          <div><label class="card-title">Payment Method</label><select id="wd-method"></select></div>
+          <div><label class="card-title">Account Number</label><input id="wd-acct" placeholder="Enter account number"/></div>
+          <div><label class="card-title">Account Holder Name</label><input id="wd-name" placeholder="Enter account holder name"/></div>
+          <div><label class="card-title">WhatsApp Number (for notifications)</label><input id="wd-wa" placeholder="+234 xxx xxx xxxx"/></div>
+          <div style="align-self:end;text-align:right"><button class="btn" id="btn-withdraw">Submit</button></div>
+        </div>
+        <div class="muted" id="wd-note" style="margin-top:8px">Instant-mode simulation. Real rails can be connected via your payment gateway later.</div>
+      </div>
+    </section>
 
-      <!-- ===== SECURITY ===== -->
-      <section id="tab-security" class="tab-panel" hidden>
-        <div class="card-title">System Security & Monitoring</div>
-        <div id="health-json" class="muted">Loading…</div>
-      </section>
+    <!-- Monitoring -->
+    <section class="panel" id="panel-monitor" hidden>
+      <div class="two">
+        <div class="card">
+          <div class="card-title">System Health Monitor</div>
+          <pre id="health-json" class="mono" style="white-space:pre-wrap"></pre>
+        </div>
+        <div class="card">
+          <div class="card-title">Intelligent Alert System</div>
+          <div class="badges" id="alerts"></div>
+        </div>
+      </div>
+    </section>
 
-      <div class="footer">© Empire Affiliate Marketing Hub</div>
-    </main>
-  </div>
+    <!-- Maintenance -->
+    <section class="panel" id="panel-maint" hidden>
+      <div class="cards">
+        <div class="card"><div class="card-title">Daily Performance Report</div><div class="muted">Scheduled · Next 08:00</div></div>
+        <div class="card"><div class="card-title">Revenue Analysis</div><div class="muted">Weekly · Thu 20:00</div></div>
+        <div class="card"><div class="card-title">Predictive Insights</div><div class="muted">AI-driven · on demand</div></div>
+        <div class="card"><div class="card-title">Security Audit</div><div class="muted">24/7 proactive alerts</div></div>
+        <div class="card"><div class="card-title">Cache Refresh</div><div class="muted">Automatic cache systems</div></div>
+        <div class="card"><div class="card-title">Database Optimization</div><div class="muted">Index/Perf tuning</div></div>
+      </div>
+    </section>
 
-  <script>
-    // ---------- tabs
-    const views = ['overview','accounts','users','analytics','wallet','security'];
-    const panels = Object.fromEntries(views.map(v=>[v, document.getElementById('tab-'+v)]));
-    const nav = document.getElementById('nav');
-    function show(tab){
-      views.forEach(v => { panels[v].hidden = (v!==tab); });
-      nav.querySelectorAll('a').forEach(a=>a.classList.toggle('active', a.dataset.tab===tab));
-      location.hash = '#'+tab;
-      if (tab==='wallet') loadWallet();
-      if (tab==='security') loadHealth();
-    }
-    nav.querySelectorAll('a').forEach(a=>a.addEventListener('click', e=>{
-      e.preventDefault(); show(a.dataset.tab);
-    }));
-    show(location.hash.replace('#','')||'overview');
+    <!-- Promotion -->
+    <section class="panel" id="panel-promote" hidden>
+      <div class="two">
+        <div class="card">
+          <div class="card-title">Auto-Promotion Configuration</div>
+          <div class="form-grid">
+            <label>1× → 2× Level ($/mo) <input id="p-1" type="number" value="5000"/></label>
+            <label>2× → 3× Level ($/mo) <input id="p-2" type="number" value="15000"/></label>
+            <label>3× → 4× Level ($/mo) <input id="p-3" type="number" value="35000"/></label>
+            <label>4× → 5× Level ($/mo) <input id="p-4" type="number" value="75000"/></label>
+            <div class="badges">
+              <label><input type="checkbox" id="p-min-cr" checked/> Minimum conversion rate requirement (45%)</label>
+            </div>
+            <div class="badges">
+              <label><input type="checkbox" id="p-days" checked/> Minimum active days requirement (30)</label>
+              <label><input type="checkbox" id="p-approve" checked/> Require Commander manual approval</label>
+              <label><input type="checkbox" id="p-notify" checked/> Send promotion notifications</label>
+            </div>
+            <div style="text-align:right"><button class="btn" id="btn-prom-save">Save Configuration</button></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Empire Growth Analytics</div>
+          <div class="muted">(placeholder for growth chart)</div>
+        </div>
+      </div>
+    </section>
 
-    // ---------- helpers
-    const fmtUSD = n => {
-      try { return new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(+n||0); }
-      catch { return '$'+(Number(n||0).toFixed(2)); }
-    };
-    const setText = (id,v)=>{ const e=document.getElementById(id); if(e) e.textContent=v; };
-    const escapeHtml = s => String(s||'').replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+    <footer class="footer">© Empire Affiliate Marketing Hub</footer>
+  </main>
 
-    async function fetchJSON(url){
-      const r = await fetch(url, {headers:{'Cache-Control':'no-cache'}});
-      if(!r.ok) throw new Error(r.status+' '+url);
-      return r.json();
-    }
+  <!-- Add Account dialog -->
+  <dialog id="dlg-account">
+    <div class="body">
+      <h3>Add New CPA Account</h3>
+      <div class="form-grid">
+        <input id="acc-name" placeholder="Account Name"/>
+        <input id="acc-url" placeholder="https://example.com"/>
+        <input id="acc-user" placeholder="User ID"/>
+        <input id="acc-key" placeholder="API Key"/>
+        <input id="acc-start" type="number" step="0.01" value="0.00" placeholder="Starting Revenue"/>
+      </div>
+    </div>
+    <div class="foot">
+      <button class="btn secondary" onclick="closeDlg('dlg-account')">Cancel</button>
+      <button class="btn" id="dlg-acc-save">Add Account</button>
+    </div>
+  </dialog>
 
-    // ---------- Overview
-    (async function loadSummary(){
-      try{
-        const s = await fetchJSON('/.netlify/functions/summary');
-        setText('kpi-earn', fmtUSD(s.totalEarnings||0));
-        setText('kpi-active', String(s.activeUsers??0));
-        setText('kpi-approval', (s.approvalRate!=null)? (Math.round((s.approvalRate*100)||0)+'%') : '—');
-        setText('kpi-pending', String(s.pendingReviews??0));
-        setText('summary-note','Synced from Google Sheets.');
-      }catch(e){
-        setText('summary-note','Failed to load summary: '+e.message);
-      }
-    })();
+  <!-- Add User dialog -->
+  <dialog id="dlg-user">
+    <div class="body">
+      <h3>Add New User</h3>
+      <div class="form-grid">
+        <input id="u-name" placeholder="Full name"/>
+        <input id="u-email" placeholder="Email address"/>
+        <input id="u-wa" placeholder="+234 xxx xxx xxxx"/>
+        <input id="u-bank" placeholder="Bank name"/>
+        <input id="u-acct" placeholder="Account number"/>
+        <select id="u-level">
+          <option value="1x">1x Level</option><option value="2x">2x Level</option>
+          <option value="3x">3x Level</option><option value="4x">4x Level</option>
+          <option value="5x">5x Level</option>
+        </select>
+      </div>
+    </div>
+    <div class="foot">
+      <button class="btn secondary" onclick="closeDlg('dlg-user')">Cancel</button>
+      <button class="btn" id="dlg-user-save">Add User</button>
+    </div>
+  </dialog>
 
-    // ---------- Wallet
-    async function loadWallet(){
-      const body = document.querySelector('#wallet-table tbody');
-      body.innerHTML = '<tr><td class="muted" colspan="4">Loading…</td></tr>';
-      try{
-        const w = await fetchJSON('/.netlify/functions/wallet?limit=50');
-        setText('w-inflow', fmtUSD(w.inflow||0));
-        setText('w-outflow', fmtUSD(w.outflow||0));
-        setText('w-net', fmtUSD(w.net||0));
-        const rows = (w.items||[]).map(i=>{
-          const when = i.ts ? new Date(i.ts).toLocaleString() : '';
-          return `<tr><td>${escapeHtml(when)}</td><td>${fmtUSD(i.amount||0)}</td><td>${escapeHtml(i.method||'')}</td><td>${escapeHtml(i.status||'')}</td></tr>`;
-        });
-        body.innerHTML = rows.length? rows.join('') : '<tr><td class="muted" colspan="4">No wallet entries.</td></tr>';
-      }catch(e){
-        body.innerHTML = `<tr><td class="muted" colspan="4">Failed to load wallet: ${escapeHtml(e.message)}</td></tr>`;
-      }
-    }
+<script>
+/* ---------- Routing (hash) ---------- */
+const panels = {
+  '#overview':'panel-overview',
+  '#accounts':'panel-accounts',
+  '#users':'panel-users',
+  '#analytics':'panel-analytics',
+  '#wallet':'panel-wallet',
+  '#monitor':'panel-monitor',
+  '#maint':'panel-maint',
+  '#promote':'panel-promote',
+};
+function showPanel(hash){
+  if(!panels[hash]) hash = '#overview';
+  document.querySelectorAll('main .panel').forEach(p=>p.hidden = true);
+  document.getElementById(panels[hash]).hidden = false;
+  document.querySelectorAll('.nav a').forEach(a=>a.classList.toggle('active', a.getAttribute('href')===hash));
+}
+window.addEventListener('hashchange',()=>showPanel(location.hash));
+showPanel(location.hash || '#overview');
 
-    // ---------- Health (security)
-    async function loadHealth(){
-      try{
-        const h = await fetchJSON('/.netlify/functions/health');
-        document.getElementById('health-json').textContent = JSON.stringify(h,null,2);
-      }catch(e){
-        document.getElementById('health-json').textContent = 'Failed: '+e.message;
-      }
-    }
+/* ---------- Helpers ---------- */
+const money = n => (n||0).toLocaleString(undefined,{style:'currency',currency:'USD'});
+const ADMIN_KEY_K = 'empire:admin';
+const ADMIN_KEY = localStorage.getItem(ADMIN_KEY_K)||'';
+function fetchJSON(url, opts={}){
+  const h = Object.assign({'Content-Type':'application/json'}, opts.headers||{});
+  return fetch(url, Object.assign({headers:h}, opts)).then(r=>r.json());
+}
+function adminFetch(url, body){
+  return fetchJSON(url, { method: body ? 'POST' : 'GET',
+    headers:{'X-Admin-Secret': localStorage.getItem(ADMIN_KEY_K)||''},
+    body: body ? JSON.stringify(body) : undefined
+  });
+}
+function openDlg(id){document.getElementById(id).showModal()}
+function closeDlg(id){document.getElementById(id).close()}
 
-    // ---------- Admin / approvals
-    const ADMIN_FN = '/.netlify/functions/admin-pending';
-    const admin = {
-      get secret(){ return localStorage.getItem('EMP_ADMIN_SECRET') || ''; },
-      set secret(v){ localStorage.setItem('EMP_ADMIN_SECRET', v || ''); }
-    };
-    const setNote = (id,msg)=>{ const e=document.getElementById(id); if(e) e.textContent = msg||''; };
+/* ---------- Overview ---------- */
+async function loadOverview(){
+  const s = await fetchJSON('/.netlify/functions/summary?action=overview');
+  if(!s || s.ok===false) return;
+  document.getElementById('ov-earn').textContent = money(s.totalEarnings||0);
+  document.getElementById('ov-users').textContent = s.activeUsers||0;
+  document.getElementById('ov-approve').textContent = (s.approvalRate||0).toFixed(0)+'%';
+  document.getElementById('ov-pending').textContent = s.pendingReviews||0;
 
-    (function initAdminUI(){
-      const inp = document.getElementById('admin-secret');
-      if (inp){ inp.value = admin.secret; setNote('admin-secret-note', admin.secret ? 'Saved locally.' : 'Enter your admin secret and click Save.'); }
-      const saveBtn = document.getElementById('btn-save-secret');
-      if (saveBtn) saveBtn.addEventListener('click', ()=>{
-        admin.secret = (document.getElementById('admin-secret').value||'').trim();
-        setNote('admin-secret-note', admin.secret ? 'Saved locally.' : 'Cleared.');
-      });
-      const loadPending = document.getElementById('btn-load-pending');
-      if (loadPending) loadPending.addEventListener('click', loadPendingRows);
-      const loadApproved = document.getElementById('btn-load-approved');
-      if (loadApproved) loadApproved.addEventListener('click', loadApprovedRows);
-      const addUser = document.getElementById('btn-add-user');
-      if (addUser) addUser.addEventListener('click', addApprovedUser);
-    })();
+  // Line chart (hourly/daily earnings – mockable from summary)
+  const ctx = document.getElementById('ov-line');
+  new Chart(ctx,{type:'line',data:{labels:(s.trend?.labels||[]),datasets:[{label:'Daily Earnings ($)',data:(s.trend?.values||[]),tension:.4,borderWidth:3,pointRadius:0}]},options:{plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{grid:{color:'#1f2b44'}}}});
 
-    async function adminFetch(path='', opts={}){
-      const headers = Object.assign({'Content-Type':'application/json','x-admin-secret': admin.secret}, opts.headers||{});
-      const r = await fetch(ADMIN_FN + path, Object.assign({}, opts, { headers }));
-      let data = null; try{ data = await r.json(); }catch{}
-      if (!r.ok) throw new Error((data && (data.error||data.message)) || ''+r.status);
-      return data;
-    }
+  // Geo pie
+  const gctx = document.getElementById('ov-geo');
+  new Chart(gctx,{type:'doughnut',data:{labels:(s.geo?.labels||[]),datasets:[{data:(s.geo?.values||[])}]},options:{plugins:{legend:{position:'bottom'}}}});
+}
 
-    function td(s){ return `<td>${escapeHtml(s ?? '')}</td>`; }
-    function btn(label, cls){ return `<button class="tab-btn ${cls||''}" style="padding:6px 10px">${label}</button>`; }
+/* ---------- Accounts ---------- */
+async function loadAccounts(){
+  const s = await fetchJSON('/.netlify/functions/summary?action=accounts&limit=5');
+  const el = document.getElementById('acc-cards'); el.innerHTML = '';
+  (s.accounts||[]).slice(0,5).forEach(acc=>{
+    const div = document.createElement('div');
+    div.className='card';
+    div.innerHTML = `
+      <div class="head"><div class="card-title mono">${acc.name||'CPA'}</div>
+        <span class="badge">${acc.status||'ACTIVE'}</span></div>
+      <div class="kv"><span>Active Offers</span><strong>${acc.offers||0}</strong></div>
+      <div class="kv"><span>Revenue</span><strong>${money(acc.revenue||0)}</strong></div>
+      <div class="kv"><span>Clicks</span><strong>${(acc.clicks||0).toLocaleString()}</strong></div>
+      <div class="kv"><span>Conversion</span><strong>${(acc.conversion||0).toFixed(1)}%</strong></div>
+      <div style="text-align:right;margin-top:8px"><button class="btn secondary">View details</button></div>
+    `;
+    el.appendChild(div);
+  });
+}
+document.getElementById('btn-acc-refresh').onclick = loadAccounts;
+document.getElementById('btn-acc-new').onclick = ()=>openDlg('dlg-account');
+document.getElementById('dlg-acc-save').onclick = async ()=>{
+  const payload = {
+    action:'addAccount',
+    name:document.getElementById('acc-name').value.trim(),
+    url:document.getElementById('acc-url').value.trim(),
+    user:document.getElementById('acc-user').value.trim(),
+    key:document.getElementById('acc-key').value.trim(),
+    start:+document.getElementById('acc-start').value||0
+  };
+  await fetchJSON('/.netlify/functions/summary',{method:'POST',body:JSON.stringify(payload)});
+  closeDlg('dlg-account'); loadAccounts();
+};
 
-    async function loadPendingRows(){
-      setNote('pending-msg','Loading…');
-      const body = document.querySelector('#pending-table tbody');
-      body.innerHTML = `<tr><td class="muted" colspan="6">Loading…</td></tr>`;
-      try{
-        const res = await adminFetch('', { method:'GET' });
-        if (!res.ok) throw new Error(res.error||'Failed');
-        const items = res.items || [];
-        if (!items.length){
-          body.innerHTML = `<tr><td class="muted" colspan="6">No pending approvals.</td></tr>`;
-        }else{
-          body.innerHTML = items.map(row=>{
-            const actions = `<div class="row">${btn('Approve','btn-approve')}${btn('Reject','btn-reject')}</div>`;
-            return `<tr data-id="${escapeHtml(row.id||'')}" data-name="${escapeHtml(row.name||'')}" data-email="${escapeHtml(row.email||'')}" data-phone="${escapeHtml(row.phone||'')}" data-tele="${escapeHtml(row.telegram||row.tele||'')}">
-                      ${td(row.id)}${td(row.name)}${td(row.email)}${td(row.phone)}${td(row.telegram||row.tele||'')}${td(actions)}
-                    </tr>`;
-          }).join('');
-          body.querySelectorAll('.btn-approve').forEach(b=>b.addEventListener('click', ()=> markRow(b,'approved')));
-          body.querySelectorAll('.btn-reject').forEach(b=>b.addEventListener('click', ()=> markRow(b,'dismissed')));
-        }
-        setNote('pending-msg','');
-      }catch(e){
-        setNote('pending-msg',`Error: ${e.message}${admin.secret?'':' (Set admin secret first.)'}`);
-        body.innerHTML = `<tr><td class="muted" colspan="6">Failed to load.</td></tr>`;
-      }
-    }
+/* ---------- Users ---------- */
+async function loadUsers(){
+  // Active users from summary
+  const s = await fetchJSON('/.netlify/functions/summary?action=users');
+  const tb = document.querySelector('#users-table tbody'); tb.innerHTML='';
+  (s.users||[]).forEach(u=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${u.name||''}</td>
+      <td>${u.email||''}</td>
+      <td>${u.whatsapp||''}</td>
+      <td>${u.bank||''}</td>
+      <td><span class="badge">${u.status||'ACTIVE'}</span></td>
+      <td><a href="#" class="muted">View</a> · <a href="#" class="muted">Edit</a></td>`;
+    tb.appendChild(tr);
+  });
+}
+document.getElementById('btn-users-refresh').onclick = loadUsers;
+document.getElementById('btn-user-add').onclick = ()=>openDlg('dlg-user');
+document.getElementById('dlg-user-save').onclick = async ()=>{
+  const payload = {
+    action:'addUser',
+    name:document.getElementById('u-name').value.trim(),
+    email:document.getElementById('u-email').value.trim(),
+    whatsapp:document.getElementById('u-wa').value.trim(),
+    bank:document.getElementById('u-bank').value.trim(),
+    acct:document.getElementById('u-acct').value.trim(),
+    level:document.getElementById('u-level').value
+  };
+  await adminFetch('/.netlify/functions/admin-pending', payload); // reuse secured function for adds
+  closeDlg('dlg-user'); loadUsers();
+};
+document.getElementById('btn-share-wa').onclick = ()=>{
+  const link = document.getElementById('invite-link').textContent.trim();
+  const url = `https://wa.me/?text=${encodeURIComponent(link)}`;
+  window.open(url,'_blank');
+};
 
-    async function markRow(button, status){
-      const tr = button.closest('tr');
-      const id = tr?.dataset?.id || ''; if (!id) return;
-      const name = tr?.dataset?.name || ''; const phone = tr?.dataset?.phone || '';
-      const old = tr.innerHTML; tr.innerHTML = `<td colspan="6" class="muted">Processing ${escapeHtml(status)}…</td>`;
-      try{
-        const payload = { action:'mark', id, status, user:{ name, phone } };
-        const res = await adminFetch('', { method:'POST', body: JSON.stringify(payload) });
-        if (!res.ok) throw new Error(res.error||'Failed');
-        tr.remove(); loadApprovedRows();
-      }catch(e){
-        tr.innerHTML = old; alert('Action failed: '+e.message);
-      }
-    }
+/* ---------- Analytics ---------- */
+async function loadAnalytics(){
+  const s = await fetchJSON('/.netlify/functions/summary?action=analytics');
+  // Monthly bar
+  new Chart(document.getElementById('an-bar'),{type:'bar',data:{labels:(s.months?.labels||[]),datasets:[{label:'Monthly Earnings ($)',data:(s.months?.values||[])}]},options:{plugins:{legend:{display:false}}}});
+  // Geo pie
+  new Chart(document.getElementById('an-geo'),{type:'pie',data:{labels:(s.geo?.labels||[]),datasets:[{data:(s.geo?.values||[])}]}});
+  // Live table
+  const tb = document.querySelector('#an-live tbody'); tb.innerHTML='';
+  (s.live||[]).forEach(r=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${r.time||''}</td><td>${r.country||''}</td><td>${r.type||''}</td><td>${r.device||''}</td><td>${r.clicks||0}</td><td>${r.leads||0}</td><td>${money(r.earnings||0)}</td>`;
+    tb.appendChild(tr);
+  });
+}
 
-    async function loadApprovedRows(){
-      setNote('approved-msg','Loading…');
-      const body = document.querySelector('#approved-table tbody');
-      body.innerHTML = `<tr><td class="muted" colspan="5">Loading…</td></tr>`;
-      try{
-        const r = await fetch('/.netlify/functions/users?status=approved',{headers:{'Cache-Control':'no-cache'}});
-        const d = await r.json();
-        const rows = (d.users||[]).map(u=>`<tr>${td(u.name)}${td(u.email)}${td(u.phone)}${td(u.scale||'')}${td(u.status||'approved')}</tr>`);
-        body.innerHTML = rows.length? rows.join('') : `<tr><td class="muted" colspan="5">No approved users yet.</td></tr>`;
-        setNote('approved-msg','');
-      }catch(e){
-        setNote('approved-msg','Could not load approved users.');
-        body.innerHTML = `<tr><td class="muted" colspan="5">Failed.</td></tr>`;
-      }
-    }
+/* ---------- Wallet ---------- */
+let walletItems=[];
+async function loadWallet(){
+  const w = await fetchJSON('/.netlify/functions/wallet?limit=50');
+  if(!w || w.ok===false) return;
+  document.getElementById('w-inflow').textContent = money(w.inflow||0);
+  document.getElementById('w-outflow').textContent = money(w.outflow||0);
+  document.getElementById('w-net').textContent = money(w.net||0);
+  // Simple “remaining balance” = net (adjust if you keep a base)
+  document.getElementById('w-balance').textContent = money(w.net||0);
+  walletItems = w.items||[];
+  const tb = document.querySelector('#wallet-table tbody'); tb.innerHTML='';
+  walletItems.forEach(r=>{
+    const tr = document.createElement('tr');
+    const dt = r.ts ? new Date(r.ts) : null;
+    tr.innerHTML = `<td>${dt?dt.toLocaleString():''}</td><td>${money(r.amount||0)}</td><td>${r.method||''}</td><td>${r.status||''}</td>`;
+    tb.appendChild(tr);
+  });
+}
+document.getElementById('btn-w-refresh').onclick = loadWallet;
+// dynamic methods list
+(function seedMethods(){
+  const el = document.getElementById('wd-method');
+  ['Polaris Bank','First Bank','Wema Bank','PalmPay','Opay','Paga','Stripe','PayPal'].forEach(x=>{
+    const o=document.createElement('option'); o.textContent=x; el.appendChild(o);
+  });
+})();
+document.getElementById('btn-withdraw').onclick = ()=>{
+  const amt = +document.getElementById('wd-amt').value||0;
+  if(amt<=0) return alert('Enter withdrawal amount');
+  alert('Withdrawal request submitted (demo). WhatsApp receipt will be sent after approval.');
+};
 
-    async function addApprovedUser(){
-      setNote('add-user-msg','Submitting…');
-      const name = document.getElementById('add-name').value.trim();
-      const email= document.getElementById('add-email').value.trim();
-      const phone= document.getElementById('add-phone').value.trim();
-      const tele = document.getElementById('add-tele').value.trim();
-      if(!name||!email){ setNote('add-user-msg','Name and email are required.'); return; }
-      try{
-        // Optional: if you add a handler for /create on the admin function
-        const res = await adminFetch('/create', { method:'POST', body: JSON.stringify({action:'createApproved', user:{name,email,phone,telegram:tele}})});
-        if(res.ok){ setNote('add-user-msg','User added.'); loadApprovedRows(); }
-        else { setNote('add-user-msg', res.error || 'Create API not implemented yet.'); }
-      }catch(e){ setNote('add-user-msg','Error: '+e.message); }
-    }
-  </script>
+/* ---------- Monitoring ---------- */
+async function loadHealth(){
+  const h = await fetchJSON('/.netlify/functions/health').catch(()=>({ok:false}));
+  document.getElementById('health-json').textContent = JSON.stringify(h,null,2);
+  const A = document.getElementById('alerts'); A.innerHTML='';
+  const alerts = [
+    {kind:'success', text:'System Optimized · AI improved conversion by 5.4%'},
+    {kind:'warn', text:'High Traffic Detected · Auto-scaling activated'},
+    {kind:'info', text:'Predictive Maintenance · Next optimization in 25 min'}
+  ];
+  alerts.forEach(a=>{const b=document.createElement('span'); b.className='badge'; b.textContent=a.text; A.appendChild(b);});
+}
+
+/* ---------- Promotion ---------- */
+document.getElementById('btn-prom-save').onclick = ()=>{
+  alert('Promotion configuration saved (demo). Values persisted in future step.');
+};
+
+/* ---------- Page boot ---------- */
+loadOverview(); loadAccounts(); loadUsers(); loadAnalytics(); loadWallet(); loadHealth();
+</script>
 </body>
 </html>

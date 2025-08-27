@@ -1,575 +1,369 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Empire — Command Dashboard</title>
-  <meta name="color-scheme" content="dark"/>
-  <link rel="stylesheet" href="/app/styles/brand.css"/>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Empire — Dashboard</title>
+  <meta name="color-scheme" content="dark" />
+  <link rel="stylesheet" href="/app/styles/brand.css" />
   <style>
-    :root{
-      --side-w: 260px;
-    }
-    body{margin:0}
-    .layout{display:grid;grid-template-columns:var(--side-w) 1fr;min-height:100vh}
-    .sidebar{
-      background:linear-gradient(180deg, rgba(255,255,255,.02), transparent), var(--emp-panel);
-      border-right:1px solid var(--emp-line);
-      padding:16px 12px;
-      position:sticky; top:0; height:100dvh; overflow:auto;
-    }
-    .side-head{display:flex; gap:10px; align-items:center; margin-bottom:12px}
-    .side-title{font-weight:900; font-size:18px; background:linear-gradient(90deg, var(--emp-gold-1), var(--emp-gold-2));
-      -webkit-background-clip:text; background-clip:text; color:transparent;}
-    .nav{display:flex; flex-direction:column; gap:8px; margin-top:10px}
-    .nav button{
-      text-align:left; width:100%; padding:10px 12px; border-radius:12px; border:1px solid var(--emp-line);
-      background:#0f182a; color:var(--emp-ink); cursor:pointer; transition:all .15s ease;
-    }
-    .nav button:hover{border-color:var(--emp-ring)}
-    .nav button.active{outline:2px solid var(--emp-ring)}
-    .main{padding:24px 16px}
-    .hero{
-      border-radius:var(--radius-lg);
-      background:linear-gradient( to right, rgba(35,45,80,.6), rgba(15,24,42,.85) ),
-                 url("/app/assets/brand/welcome_banner.jpg") center/cover no-repeat;
-      border:1px solid var(--emp-line);
-      padding:16px; margin-bottom:16px;
-      display:flex; align-items:center; gap:12px;
-    }
-    .hero .badge{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;
-      background:linear-gradient(135deg,#22c55e,#60a5fa);color:#001;font-weight:800}
-    .h1{font-size:24px;font-weight:800;margin:0}
-    .sub{color:var(--emp-muted)}
-    .panel{background:rgba(15,24,42,.9); border:1px solid var(--emp-line); border-radius:16px; padding:16px; margin:12px 0}
+    /* Minimal layout helpers on top of brand.css */
+    .layout{display:grid;grid-template-columns:260px 1fr;min-height:100vh}
+    .sidebar{background:#0e1729;border-right:1px solid var(--emp-line);padding:18px 14px}
+    .nav-title{font-weight:900;color:#ffd24d;letter-spacing:.4px;margin:4px 0 12px}
+    .nav a{display:block;padding:10px 12px;margin:6px 0;border-radius:12px;border:1px solid var(--emp-line);color:var(--emp-ink);text-decoration:none}
+    .nav a.active,.nav a:hover{outline:2px solid var(--emp-ring)}
+    .content{padding:24px 18px}
+    .page-title{display:flex;align-items:center;gap:10px;margin:0 0 12px}
+    .page-title .badge{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--emp-line);background:#0f182a;border-radius:999px;padding:6px 10px;color:var(--emp-muted);font-size:12px}
     .grid{display:grid;gap:14px}
-    @media(min-width:900px){ .cols-2{grid-template-columns:1fr 1fr} .cols-3{grid-template-columns:1fr 1fr 1fr} }
-    .card{background:var(--emp-panel); border:1px solid var(--emp-line); border-radius:16px; padding:16px}
-    .card-title{color:var(--emp-muted); font-size:13px; margin-bottom:6px}
-    .kpi{font-size:36px; font-weight:900}
+    @media(min-width:760px){.grid.cols-2{grid-template-columns:1fr 1fr}.grid.cols-3{grid-template-columns:1fr 1fr 1fr}}
+    .tab-panel{margin-top:12px}
+    .btn{cursor:pointer;border:1px solid var(--emp-line);background:#14203a;color:var(--emp-ink);padding:9px 14px;border-radius:12px}
+    .btn.gold{background:linear-gradient(90deg,var(--emp-gold-1),var(--emp-gold-2));color:#10151f;border:none}
+    .input{width:100%;background:#0f182a;border:1px solid var(--emp-line);color:var(--emp-ink);padding:10px 12px;border-radius:12px}
+    .mt{margin-top:16px}
     .muted{color:var(--emp-muted)}
-    .table{width:100%; border-collapse:collapse; font-size:14px}
-    .table th, .table td{padding:10px; border-bottom:1px solid var(--emp-line); text-align:left}
-    .table th{color:#cfe0ff}
-    .table-scroll{overflow:auto}
-    .row{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
+    .right{display:flex;gap:10px;align-items:center}
+    .table{width:100%;border-collapse:collapse;font-size:14px}
+    .table th,.table td{padding:10px;border-bottom:1px solid var(--emp-line);text-align:left}
     .chip{display:inline-block;border:1px solid var(--emp-line);border-radius:999px;padding:4px 10px;background:#0f182a}
-    .ok{color:#48e088}.warn{color:#f59e0b}.err{color:#ff6767}
-    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,"Courier New",monospace}
-    .btn{padding:10px 12px;border-radius:10px;border:1px solid var(--emp-line);background:#0f182a;color:var(--emp-ink);cursor:pointer}
-    .btn.gold{color:#1b1606;background:linear-gradient(180deg,var(--emp-gold-1),var(--emp-gold-2));border:0;font-weight:800}
-    .input, select{background:#0b162a;color:#e8eefc;border:1px solid var(--emp-ring);border-radius:12px;padding:10px 12px}
-    .section-title{font-weight:800;margin:0 0 8px}
-    .row-right{margin-left:auto}
-    .note{padding:10px;border:1px dashed var(--emp-ring);border-radius:12px;color:var(--emp-muted)}
-    .hidden{display:none}
   </style>
 </head>
 <body class="brand-bg">
   <div class="layout">
+
     <!-- SIDEBAR -->
     <aside class="sidebar">
-      <div class="side-head">
-        <img src="/app/assets/brand/emblem.svg" alt="Emblem" class="brand-logo"/>
-        <div class="side-title">EMPIRE</div>
-      </div>
-      <div class="nav">
-        <button class="active" data-tab="overview">1. Dashboard Overview</button>
-        <button data-tab="cpa">2. CPA Accounts</button>
-        <button data-tab="users">3. User Management</button>
-        <button data-tab="perf">4. Performance Analytics</button>
-        <button data-tab="wallet">5. Wallet</button>
-        <button data-tab="security">6. Security & Monitoring</button>
-      </div>
+      <div class="nav-title">EMPIRE</div>
+      <nav class="nav">
+        <a href="#overview" class="active">Dashboard Overview</a>
+        <a href="#accounts">CPA Accounts</a>
+        <a href="#users">User Management</a>
+        <a href="#analytics">Performance Analytics</a>
+        <a href="#wallet">Wallet</a>
+        <a href="#security">System Security & Monitoring</a>
+      </nav>
     </aside>
 
     <!-- MAIN -->
-    <main class="main">
-      <!-- HERO -->
-      <div class="hero">
-        <div class="badge">▲</div>
-        <div>
-          <div class="h1">Command Dashboard</div>
-          <div class="sub">Live metrics · Accounts · Users · Analytics · Payouts · Monitoring</div>
-        </div>
-      </div>
+    <main class="content">
+      <header class="page-title">
+        <img src="/app/assets/brand/emblem.svg" alt="Empire" class="brand-logo" />
+        <h1 class="emp-title" style="margin:0">Command Dashboard</h1>
+        <span class="badge">Live metrics • Accounts • Users • Analytics • Monitoring</span>
+      </header>
 
-      <!-- ================= 1) OVERVIEW ================= -->
-      <section id="tab-overview" class="panel">
-        <div class="grid cols-3">
-          <div class="card">
+      <!-- NAV-TABS via hash -->
+      <section id="panel-overview" class="tab-panel">
+        <div class="grid cols-2">
+          <div class="panel">
             <div class="card-title">Total Earnings (USD)</div>
             <div id="kpi-earn" class="kpi">$0.00</div>
           </div>
-          <div class="card">
+          <div class="panel">
             <div class="card-title">Active Users</div>
             <div id="kpi-active" class="kpi">0</div>
           </div>
-          <div class="card">
+          <div class="panel">
+            <div class="card-title">Approval Rate</div>
+            <div id="kpi-approval" class="kpi">—</div>
+          </div>
+          <div class="panel">
             <div class="card-title">Pending Reviews</div>
             <div id="kpi-pending" class="kpi">0</div>
           </div>
         </div>
+        <div class="muted mt" id="summary-note">Loading…</div>
+      </section>
+
+      <!-- ACCOUNTS (placeholder structure) -->
+      <section id="panel-accounts" class="tab-panel" hidden>
         <div class="panel">
-          <div class="row">
-            <div class="section-title">Health</div>
-            <button class="btn row-right" id="btnHealth">Refresh</button>
+          <div class="right">
+            <h3 style="margin:0">CPA Accounts</h3>
+            <button class="btn gold" id="btn-add-account">Add New Account</button>
           </div>
-          <div class="row" style="gap:14px">
-            <div>Server: <span id="h-server" class="chip">—</span></div>
-            <div>DB: <span id="h-db" class="chip">—</span></div>
-            <div>Sheets: <span id="h-sheets" class="chip">—</span></div>
-            <div>AI: <span id="h-ai" class="chip">—</span></div>
-          </div>
-        </div>
-        <div class="muted" id="summary-note">Loading…</div>
-      </section>
-
-      <!-- ================= 2) CPA ACCOUNTS ================= -->
-      <section id="tab-cpa" class="panel hidden">
-        <div class="row">
-          <div class="section-title">CPA GRIP Accounts</div>
-          <button class="btn gold row-right" id="btnAddCpa">+ Add Account</button>
-        </div>
-        <div class="table-scroll card">
-          <table class="table" id="cpa-table">
-            <thead>
-              <tr><th>Network</th><th>Status</th><th>Clicks</th><th>Leads</th><th>Earnings (USD)</th><th>Actions</th></tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div>
-        <div id="cpa-note" class="note hidden">Connect <code>/.netlify/functions/cpa-accounts</code> to list/create accounts.</div>
-      </section>
-
-      <!-- ================= 3) USER MANAGEMENT ================= -->
-      <section id="tab-users" class="panel hidden">
-        <div class="grid cols-2">
-          <div class="card">
-            <div class="section-title">Awaiting Approval</div>
-            <div class="table-scroll">
-              <table class="table" id="pending-table">
-                <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Telegram</th><th>Action</th></tr></thead>
-                <tbody></tbody>
-              </table>
-            </div>
-          </div>
-          <div class="card">
-            <div class="section-title">Approved Users</div>
-            <div class="table-scroll">
-              <table class="table" id="approved-table">
-                <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Scale</th><th>Set Scale</th></tr></thead>
-                <tbody></tbody>
-              </table>
-            </div>
-          </div>
-          <div class="card">
-            <div class="section-title">Add Approved User</div>
-            <div class="grid cols-2">
-              <input id="nu-name"  class="input" placeholder="Full name"/>
-              <input id="nu-email" class="input" placeholder="Email"/>
-              <input id="nu-phone" class="input" placeholder="Phone (+234...)"/>
-              <input id="nu-tg"    class="input" placeholder="Telegram @handle"/>
-            </div>
-            <button class="btn gold" id="btnAddUser" style="margin-top:10px">Add User</button>
-            <div id="nu-msg" class="muted"></div>
-          </div>
+          <div class="muted mt">Coming soon: live metrics per account and add-account modal.</div>
         </div>
       </section>
 
-      <!-- ================= 4) PERFORMANCE ANALYTICS ================= -->
-      <section id="tab-perf" class="panel hidden">
-        <div class="row">
-          <div class="section-title">Performance & Projections</div>
-          <select id="perf-window" class="row-right input" style="width:auto">
-            <option value="daily" selected>Daily</option>
-            <option value="weekly">Weekly</option>
-            <option value="monthly">Monthly</option>
-          </select>
-        </div>
+      <!-- USERS (Admin approvals) -->
+      <section id="panel-users" class="tab-panel" hidden>
+        <div class="panel">
+          <h3 style="margin:0 0 10px">Awaiting Approval</h3>
 
-        <div class="grid cols-3">
-          <div class="card"><div class="card-title">Clicks</div><div id="p-clicks" class="kpi">0</div></div>
-          <div class="card"><div class="card-title">Leads</div><div id="p-leads" class="kpi">0</div></div>
-          <div class="card"><div class="card-title">Earnings (USD)</div><div id="p-earn" class="kpi">$0.00</div></div>
+          <div class="right" style="gap:8px;margin-bottom:10px">
+            <input id="admin-secret" class="input" placeholder="Enter admin secret…" style="max-width:320px" />
+            <button id="save-secret" class="btn">Save</button>
+            <button id="load-pending" class="btn">Load pending</button>
+            <span id="secret-status" class="muted"></span>
+          </div>
+
+          <div class="table-scroll">
+            <table class="table">
+              <thead>
+                <tr><th>Name</th><th>Email</th><th>Phone</th><th>Telegram</th><th>Actions</th></tr>
+              </thead>
+              <tbody id="pending-body"><tr><td class="muted" colspan="5">Click “Load pending”.</td></tr></tbody>
+            </table>
+          </div>
         </div>
 
         <div class="panel">
-          <div class="card-title">Projected Growth</div>
-          <div class="muted" id="p-proj">Awaiting data…</div>
-        </div>
-
-        <div class="note" id="perf-note" style="margin-top:8px">If <code>/.netlify/functions/performance</code> is not available, these KPIs fall back to <code>/summary</code>.</div>
-      </section>
-
-      <!-- ================= 5) WALLET ================= -->
-      <section id="tab-wallet" class="panel hidden">
-        <div class="grid cols-3">
-          <div class="card"><div class="card-title">Available Balance (USD)</div><div id="w-balance" class="kpi">$0.00</div></div>
-          <div class="card"><div class="card-title">Total Inflow</div><div id="w-inflow" class="kpi">$0.00</div></div>
-          <div class="card"><div class="card-title">Total Outflow</div><div id="w-outflow" class="kpi">$0.00</div></div>
+          <h3 style="margin:0 0 10px">Approved Users</h3>
+          <div class="table-scroll">
+            <table class="table" id="users-table">
+              <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Status</th><th>Scale</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
         </div>
 
         <div class="panel">
-          <div class="section-title">Withdraw</div>
+          <h3 style="margin:0 0 10px">Add Approved User</h3>
           <div class="grid cols-3">
-            <select id="w-bank" class="input"></select>
-            <input id="w-acct"  class="input" placeholder="Account number"/>
-            <input id="w-amt"   class="input" placeholder="Amount (USD)"/>
+            <input id="au-name" class="input" placeholder="Full name" />
+            <input id="au-email" class="input" placeholder="Email" />
+            <input id="au-phone" class="input" placeholder="Phone (+234…)" />
           </div>
-          <div class="row" style="margin-top:8px">
-            <input id="w-reason" class="input grow" placeholder="Narration / reason"/>
-            <button id="w-validate" class="btn">Validate Name</button>
-            <button id="w-withdraw" class="btn gold">Withdraw Now</button>
+          <input id="au-telegram" class="input mt" placeholder="Telegram @handle" />
+          <button id="add-user" class="btn gold mt">Add User</button>
+          <div id="add-user-status" class="muted mt"></div>
+        </div>
+      </section>
+
+      <!-- ANALYTICS (placeholder scaffolding) -->
+      <section id="panel-analytics" class="tab-panel" hidden>
+        <div class="panel">
+          <h3 style="margin:0 0 10px">Performance Analytics</h3>
+          <div class="muted">Daily / Weekly / Monthly summaries with projected growth — coming soon.</div>
+        </div>
+      </section>
+
+      <!-- WALLET -->
+      <section id="panel-wallet" class="tab-panel" hidden>
+        <div class="grid cols-3">
+          <div class="card">
+            <div class="card-title">Total Inflow (USD)</div>
+            <div id="w-inflow" class="big">$0.00</div>
           </div>
-          <div id="w-msg" class="muted" style="margin-top:6px"></div>
+          <div class="card">
+            <div class="card-title">Total Outflow (USD)</div>
+            <div id="w-outflow" class="big">$0.00</div>
+          </div>
+          <div class="card">
+            <div class="card-title">Net (USD)</div>
+            <div id="w-net" class="big">$0.00</div>
+          </div>
         </div>
 
-        <h3 style="margin:12px 0 6px">Recent Wallet Activity</h3>
-        <div class="card table-scroll">
+        <h3 class="mt">Recent Wallet Activity</h3>
+        <div class="table-scroll">
           <table class="table" id="wallet-table">
-            <thead><tr><th>Date</th><th>Amount (USD)</th><th>Method</th><th>Status</th></tr></thead>
-            <tbody></tbody>
+            <thead>
+              <tr><th>Date</th><th>Amount (USD)</th><th>Method</th><th>Status</th></tr>
+            </thead>
+            <tbody><!-- filled by JS --></tbody>
           </table>
         </div>
       </section>
 
-      <!-- ================= 6) SECURITY & MONITORING ================= -->
-      <section id="tab-security" class="panel hidden">
-        <div class="grid cols-2">
-          <div class="card">
-            <div class="card-title">System Health (raw)</div>
-            <pre id="sec-health" class="mono muted" style="white-space:pre-wrap;margin:0">Loading…</pre>
-          </div>
-          <div class="card">
-            <div class="card-title">Live Event Feed</div>
-            <div class="table-scroll">
-              <table class="table" id="sec-events">
-                <thead><tr><th>When</th><th>Actor</th><th>Type</th><th>Message</th></tr></thead>
-                <tbody></tbody>
-              </table>
-            </div>
-          </div>
+      <!-- SECURITY / HEALTH -->
+      <section id="panel-security" class="tab-panel" hidden>
+        <div class="panel">
+          <h3 style="margin:0 0 10px">System Security & Monitoring</h3>
+          <pre id="health-json" class="muted" style="white-space:pre-wrap">Loading…</pre>
         </div>
       </section>
+
+      <div class="footer">© Empire Affiliate Marketing Hub</div>
     </main>
   </div>
 
   <script>
-    // -------- Tabs (left sidebar)
-    const navBtns = document.querySelectorAll('.nav button');
-    const sect = {
-      overview: document.getElementById('tab-overview'),
-      cpa:      document.getElementById('tab-cpa'),
-      users:    document.getElementById('tab-users'),
-      perf:     document.getElementById('tab-perf'),
-      wallet:   document.getElementById('tab-wallet'),
-      security: document.getElementById('tab-security'),
+    // --------- routing via hash (sidebar)
+    const hashToPanel = {
+      '#overview':'panel-overview',
+      '#accounts':'panel-accounts',
+      '#users':'panel-users',
+      '#analytics':'panel-analytics',
+      '#wallet':'panel-wallet',
+      '#security':'panel-security',
     };
-    navBtns.forEach(b=>{
-      b.addEventListener('click', ()=>{
-        navBtns.forEach(x=>x.classList.remove('active'));
-        b.classList.add('active');
-        const k = b.dataset.tab;
-        Object.entries(sect).forEach(([id,el])=> el.classList.toggle('hidden', id!==k));
-        if (k==='overview') initOverview();
-        if (k==='cpa')      loadCpa();
-        if (k==='users')    loadUsers();
-        if (k==='perf')     loadPerf();
-        if (k==='wallet')   loadWallet();
-        if (k==='security') loadSecurity();
-      });
-    });
+    function showPanelFromHash(){
+      const h = location.hash || '#overview';
+      document.querySelectorAll('.nav a').forEach(a=> a.classList.toggle('active', a.getAttribute('href')===h));
+      Object.values(hashToPanel).forEach(id=> document.getElementById(id).hidden = true);
+      (document.getElementById(hashToPanel[h])||document.getElementById('panel-overview')).hidden = false;
+    }
+    window.addEventListener('hashchange', showPanelFromHash);
+    showPanelFromHash();
 
-    // -------- Helpers
-    const el   = (id)=> document.getElementById(id);
-    const set  = (id,v)=>{ const E=el(id); if(E) E.textContent=v; };
-    const html = (id,v)=>{ const E=el(id); if(E) E.innerHTML=v; };
+    // --------- helpers
+    const el = (id)=> document.getElementById(id);
+    const setText = (id,v)=> { const e=el(id); if(e) e.textContent=v; };
     const fmtUSD = (n)=> {
       try { return new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(+n||0); }
-      catch { return '$' + (Number(n||0).toFixed(2)); }
+      catch { return '$'+Number(n||0).toFixed(2); }
     };
-    const esc = (s)=> String(s||'').replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
-    async function j(url, opt){ const r = await fetch(url, opt||{}); if(!r.ok) throw new Error(r.status+' '+url); return r.json(); }
+    const escapeHtml = (s)=> String(s||'').replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
 
-    // -------- 1) OVERVIEW
-    async function initOverview(){
+    async function fetchJSON(url, opts){
+      const r = await fetch(url, opts || { headers:{'Cache-Control':'no-cache'} });
+      const data = await r.json().catch(()=> ({}));
+      if(!r.ok) throw new Error(data?.error || r.status);
+      return data;
+    }
+
+    // --------- Overview
+    async function loadSummary(){
       try{
-        const s = await j('/.netlify/functions/summary');
-        set('kpi-earn', fmtUSD(s.totalEarnings||0));
-        set('kpi-active', String(s.activeUsers??0));
-        set('kpi-pending', String(s.pendingReviews??0));
+        const s = await fetchJSON('/.netlify/functions/summary');
+        setText('kpi-earn', fmtUSD(s.totalEarnings||0));
+        setText('kpi-active', String(s.activeUsers ?? 0));
+        setText('kpi-approval', (s.approvalRate!=null) ? (Math.round((s.approvalRate*100)||0)+'%') : '—');
+        setText('kpi-pending', String(s.pendingReviews ?? 0));
         el('summary-note').textContent = 'Synced from Google Sheets.';
       }catch(e){
-        el('summary-note').textContent = 'Summary failed: '+e.message;
+        el('summary-note').textContent = 'Failed to load summary: '+e.message;
       }
-      await loadHealthChips();
     }
-    async function loadHealthChips(){
-      try{
-        const h = await j('/.netlify/functions/health');
-        const chips=[['h-server',h.server],['h-db',h.db],['h-sheets',h.sheets],['h-ai',h.ai]];
-        chips.forEach(([id,val])=>{
-          const E=el(id); if(!E) return; E.textContent=val||'—';
-          E.classList.remove('ok','warn','err');
-          const v=String(val||'').toUpperCase();
-          if (v.includes('ONLINE')||v.includes('OPERATIONAL')||v.includes('ACTIVE')) E.classList.add('ok');
-          else if (v.includes('WARN')||v.includes('DEGRADED')) E.classList.add('warn');
-          else E.classList.add('err');
-        });
-      }catch(e){}
-    }
-    el('btnHealth')?.addEventListener('click', loadHealthChips);
 
-    // -------- 2) CPA ACCOUNTS
-    async function loadCpa(){
-      const body = document.querySelector('#cpa-table tbody');
-      body.innerHTML = '<tr><td class="muted" colspan="6">Loading…</td></tr>';
+    // --------- Health (also used by Security)
+    async function loadHealth(){
       try{
-        // expected: {ok:true, accounts:[{id,network,status,clicks,leads,earningsUSD}]}
-        const r = await j('/.netlify/functions/cpa-accounts');
-        const rows = Array.isArray(r.accounts)? r.accounts : [];
-        body.innerHTML='';
-        rows.forEach(a=>{
-          const tr=document.createElement('tr');
-          tr.innerHTML = `
-            <td>${esc(a.network)}</td>
-            <td><span class="chip">${esc(a.status||'')}</span></td>
-            <td>${esc(a.clicks??0)}</td>
-            <td>${esc(a.leads??0)}</td>
-            <td>${fmtUSD(a.earningsUSD||0)}</td>
-            <td><button class="btn" data-id="${esc(a.id)}">Refresh</button></td>
-          `;
-          body.appendChild(tr);
-        });
-        if(!rows.length){ body.innerHTML = '<tr><td class="muted" colspan="6">No CPA accounts yet.</td></tr>'; }
-        el('cpa-note').classList.add('hidden');
+        const h = await fetchJSON('/.netlify/functions/health');
+        el('health-json').textContent = JSON.stringify(h, null, 2);
       }catch(e){
-        el('cpa-note').classList.remove('hidden');
-        body.innerHTML = '<tr><td class="muted" colspan="6">Endpoint not ready.</td></tr>';
+        el('health-json').textContent = 'Failed to load health: '+e.message;
       }
     }
-    el('btnAddCpa')?.addEventListener('click', async ()=>{
-      // minimal inline add; expects POST {network, apiKey, accountId}
-      const network = prompt('Network (e.g., CPAgrip):'); if(!network) return;
-      const apiKey  = prompt('API key (stored server-side):'); if(!apiKey) return;
-      const accountId = prompt('Account ID/Username:')||'';
-      try{
-        await j('/.netlify/functions/cpa-accounts', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ network, apiKey, accountId })});
-        loadCpa();
-      }catch(e){ alert('Add failed: '+e.message); }
-    });
 
-    // -------- 3) USER MANAGEMENT
-    async function loadUsers(){
-      await Promise.all([loadPending(), loadApproved()]);
-    }
-    async function loadPending(){
-      const body = document.querySelector('#pending-table tbody');
+    // --------- Users (approved list only)
+    async function loadUsersTable(){
+      const body = document.querySelector('#users-table tbody');
       body.innerHTML = '<tr><td class="muted" colspan="5">Loading…</td></tr>';
       try{
-        // admin-pending GET should return {ok:true, items:[{id,name,email,phone,telegram}]}
-        const r = await j('/.netlify/functions/admin-pending');
-        const items = Array.isArray(r.items)? r.items : [];
-        body.innerHTML='';
-        items.forEach(x=>{
-          const tr=document.createElement('tr');
+        const u = await fetchJSON('/.netlify/functions/users?limit=100');
+        body.innerHTML = '';
+        (u.users||[]).forEach(row=>{
+          const tr = document.createElement('tr');
           tr.innerHTML = `
-            <td>${esc(x.name||'')}</td>
-            <td>${esc(x.email||'')}</td>
-            <td>${esc(x.phone||'')}</td>
-            <td>${esc(x.telegram||'')}</td>
-            <td>
-              <button class="btn" data-approve="${esc(x.id)}">Approve</button>
-              <button class="btn" data-reject="${esc(x.id)}">Reject</button>
-            </td>`;
+            <td>${escapeHtml(row.name||'')}</td>
+            <td>${escapeHtml(row.email||'')}</td>
+            <td>${escapeHtml(row.phone||'')}</td>
+            <td><span class="chip">${escapeHtml(row.status||'')}</span></td>
+            <td>${escapeHtml(row.scale||'')}</td>`;
           body.appendChild(tr);
         });
-        if(!items.length){ body.innerHTML = '<tr><td class="muted" colspan="5">No pending requests.</td></tr>'; }
+        if(!u.users || u.users.length===0) body.innerHTML = '<tr><td class="muted" colspan="5">No users yet.</td></tr>';
       }catch(e){
-        body.innerHTML = '<tr><td class="muted" colspan="5">Pending endpoint not available.</td></tr>';
+        body.innerHTML = `<tr><td class="muted" colspan="5">Error: ${escapeHtml(e.message)}</td></tr>`;
       }
     }
-    document.addEventListener('click', async (e)=>{
-      const ap = e.target.closest('[data-approve]');
-      if(ap){ await markPending(ap.getAttribute('data-approve'), 'approved'); return; }
-      const rj = e.target.closest('[data-reject]');
-      if(rj){ await markPending(rj.getAttribute('data-reject'), 'dismissed'); return; }
-    });
-    async function markPending(id, status){
-      try{
-        await j('/.netlify/functions/admin-pending', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ action:'mark', id, status })});
-        await loadPending(); await loadApproved();
-      }catch(e){ alert('Action failed: '+e.message); }
-    }
-    async function loadApproved(){
-      const body = document.querySelector('#approved-table tbody');
-      body.innerHTML = '<tr><td class="muted" colspan="5">Loading…</td></tr>';
-      try{
-        // {ok:true, users:[{id,name,email,phone,status,scale}]}
-        const r = await j('/.netlify/functions/users?limit=200');
-        const rows = Array.isArray(r.users)? r.users : [];
-        body.innerHTML='';
-        rows
-          .filter(x=> String(x.status||'').toLowerCase().includes('confirm') || String(x.status||'').toLowerCase()==='approved')
-          .forEach(u=>{
-            const tr=document.createElement('tr');
-            const scaleVal = u.scale ?? '';
-            tr.innerHTML = `
-              <td>${esc(u.name||'')}</td>
-              <td>${esc(u.email||'')}</td>
-              <td>${esc(u.phone||'')}</td>
-              <td>${esc(scaleVal)}</td>
-              <td>
-                <select data-scale="${esc(u.id||'')}" class="input" style="width:auto">
-                  ${[1,2,3,4,5].map(n=>`<option value="${n}" ${String(scaleVal)==String(n)?'selected':''}>${n}×</option>`).join('')}
-                </select>
-                <button class="btn" data-scale-save="${esc(u.id||'')}">Save</button>
-              </td>`;
-            body.appendChild(tr);
-          });
-        if(!body.children.length){ body.innerHTML = '<tr><td class="muted" colspan="5">No approved users yet.</td></tr>'; }
-      }catch(e){
-        body.innerHTML = '<tr><td class="muted" colspan="5">Users endpoint not available.</td></tr>';
-      }
-    }
-    document.addEventListener('click', async (e)=>{
-      const btn = e.target.closest('[data-scale-save]');
-      if(!btn) return;
-      const id = btn.getAttribute('data-scale-save');
-      const sel = document.querySelector(`select[data-scale="${CSS.escape(id)}"]`);
-      const scale = Number(sel?.value||1);
-      try{
-        await j('/.netlify/functions/user-level-set', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ userId:id, scale })});
-        await loadApproved();
-      }catch(err){ alert('Set scale failed: '+err.message); }
-    });
-    el('btnAddUser')?.addEventListener('click', async ()=>{
-      const name  = el('nu-name').value.trim();
-      const email = el('nu-email').value.trim();
-      const phone = el('nu-phone').value.trim();
-      const tg    = el('nu-tg').value.trim();
-      html('nu-msg','');
-      if(!name||!email){ html('nu-msg','Name & email required'); return; }
-      try{
-        // Invite/create approved user (adjust if you prefer a different function)
-        await j('/.netlify/functions/invite-create', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ name, email, phone, telegramHandle: tg })});
-        html('nu-msg','User created/invited.'); el('nu-name').value=el('nu-email').value=el('nu-phone').value=el('nu-tg').value='';
-        await loadApproved();
-      }catch(e){ html('nu-msg','Create failed: '+e.message); }
-    });
 
-    // -------- 4) PERFORMANCE
-    async function loadPerf(){
-      const win = el('perf-window').value;
-      try{
-        // preferred (if you add later): /.netlify/functions/performance?window=daily|weekly|monthly
-        let p;
-        try{
-          p = await j('/.netlify/functions/performance?window='+encodeURIComponent(win));
-        }catch{ p = null; }
-        if(!p){
-          // fallback to /summary
-          const s = await j('/.netlify/functions/summary');
-          p = { clicks: s.clicks||0, leads: s.leads||0, earnings: s.totalEarnings||0, growthNote:'Projected from summary only' };
-        }
-        set('p-clicks', String(p.clicks||0));
-        set('p-leads',  String(p.leads||0));
-        set('p-earn',   fmtUSD(p.earnings||0));
-        set('p-proj',   p.growthNote || 'Projection uses simple momentum from last periods.');
-      }catch(e){
-        set('p-proj','Failed to load performance: '+e.message);
-      }
-    }
-    el('perf-window')?.addEventListener('change', loadPerf);
-
-    // -------- 5) WALLET
+    // --------- Wallet
     async function loadWallet(){
-      // banks for destination select
+      const body = document.querySelector('#wallet-table tbody');
+      body.innerHTML = '<tr><td class="muted" colspan="4">Loading…</td></tr>';
       try{
-        const r = await j('/.netlify/functions/banks');
-        const sel = el('w-bank');
-        sel.innerHTML = '<option value="">Select Bank/Wallet</option>';
-        (r.banks||[]).forEach(b=>{
-          const opt=document.createElement('option');
-          opt.value=b.code; opt.textContent=b.name+' ('+b.code+')';
-          sel.appendChild(opt);
-        });
-      }catch{}
-      // wallet summary + rows
-      try{
-        const w = await j('/.netlify/functions/wallet?limit=50');
-        set('w-inflow',  fmtUSD(w.inflow||0));
-        set('w-outflow', fmtUSD(w.outflow||0));
-        const balance = Math.max(0, (w.inflow||0) - (w.outflow||0));
-        set('w-balance', fmtUSD(balance));
-        const body = document.querySelector('#wallet-table tbody');
-        body.innerHTML='';
-        (w.items||[]).forEach(row=>{
-          const when = row.ts ? new Date(row.ts).toLocaleString() : '';
-          const tr=document.createElement('tr');
+        const w = await fetchJSON('/.netlify/functions/wallet?limit=50');
+        setText('w-inflow', fmtUSD(w.inflow||0));
+        setText('w-outflow', fmtUSD(w.outflow||0));
+        setText('w-net',    fmtUSD(w.net||0));
+        body.innerHTML = '';
+        (w.items||[]).forEach(it=>{
+          const tr = document.createElement('tr');
+          const when = it.ts ? new Date(it.ts).toLocaleString() : '';
           tr.innerHTML = `
-            <td>${esc(when)}</td>
-            <td>${fmtUSD(row.amount||0)}</td>
-            <td>${esc(row.method||'')}</td>
-            <td><span class="chip">${esc(row.status||'')}</span></td>`;
+            <td>${escapeHtml(when)}</td>
+            <td>${fmtUSD(it.amount||0)}</td>
+            <td>${escapeHtml(it.method||'')}</td>
+            <td>${escapeHtml(it.status||'')}</td>`;
           body.appendChild(tr);
         });
-        if(!w.items || !w.items.length){
-          document.querySelector('#wallet-table tbody').innerHTML = '<tr><td class="muted" colspan="4">No wallet activity yet.</td></tr>';
-        }
-      }catch(e){}
+        if(!w.items || w.items.length===0) body.innerHTML = '<tr><td class="muted" colspan="4">No wallet activity yet.</td></tr>';
+      }catch(e){
+        body.innerHTML = `<tr><td class="muted" colspan="4">Failed to load wallet: ${escapeHtml(e.message)}</td></tr>`;
+      }
     }
-    el('w-validate')?.addEventListener('click', async ()=>{
-      const bank = el('w-bank').value.trim();
-      const acct = el('w-acct').value.trim();
-      if(!bank || !acct){ html('w-msg','Enter bank and account number'); return; }
-      html('w-msg','Validating…');
-      try{
-        const r = await j('/.netlify/functions/paystack-resolve', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ bankCode:bank, accountNumber:acct })});
-        if(r && r.ok && r.account_name){ html('w-msg','Account: <b>'+esc(r.account_name)+'</b> ✓'); }
-        else html('w-msg','Unable to validate account');
-      }catch(e){ html('w-msg','Error: '+e.message); }
-    });
-    el('w-withdraw')?.addEventListener('click', async ()=>{
-      const bank = el('w-bank').value.trim();
-      const acct = el('w-acct').value.trim();
-      const amt  = parseFloat(el('w-amt').value||'0');
-      const why  = el('w-reason').value.trim()||'Payout';
-      if(!bank || !acct || !(amt>0)){ html('w-msg','Enter destination and amount'); return; }
-      html('w-msg','Submitting withdrawal…');
-      try{
-        const r = await j('/.netlify/functions/paystack-transfer', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ bankCode:bank, accountNumber:acct, amount:amt, reason:why })});
-        if(r && r.ok){ html('w-msg','Withdrawal queued ✓'); loadWallet(); }
-        else html('w-msg','Transfer failed');
-      }catch(e){ html('w-msg','Error: '+e.message); }
-    });
 
-    // -------- 6) SECURITY & MONITORING
-    async function loadSecurity(){
+    // --------- ADMIN (Pending approvals) — matches admin-pending.js
+    const AdminKey = {
+      set(v){ try{ localStorage.setItem('emp_admin_secret', v); }catch{} },
+      get(){ try{ return localStorage.getItem('emp_admin_secret') || ''; }catch{ return ''; } }
+    };
+    async function adminCall(method='GET', payload=null){
+      const opts = { method, headers:{ 'X-Admin-Secret': AdminKey.get() } };
+      if(payload){ opts.headers['Content-Type']='application/json'; opts.body = JSON.stringify(payload); }
+      const r = await fetch('/.netlify/functions/admin-pending', opts);
+      const data = await r.json().catch(()=> ({}));
+      if(!r.ok || data?.ok===false) throw new Error(data?.error || r.status);
+      return data;
+    }
+    async function loadPendingInto(sel){
+      const body = document.querySelector(sel);
+      body.innerHTML = `<tr><td class="muted" colspan="5">Loading…</td></tr>`;
       try{
-        const h = await j('/.netlify/functions/health');
-        html('sec-health', esc(JSON.stringify(h,null,2)));
-      }catch(e){ html('sec-health','Failed: '+e.message); }
-      // events
-      try{
-        const ev = await j('/.netlify/functions/events?limit=50');
-        const body = document.querySelector('#sec-events tbody');
-        body.innerHTML='';
-        (ev.events||[]).forEach(item=>{
-          const when = item.ts ? new Date(item.ts).toLocaleString() : '';
-          const tr=document.createElement('tr');
-          tr.innerHTML = `<td>${esc(when)}</td><td>${esc(item.actor||'')}</td><td>${esc(item.type||'')}</td><td>${esc(item.msg||'')}</td>`;
+        const res = await adminCall('GET');
+        const rows = Array.isArray(res.items) ? res.items : (res.rows || []);
+        body.innerHTML = '';
+        if(!rows.length){ body.innerHTML = `<tr><td class="muted" colspan="5">No pending approvals.</td></tr>`; return; }
+        rows.forEach(row=>{
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${escapeHtml(row.name||'')}</td>
+            <td>${escapeHtml(row.email||'')}</td>
+            <td>${escapeHtml(row.phone||'')}</td>
+            <td>${escapeHtml(row.telegram||'')}</td>
+            <td>
+              <button class="btn" data-act="approve">Approve</button>
+              <button class="btn" data-act="reject">Reject</button>
+            </td>`;
+          tr.querySelector('[data-act="approve"]').onclick = async ()=>{
+            const b = tr.querySelector('[data-act="approve"]'); b.disabled = true;
+            try{
+              await adminCall('POST', { action:'mark', id:row.id, status:'approved', name:row.name, email:row.email, phone:row.phone });
+              tr.remove();
+            }catch(e){ alert('Approve failed: '+e.message); b.disabled=false; }
+          };
+          tr.querySelector('[data-act="reject"]').onclick = async ()=>{
+            const b = tr.querySelector('[data-act="reject"]'); b.disabled = true;
+            try{
+              await adminCall('POST', { action:'mark', id:row.id, status:'rejected' });
+              tr.remove();
+            }catch(e){ alert('Reject failed: '+e.message); b.disabled=false; }
+          };
           body.appendChild(tr);
         });
-        if(!ev.events || !ev.events.length){
-          body.innerHTML = '<tr><td class="muted" colspan="4">No events.</td></tr>';
-        }
-      }catch(e){}
+      }catch(e){
+        body.innerHTML = `<tr><td class="muted" colspan="5">Pending endpoint not available (${escapeHtml(e.message)}).</td></tr>`;
+      }
     }
 
-    // Boot initial tab
-    initOverview();
+    // wire controls
+    (function initAdminUI(){
+      const sec = el('admin-secret'); if(sec) sec.value = AdminKey.get();
+      const save = el('save-secret'); if(save) save.onclick = ()=>{ AdminKey.set(el('admin-secret').value.trim()); el('secret-status').textContent='Saved.'; };
+      const load = el('load-pending'); if(load) load.onclick = ()=>{ el('secret-status').textContent=''; loadPendingInto('#pending-body'); };
+    })();
+
+    // simple “Add Approved User” stub (extend to your function if desired)
+    el('add-user')?.addEventListener('click', ()=>{
+      const name = el('au-name').value.trim();
+      const email= el('au-email').value.trim();
+      const phone= el('au-phone').value.trim();
+      const tgm  = el('au-telegram').value.trim();
+      if(!name || !email){ el('add-user-status').textContent='Name and Email required.'; return; }
+      el('add-user-status').textContent = 'This button is a stub — wire to your users function if needed.';
+    });
+
+    // kick off loads
+    loadSummary();
+    loadHealth();
+    loadUsersTable();
+    loadWallet();
   </script>
 </body>
 </html>

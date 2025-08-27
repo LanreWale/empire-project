@@ -2,477 +2,287 @@
 <html lang="en">
 <head>
   <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Empire — Dashboard</title>
+
+  <!-- Brand styles -->
   <link rel="stylesheet" href="/app/styles/brand.css"/>
+
   <style>
-    /* page-specific micro styles */
-    .rail{position:fixed;left:0;top:0;bottom:0;width:240px;padding:18px 12px;background:#0d1527;border-right:1px solid var(--emp-line)}
-    .rail h2{margin:6px 10px 16px;font-size:14px;letter-spacing:.3px;color:var(--emp-muted)}
-    .rail .nav{display:flex;flex-direction:column;gap:10px}
-    .nav a{display:block;padding:12px 14px;border-radius:14px;border:1px solid var(--emp-line);background:#0f182a;color:var(--emp-ink);text-decoration:none}
-    .nav a.active{outline:2px solid var(--emp-ring)}
-    .main{margin-left:260px}
-    .hdr{display:flex;align-items:center;gap:10px;margin:18px 0}
-    .hdr .emblem{width:36px;height:36px}
-    .kpis{display:grid;gap:14px;grid-template-columns:repeat(4,minmax(0,1fr))}
-    .tile{background:var(--emp-panel);border:1px solid var(--emp-line);border-radius:var(--radius);padding:14px}
-    .tile small{color:var(--emp-muted)}
-    .tile .val{font-size:28px;font-weight:900;margin-top:6px}
-    .two{display:grid;gap:14px;grid-template-columns:2fr 1fr}
-    .cards{display:grid;gap:14px;grid-template-columns:repeat(3,minmax(0,1fr))}
-    .card .kv{display:flex;justify-content:space-between;margin:4px 0}
-    .btn{background:linear-gradient(90deg,var(--emp-gold-1),var(--emp-gold-2));border:none;border-radius:12px;padding:10px 14px;font-weight:700;cursor:pointer}
-    .btn.secondary{background:#12203a;border:1px solid var(--emp-ring)}
+    /* Layout skeleton for this page */
+    body{min-height:100vh;display:grid;grid-template-columns:260px 1fr;gap:0}
+    aside{background:rgba(8,14,26,.7);border-right:1px solid var(--emp-line)}
+    main{min-height:100vh}
+
+    /* Sidebar */
+    .side-wrap{position:sticky;top:0;padding:18px 14px 22px}
+    .brand-row{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+    .brand-title{font-weight:900;letter-spacing:.2px}
+
+    .tabs{display:flex;flex-direction:column;gap:10px;margin-top:12px}
+    .tab{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:14px;background:#0f182a;
+         border:1px solid var(--emp-line);color:var(--emp-ink);cursor:pointer}
+    .tab:hover{border-color:var(--emp-ring)}
+    .tab.active{outline:2px solid var(--emp-ring)}
+
+    /* Main */
+    .emp-wrap{max-width:var(--container-w);margin:0 auto;padding:28px 14px 48px}
+    .view[hidden]{display:none !important}
+
+    /* Header */
+    .emp-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+    .emp-kicker{color:var(--emp-muted);font-size:12px}
+
+    /* Cards/blocks */
+    .panel{background:rgba(15,24,42,.9);border:1px solid var(--emp-line);border-radius:16px;padding:16px;margin:12px 0}
+    .grid{display:grid;gap:14px}
+    @media(min-width:860px){.grid.cols-2{grid-template-columns:1fr 1fr}}
+    @media(min-width:1100px){.grid.cols-3{grid-template-columns:1fr 1fr 1fr}}
+
+    .kpi{font-size:34px;font-weight:900}
+    .muted{color:var(--emp-muted)}
     .table{width:100%;border-collapse:collapse}
     .table th,.table td{padding:10px;border-bottom:1px solid var(--emp-line);text-align:left}
-    .panel .head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
-    .badges{display:flex;gap:6px;flex-wrap:wrap}
-    .badge{border:1px solid var(--emp-line);border-radius:999px;padding:4px 10px}
-    .form-grid{display:grid;gap:10px}
-    .form-grid.cols-2{grid-template-columns:1fr 1fr}
-    input,select{width:100%;background:#0f182a;border:1px solid var(--emp-line);border-radius:10px;color:var(--emp-ink);padding:10px}
-    dialog{border:none;border-radius:16px;background:#0f182a;color:var(--emp-ink);padding:0;max-width:560px}
-    dialog .body{padding:16px}
-    dialog .foot{display:flex;justify-content:flex-end;gap:10px;padding:14px;border-top:1px solid var(--emp-line)}
-    .muted{color:var(--emp-muted)}
-    .hero{margin-top:10px}
-    .right{display:flex;gap:10px}
-    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace}
+    .card-title{color:#cfe0ff;font-size:13px;margin-bottom:6px}
+
+    /* Make any decorative layers ignore clicks */
+    .brand-overlay,.hero:before,.hero:after{pointer-events:none}
   </style>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 </head>
 <body class="brand-bg">
-  <aside class="rail">
-    <div class="brand">
-      <img src="/app/assets/brand/emblem.svg" class="brand-logo" alt="Empire"/>
+
+  <!-- SIDEBAR -->
+  <aside>
+    <div class="side-wrap">
+      <div class="brand-row">
+        <img src="/app/assets/brand/commander_badge.png" alt="Supreme Command" width="36" height="36" class="brand-logo"/>
+        <div>
+          <div class="brand-title emp-title">EMPIRE</div>
+          <div class="emp-kicker">Command Center</div>
+        </div>
+      </div>
+
+      <nav class="tabs sidebar">
+        <button class="tab" data-tab="overview">Dashboard Overview</button>
+        <button class="tab" data-tab="accounts">CPA Accounts</button>
+        <button class="tab" data-tab="users">User Management</button>
+        <button class="tab" data-tab="analytics">Performance Analytics</button>
+        <button class="tab" data-tab="wallet">Wallet</button>
+        <button class="tab" data-tab="security">System Security & Monitoring</button>
+        <button class="tab" data-tab="maintenance">Predictive Maintenance</button>
+        <button class="tab" data-tab="promotion">User Promotion</button>
+      </nav>
     </div>
-    <h2>EMPIRE</h2>
-    <nav class="nav" id="nav">
-      <a href="#overview" class="active">Dashboard Overview</a>
-      <a href="#accounts">CPA Accounts</a>
-      <a href="#users">User Management</a>
-      <a href="#analytics">Performance Analytics</a>
-      <a href="#wallet">Wallet</a>
-      <a href="#monitor">System Security & Monitoring</a>
-      <a href="#maint">Predictive Maintenance</a>
-      <a href="#promote">User Promotion</a>
-    </nav>
   </aside>
 
-  <main class="emp-wrap main">
-    <header class="hdr">
-      <img src="/app/assets/brand/emblem.svg" class="emblem" alt=""/>
-      <h1 class="emp-title">Command Dashboard</h1>
-      <div class="muted">Live metrics · Accounts · Users · Analytics · Monitoring</div>
-    </header>
+  <!-- MAIN CONTENT -->
+  <main>
+    <div class="emp-wrap">
+      <header class="emp-header">
+        <h1 class="emp-title" style="margin:0">Command Dashboard</h1>
+        <div class="emp-kicker">Live metrics · Accounts · Users · Analytics · Monitoring</div>
+      </header>
 
-    <!-- Overview -->
-    <section class="panel" id="panel-overview">
-      <div class="kpis">
-        <div class="tile"><small>Total Earnings (USD)</small><div id="ov-earn" class="val">$0.00</div></div>
-        <div class="tile"><small>Active Users</small><div id="ov-users" class="val">0</div></div>
-        <div class="tile"><small>Approval Rate</small><div id="ov-approve" class="val">0%</div></div>
-        <div class="tile"><small>Pending Reviews</small><div id="ov-pending" class="val">0</div></div>
-      </div>
-      <div class="two" style="margin-top:14px">
-        <div class="card">
-          <div class="head"><div class="card-title">Performance Trends</div></div>
-          <canvas id="ov-line" height="120"></canvas>
-        </div>
-        <div class="card">
-          <div class="head"><div class="card-title">Geographic Distribution</div></div>
-          <canvas id="ov-geo" height="120"></canvas>
-        </div>
-      </div>
-    </section>
-
-    <!-- Accounts -->
-    <section class="panel" id="panel-accounts" hidden>
-      <div class="head">
-        <div class="card-title">CPA Accounts Management</div>
-        <div class="right">
-          <button class="btn secondary" id="btn-acc-refresh">Refresh</button>
-          <button class="btn" id="btn-acc-new">Add New Account</button>
-        </div>
-      </div>
-      <div class="cards" id="acc-cards"></div>
-    </section>
-
-    <!-- Users -->
-    <section class="panel" id="panel-users" hidden>
-      <div class="head">
-        <div class="card-title">Users Management</div>
-        <div class="badges">
-          <span class="badge mono" id="invite-link">https://superlative-pothos-ebf5f2.netlify.app/?ref=SUPREME_COMMANDER</span>
-          <button class="btn secondary" id="btn-share-wa">Share on WhatsApp</button>
-          <button class="btn" id="btn-user-add">Add New User</button>
-        </div>
-      </div>
-      <div class="card">
-        <div class="head"><div class="card-title">Active Users</div><button class="btn secondary" id="btn-users-refresh">Refresh</button></div>
-        <div class="table-scroll">
-          <table class="table" id="users-table">
-            <thead><tr><th>Name</th><th>Email</th><th>WhatsApp</th><th>Bank</th><th>Status</th><th>Actions</th></tr></thead>
-            <tbody></tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-
-    <!-- Analytics -->
-    <section class="panel" id="panel-analytics" hidden>
-      <div class="head"><div class="card-title">Performance Analytics</div></div>
-      <div class="two">
-        <div class="card">
-          <div class="card-title">Performance Overview (Monthly)</div>
-          <canvas id="an-bar" height="120"></canvas>
-        </div>
-        <div class="card">
-          <div class="card-title">Geographic Distribution</div>
-          <canvas id="an-geo" height="120"></canvas>
-        </div>
-      </div>
-      <div class="card" style="margin-top:14px">
-        <div class="card-title">Live Performance Data</div>
-        <div class="table-scroll">
-          <table class="table" id="an-live">
-            <thead><tr><th>Date & Time</th><th>Country</th><th>Offer Type</th><th>Device</th><th>Clicks</th><th>Leads</th><th>Earnings ($)</th></tr></thead>
-            <tbody></tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-
-    <!-- Wallet -->
-    <section class="panel" id="panel-wallet" hidden>
-      <div class="kpis">
-        <div class="tile"><small>Total Inflow (USD)</small><div id="w-inflow" class="val">$0.00</div></div>
-        <div class="tile"><small>Total Outflow (USD)</small><div id="w-outflow" class="val">$0.00</div></div>
-        <div class="tile"><small>Net (USD)</small><div id="w-net" class="val">$0.00</div></div>
-        <div class="tile"><small>Remaining Balance</small><div id="w-balance" class="val">$0.00</div></div>
-      </div>
-      <div class="card" style="margin-top:14px">
-        <div class="head"><div class="card-title">Recent Wallet Activity</div><button class="btn secondary" id="btn-w-refresh">Refresh</button></div>
-        <div class="table-scroll">
-          <table class="table" id="wallet-table">
-            <thead><tr><th>Date</th><th>Amount (USD)</th><th>Method</th><th>Status</th></tr></thead>
-            <tbody></tbody>
-          </table>
-        </div>
-      </div>
-      <div class="card" style="margin-top:14px">
-        <div class="head"><div class="card-title">Universal Withdrawal Request</div></div>
-        <div class="form-grid cols-2" id="withdraw-form">
-          <div><label class="card-title">Amount (USD)</label><input id="wd-amt" type="number" min="1" value="200"/></div>
-          <div><label class="card-title">Payout Category</label>
-            <select id="wd-cat"><option>Traditional Banks</option><option>Fintechs</option><option>Wallets</option></select>
+      <!-- ====== OVERVIEW ====== -->
+      <section id="view-overview" class="view">
+        <div class="grid cols-3">
+          <div class="panel">
+            <div class="card-title">Total Earnings (USD)</div>
+            <div class="kpi" id="kpi-earnings">$0.00</div>
+            <div class="muted" id="kpi-earnings-note">Synced from Google Sheets.</div>
           </div>
-          <div><label class="card-title">Country/Region</label><select id="wd-country"><option>Nigeria</option><option>Ghana</option><option>USA</option><option>UK</option></select></div>
-          <div><label class="card-title">Payment Method</label><select id="wd-method"></select></div>
-          <div><label class="card-title">Account Number</label><input id="wd-acct" placeholder="Enter account number"/></div>
-          <div><label class="card-title">Account Holder Name</label><input id="wd-name" placeholder="Enter account holder name"/></div>
-          <div><label class="card-title">WhatsApp Number (for notifications)</label><input id="wd-wa" placeholder="+234 xxx xxx xxxx"/></div>
-          <div style="align-self:end;text-align:right"><button class="btn" id="btn-withdraw">Submit</button></div>
-        </div>
-        <div class="muted" id="wd-note" style="margin-top:8px">Instant-mode simulation. Real rails can be connected via your payment gateway later.</div>
-      </div>
-    </section>
-
-    <!-- Monitoring -->
-    <section class="panel" id="panel-monitor" hidden>
-      <div class="two">
-        <div class="card">
-          <div class="card-title">System Health Monitor</div>
-          <pre id="health-json" class="mono" style="white-space:pre-wrap"></pre>
-        </div>
-        <div class="card">
-          <div class="card-title">Intelligent Alert System</div>
-          <div class="badges" id="alerts"></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Maintenance -->
-    <section class="panel" id="panel-maint" hidden>
-      <div class="cards">
-        <div class="card"><div class="card-title">Daily Performance Report</div><div class="muted">Scheduled · Next 08:00</div></div>
-        <div class="card"><div class="card-title">Revenue Analysis</div><div class="muted">Weekly · Thu 20:00</div></div>
-        <div class="card"><div class="card-title">Predictive Insights</div><div class="muted">AI-driven · on demand</div></div>
-        <div class="card"><div class="card-title">Security Audit</div><div class="muted">24/7 proactive alerts</div></div>
-        <div class="card"><div class="card-title">Cache Refresh</div><div class="muted">Automatic cache systems</div></div>
-        <div class="card"><div class="card-title">Database Optimization</div><div class="muted">Index/Perf tuning</div></div>
-      </div>
-    </section>
-
-    <!-- Promotion -->
-    <section class="panel" id="panel-promote" hidden>
-      <div class="two">
-        <div class="card">
-          <div class="card-title">Auto-Promotion Configuration</div>
-          <div class="form-grid">
-            <label>1× → 2× Level ($/mo) <input id="p-1" type="number" value="5000"/></label>
-            <label>2× → 3× Level ($/mo) <input id="p-2" type="number" value="15000"/></label>
-            <label>3× → 4× Level ($/mo) <input id="p-3" type="number" value="35000"/></label>
-            <label>4× → 5× Level ($/mo) <input id="p-4" type="number" value="75000"/></label>
-            <div class="badges">
-              <label><input type="checkbox" id="p-min-cr" checked/> Minimum conversion rate requirement (45%)</label>
-            </div>
-            <div class="badges">
-              <label><input type="checkbox" id="p-days" checked/> Minimum active days requirement (30)</label>
-              <label><input type="checkbox" id="p-approve" checked/> Require Commander manual approval</label>
-              <label><input type="checkbox" id="p-notify" checked/> Send promotion notifications</label>
-            </div>
-            <div style="text-align:right"><button class="btn" id="btn-prom-save">Save Configuration</button></div>
+          <div class="panel">
+            <div class="card-title">Active Users</div>
+            <div class="kpi" id="kpi-users">0</div>
+            <div class="muted">Connected</div>
+          </div>
+          <div class="panel">
+            <div class="card-title">Pending Reviews</div>
+            <div class="kpi" id="kpi-pending">0</div>
+            <div class="muted">Awaiting approval</div>
           </div>
         </div>
-        <div class="card">
-          <div class="card-title">Empire Growth Analytics</div>
-          <div class="muted">(placeholder for growth chart)</div>
-        </div>
-      </div>
-    </section>
 
-    <footer class="footer">© Empire Affiliate Marketing Hub</footer>
+        <div class="grid cols-2">
+          <div class="panel">
+            <div class="card-title">Performance Trends</div>
+            <div id="chart-trends" style="height:260px"></div>
+          </div>
+          <div class="panel">
+            <div class="card-title">Geographic Distribution</div>
+            <div id="chart-geo" style="height:260px"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ====== ACCOUNTS ====== -->
+      <section id="view-accounts" class="view" hidden>
+        <div class="panel">
+          <div class="card-title">CPA Accounts Management</div>
+          <div id="accounts-grid">Coming soon: live metrics per account and add-account modal.</div>
+        </div>
+      </section>
+
+      <!-- ====== USERS ====== -->
+      <section id="view-users" class="view" hidden>
+        <div class="panel">
+          <div class="card-title">Awaiting Approval</div>
+          <div style="display:flex;gap:10px;margin:8px 0">
+            <input id="adminSecret" placeholder="Admin secret…" style="flex:1;padding:10px;border-radius:10px;border:1px solid var(--emp-line);background:#0f182a;color:var(--emp-ink)"/>
+            <button class="chip" id="btnSaveAdmin">Save</button>
+            <button class="chip" id="btnLoadPending">Load pending</button>
+          </div>
+          <div class="table-scroll">
+            <table class="table" id="tbl-pending">
+              <thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Phone</th><th>Telegram</th><th>Actions</th></tr></thead>
+              <tbody><tr><td colspan="6" class="muted">Click “Load pending”.</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="card-title">Approved Users</div>
+          <div class="table-scroll">
+            <table class="table" id="tbl-approved">
+              <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Status</th><th>Scale</th></tr></thead>
+              <tbody><tr><td colspan="5" class="muted">No approved users yet.</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="card-title">Add Approved User</div>
+          <div class="grid cols-3">
+            <input id="add-name"  placeholder="Full name"/>
+            <input id="add-email" placeholder="Email"/>
+            <input id="add-phone" placeholder="Phone (+234…)"/>
+          </div>
+          <div style="margin-top:10px">
+            <input id="add-telegram" placeholder="Telegram @handle" style="width:100%"/>
+          </div>
+          <div style="margin-top:12px">
+            <button class="chip" id="btnAddUser">Add User</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ====== ANALYTICS ====== -->
+      <section id="view-analytics" class="view" hidden>
+        <div class="panel">
+          <div class="card-title">Daily / Weekly / Monthly summaries with projected growth — coming soon.</div>
+        </div>
+      </section>
+
+      <!-- ====== WALLET ====== -->
+      <section id="view-wallet" class="view" hidden>
+        <div class="grid cols-3">
+          <div class="panel">
+            <div class="card-title">Total Inflow (USD)</div>
+            <div class="kpi" id="wallet-in">$0.00</div>
+          </div>
+          <div class="panel">
+            <div class="card-title">Total Outflow (USD)</div>
+            <div class="kpi" id="wallet-out">$0.00</div>
+          </div>
+          <div class="panel">
+            <div class="card-title">Net (USD)</div>
+            <div class="kpi" id="wallet-net">$0.00</div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="card-title">Recent Wallet Activity</div>
+          <div class="table-scroll">
+            <table class="table" id="tbl-wallet">
+              <thead><tr><th>Date</th><th>Amount (USD)</th><th>Method</th><th>Status</th></tr></thead>
+              <tbody><tr><td colspan="4" class="muted">No wallet entries.</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ====== SECURITY ====== -->
+      <section id="view-security" class="view" hidden>
+        <div class="panel">
+          <div class="card-title">System Security & Monitoring</div>
+          <pre id="security-json" style="white-space:pre-wrap;margin:0" class="muted">{ }</pre>
+        </div>
+      </section>
+
+      <!-- ====== MAINTENANCE ====== -->
+      <section id="view-maintenance" class="view" hidden>
+        <div class="panel">
+          <div class="card-title">Predictive Maintenance & Automated Reports</div>
+          <div class="muted">Schedule designer coming soon.</div>
+        </div>
+      </section>
+
+      <!-- ====== PROMOTION ====== -->
+      <section id="view-promotion" class="view" hidden>
+        <div class="panel">
+          <div class="card-title">User Promotion</div>
+          <div class="muted">Auto-promotion thresholds and rules coming soon.</div>
+        </div>
+      </section>
+
+      <footer class="footer">© Empire Affiliate Marketing Hub</footer>
+    </div>
   </main>
 
-  <!-- Add Account dialog -->
-  <dialog id="dlg-account">
-    <div class="body">
-      <h3>Add New CPA Account</h3>
-      <div class="form-grid">
-        <input id="acc-name" placeholder="Account Name"/>
-        <input id="acc-url" placeholder="https://example.com"/>
-        <input id="acc-user" placeholder="User ID"/>
-        <input id="acc-key" placeholder="API Key"/>
-        <input id="acc-start" type="number" step="0.01" value="0.00" placeholder="Starting Revenue"/>
-      </div>
-    </div>
-    <div class="foot">
-      <button class="btn secondary" onclick="closeDlg('dlg-account')">Cancel</button>
-      <button class="btn" id="dlg-acc-save">Add Account</button>
-    </div>
-  </dialog>
+  <!-- TAB ROUTER (hash + clicks) -->
+  <script>
+  (function () {
+    const tabs  = Array.from(document.querySelectorAll('[data-tab]'));
+    const views = Array.from(document.querySelectorAll('.view'));
+    if (!tabs.length || !views.length) return;
 
-  <!-- Add User dialog -->
-  <dialog id="dlg-user">
-    <div class="body">
-      <h3>Add New User</h3>
-      <div class="form-grid">
-        <input id="u-name" placeholder="Full name"/>
-        <input id="u-email" placeholder="Email address"/>
-        <input id="u-wa" placeholder="+234 xxx xxx xxxx"/>
-        <input id="u-bank" placeholder="Bank name"/>
-        <input id="u-acct" placeholder="Account number"/>
-        <select id="u-level">
-          <option value="1x">1x Level</option><option value="2x">2x Level</option>
-          <option value="3x">3x Level</option><option value="4x">4x Level</option>
-          <option value="5x">5x Level</option>
-        </select>
-      </div>
-    </div>
-    <div class="foot">
-      <button class="btn secondary" onclick="closeDlg('dlg-user')">Cancel</button>
-      <button class="btn" id="dlg-user-save">Add User</button>
-    </div>
-  </dialog>
+    function showTab(name) {
+      const targetId = 'view-' + name;
+      tabs.forEach(btn => {
+        const on = btn.dataset.tab === name;
+        btn.classList.toggle('active', on);
+        btn.setAttribute('aria-current', on ? 'page' : 'false');
+      });
+      views.forEach(v => {
+        const on = v.id === targetId;
+        v.hidden = !on;
+        v.style.display = on ? '' : 'none';
+      });
+      if (location.hash.replace(/^#/, '') !== name) history.replaceState(null, '', '#' + name);
+    }
 
-<script>
-/* ---------- Routing (hash) ---------- */
-const panels = {
-  '#overview':'panel-overview',
-  '#accounts':'panel-accounts',
-  '#users':'panel-users',
-  '#analytics':'panel-analytics',
-  '#wallet':'panel-wallet',
-  '#monitor':'panel-monitor',
-  '#maint':'panel-maint',
-  '#promote':'panel-promote',
-};
-function showPanel(hash){
-  if(!panels[hash]) hash = '#overview';
-  document.querySelectorAll('main .panel').forEach(p=>p.hidden = true);
-  document.getElementById(panels[hash]).hidden = false;
-  document.querySelectorAll('.nav a').forEach(a=>a.classList.toggle('active', a.getAttribute('href')===hash));
-}
-window.addEventListener('hashchange',()=>showPanel(location.hash));
-showPanel(location.hash || '#overview');
+    tabs.forEach(btn => btn.addEventListener('click', e => {
+      e.preventDefault();
+      const name = btn.dataset.tab;
+      if (name) showTab(name);
+    }));
 
-/* ---------- Helpers ---------- */
-const money = n => (n||0).toLocaleString(undefined,{style:'currency',currency:'USD'});
-const ADMIN_KEY_K = 'empire:admin';
-const ADMIN_KEY = localStorage.getItem(ADMIN_KEY_K)||'';
-function fetchJSON(url, opts={}){
-  const h = Object.assign({'Content-Type':'application/json'}, opts.headers||{});
-  return fetch(url, Object.assign({headers:h}, opts)).then(r=>r.json());
-}
-function adminFetch(url, body){
-  return fetchJSON(url, { method: body ? 'POST' : 'GET',
-    headers:{'X-Admin-Secret': localStorage.getItem(ADMIN_KEY_K)||''},
-    body: body ? JSON.stringify(body) : undefined
-  });
-}
-function openDlg(id){document.getElementById(id).showModal()}
-function closeDlg(id){document.getElementById(id).close()}
+    window.addEventListener('hashchange', () => {
+      const name = (location.hash || '#overview').replace(/^#/, '');
+      showTab(name);
+    });
 
-/* ---------- Overview ---------- */
-async function loadOverview(){
-  const s = await fetchJSON('/.netlify/functions/summary?action=overview');
-  if(!s || s.ok===false) return;
-  document.getElementById('ov-earn').textContent = money(s.totalEarnings||0);
-  document.getElementById('ov-users').textContent = s.activeUsers||0;
-  document.getElementById('ov-approve').textContent = (s.approvalRate||0).toFixed(0)+'%';
-  document.getElementById('ov-pending').textContent = s.pendingReviews||0;
+    document.addEventListener('DOMContentLoaded', () => {
+      const initial = (location.hash || '').replace(/^#/, '')
+                   || (tabs[0] && tabs[0].dataset.tab) || 'overview';
+      showTab(initial);
+    });
 
-  // Line chart (hourly/daily earnings – mockable from summary)
-  const ctx = document.getElementById('ov-line');
-  new Chart(ctx,{type:'line',data:{labels:(s.trend?.labels||[]),datasets:[{label:'Daily Earnings ($)',data:(s.trend?.values||[]),tension:.4,borderWidth:3,pointRadius:0}]},options:{plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{grid:{color:'#1f2b44'}}}});
-
-  // Geo pie
-  const gctx = document.getElementById('ov-geo');
-  new Chart(gctx,{type:'doughnut',data:{labels:(s.geo?.labels||[]),datasets:[{data:(s.geo?.values||[])}]},options:{plugins:{legend:{position:'bottom'}}}});
-}
-
-/* ---------- Accounts ---------- */
-async function loadAccounts(){
-  const s = await fetchJSON('/.netlify/functions/summary?action=accounts&limit=5');
-  const el = document.getElementById('acc-cards'); el.innerHTML = '';
-  (s.accounts||[]).slice(0,5).forEach(acc=>{
-    const div = document.createElement('div');
-    div.className='card';
-    div.innerHTML = `
-      <div class="head"><div class="card-title mono">${acc.name||'CPA'}</div>
-        <span class="badge">${acc.status||'ACTIVE'}</span></div>
-      <div class="kv"><span>Active Offers</span><strong>${acc.offers||0}</strong></div>
-      <div class="kv"><span>Revenue</span><strong>${money(acc.revenue||0)}</strong></div>
-      <div class="kv"><span>Clicks</span><strong>${(acc.clicks||0).toLocaleString()}</strong></div>
-      <div class="kv"><span>Conversion</span><strong>${(acc.conversion||0).toFixed(1)}%</strong></div>
-      <div style="text-align:right;margin-top:8px"><button class="btn secondary">View details</button></div>
+    // Safety: ensure overlays never eat clicks
+    const css = document.createElement('style');
+    css.textContent = `
+      .tabs [data-tab]{cursor:pointer;pointer-events:auto}
+      .sidebar [data-tab]{cursor:pointer;pointer-events:auto}
+      .brand-overlay,.hero:before,.hero:after{pointer-events:none}
     `;
-    el.appendChild(div);
-  });
-}
-document.getElementById('btn-acc-refresh').onclick = loadAccounts;
-document.getElementById('btn-acc-new').onclick = ()=>openDlg('dlg-account');
-document.getElementById('dlg-acc-save').onclick = async ()=>{
-  const payload = {
-    action:'addAccount',
-    name:document.getElementById('acc-name').value.trim(),
-    url:document.getElementById('acc-url').value.trim(),
-    user:document.getElementById('acc-user').value.trim(),
-    key:document.getElementById('acc-key').value.trim(),
-    start:+document.getElementById('acc-start').value||0
-  };
-  await fetchJSON('/.netlify/functions/summary',{method:'POST',body:JSON.stringify(payload)});
-  closeDlg('dlg-account'); loadAccounts();
-};
+    document.head.appendChild(css);
+  })();
+  </script>
 
-/* ---------- Users ---------- */
-async function loadUsers(){
-  // Active users from summary
-  const s = await fetchJSON('/.netlify/functions/summary?action=users');
-  const tb = document.querySelector('#users-table tbody'); tb.innerHTML='';
-  (s.users||[]).forEach(u=>{
-    const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${u.name||''}</td>
-      <td>${u.email||''}</td>
-      <td>${u.whatsapp||''}</td>
-      <td>${u.bank||''}</td>
-      <td><span class="badge">${u.status||'ACTIVE'}</span></td>
-      <td><a href="#" class="muted">View</a> · <a href="#" class="muted">Edit</a></td>`;
-    tb.appendChild(tr);
-  });
-}
-document.getElementById('btn-users-refresh').onclick = loadUsers;
-document.getElementById('btn-user-add').onclick = ()=>openDlg('dlg-user');
-document.getElementById('dlg-user-save').onclick = async ()=>{
-  const payload = {
-    action:'addUser',
-    name:document.getElementById('u-name').value.trim(),
-    email:document.getElementById('u-email').value.trim(),
-    whatsapp:document.getElementById('u-wa').value.trim(),
-    bank:document.getElementById('u-bank').value.trim(),
-    acct:document.getElementById('u-acct').value.trim(),
-    level:document.getElementById('u-level').value
-  };
-  await adminFetch('/.netlify/functions/admin-pending', payload); // reuse secured function for adds
-  closeDlg('dlg-user'); loadUsers();
-};
-document.getElementById('btn-share-wa').onclick = ()=>{
-  const link = document.getElementById('invite-link').textContent.trim();
-  const url = `https://wa.me/?text=${encodeURIComponent(link)}`;
-  window.open(url,'_blank');
-};
-
-/* ---------- Analytics ---------- */
-async function loadAnalytics(){
-  const s = await fetchJSON('/.netlify/functions/summary?action=analytics');
-  // Monthly bar
-  new Chart(document.getElementById('an-bar'),{type:'bar',data:{labels:(s.months?.labels||[]),datasets:[{label:'Monthly Earnings ($)',data:(s.months?.values||[])}]},options:{plugins:{legend:{display:false}}}});
-  // Geo pie
-  new Chart(document.getElementById('an-geo'),{type:'pie',data:{labels:(s.geo?.labels||[]),datasets:[{data:(s.geo?.values||[])}]}});
-  // Live table
-  const tb = document.querySelector('#an-live tbody'); tb.innerHTML='';
-  (s.live||[]).forEach(r=>{
-    const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${r.time||''}</td><td>${r.country||''}</td><td>${r.type||''}</td><td>${r.device||''}</td><td>${r.clicks||0}</td><td>${r.leads||0}</td><td>${money(r.earnings||0)}</td>`;
-    tb.appendChild(tr);
-  });
-}
-
-/* ---------- Wallet ---------- */
-let walletItems=[];
-async function loadWallet(){
-  const w = await fetchJSON('/.netlify/functions/wallet?limit=50');
-  if(!w || w.ok===false) return;
-  document.getElementById('w-inflow').textContent = money(w.inflow||0);
-  document.getElementById('w-outflow').textContent = money(w.outflow||0);
-  document.getElementById('w-net').textContent = money(w.net||0);
-  // Simple “remaining balance” = net (adjust if you keep a base)
-  document.getElementById('w-balance').textContent = money(w.net||0);
-  walletItems = w.items||[];
-  const tb = document.querySelector('#wallet-table tbody'); tb.innerHTML='';
-  walletItems.forEach(r=>{
-    const tr = document.createElement('tr');
-    const dt = r.ts ? new Date(r.ts) : null;
-    tr.innerHTML = `<td>${dt?dt.toLocaleString():''}</td><td>${money(r.amount||0)}</td><td>${r.method||''}</td><td>${r.status||''}</td>`;
-    tb.appendChild(tr);
-  });
-}
-document.getElementById('btn-w-refresh').onclick = loadWallet;
-// dynamic methods list
-(function seedMethods(){
-  const el = document.getElementById('wd-method');
-  ['Polaris Bank','First Bank','Wema Bank','PalmPay','Opay','Paga','Stripe','PayPal'].forEach(x=>{
-    const o=document.createElement('option'); o.textContent=x; el.appendChild(o);
-  });
-})();
-document.getElementById('btn-withdraw').onclick = ()=>{
-  const amt = +document.getElementById('wd-amt').value||0;
-  if(amt<=0) return alert('Enter withdrawal amount');
-  alert('Withdrawal request submitted (demo). WhatsApp receipt will be sent after approval.');
-};
-
-/* ---------- Monitoring ---------- */
-async function loadHealth(){
-  const h = await fetchJSON('/.netlify/functions/health').catch(()=>({ok:false}));
-  document.getElementById('health-json').textContent = JSON.stringify(h,null,2);
-  const A = document.getElementById('alerts'); A.innerHTML='';
-  const alerts = [
-    {kind:'success', text:'System Optimized · AI improved conversion by 5.4%'},
-    {kind:'warn', text:'High Traffic Detected · Auto-scaling activated'},
-    {kind:'info', text:'Predictive Maintenance · Next optimization in 25 min'}
-  ];
-  alerts.forEach(a=>{const b=document.createElement('span'); b.className='badge'; b.textContent=a.text; A.appendChild(b);});
-}
-
-/* ---------- Promotion ---------- */
-document.getElementById('btn-prom-save').onclick = ()=>{
-  alert('Promotion configuration saved (demo). Values persisted in future step.');
-};
-
-/* ---------- Page boot ---------- */
-loadOverview(); loadAccounts(); loadUsers(); loadAnalytics(); loadWallet(); loadHealth();
-</script>
+  <!-- OPTIONAL: your existing data scripts (leave as-is if you already have them) -->
+  <!--
+  <script src="/app/init-admin.js"></script>
+  <script src="/app/init-wallet.js"></script>
+  <script src="/app/init-security.js"></script>
+  -->
 </body>
 </html>

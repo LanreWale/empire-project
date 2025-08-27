@@ -1,32 +1,43 @@
-// Proxy to Apps Script: returns numbers the dashboard expects (USD)
-exports.handler = async () => {
+"use strict";
+
+const ORIGIN = process.env.PUBLIC_SITE_ORIGIN || "*";
+const GAS_URL = process.env.GAS_BRIDGE_URL;
+const GS_KEY = (process.env.GS_WEBAPP_KEY || "").trim();
+const GS_SHEET_ID = (process.env.GS_SHEET_ID || "").trim();
+
+const cors = {
+  "Access-Control-Allow-Origin": ORIGIN,
+  "Access-Control-Allow-Headers": "Content-Type, Authorization",
+  "Access-Control-Allow-Methods": "GET, OPTIONS",
+  "Content-Type": "application/json",
+};
+
+const res = (s, b) => ({ statusCode: s, headers: cors, body: JSON.stringify(b) });
+
+exports.handler = async (event) => {
+  if (event.httpMethod === "OPTIONS") return { statusCode: 204, headers: cors, body: "" };
+  if (event.httpMethod !== "GET") return res(405, { ok: false, error: "Method not allowed" });
+  if (!GAS_URL || !GS_KEY) return res(500, { ok: false, error: "Missing GAS_BRIDGE_URL or GS_WEBAPP_KEY" });
+
   try {
-    const base = process.env.GSCRIPT_WEBAPP_URL;
-    if (!base) throw new Error("GSCRIPT_WEBAPP_URL not set");
+    // Build <GAS_URL>?action=summary&key=...&sheetId=...
+    const u = new URL(GAS_URL);
+    u.searchParams.set("action", "summary");
+    u.searchParams.set("key", GS_KEY);
+    if (GS_SHEET_ID) u.searchParams.set("sheetId", GS_SHEET_ID);
 
-    const r = await fetch(`${base}?action=summary`, { method: "GET" });
-    const raw = await r.text();
-    let data;
-    try { data = JSON.parse(raw); } catch { throw new Error("Bad JSON from Apps Script"); }
-    if (!r.ok || !data?.ok) throw new Error(data?.error || `Script HTTP ${r.status}`);
+    const r = await fetch(u.toString(), { headers: { "Cache-Control": "no-cache" } });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok || data?.ok === false) return res(r.status || 502, data || { ok: false });
 
-    const {
-      totalEarnings = 0,
-      activeUsers = 0,
-      approvalRate = 0,
-      pendingReviews = 0
-    } = data;
-
-    return {
-      statusCode: 200,
-      headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
-      body: JSON.stringify({ ok: true, totalEarnings, activeUsers, approvalRate, pendingReviews })
-    };
+    return res(200, {
+      ok: true,
+      totalEarnings: Number(data.totalEarnings || 0),
+      activeUsers: Number(data.activeUsers || 0),
+      approvalRate: Number(data.approvalRate || 0),
+      pendingReviews: Number(data.pendingReviews || 0),
+    });
   } catch (e) {
-    return {
-      statusCode: 500,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ok: false, error: String(e) })
-    };
+    return res(502, { ok: false, error: String(e) });
   }
 };

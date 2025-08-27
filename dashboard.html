@@ -5,16 +5,13 @@
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Empire — Dashboard</title>
 
-  <!-- Brand styles -->
   <link rel="stylesheet" href="/app/styles/brand.css"/>
 
   <style>
-    /* Layout skeleton for this page */
     body{min-height:100vh;display:grid;grid-template-columns:260px 1fr;gap:0}
     aside{background:rgba(8,14,26,.7);border-right:1px solid var(--emp-line)}
     main{min-height:100vh}
 
-    /* Sidebar */
     .side-wrap{position:sticky;top:0;padding:18px 14px 22px}
     .brand-row{display:flex;align-items:center;gap:10px;margin-bottom:16px}
     .brand-title{font-weight:900;letter-spacing:.2px}
@@ -25,15 +22,12 @@
     .tab:hover{border-color:var(--emp-ring)}
     .tab.active{outline:2px solid var(--emp-ring)}
 
-    /* Main */
     .emp-wrap{max-width:var(--container-w);margin:0 auto;padding:28px 14px 48px}
     .view[hidden]{display:none !important}
 
-    /* Header */
     .emp-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
     .emp-kicker{color:var(--emp-muted);font-size:12px}
 
-    /* Cards/blocks */
     .panel{background:rgba(15,24,42,.9);border:1px solid var(--emp-line);border-radius:16px;padding:16px;margin:12px 0}
     .grid{display:grid;gap:14px}
     @media(min-width:860px){.grid.cols-2{grid-template-columns:1fr 1fr}}
@@ -45,7 +39,6 @@
     .table th,.table td{padding:10px;border-bottom:1px solid var(--emp-line);text-align:left}
     .card-title{color:#cfe0ff;font-size:13px;margin-bottom:6px}
 
-    /* Make any decorative layers ignore clicks */
     .brand-overlay,.hero:before,.hero:after{pointer-events:none}
   </style>
 </head>
@@ -66,16 +59,16 @@
         <button class="tab" data-tab="overview">Dashboard Overview</button>
         <button class="tab" data-tab="accounts">CPA Accounts</button>
         <button class="tab" data-tab="users">User Management</button>
+        <button class="tab" data-tab="promotion">User Promotion</button>
         <button class="tab" data-tab="analytics">Performance Analytics</button>
         <button class="tab" data-tab="wallet">Wallet</button>
-        <button class="tab" data-tab="security">System Security & Monitoring</button>
         <button class="tab" data-tab="maintenance">Predictive Maintenance</button>
-        <button class="tab" data-tab="promotion">User Promotion</button>
+        <button class="tab" data-tab="security">System Security & Monitoring</button>
       </nav>
     </div>
   </aside>
 
-  <!-- MAIN CONTENT -->
+  <!-- MAIN -->
   <main>
     <div class="emp-wrap">
       <header class="emp-header">
@@ -83,206 +76,71 @@
         <div class="emp-kicker">Live metrics · Accounts · Users · Analytics · Monitoring</div>
       </header>
 
-      <!-- ====== OVERVIEW ====== -->
+      <!-- Overview -->
       <section id="view-overview" class="view">
         <div class="grid cols-3">
-          <div class="panel">
-            <div class="card-title">Total Earnings (USD)</div>
-            <div class="kpi" id="kpi-earnings">$0.00</div>
-            <div class="muted" id="kpi-earnings-note">Synced from Google Sheets.</div>
-          </div>
-          <div class="panel">
-            <div class="card-title">Active Users</div>
-            <div class="kpi" id="kpi-users">0</div>
-            <div class="muted">Connected</div>
-          </div>
-          <div class="panel">
-            <div class="card-title">Pending Reviews</div>
-            <div class="kpi" id="kpi-pending">0</div>
-            <div class="muted">Awaiting approval</div>
-          </div>
-        </div>
-
-        <div class="grid cols-2">
-          <div class="panel">
-            <div class="card-title">Performance Trends</div>
-            <div id="chart-trends" style="height:260px"></div>
-          </div>
-          <div class="panel">
-            <div class="card-title">Geographic Distribution</div>
-            <div id="chart-geo" style="height:260px"></div>
-          </div>
+          <div class="panel"><div class="card-title">Total Earnings (USD)</div><div class="kpi" id="kpi-earnings">$0.00</div></div>
+          <div class="panel"><div class="card-title">Active Users</div><div class="kpi" id="kpi-users">0</div></div>
+          <div class="panel"><div class="card-title">Pending Reviews</div><div class="kpi" id="kpi-pending">0</div></div>
         </div>
       </section>
 
-      <!-- ====== ACCOUNTS ====== -->
+      <!-- Accounts -->
       <section id="view-accounts" class="view" hidden>
-        <div class="panel">
-          <div class="card-title">CPA Accounts Management</div>
-          <div id="accounts-grid">Coming soon: live metrics per account and add-account modal.</div>
-        </div>
+        <div class="panel"><div class="card-title">CPA Accounts</div><div id="accounts-grid">Live metrics will load here.</div></div>
       </section>
 
-      <!-- ====== USERS ====== -->
+      <!-- Users -->
       <section id="view-users" class="view" hidden>
-        <div class="panel">
-          <div class="card-title">Awaiting Approval</div>
-          <div style="display:flex;gap:10px;margin:8px 0">
-            <input id="adminSecret" placeholder="Admin secret…" style="flex:1;padding:10px;border-radius:10px;border:1px solid var(--emp-line);background:#0f182a;color:var(--emp-ink)"/>
-            <button class="chip" id="btnSaveAdmin">Save</button>
-            <button class="chip" id="btnLoadPending">Load pending</button>
-          </div>
-          <div class="table-scroll">
-            <table class="table" id="tbl-pending">
-              <thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Phone</th><th>Telegram</th><th>Actions</th></tr></thead>
-              <tbody><tr><td colspan="6" class="muted">Click “Load pending”.</td></tr></tbody>
-            </table>
-          </div>
-        </div>
-
-        <div class="panel">
-          <div class="card-title">Approved Users</div>
-          <div class="table-scroll">
-            <table class="table" id="tbl-approved">
-              <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Status</th><th>Scale</th></tr></thead>
-              <tbody><tr><td colspan="5" class="muted">No approved users yet.</td></tr></tbody>
-            </table>
-          </div>
-        </div>
-
-        <div class="panel">
-          <div class="card-title">Add Approved User</div>
-          <div class="grid cols-3">
-            <input id="add-name"  placeholder="Full name"/>
-            <input id="add-email" placeholder="Email"/>
-            <input id="add-phone" placeholder="Phone (+234…)"/>
-          </div>
-          <div style="margin-top:10px">
-            <input id="add-telegram" placeholder="Telegram @handle" style="width:100%"/>
-          </div>
-          <div style="margin-top:12px">
-            <button class="chip" id="btnAddUser">Add User</button>
-          </div>
-        </div>
+        <div class="panel"><div class="card-title">User Management</div><div class="muted">Approval, scaling, invite links…</div></div>
       </section>
 
-      <!-- ====== ANALYTICS ====== -->
+      <!-- Promotion -->
+      <section id="view-promotion" class="view" hidden>
+        <div class="panel"><div class="card-title">User Promotion</div><div class="muted">Promotion thresholds and rules.</div></div>
+      </section>
+
+      <!-- Analytics -->
       <section id="view-analytics" class="view" hidden>
-        <div class="panel">
-          <div class="card-title">Daily / Weekly / Monthly summaries with projected growth — coming soon.</div>
-        </div>
+        <div class="panel"><div class="card-title">Performance Analytics</div><div class="muted">Charts & growth projections.</div></div>
       </section>
 
-      <!-- ====== WALLET ====== -->
+      <!-- Wallet -->
       <section id="view-wallet" class="view" hidden>
         <div class="grid cols-3">
-          <div class="panel">
-            <div class="card-title">Total Inflow (USD)</div>
-            <div class="kpi" id="wallet-in">$0.00</div>
-          </div>
-          <div class="panel">
-            <div class="card-title">Total Outflow (USD)</div>
-            <div class="kpi" id="wallet-out">$0.00</div>
-          </div>
-          <div class="panel">
-            <div class="card-title">Net (USD)</div>
-            <div class="kpi" id="wallet-net">$0.00</div>
-          </div>
-        </div>
-        <div class="panel">
-          <div class="card-title">Recent Wallet Activity</div>
-          <div class="table-scroll">
-            <table class="table" id="tbl-wallet">
-              <thead><tr><th>Date</th><th>Amount (USD)</th><th>Method</th><th>Status</th></tr></thead>
-              <tbody><tr><td colspan="4" class="muted">No wallet entries.</td></tr></tbody>
-            </table>
-          </div>
+          <div class="panel"><div class="card-title">Total Inflow</div><div class="kpi" id="wallet-in">$0.00</div></div>
+          <div class="panel"><div class="card-title">Total Outflow</div><div class="kpi" id="wallet-out">$0.00</div></div>
+          <div class="panel"><div class="card-title">Net</div><div class="kpi" id="wallet-net">$0.00</div></div>
         </div>
       </section>
 
-      <!-- ====== SECURITY ====== -->
-      <section id="view-security" class="view" hidden>
-        <div class="panel">
-          <div class="card-title">System Security & Monitoring</div>
-          <pre id="security-json" style="white-space:pre-wrap;margin:0" class="muted">{ }</pre>
-        </div>
-      </section>
-
-      <!-- ====== MAINTENANCE ====== -->
+      <!-- Maintenance -->
       <section id="view-maintenance" class="view" hidden>
-        <div class="panel">
-          <div class="card-title">Predictive Maintenance & Automated Reports</div>
-          <div class="muted">Schedule designer coming soon.</div>
-        </div>
+        <div class="panel"><div class="card-title">Predictive Maintenance</div><div class="muted">Automation schedules here.</div></div>
       </section>
 
-      <!-- ====== PROMOTION ====== -->
-      <section id="view-promotion" class="view" hidden>
-        <div class="panel">
-          <div class="card-title">User Promotion</div>
-          <div class="muted">Auto-promotion thresholds and rules coming soon.</div>
-        </div>
+      <!-- Security -->
+      <section id="view-security" class="view" hidden>
+        <div class="panel"><div class="card-title">System Security & Monitoring</div><pre id="security-json" class="muted">{ }</pre></div>
       </section>
 
       <footer class="footer">© Empire Affiliate Marketing Hub</footer>
     </div>
   </main>
 
-  <!-- TAB ROUTER (hash + clicks) -->
   <script>
-  (function () {
+  (function(){
     const tabs  = Array.from(document.querySelectorAll('[data-tab]'));
     const views = Array.from(document.querySelectorAll('.view'));
-    if (!tabs.length || !views.length) return;
-
-    function showTab(name) {
-      const targetId = 'view-' + name;
-      tabs.forEach(btn => {
-        const on = btn.dataset.tab === name;
-        btn.classList.toggle('active', on);
-        btn.setAttribute('aria-current', on ? 'page' : 'false');
-      });
-      views.forEach(v => {
-        const on = v.id === targetId;
-        v.hidden = !on;
-        v.style.display = on ? '' : 'none';
-      });
-      if (location.hash.replace(/^#/, '') !== name) history.replaceState(null, '', '#' + name);
+    function showTab(name){
+      tabs.forEach(btn=>btn.classList.toggle('active',btn.dataset.tab===name));
+      views.forEach(v=>v.hidden=(v.id!=='view-'+name));
+      history.replaceState(null,'','#'+name);
     }
-
-    tabs.forEach(btn => btn.addEventListener('click', e => {
-      e.preventDefault();
-      const name = btn.dataset.tab;
-      if (name) showTab(name);
-    }));
-
-    window.addEventListener('hashchange', () => {
-      const name = (location.hash || '#overview').replace(/^#/, '');
-      showTab(name);
-    });
-
-    document.addEventListener('DOMContentLoaded', () => {
-      const initial = (location.hash || '').replace(/^#/, '')
-                   || (tabs[0] && tabs[0].dataset.tab) || 'overview';
-      showTab(initial);
-    });
-
-    // Safety: ensure overlays never eat clicks
-    const css = document.createElement('style');
-    css.textContent = `
-      .tabs [data-tab]{cursor:pointer;pointer-events:auto}
-      .sidebar [data-tab]{cursor:pointer;pointer-events:auto}
-      .brand-overlay,.hero:before,.hero:after{pointer-events:none}
-    `;
-    document.head.appendChild(css);
+    tabs.forEach(btn=>btn.onclick=()=>showTab(btn.dataset.tab));
+    window.addEventListener('hashchange',()=>showTab(location.hash.replace('#','')||'overview'));
+    document.addEventListener('DOMContentLoaded',()=>showTab(location.hash.replace('#','')||'overview'));
   })();
   </script>
-
-  <!-- OPTIONAL: your existing data scripts (leave as-is if you already have them) -->
-  <!--
-  <script src="/app/init-admin.js"></script>
-  <script src="/app/init-wallet.js"></script>
-  <script src="/app/init-security.js"></script>
-  -->
 </body>
 </html>

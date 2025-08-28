@@ -64,6 +64,3 @@ exports.handler = async () => {
     return RESP(200,{ ok:true, monthly, geo, table });
   }catch(e){
     return RESP(500,{ ok:false, error:String(e) });
->>>>>>> f1ddff6 (fix: rename analytics function correctly)
-  }
-};

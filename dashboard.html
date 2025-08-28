@@ -2,11 +2,10 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>Empire — Command Dashboard</title>
 <meta name="color-scheme" content="dark"/>
 
-<!-- Optional: your brand stylesheet (kept compatible). Safe to remove if you prefer only inline styles -->
 <link rel="stylesheet" href="/app/styles/brand.css"/>
 
 <style>
@@ -21,8 +20,6 @@ body{
            linear-gradient(180deg, rgba(24,35,62,.55), rgba(24,35,62,.1)), var(--bg);
   color:var(--ink); font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,sans-serif;
 }
-
-/* Shell & left nav */
 .shell{display:grid; grid-template-columns:260px 1fr; gap:18px; max-width:1280px; margin:0 auto; padding:24px 14px 40px}
 @media(max-width:980px){ .shell{grid-template-columns:1fr} }
 .sidebar{background:rgba(15,24,42,.9); border:1px solid var(--line); border-radius:16px; padding:16px; box-shadow:0 10px 30px rgba(0,0,0,.25)}
@@ -32,8 +29,6 @@ body{
 .nav{display:flex; flex-direction:column; gap:8px}
 .nav button{ text-align:left; width:100%; background:#0f182a; border:1px solid var(--line); color:#cfe0ff; padding:10px 12px; border-radius:10px; cursor:pointer; font-weight:700 }
 .nav button.active{ outline:2px solid var(--ring) }
-
-/* Top badges + buttons */
 .top{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px }
 .top .right{display:flex; gap:8px; align-items:center}
 .btn{background:#2b66f6; color:#fff; border:0; padding:10px 12px; border-radius:10px; cursor:pointer; font-weight:800}
@@ -42,8 +37,6 @@ body{
 .badge.ok{background:rgba(22,163,74,.2); border-color:#166534}
 .badge.down{background:rgba(220,38,38,.2); border-color:#991b1b}
 .badge.warn{background:rgba(245,158,11,.2); border-color:#b45309}
-
-/* Content */
 .panel{background:rgba(15,24,42,.9); border:1px solid var(--line); border-radius:16px; padding:16px; margin-bottom:16px}
 .grid{display:grid; gap:14px}
 @media(min-width:960px){ .cols-2{grid-template-columns:1fr 1fr} .cols-3{grid-template-columns:repeat(3,1fr)} .cols-4{grid-template-columns:repeat(4,1fr)} }
@@ -55,8 +48,6 @@ body{
 .table th{color:#cfe0ff}
 .tableScroll{overflow:auto}
 .hidden{display:none !important}
-
-/* Forms */
 label{display:block; font-size:13px; color:#cfe0ff; margin:10px 0 6px}
 input,select,textarea{width:100%; background:#0b162a; color:#e8eefc; border:1px solid var(--ring); border-radius:12px; padding:12px 10px}
 .row{display:flex; gap:10px; flex-wrap:wrap}
@@ -64,32 +55,18 @@ input,select,textarea{width:100%; background:#0b162a; color:#e8eefc; border:1px 
 .note{margin-top:10px; padding:10px; border-radius:10px}
 .note.ok{background:#0f2a18; border:1px solid #1e5d38; color:#b7f7c3}
 .note.err{background:#2a0f13; border:1px solid #5d1e28; color:#ffb4c0}
-
-/* Progress bars (monitoring) */
-.barWrap{height:8px;background:#1f2b44;border-radius:999px;overflow:hidden}
-.bar{height:100%;width:0%;background:linear-gradient(90deg,var(--gold1),var(--gold2))}
-
-/* Status chips */
+.chartBox{height:260px}
 .status{padding:2px 8px; border-radius:999px; font-size:12px; border:1px solid var(--line); background:#121a2b}
 .status.ACTIVE{background:rgba(22,163,74,.18); border-color:#166534}
 .status.PENDING{background:rgba(245,158,11,.18); border-color:#b45309}
 .status.BLOCKED{background:rgba(220,38,38,.18); border-color:#991b1b}
 </style>
 
-<!-- Charts -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
-
-<!-- OPTIONAL: If you want to hard-set endpoints without editing JS, put this small config block BEFORE DOMContentLoaded
-<script>
-  window.EMPIRE_API = 'https://empireaffiliatemarketinghub.com/.netlify/functions';
-  window.GAS_URL    = 'https://script.google.com/macros/s/AKfycbzN5K7h4KRGGuPXsGWo3-nuv28JflmcvrTNjqDSDmGRUrUn3x7s0fGNKc-lP-tZVUgU/exec';
-</script>
--->
 </head>
 <body>
 
 <div class="shell">
-  <!-- ===== LEFT NAV ===== -->
   <aside class="sidebar">
     <div class="brandRow">
       <img src="/app/assets/brand/commander_badge.png" alt="Supreme Command"/>
@@ -110,7 +87,6 @@ input,select,textarea{width:100%; background:#0b162a; color:#e8eefc; border:1px 
     </div>
   </aside>
 
-  <!-- ===== MAIN ===== -->
   <main>
     <div class="top">
       <div>
@@ -160,7 +136,7 @@ input,select,textarea{width:100%; background:#0b162a; color:#e8eefc; border:1px 
       </div>
       <div id="cpaGrid" class="grid cols-3"></div>
 
-      <!-- Add Account Modal (inline) -->
+      <!-- Add Account Modal -->
       <div id="modalAddCpa" class="panel hidden">
         <h3 style="margin:0 0 6px">Add CPA Account</h3>
         <div class="row">
@@ -188,16 +164,11 @@ input,select,textarea{width:100%; background:#0b162a; color:#e8eefc; border:1px 
         <div class="card">
           <div class="muted">Invite link (working)</div>
           <input id="inviteLink" readonly value="https://superlative-pothos-ebf5f2.netlify.app/?ref=SUPREME_COMMANDER"/>
-          <div class="row" id="inviteActions" style="margin-top:10px">
-            <button class="btn alt" type="button" onclick="copyInviteLink()">Copy</button>
-            <button class="btn alt" type="button" onclick="shareWhatsApp()">Share on WhatsApp</button>
-            <button class="btn"     type="button" onclick="generateNewLink()">Generate New</button>
-          </div>
         </div>
         <div class="card">
           <div class="muted">Pending Approvals</div>
-          <div class="tableScroll" style="max-height:280px">
-            <table class="table"><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Action</th></tr></thead><tbody id="pendingBody"></tbody></table>
+          <div class="tableScroll" style="max-height:240px">
+            <table class="table"><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th></th></tr></thead><tbody id="pendingBody"></tbody></table>
           </div>
         </div>
       </div>
@@ -254,19 +225,6 @@ input,select,textarea{width:100%; background:#0b162a; color:#e8eefc; border:1px 
 
     <!-- ===== WALLET ===== -->
     <section id="view-wallet" class="panel hidden">
-      <!-- User balance equation block -->
-      <div class="panel">
-        <div class="muted" style="margin-bottom:6px">User Balance Calculation</div>
-        <div class="row">
-          <div><div class="muted">Available Balance</div><div id="userAvailableBalance" class="kpi" data-val="0">$0.00</div></div>
-          <div><div class="muted">Withdrawal Amount</div><div id="userWithdrawalAmount" class="kpi">$0.00</div></div>
-          <div><div class="muted">Remaining</div><div id="userRemainingBalance" class="kpi">$0.00</div></div>
-        </div>
-        <div class="note" style="margin-top:8px">
-          Withdrawals are processed on Fridays at 3:00 PM UTC for standard users.
-        </div>
-      </div>
-
       <div class="grid cols-4">
         <div class="card"><div class="muted">Available Balance</div><div id="w-available" class="kpi">$0.00</div></div>
         <div class="card"><div class="muted">Withdrawal Amount</div><div id="w-withdraw" class="kpi">$0.00</div></div>
@@ -278,7 +236,7 @@ input,select,textarea{width:100%; background:#0b162a; color:#e8eefc; border:1px 
         <div class="card">
           <div class="muted">Request Withdrawal</div>
           <div class="row">
-            <div><label>Amount (USD)</label><input id="wd-amt" type="number" step="0.01" value="0" oninput="updateUserBalanceEquation()"/></div>
+            <div><label>Amount (USD)</label><input id="wd-amt" type="number" step="0.01" value="0"/></div>
             <div><label>Method</label>
               <select id="wd-method">
                 <option value="">Select…</option>
@@ -333,34 +291,22 @@ input,select,textarea{width:100%; background:#0b162a; color:#e8eefc; border:1px 
     <!-- ===== MONITORING ===== -->
     <section id="view-monitoring" class="panel hidden">
       <div class="grid cols-2">
-        <!-- Live Activity Feed (left) -->
-        <div class="card">
-          <div class="muted">Live Activity Feed</div>
-          <div class="tableScroll" style="max-height:380px">
-            <div id="activityFeed"></div>
-          </div>
-        </div>
-
-        <!-- System Health with progress bars (right) -->
         <div class="card">
           <div class="muted">System Health</div>
           <div style="margin-top:8px">Server: <span id="h-server" class="badge">—</span></div>
           <div>Database: <span id="h-db" class="badge">—</span></div>
           <div>Sheets: <span id="h-sheets" class="badge">—</span></div>
           <div>AI: <span id="h-ai" class="badge">—</span></div>
-
-          <div style="margin-top:14px" class="muted">Performance</div>
-          <div class="note" style="background:#101829;border-color:#24304d">
-            <div style="display:flex;justify-content:space-between"><span>API Performance</span><span id="pctApi">—</span></div>
-            <div class="barWrap"><div id="barApi" class="bar"></div></div>
-            <div style="display:flex;justify-content:space-between;margin-top:8px"><span>Database Health</span><span id="pctDb">—</span></div>
-            <div class="barWrap"><div id="barDb" class="bar"></div></div>
-            <div style="display:flex;justify-content:space-between;margin-top:8px"><span>Sheets API</span><span id="pctSheets">—</span></div>
-            <div class="barWrap"><div id="barSheets" class="bar"></div></div>
-            <div style="display:flex;justify-content:space-between;margin-top:8px"><span>AI Processing</span><span id="pctAi">—</span></div>
-            <div class="barWrap"><div id="barAi" class="bar"></div></div>
-          </div>
           <div class="muted" style="margin-top:10px">Auto-refresh every 15s.</div>
+        </div>
+        <div class="card">
+          <div class="muted">Event Feed</div>
+          <div class="tableScroll" style="max-height:340px">
+            <table class="table">
+              <thead><tr><th>Time</th><th>Type</th><th>Message</th><th>Ref</th><th>Actor</th></tr></thead>
+              <tbody id="evBody"></tbody>
+            </table>
+          </div>
         </div>
       </div>
     </section>
@@ -369,460 +315,26 @@ input,select,textarea{width:100%; background:#0b162a; color:#e8eefc; border:1px 
   </main>
 </div>
 
+<!-- Bootstrap: load public config, then dashboard.js -->
 <script>
-/* ====================== CONFIG ====================== */
-const BASE   = (window.EMPIRE_API || '/.netlify/functions').replace(/\/+$/,'');
-const GAS    = (window.GAS_URL || '').replace(/\/+$/,'');
-const INVITE = "https://superlative-pothos-ebf5f2.netlify.app/?ref=SUPREME_COMMANDER";
-
-/* ====================== UTILS ======================= */
-const $=id=>document.getElementById(id);
-const q=(s,r=document)=>r.querySelector(s);
-const qa=(s,r=document)=>Array.from(r.querySelectorAll(s));
-const fmtUSD=n=> new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(+n||0);
-const num=n=> (+n||0).toLocaleString();
-const pct=n=> ((+n||0)*100).toFixed(1)+'%';
-const esc=s=> String(s??'').replace(/[&<>"']/g,m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
-
-/* Admin secret in localStorage */
-const ADMIN_KEY = 'empire.admin.secret';
-function getAdmin(){ try{return localStorage.getItem(ADMIN_KEY)||'';}catch{return '';} }
-function setAdmin(v){ try{localStorage.setItem(ADMIN_KEY,v||'')}catch{}; paintAdmin(); }
-function paintAdmin(){ const has = !!getAdmin(); const el=$('admStatus'); if(el){ el.textContent = has?'SET':'NOT SET'; el.className='badge '+(has?'ok':'warn'); }}
-
-/* HTTP helpers */
-function headers(json=true, includeAdmin=false){
-  const h={};
-  if(json) h['Content-Type']='application/json';
-  const adm = includeAdmin && getAdmin();
-  if(adm) h['X-Admin-Secret']=adm;
-  return h;
-}
-async function fetchJSON(url, opts){ const r= await fetch(url, opts||{}); if(!r.ok) throw new Error(r.status+' '+url); return r.json(); }
-
-/* Primary→Fallback loader */
-async function loadMaybe(fnPath, gasParams){
-  // Try Netlify function first
-  try{ return await fetchJSON(BASE + fnPath, {headers: headers(false, fnPath.includes('admin-pending') || fnPath.includes('users'))}); } catch(e){}
-  // Fallback to GAS if available
-  if(!GAS) throw new Error('No GAS_URL set and primary failed: '+fnPath);
-  const u=new URL(GAS);
-  Object.entries(gasParams||{}).forEach(([k,v])=>u.searchParams.set(k,String(v)));
-  return await fetchJSON(u.toString(), {headers: headers(false)});
-}
-
-/* ======================== TABS ====================== */
-const views = {
-  dashboard: $('view-dashboard'),
-  cpa:       $('view-cpa'),
-  users:     $('view-users'),
-  analytics: $('view-analytics'),
-  wallet:    $('view-wallet'),
-  security:  $('view-security'),
-  monitoring:$('view-monitoring')
-};
-qa('.nav button').forEach(b=>{
-  b.addEventListener('click', ()=>{
-    qa('.nav button').forEach(x=>x.classList.remove('active'));
-    b.classList.add('active');
-    const k=b.dataset.tab;
-    Object.values(views).forEach(v=>v.classList.add('hidden'));
-    (views[k]||views.dashboard).classList.remove('hidden');
-    // lazy load
-    if(k==='dashboard') loadOverview().catch(console.warn);
-    if(k==='cpa')       loadCpa().catch(console.warn);
-    if(k==='users')     loadUsers().catch(console.warn);
-    if(k==='analytics') loadAnalytics().catch(console.warn);
-    if(k==='wallet')    loadWallet().catch(console.warn);
-    if(k==='security')  loadSecurity().catch(console.warn);
-    if(k==='monitoring')loadMonitoring().catch(console.warn);
-  });
-});
-
-/* =================== OVERVIEW ======================= */
-let chartMonthly1, chartGeo1;
-async function loadOverview(){
-  try{
-    const s = await loadMaybe('/summary', {summary:1});
-    $('kpi-earn').textContent     = fmtUSD(s.totalEarnings ?? s.earnings ?? 0);
-    $('kpi-active').textContent   = num(s.activeUsers ?? 0);
-    $('kpi-pending').textContent  = num(s.pending ?? s.pendingReviews ?? 0);
-    $('kpi-clicks').textContent   = num(s.clicks ?? 0);
-    $('kpi-approval').textContent = s.approvalRate!=null ? (typeof s.approvalRate==='string'?s.approvalRate:pct(s.approvalRate)) : '—';
-    $('kpi-cr').textContent       = s.conversionRate!=null ? (typeof s.conversionRate==='string'?s.conversionRate:pct(s.conversionRate)) : '—';
-
-    const m = s.monthly || [];
-    const g = s.geo || s.geographic || [];
-    const live = s.live || [];
-
-    chartMonthly1 && chartMonthly1.destroy();
-    chartMonthly1 = new Chart($('#chartMonthly'), {
-      type:'line',
-      data:{ labels:m.map(x=>x.label||x.month),
-             datasets:[{ label:'Monthly Earnings', data:m.map(x=>x.value||x.amount||0), borderWidth:2, tension:.35 }]},
-      options:{plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}}}
-    });
-
-    chartGeo1 && chartGeo1.destroy();
-    chartGeo1 = new Chart($('#chartGeo'), {
-      type:'doughnut',
-      data:{ labels:g.map(x=>x.label||x.country),
-             datasets:[{ data:g.map(x=>x.value||x.amount||0)}]},
-      options:{plugins:{legend:{position:'right'}}}
-    });
-
-    const tb = $('#tbl-live').querySelector('tbody'); tb.innerHTML='';
-    live.forEach(r=>{
-      const tr=document.createElement('tr');
-      tr.innerHTML = `<td>${esc(r.time||'')}</td><td>${esc(r.country||'')}</td><td>${esc(r.offer||'')}</td>
-                      <td>${esc(r.device||'')}</td><td>${num(r.clicks||0)}</td><td>${num(r.leads||0)}</td>
-                      <td>${fmtUSD(r.earnings||0)}</td>`;
-      tb.appendChild(tr);
-    });
-  }catch(e){
-    console.warn('overview',e);
-  }
-}
-
-/* =================== CPA ACCOUNTS =================== */
-async function loadCpa(){
-  const grid = $('cpaGrid'); grid.innerHTML='';
-  try{
-    const r = await loadMaybe('/cpa/list', {cpa:1});
-    (r.items || r.accounts || []).forEach(acc=>{
-      const card=document.createElement('div'); card.className='card';
-      card.innerHTML = `
-        <div class="muted" style="margin-bottom:6px">${esc(acc.name||acc.id||'CPA')}</div>
-        <div style="display:flex;gap:10px;flex-wrap:wrap">
-          <div><div class="muted">Active Offers</div><div class="kpi" style="font-size:22px">${num(acc.offers||acc.activeOffers||0)}</div></div>
-          <div><div class="muted">Revenue</div><div class="kpi" style="font-size:22px">${fmtUSD(acc.revenue||0)}</div></div>
-          <div><div class="muted">Clicks</div><div class="kpi" style="font-size:22px">${num(acc.clicks||0)}</div></div>
-          <div><div class="muted">Conversion</div><div class="kpi" style="font-size:22px">${acc.conversionRate!=null?(typeof acc.conversionRate==='string'?acc.conversionRate:pct(acc.conversionRate)):'—'}</div></div>
-        </div>`;
-      grid.appendChild(card);
-    });
-    if(!grid.children.length) grid.innerHTML = `<div class="note err">Failed to load accounts or none found.</div>`;
-  }catch(e){
-    grid.innerHTML = `<div class="note err">Failed: ${esc(e.message)}</div>`;
-  }
-  $('#btnAddCpaOpen').onclick = ()=> $('#modalAddCpa').classList.remove('hidden');
-  $('#btnAddCpaClose').onclick= ()=> $('#modalAddCpa').classList.add('hidden');
-  $('#btnAddCpaSave').onclick = async ()=>{
-    const payload={
-      name:$('#cpaName').value.trim(), domain:$('#cpaDomain').value.trim(),
-      user:$('#cpaUserId').value.trim(), apiKey:$('#cpaApiKey').value.trim(),
-      startingRevenue:+$('#cpaStartRev').value||0
-    };
-    try{
-      await fetchJSON(BASE+'/cpa/add',{method:'POST',headers:headers(true,true),body:JSON.stringify(payload)});
-      $('#cpaNote').classList.remove('hidden'); setTimeout(()=>{ $('#modalAddCpa').classList.add('hidden'); loadCpa(); },800);
-    }catch(e){ alert('Save failed: '+e.message); }
-  };
-}
-
-/* =================== USERS ========================== */
-async function loadUsers(){
-  // PENDING (admin-pending GET; requires X-Admin-Secret)
-  try{
-    const p = await loadMaybe('/admin-pending', {action:'listPending'});
-    const body = $('pendingBody'); body.innerHTML='';
-    (p.items || p.users || p.pending || []).forEach(u=>{
-      const id = u.id || u.ID || u.rowId || '';
-      const tr=document.createElement('tr');
-      tr.innerHTML = `<td>${esc(u.name||'')}</td><td>${esc(u.email||'')}</td><td>${esc(u.phone||'')}</td>
-        <td style="display:flex;gap:6px;flex-wrap:wrap">
-          <button class="btn alt btnApprove" data-id="${esc(id)}">Approve</button>
-          <button class="btn alt btnReject"  data-id="${esc(id)}">Reject</button>
-        </td>`;
-      body.appendChild(tr);
-    });
-    body.querySelectorAll('.btnApprove').forEach(btn=>{
-      btn.onclick= ()=> markUser(btn.dataset.id, 'approved').catch(e=>alert(e.message));
-    });
-    body.querySelectorAll('.btnReject').forEach(btn=>{
-      btn.onclick= ()=> markUser(btn.dataset.id, 'rejected').catch(e=>alert(e.message));
-    });
-  }catch(e){
-    $('pendingBody').innerHTML=`<tr><td colspan="4">Failed (need Admin Secret?): ${esc(e.message)}</td></tr>`;
-  }
-
-  // APPROVED (fallback to /users?limit=200)
-  try{
-    const a = await loadMaybe('/users?limit=200', {approved:1});
-    const body = $('usersBody'); body.innerHTML='';
-    (a.items || a.users || []).forEach(u=>{
-      const tr=document.createElement('tr');
-      tr.innerHTML = `<td>${esc(u.name||'')}</td><td>${esc(u.email||'')}</td><td>${esc(u.whatsapp||u.phone||'')}</td>
-                      <td>${esc(u.bank||'')}</td><td>${esc(u.account||'')}</td>
-                      <td>${esc(u.authority||'User')}</td><td><span class="status ${esc(u.status||'ACTIVE')}">${esc(u.status||'ACTIVE')}</span></td>`;
-      body.appendChild(tr);
-    });
-    if(!body.children.length){ body.innerHTML=`<tr><td colspan="7" class="muted">No approved users yet.</td></tr>`; }
-  }catch(e){ $('usersBody').innerHTML=`<tr><td colspan="7">Failed: ${esc(e.message)}</td></tr>`; }
-
-  // Add user modal
-  $('#btnAddUserOpen').onclick = ()=> $('#modalAddUser').classList.remove('hidden');
-  $('#btnAddUserClose').onclick= ()=> $('#modalAddUser').classList.add('hidden');
-  $('#btnAddUserSave').onclick = async ()=>{
-    const payload={name:$('#uName').value,email:$('#uEmail').value,whatsapp:$('#uWa').value,authority:$('#uAuth').value,bank:$('#uBank').value,account:$('#uAcct').value};
-    try{
-      await fetchJSON(BASE+'/users/add',{method:'POST',headers:headers(true,true),body:JSON.stringify(payload)});
-      $('#userNote').classList.remove('hidden'); setTimeout(()=>{ $('#modalAddUser').classList.add('hidden'); loadUsers(); },800);
-    }catch(e){ alert('Save failed: '+e.message); }
-  };
-}
-async function markUser(id, status){
-  const body = { action:'mark', id, status };
-  const r = await fetchJSON(BASE+'/admin-pending',{method:'POST',headers:headers(true,true),body:JSON.stringify(body)});
-  if(!r?.ok) throw new Error(r?.error||'Approve/Reject failed');
-  loadUsers();
-}
-
-/* =================== ANALYTICS ====================== */
-let chartMonthly2, chartGeo2;
-async function loadAnalytics(){
-  try{
-    // prefer analytics/summary; fallback to summary
-    let s;
-    try{ s = await loadMaybe('/analytics/summary', {analytics:1}); }
-    catch{ s = await loadMaybe('/summary', {summary:1}); }
-    const m = s.monthly || [];
-    const g = s.geo || s.geographic || [];
-    const live = s.live || [];
-
-    chartMonthly2 && chartMonthly2.destroy();
-    chartMonthly2 = new Chart($('#chartMonthly2'), {
-      type:'bar',
-      data:{ labels:m.map(x=>x.label||x.month), datasets:[{ label:'Monthly', data:m.map(x=>x.value||x.amount||0)}] },
-      options:{plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}}}
-    });
-
-    chartGeo2 && chartGeo2.destroy();
-    chartGeo2 = new Chart($('#chartGeo2'), {
-      type:'pie',
-      data:{ labels:g.map(x=>x.label||x.country), datasets:[{ data:g.map(x=>x.value||x.amount||0)}] }
-    });
-
-    const tb = $('#tbl-live2').querySelector('tbody'); tb.innerHTML='';
-    live.forEach(r=>{
-      const tr=document.createElement('tr');
-      tr.innerHTML = `<td>${esc(r.time||'')}</td><td>${esc(r.country||'')}</td><td>${esc(r.offer||'')}</td>
-                      <td>${esc(r.device||'')}</td><td>${num(r.clicks||0)}</td><td>${num(r.leads||0)}</td><td>${fmtUSD(r.earnings||0)}</td>`;
-      tb.appendChild(tr);
-    });
-  }catch(e){
-    console.warn('analytics',e);
-  }
-}
-
-/* =================== WALLET ========================= */
-async function loadWallet(){
-  try{
-    // KPIs + list
-    const w = await loadMaybe('/wallet', {wallet:1});
-    $('w-available').textContent = fmtUSD(w.available ?? w.balance ?? 0);
-    $('w-withdraw').textContent  = fmtUSD(w.withdraw ?? 0);
-    $('w-proc').textContent      = fmtUSD(w.processing ?? 0);
-    const remaining = (w.available ?? w.balance ?? 0) - (w.withdraw ?? 0) - (w.processing ?? 0);
-    $('w-remaining').textContent = fmtUSD(remaining);
-
-    // user balance equation
-    $('userAvailableBalance').textContent = fmtUSD(w.available ?? w.balance ?? 0);
-    $('userAvailableBalance').dataset.val = (w.available ?? w.balance ?? 0);
-    updateUserBalanceEquation();
-
-    const list = $('walletList'); list.innerHTML='';
-    (w.items||w.history||[]).forEach(tx=>{
-      const wrap=document.createElement('div'); wrap.className='card';
-      wrap.innerHTML=`<div style="display:flex;justify-content:space-between">
-        <div><div class="muted">${esc(tx.method||'')}</div><div style="font-weight:800">${fmtUSD(tx.amount||0)}</div></div>
-        <div style="text-align:right"><div class="muted">${esc(tx.date||tx.ts||'')}</div><span class="status ${esc(tx.status||'COMPLETED')}">${esc(tx.status||'COMPLETED')}</span></div>
-      </div>`;
-      list.appendChild(wrap);
-    });
-
-    // banks
-    await ensureBanks();
-  }catch(e){
-    $('walletList').innerHTML = `<div class="note err">Failed: ${esc(e.message)}</div>`;
-  }
-
-  // Actions
-  $('#btnValidate').onclick = validateAccount;
-  $('#btnWithdraw').onclick = processUserWithdrawal;
-}
-function updateUserBalanceEquation(){
-  const avail = +($('userAvailableBalance').dataset.val||0);
-  const want  = +($('wd-amt')?.value||0);
-  $('userWithdrawalAmount').textContent = fmtUSD(want);
-  $('userRemainingBalance').textContent = fmtUSD(Math.max(0, avail - want));
-}
-async function ensureBanks(){
-  const sel = $('wd-bank');
-  if(sel && sel.options.length<=1){
-    try{
-      const b = await loadMaybe('/banks', {banks:1});
-      (b.banks||[]).forEach(x=>{
-        const opt=document.createElement('option');
-        opt.value = x.code; opt.textContent = `${x.name} (${x.code})`;
-        sel.appendChild(opt);
-      });
-    }catch(e){}
-  }
-}
-async function validateAccount(){
-  const code = $('wd-bank').value.trim();
-  const acct = $('wd-acct').value.trim();
-  if(!code || !acct) return alert('Select bank and enter account number.');
-  $('wd-name').value = 'Validating…';
-  try{
-    // Try Netlify endpoint first (if you added one)
-    let res;
-    try{ res = await fetchJSON(`${BASE}/account/resolve?bank=${encodeURIComponent(code)}&acct=${encodeURIComponent(acct)}`, {headers:headers(false,true)}); }
-    catch{
-      // Fallback to GAS if your script supports it
-      const u = new URL(GAS); u.searchParams.set('action','resolve'); u.searchParams.set('bank',code); u.searchParams.set('acct',acct);
-      res = await fetchJSON(u.toString());
+  (async () => {
+    try {
+      // default base to Netlify Functions; GAS set by public-config response
+      window.EMPIRE_API = '/.netlify/functions';
+      const res = await fetch('/.netlify/functions/public-config', { headers: { 'Cache-Control': 'no-cache' }});
+      const cfg = await res.json().catch(()=> ({}));
+      window.GAS_URL = cfg && (cfg.gasUrl || cfg.appsScriptUrl || '');
+      // also show public config in Security tab
+      window.__PUBLIC_CFG__ = cfg || {};
+    } catch(e) {
+      window.GAS_URL = '';
+      window.__PUBLIC_CFG__ = { error: String(e) };
+    } finally {
+      var s = document.createElement('script');
+      s.src = '/app/dashboard.js';
+      document.body.appendChild(s);
     }
-    if(res?.name){ $('wd-name').value = res.name; } else { $('wd-name').value = res?.account_name || 'Unknown'; }
-  }catch(e){
-    $('wd-name').value = 'Validation failed';
-  }
-}
-async function processUserWithdrawal(){
-  const amount = +($('wd-amt')?.value||0);
-  const method = $('wd-method').value;
-  const bank   = $('wd-bank').value;
-  const acct   = $('wd-acct').value.trim();
-  const wa     = $('wd-wa').value.trim();
-  if(!amount || !method) return alert('Enter amount and method.');
-  try{
-    const payload = { amount, method, bank, account:acct, whatsapp:wa };
-    let r;
-    try{
-      r = await fetchJSON(BASE+'/wallet/withdraw', {method:'POST', headers:headers(true,true), body:JSON.stringify(payload)});
-    }catch{
-      // Fallback GAS (if you wired action=withdraw)
-      const u=new URL(GAS);
-      u.searchParams.set('wallet','withdraw');
-      Object.entries(payload).forEach(([k,v])=>u.searchParams.set(k,String(v||'')));
-      r = await fetchJSON(u.toString());
-    }
-    if(r?.ok){ $('wdNote').classList.remove('hidden'); $('wdErr').classList.add('hidden'); }
-    else{ throw new Error(r?.error||'Submit failed'); }
-  }catch(e){
-    $('wdErr').textContent = 'Error: ' + e.message;
-    $('wdErr').classList.remove('hidden');
-    $('wdNote').classList.add('hidden');
-  }
-}
-
-/* =================== SECURITY ======================= */
-async function loadSecurity(){
-  paintAdmin();
-  $('btnAdminSet').onclick   = ()=>{ const v=prompt('Enter admin secret'); if(v) setAdmin(v); };
-  $('btnAdminClear').onclick = ()=> setAdmin('');
-
-  try{
-    const cfg = await loadMaybe('/public-config', {config:1});
-    $('pubCfg').textContent = JSON.stringify(cfg,null,2);
-  }catch(e){
-    $('pubCfg').textContent = 'Failed to load public config: '+e.message;
-  }
-}
-
-/* =================== MONITORING ===================== */
-function setBadge(el, ok){ if(!el) return; el.textContent = ok?'ONLINE':'OFFLINE'; el.className='badge '+(ok?'ok':'down'); }
-function fillBar(id, pct){
-  const el = $(id), label = $('pct'+id.slice(3)); // barApi -> pctApi
-  const v = Math.max(0, Math.min(100, Math.round(pct<=1 ? pct*100 : pct)));
-  if(el) el.style.width = v + '%';
-  if(label) label.textContent = v + '%';
-}
-function pushActivityFeed(events){
-  const box = $('activityFeed'); if(!box) return;
-  box.innerHTML = '';
-  (events||[]).slice(0,40).forEach(e=>{
-    const row = document.createElement('div');
-    row.className = 'card';
-    row.innerHTML = `<div style="display:flex;justify-content:space-between;gap:10px">
-      <div><div style="font-weight:700">${esc(e.type||'event')}</div>
-      <div class="muted" style="font-size:12px">${esc(e.msg||'')}</div></div>
-      <div class="muted" style="font-size:12px;text-align:right">${esc(e.time||e.ts||'')}</div>
-    </div>`;
-    box.appendChild(row);
-  });
-}
-async function loadMonitoring(){
-  try{
-    const r = await loadMaybe('/health', {health:1});
-    setBadge($('serverBadge'), r.server!==false); setBadge($('dbBadge'), r.db!==false);
-    setBadge($('sheetsBadge'), r.sheets!==false); setBadge($('aiBadge'), r.ai!==false);
-    setBadge($('h-server'), r.server!==false); setBadge($('h-db'), r.db!==false);
-    setBadge($('h-sheets'), r.sheets!==false); setBadge($('h-ai'), r.ai!==false);
-
-    pushActivityFeed(r.events||[]);
-    const m = r.metrics || {};
-    fillBar('barApi',    m.api ?? 0);
-    fillBar('barDb',     m.db ?? 0);
-    fillBar('barSheets', m.sheets ?? 0);
-    fillBar('barAi',     m.ai ?? 0);
-
-    // auto-refresh every 15s while tab is visible
-    if(!loadMonitoring._timer){
-      loadMonitoring._timer = setInterval(()=>{
-        if(!views.monitoring.classList.contains('hidden')) loadMonitoring().catch(()=>{});
-      },15000);
-    }
-  }catch(e){
-    // keep badges as-is; show feed error inline
-    const box=$('activityFeed');
-    if(box) box.innerHTML = `<div class="note err">Failed: ${esc(e.message)}</div>`;
-  }
-}
-
-/* ============== INVITE ACTIONS (Users tab) ============== */
-function copyInviteLink(){
-  const v = $('inviteLink')?.value || '';
-  navigator.clipboard?.writeText(v).then(()=>alert('Invite link copied.'));
-}
-function shareWhatsApp(){
-  const v = $('inviteLink')?.value || '';
-  const u = 'https://wa.me/?text=' + encodeURIComponent('Join via my invite link: ' + v);
-  window.open(u, '_blank');
-}
-async function generateNewLink(){
-  try{
-    const r = await fetchJSON(BASE+'/invite/new',{headers:headers(false,true)});
-    if(r?.url){ $('inviteLink').value = r.url; return; }
-  }catch(_){} // fall through
-  const ref = 'SUPREME_COMMANDER';
-  const base = new URL($('inviteLink').value || INVITE);
-  base.searchParams.set('ref', ref);
-  $('inviteLink').value = base.toString();
-  alert('Invite link refreshed.');
-}
-
-/* ================ INIT ============================== */
-window.addEventListener('DOMContentLoaded', async ()=>{
-  // Admin prompt
-  $('btnSetAdmin').onclick = ()=>{ const v=prompt('Enter admin secret'); if(v) setAdmin(v); };
-
-  // default view + initial data
-  loadOverview().catch(console.warn);
-
-  // invite link consistency
-  $('inviteLink').value = INVITE;
-
-  // preload banks once for wallet
-  ensureBanks().catch(()=>{});
-
-  // open tab via hash if present
-  const h = (location.hash||'').replace('#','');
-  if(h && views[h]){
-    qa('.nav button').forEach(b=>{ if(b.dataset.tab===h) b.click(); });
-  }
-});
+  })();
 </script>
 </body>
 </html>

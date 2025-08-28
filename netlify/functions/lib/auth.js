@@ -1,23 +1,30 @@
-<!-- auth.js -->
-<script>
-/* Tiny auth helper for Empire admin */
-window.EmpireAuth = (function () {
-  const KEY = "EMPIRE_TOKEN";
-  function get(){ try{ return localStorage.getItem(KEY) || ""; }catch{return ""} }
-  function set(tok){ try{ localStorage.setItem(KEY, tok||""); }catch{} }
-  function clear(){ try{ localStorage.removeItem(KEY); }catch{} }
-  function has(){ return !!get(); }
-  function authz(headers={}){
-    const t = get();
-    if (t) headers["Authorization"] = "Bearer " + t;
-    return headers;
+// netlify/functions/lib/auth.js
+"use strict";
+
+/**
+ * Checks for a Bearer token or ?key= in the request
+ * and compares it to EMPIRE_TOKEN (Netlify env var).
+ * Return `null` if OK, or an HTTP response object if unauthorized.
+ */
+const EXPECTED = (process.env.EMPIRE_TOKEN || "").trim();
+
+exports.ensureAuth = function ensureAuth(event) {
+  // Authorization: Bearer <token>
+  const h = event.headers || {};
+  const authHeader = h.authorization || h.Authorization || "";
+  const m = authHeader.match(/^Bearer\s+(.+)$/i);
+  const headerToken = m ? m[1] : "";
+
+  const qsToken = event.queryStringParameters?.key || "";
+
+  const token = headerToken || qsToken;
+
+  if (!EXPECTED || token !== EXPECTED) {
+    return {
+      statusCode: 401,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ok: false, error: "Unauthorized (key)" }),
+    };
   }
-  async function authedFetch(url, opts={}){
-    const headers = authz(Object.assign({ "Content-Type": "application/json" }, opts.headers||{}));
-    const r = await fetch(url, Object.assign({}, opts, { headers }));
-    if (r.status === 401) throw new Error("Unauthorized");
-    return r;
-  }
-  return { get,set,clear,has,authz,authedFetch };
-})();
-</script>
+  return null; // authorized
+};

@@ -267,6 +267,14 @@
       };
       callJSON("/.netlify/functions/log-performance", body, $("perfMsg"));
     };
-  </script>
+
+function headerAuth(){
+      if (window.EmpireAuth && typeof EmpireAuth.authz === 'function') {
+        return EmpireAuth.authz({});
+      }
+      const p = getPIN();
+      return p ? { "x-cmd-user": p } : {};
+    }
+</script>
 </body>
 </html>

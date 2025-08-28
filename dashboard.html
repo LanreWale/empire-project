@@ -6,9 +6,6 @@
 <title>Empire — Command Dashboard</title>
 <meta name="color-scheme" content="dark"/>
 
-<!-- Optional brand CSS (keeps your Empire look if present) -->
-<link rel="stylesheet" href="/app/styles/brand.css"/>
-
 <style>
 :root{
   --bg:#0b1220; --panel:#0f182a; --ink:#e8eefc; --muted:#9fb2d1; --line:#1f2b44; --ring:#2f3b58;
@@ -64,7 +61,7 @@ input,select,textarea{width:100%; background:#0b162a; color:#e8eefc; border:1px 
 </style>
 
 <!-- Charts -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
 </head>
 <body>
 
@@ -319,25 +316,27 @@ input,select,textarea{width:100%; background:#0b162a; color:#e8eefc; border:1px 
   </main>
 </div>
 
+<!-- ===== Runtime endpoints (no secrets in code) ===== -->
 <script>
-/* ====================== RUNTIME CONFIG ====================== */
-const STATE = { BASE: '/.netlify/functions', GAS: '', INVITE: "https://superlative-pothos-ebf5f2.netlify.app/?ref=SUPREME_COMMANDER" };
+  window.EMPIRE_API = '/.netlify/functions';
+  window.GAS_URL = ''; // will be set below
 
-async function initConfig(){
-  try{
-    const r = await fetch(STATE.BASE + '/public-config', { headers:{'Cache-Control':'no-cache'}});
-    const cfg = await r.json();
-    STATE.GAS = (cfg && cfg.gasUrl) ? String(cfg.gasUrl).replace(/\/+$/,'') : '';
-    const site = cfg && cfg.site ? cfg.site : '';
-    const tg   = { handle: cfg && cfg.telegramHandle, url: cfg && cfg.telegramChannelUrl };
-    const pub  = { site, gasUrl: STATE.GAS, telegram: tg };
-    const el   = document.getElementById('pubCfg'); if(el) el.textContent = JSON.stringify(pub,null,2);
-  }catch(e){
-    const el = document.getElementById('pubCfg'); if(el) el.textContent = 'No public-config. Using defaults.';
+  async function ensureConfig(){
+    try{
+      const r = await fetch('/.netlify/functions/public-config', {headers:{'Cache-Control':'no-cache'}});
+      const cfg = await r.json();
+      if(cfg && cfg.gasUrl){ window.GAS_URL = String(cfg.gasUrl).replace(/\/+$/,''); }
+      const pub = { telegramHandle: cfg.telegramHandle, telegramChannelUrl: cfg.telegramChannelUrl, site: cfg.site, gasUrl: cfg.gasUrl };
+      const slot = document.getElementById('pubCfg'); if(slot) slot.textContent = JSON.stringify(pub,null,2);
+    }catch(e){
+      // leave GAS_URL empty; page still works against Netlify functions
+    }
   }
-}
+</script>
 
-/* ====================== UTILS ======================= */
+<!-- ===== App logic (data wiring; UI untouched) ===== -->
+<script>
+/* =============== UTILS =============== */
 const $=id=>document.getElementById(id);
 const qa=(s,r=document)=>Array.from(r.querySelectorAll(s));
 const fmtUSD=n=> new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(+n||0);
@@ -345,115 +344,77 @@ const num=n=> (+n||0).toLocaleString();
 const pct=n=> ((+n||0)*100).toFixed(1)+'%';
 const esc=s=> String(s??'').replace(/[&<>"']/g,m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
 
-/* Admin secret in localStorage */
-const ADMIN_KEY = 'empire.admin.secret';
-function getAdmin(){ try{return localStorage.getItem(ADMIN_KEY)||'';}catch{return '';} }
-function setAdmin(v){ try{localStorage.setItem(ADMIN_KEY,v||'')}catch{}; paintAdmin(); }
-function paintAdmin(){ const has = !!getAdmin(); const el=$('admStatus'); if(el){ el.textContent = has?'SET':'NOT SET'; el.className='badge '+(has?'ok':'warn'); }}
+/* Admin secret local storage */
+const ADMIN_KEY='empire.admin.secret';
+const getAdmin=()=>{ try{return localStorage.getItem(ADMIN_KEY)||'';}catch{return '';} };
+const setAdmin=v=>{ try{localStorage.setItem(ADMIN_KEY,v||'')}catch{}; paintAdmin(); };
+const paintAdmin=()=>{ const el=$('admStatus'); if(el){ const has=!!getAdmin(); el.textContent=has?'SET':'NOT SET'; el.className='badge '+(has?'ok':'warn'); }};
 
 /* HTTP helpers */
-function headers(json=true, includeAdmin=false){
-  const h={};
-  if(json) h['Content-Type']='application/json';
-  const adm = includeAdmin && getAdmin();
-  if(adm) h['X-Admin-Secret']=adm;
-  return h;
-}
-async function fetchJSON(url, opts){ const r= await fetch(url, opts||{}); if(!r.ok) throw new Error(r.status+' '+url); return r.json(); }
+const _headers = (json=true, includeAdmin=false)=>{ const h={}; if(json) h['Content-Type']='application/json'; const adm=includeAdmin&&getAdmin(); if(adm) h['X-Admin-Secret']=adm; return h; };
+const viaFn  = (path, opts={}) => fetch(`${window.EMPIRE_API}${path}`, opts).then(r=>{ if(!r.ok) throw new Error(r.status); return r.json(); });
+const viaGas = (params={}) => { if(!window.GAS_URL) return Promise.reject(new Error('gas-missing')); const u=new URL(window.GAS_URL); Object.entries(params).forEach(([k,v])=>u.searchParams.set(k,String(v))); return fetch(u).then(r=>{ if(!r.ok) throw new Error(r.status); return r.json(); }); };
 
-/* Primary→Fallback loader */
-async function loadMaybe(fnPath, gasParams){
-  // Try Netlify first
-  try{ return await fetchJSON(STATE.BASE + fnPath, {headers: headers(false)}); } catch(e){}
-  // Fallback to GAS if available
-  if(!STATE.GAS) throw new Error('Primary failed and GAS not configured');
-  const u=new URL(STATE.GAS);
-  Object.entries(gasParams||{}).forEach(([k,v])=>u.searchParams.set(k,String(v)));
-  return await fetchJSON(u.toString(), {headers: headers(false)});
-}
+/* Primary→Fallback */
+const loadMaybe = async (fnPath, gasParams) => { try{ return await viaFn(fnPath, {headers:_headers(false)}); } catch(_){ return await viaGas(gasParams); } };
 
-/* ======================== TABS ====================== */
-const views = {
-  dashboard: $('view-dashboard'),
-  cpa:       $('view-cpa'),
-  users:     $('view-users'),
-  analytics: $('view-analytics'),
-  wallet:    $('view-wallet'),
-  security:  $('view-security'),
-  monitoring:$('view-monitoring')
-};
-function wireTabs(){
-  qa('.nav button').forEach(b=>{
-    b.addEventListener('click', ()=>{
-      qa('.nav button').forEach(x=>x.classList.remove('active'));
-      b.classList.add('active');
-      const k=b.dataset.tab;
-      Object.values(views).forEach(v=>v.classList.add('hidden'));
-      (views[k]||views.dashboard).classList.remove('hidden');
-      if(k==='dashboard') loadOverview().catch(console.warn);
-      if(k==='cpa')       loadCpa().catch(console.warn);
-      if(k==='users')     loadUsers().catch(console.warn);
-      if(k==='analytics') loadAnalytics().catch(console.warn);
-      if(k==='wallet')    loadWallet().catch(console.warn);
-      if(k==='security')  loadSecurity().catch(console.warn);
-      if(k==='monitoring')loadMonitoring().catch(console.warn);
-    });
+/* =============== TABS =============== */
+const views={ dashboard:$('view-dashboard'), cpa:$('view-cpa'), users:$('view-users'), analytics:$('view-analytics'), wallet:$('view-wallet'), security:$('view-security'), monitoring:$('view-monitoring') };
+qa('.nav button').forEach(b=>b.addEventListener('click',()=>{ qa('.nav button').forEach(x=>x.classList.remove('active')); b.classList.add('active'); const k=b.dataset.tab; Object.values(views).forEach(v=>v.classList.add('hidden')); (views[k]||views.dashboard).classList.remove('hidden');
+  if(k==='dashboard') loadOverview().catch(console.warn);
+  if(k==='cpa')       loadCpa().catch(console.warn);
+  if(k==='users')     loadUsers().catch(console.warn);
+  if(k==='analytics') loadAnalytics().catch(console.warn);
+  if(k==='wallet')    loadWallet().catch(console.warn);
+  if(k==='security')  loadSecurity().catch(console.warn);
+  if(k==='monitoring')loadMonitoring().catch(console.warn);
+}));
+
+/* =============== OVERVIEW =============== */
+let chartMonthly1, chartGeo1;
+async function loadOverview(){
+  const s = await loadMaybe('/summary', {summary:1});
+  $('kpi-earn').textContent     = fmtUSD(s.totalEarnings ?? s.earnings ?? 0);
+  $('kpi-active').textContent   = num(s.activeUsers ?? 0);
+  $('kpi-pending').textContent  = num(s.pending ?? 0);
+  $('kpi-clicks').textContent   = num(s.clicks ?? 0);
+  $('kpi-approval').textContent = s.approvalRate!=null ? (typeof s.approvalRate==='string'?s.approvalRate:pct(s.approvalRate)) : '—';
+  $('kpi-cr').textContent       = s.conversionRate!=null ? (typeof s.conversionRate==='string'?s.conversionRate:pct(s.conversionRate)) : '—';
+
+  const m = s.monthly || [];
+  const g = s.geo || s.geographic || [];
+  const live = s.live || [];
+
+  chartMonthly1 && chartMonthly1.destroy();
+  chartMonthly1 = new Chart($('#chartMonthly'), { type:'line',
+    data:{ labels:m.map(x=>x.label||x.month), datasets:[{ label:'Monthly Earnings', data:m.map(x=>x.value||x.amount||0), borderWidth:2, tension:.35 }]},
+    options:{plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}}}
+  });
+
+  chartGeo1 && chartGeo1.destroy();
+  chartGeo1 = new Chart($('#chartGeo'), { type:'doughnut',
+    data:{ labels:g.map(x=>x.label||x.country), datasets:[{ data:g.map(x=>x.value||x.amount||0)}]},
+    options:{plugins:{legend:{position:'right'}}}
+  });
+
+  const tb = $('#tbl-live').querySelector('tbody'); tb.innerHTML='';
+  live.forEach(r=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML = `<td>${esc(r.time||'')}</td><td>${esc(r.country||'')}</td><td>${esc(r.offer||'')}</td>
+                    <td>${esc(r.device||'')}</td><td>${num(r.clicks||0)}</td><td>${num(r.leads||0)}</td>
+                    <td>${fmtUSD(r.earnings||0)}</td>`;
+    tb.appendChild(tr);
   });
 }
 
-/* =================== OVERVIEW ======================= */
-let chartMonthly1, chartGeo1;
-async function loadOverview(){
-  try{
-    const s = await loadMaybe('/summary', {summary:1});
-    $('kpi-earn').textContent     = fmtUSD(s.totalEarnings ?? s.earnings ?? 0);
-    $('kpi-active').textContent   = num(s.activeUsers ?? 0);
-    $('kpi-pending').textContent  = num(s.pending ?? 0);
-    $('kpi-clicks').textContent   = num(s.clicks ?? 0);
-    $('kpi-approval').textContent = s.approvalRate!=null ? (typeof s.approvalRate==='string'?s.approvalRate:pct(s.approvalRate)) : '—';
-    $('kpi-cr').textContent       = s.conversionRate!=null ? (typeof s.conversionRate==='string'?s.conversionRate:pct(s.conversionRate)) : '—';
-
-    const m = s.monthly || [];
-    const g = s.geo || s.geographic || [];
-    const live = s.live || [];
-
-    chartMonthly1 && chartMonthly1.destroy();
-    chartMonthly1 = new Chart($('#chartMonthly'), {
-      type:'line',
-      data:{ labels:m.map(x=>x.label||x.month),
-             datasets:[{ label:'Monthly Earnings', data:m.map(x=>x.value||x.amount||0), borderWidth:2, tension:.35 }]},
-      options:{plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}}}
-    });
-
-    chartGeo1 && chartGeo1.destroy();
-    chartGeo1 = new Chart($('#chartGeo'), {
-      type:'doughnut',
-      data:{ labels:g.map(x=>x.label||x.country),
-             datasets:[{ data:g.map(x=>x.value||x.amount||0)}]},
-      options:{plugins:{legend:{position:'right'}}}
-    });
-
-    const tb = $('#tbl-live').querySelector('tbody'); tb.innerHTML='';
-    live.forEach(r=>{
-      const tr=document.createElement('tr');
-      tr.innerHTML = `<td>${esc(r.time||'')}</td><td>${esc(r.country||'')}</td><td>${esc(r.offer||'')}</td>
-                      <td>${esc(r.device||'')}</td><td>${num(r.clicks||0)}</td><td>${num(r.leads||0)}</td>
-                      <td>${fmtUSD(r.earnings||0)}</td>`;
-      tb.appendChild(tr);
-    });
-  }catch(e){
-    console.warn('overview',e);
-  }
-}
-
-/* =================== CPA ACCOUNTS =================== */
+/* =============== CPA =============== */
 async function loadCpa(){
-  const grid = $('cpaGrid'); grid.innerHTML='';
+  const grid=$('cpaGrid'); grid.innerHTML='';
   try{
     const r = await loadMaybe('/cpa/list', {cpa:1});
-    (r.items || r.accounts || []).forEach(acc=>{
+    (r.items||r.accounts||[]).forEach(acc=>{
       const card=document.createElement('div'); card.className='card';
-      card.innerHTML = `
+      card.innerHTML=`
         <div class="muted" style="margin-bottom:6px">${esc(acc.name||acc.id||'CPA')}</div>
         <div style="display:flex;gap:10px;flex-wrap:wrap">
           <div><div class="muted">Active Offers</div><div class="kpi" style="font-size:22px">${num(acc.offers||acc.activeOffers||0)}</div></div>
@@ -463,115 +424,96 @@ async function loadCpa(){
         </div>`;
       grid.appendChild(card);
     });
-    if(!grid.children.length) grid.innerHTML = `<div class="note err">No accounts found.</div>`;
+    if(!grid.children.length) grid.innerHTML=`<div class="note err">Failed to load accounts or none found.</div>`;
   }catch(e){
-    grid.innerHTML = `<div class="note err">Failed: ${esc(e.message)}</div>`;
+    grid.innerHTML=`<div class="note err">Failed: ${esc(e.message)}</div>`;
   }
-  // modal actions (UI)
-  $('#btnAddCpaOpen').onclick = ()=> $('#modalAddCpa').classList.remove('hidden');
-  $('#btnAddCpaClose').onclick= ()=> $('#modalAddCpa').classList.add('hidden');
-  $('#btnAddCpaSave').onclick = async ()=>{
-    const payload={
-      name:$('#cpaName').value.trim(), domain:$('#cpaDomain').value.trim(),
-      user:$('#cpaUserId').value.trim(), apiKey:$('#cpaApiKey').value.trim(),
-      startingRevenue:+$('#cpaStartRev').value||0
-    };
+
+  // modal handlers (UI only)
+  $('btnAddCpaOpen').onclick=()=>$('modalAddCpa').classList.remove('hidden');
+  $('btnAddCpaClose').onclick=()=>$('modalAddCpa').classList.add('hidden');
+  $('btnAddCpaSave').onclick=async()=>{
+    const payload={ name:$('cpaName').value.trim(), domain:$('cpaDomain').value.trim(), user:$('cpaUserId').value.trim(), apiKey:$('cpaApiKey').value.trim(), startingRevenue:+$('cpaStartRev').value||0 };
     try{
-      await fetchJSON(STATE.BASE+'/cpa/add',{method:'POST',headers:headers(true,true),body:JSON.stringify(payload)});
-      $('#cpaNote').classList.remove('hidden'); setTimeout(()=>location.hash='#cpa',1000);
+      await viaFn('/cpa/add',{method:'POST',headers:_headers(true,true),body:JSON.stringify(payload)});
+      $('cpaNote').classList.remove('hidden'); setTimeout(()=>location.hash='#cpa',800);
     }catch(e){ alert('Save failed: '+e.message); }
   };
 }
 
-/* =================== USERS ========================== */
+/* =============== USERS =============== */
 async function loadUsers(){
-  // Pending list (Netlify admin-pending or GAS fallback)
+  // pending
   try{
-    const p = await (async ()=>{
-      try{
-        // Requires Admin Secret header; if missing will 401 and we’ll fall back
-        return await fetchJSON(STATE.BASE+'/admin-pending', { headers: headers(false,true) });
-      }catch(_){
-        return await loadMaybe('/users/pending', {pending:1});
-      }
-    })();
-    const body = $('pendingBody'); body.innerHTML='';
-    (p.items || p.users || []).forEach(u=>{
+    const p = await loadMaybe('/users/pending', {pending:1});
+    const body=$('pendingBody'); body.innerHTML='';
+    (p.items||p.users||[]).forEach(u=>{
       const tr=document.createElement('tr');
-      tr.innerHTML = `<td>${esc(u.name||'')}</td><td>${esc(u.email||'')}</td><td>${esc(u.phone||'')}</td>
-                      <td><button class="btn alt btnApprove" data-id="${esc(u.id||'')}">Approve</button></td>`;
+      tr.innerHTML=`<td>${esc(u.name||'')}</td><td>${esc(u.email||'')}</td><td>${esc(u.phone||'')}</td>
+                    <td><button class="btn alt btnApprove" data-id="${esc(u.id||'')}">Approve</button></td>`;
       body.appendChild(tr);
     });
     body.querySelectorAll('.btnApprove').forEach(btn=>{
-      btn.onclick= async ()=>{
-        try{
-          await fetchJSON(STATE.BASE+'/admin-pending',{method:'POST',headers:headers(true,true),body:JSON.stringify({id:btn.dataset.id, action:'approve'})});
-          loadUsers();
-        }catch(e){ alert('Approve failed: '+e.message); }
-      };
+      btn.onclick=async()=>{ try{
+        await viaFn('/admin-pending',{method:'POST',headers:_headers(true,true),body:JSON.stringify({id:btn.dataset.id,action:'approve'})});
+        loadUsers();
+      }catch(e){ alert('Approve failed: '+e.message); } };
     });
   }catch(e){ $('pendingBody').innerHTML=`<tr><td colspan="4">Failed: ${esc(e.message)}</td></tr>`; }
 
-  // Approved list
+  // approved
   try{
     const a = await loadMaybe('/users/approved', {approved:1});
-    const body = $('usersBody'); body.innerHTML='';
-    (a.items || a.users || []).forEach(u=>{
+    const body=$('usersBody'); body.innerHTML='';
+    (a.items||a.users||[]).forEach(u=>{
       const tr=document.createElement('tr');
-      tr.innerHTML = `<td>${esc(u.name||'')}</td><td>${esc(u.email||'')}</td><td>${esc(u.whatsapp||'')}</td>
-                      <td>${esc(u.bank||'')}</td><td>${esc(u.account||'')}</td>
-                      <td>${esc(u.authority||'User')}</td><td><span class="status ${esc(u.status||'ACTIVE')}">${esc(u.status||'ACTIVE')}</span></td>`;
+      tr.innerHTML=`<td>${esc(u.name||'')}</td><td>${esc(u.email||'')}</td><td>${esc(u.whatsapp||'')}</td>
+                    <td>${esc(u.bank||'')}</td><td>${esc(u.account||'')}</td>
+                    <td>${esc(u.authority||'User')}</td><td><span class="status ${esc(u.status||'ACTIVE')}">${esc(u.status||'ACTIVE')}</span></td>`;
       body.appendChild(tr);
     });
   }catch(e){ $('usersBody').innerHTML=`<tr><td colspan="7">Failed: ${esc(e.message)}</td></tr>`; }
 
-  // Add user modal (UI)
-  $('#btnAddUserOpen').onclick = ()=> $('#modalAddUser').classList.remove('hidden');
-  $('#btnAddUserClose').onclick= ()=> $('#modalAddUser').classList.add('hidden');
-  $('#btnAddUserSave').onclick = async ()=>{
-    const payload={name:$('#uName').value,email:$('#uEmail').value,whatsapp:$('#uWa').value,authority:$('#uAuth').value,bank:$('#uBank').value,account:$('#uAcct').value};
+  $('btnAddUserOpen').onclick=()=>$('modalAddUser').classList.remove('hidden');
+  $('btnAddUserClose').onclick=()=>$('modalAddUser').classList.add('hidden');
+  $('btnAddUserSave').onclick=async()=>{
+    const payload={name:$('uName').value,email:$('uEmail').value,whatsapp:$('uWa').value,authority:$('uAuth').value,bank:$('uBank').value,account:$('uAcct').value};
     try{
-      await fetchJSON(STATE.BASE+'/users/add',{method:'POST',headers:headers(true,true),body:JSON.stringify(payload)});
-      $('#userNote').classList.remove('hidden'); setTimeout(()=>location.hash='#users',1000);
+      await viaFn('/users/add',{method:'POST',headers:_headers(true,true),body:JSON.stringify(payload)});
+      $('userNote').classList.remove('hidden'); setTimeout(()=>location.hash='#users',800);
     }catch(e){ alert('Save failed: '+e.message); }
   };
 }
 
-/* =================== ANALYTICS ====================== */
+/* =============== ANALYTICS =============== */
 let chartMonthly2, chartGeo2;
 async function loadAnalytics(){
-  try{
-    const s = await loadMaybe('/analytics/summary', {analytics:1});
-    const m = s.monthly || [];
-    const g = s.geo || s.geographic || [];
-    const live = s.live || [];
+  const s = await loadMaybe('/analytics/summary', {analytics:1});
+  const m = s.monthly || [];
+  const g = s.geo || s.geographic || [];
+  const live = s.live || [];
 
-    chartMonthly2 && chartMonthly2.destroy();
-    chartMonthly2 = new Chart($('#chartMonthly2'), {
-      type:'bar',
-      data:{ labels:m.map(x=>x.label||x.month), datasets:[{ label:'Monthly', data:m.map(x=>x.value||x.amount||0)}] },
-      options:{plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}}}
-    });
+  chartMonthly2 && chartMonthly2.destroy();
+  chartMonthly2 = new Chart($('#chartMonthly2'), { type:'bar',
+    data:{ labels:m.map(x=>x.label||x.month), datasets:[{ label:'Monthly', data:m.map(x=>x.value||x.amount||0)}] },
+    options:{plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}}}
+  });
 
-    chartGeo2 && chartGeo2.destroy();
-    chartGeo2 = new Chart($('#chartGeo2'), {
-      type:'pie',
-      data:{ labels:g.map(x=>x.label||x.country), datasets:[{ data:g.map(x=>x.value||x.amount||0)}] }
-    });
+  chartGeo2 && chartGeo2.destroy();
+  chartGeo2 = new Chart($('#chartGeo2'), { type:'pie',
+    data:{ labels:g.map(x=>x.label||x.country), datasets:[{ data:g.map(x=>x.value||x.amount||0)}] }
+  });
 
-    const tb = $('#tbl-live2').querySelector('tbody'); tb.innerHTML='';
-    live.forEach(r=>{
-      const tr=document.createElement('tr');
-      tr.innerHTML = `<td>${esc(r.time||'')}</td><td>${esc(r.country||'')}</td><td>${esc(r.offer||'')}</td>
-                      <td>${esc(r.device||'')}</td><td>${num(r.clicks||0)}</td><td>${num(r.leads||0)}</td><td>${fmtUSD(r.earnings||0)}</td>`;
-      tb.appendChild(tr);
-    });
-  }catch(e){
-    console.warn('analytics',e);
-  }
+  const tb = $('#tbl-live2').querySelector('tbody'); tb.innerHTML='';
+  live.forEach(r=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML = `<td>${esc(r.time||'')}</td><td>${esc(r.country||'')}</td><td>${esc(r.offer||'')}</td>
+                    <td>${esc(r.device||'')}</td><td>${num(r.clicks||0)}</td><td>${num(r.leads||0)}</td><td>${fmtUSD(r.earnings||0)}</td>`;
+    tb.appendChild(tr);
+  });
 }
 
-/* =================== WALLET ========================= */
+/* =============== WALLET =============== */
 async function loadWallet(){
   try{
     const w = await loadMaybe('/wallet', {wallet:1});
@@ -581,7 +523,7 @@ async function loadWallet(){
     const remaining = (w.available ?? w.balance ?? 0) - (w.withdraw ?? 0) - (w.processing ?? 0);
     $('w-remaining').textContent = fmtUSD(remaining);
 
-    const list = $('walletList'); list.innerHTML='';
+    const list=$('walletList'); list.innerHTML='';
     (w.items||w.history||[]).forEach(tx=>{
       const wrap=document.createElement('div'); wrap.className='card';
       wrap.innerHTML=`<div style="display:flex;justify-content:space-between">
@@ -590,47 +532,40 @@ async function loadWallet(){
       </div>`;
       list.appendChild(wrap);
     });
-
-    // Populate bank list (if available)
-    try{
-      const b = await fetchJSON(STATE.BASE + '/banks');
-      const sel = document.getElementById('wd-bank'); if(sel){ sel.innerHTML = '<option value="">—</option>' + (b.banks||[]).map(x=>`<option value="${esc(x.code)}">${esc(x.name)}</option>`).join(''); }
-    }catch{}
   }catch(e){
-    $('walletList').innerHTML = `<div class="note err">Failed: ${esc(e.message)}</div>`;
+    $('walletList').innerHTML=`<div class="note err">Failed: ${esc(e.message)}</div>`;
   }
 }
 
-/* =================== SECURITY ======================= */
+/* =============== SECURITY =============== */
 async function loadSecurity(){
   paintAdmin();
-  $('btnAdminSet').onclick   = ()=>{ const v=prompt('Set admin secret'); if(v) setAdmin(v); };
-  $('btnAdminClear').onclick = ()=> setAdmin('');
-
+  $('btnAdminSet').onclick=()=>{ const v=prompt('Set admin secret'); if(v) setAdmin(v); };
+  $('btnAdminClear').onclick=()=> setAdmin('');
   try{
-    const r = await fetch(STATE.BASE + '/public-config'); const cfg = await r.json();
-    $('pubCfg').textContent = JSON.stringify({ site: cfg.site, gasUrl: cfg.gasUrl, telegram:{handle:cfg.telegramHandle,url:cfg.telegramChannelUrl}}, null, 2);
+    const cfg = await loadMaybe('/public-config', {config:1});
+    $('pubCfg').textContent = JSON.stringify(cfg,null,2);
   }catch(e){
     $('pubCfg').textContent = 'Failed to load public config: '+e.message;
   }
 }
 
-/* =================== MONITORING ===================== */
-function paintBadges(st){
-  const set=(el,ok)=>{ el.textContent = ok?'ONLINE':'OFFLINE'; el.className='badge '+(ok?'ok':'down'); };
-  set($('serverBadge'),  st.server   !==false);
-  set($('dbBadge'),      st.db       !==false);
-  set($('sheetsBadge'),  st.sheets   !==false);
-  set($('aiBadge'),      st.ai       !==false);
-  set($('h-server'),     st.server   !==false);
-  set($('h-db'),         st.db       !==false);
-  set($('h-sheets'),     st.sheets   !==false);
-  set($('h-ai'),         st.ai       !==false);
+/* =============== MONITORING =============== */
+function _setBadge(el,ok){ el.textContent=ok?'ONLINE':'OFFLINE'; el.className='badge '+(ok?'ok':'down'); }
+async function paintBadges(st){
+  _setBadge($('serverBadge'), st.server!==false);
+  _setBadge($('dbBadge'),     st.db!==false);
+  _setBadge($('sheetsBadge'), st.sheets!==false);
+  _setBadge($('aiBadge'),     st.ai!==false);
+  _setBadge($('h-server'),    st.server!==false);
+  _setBadge($('h-db'),        st.db!==false);
+  _setBadge($('h-sheets'),    st.sheets!==false);
+  _setBadge($('h-ai'),        st.ai!==false);
 }
 async function loadMonitoring(){
   try{
     const r = await loadMaybe('/health', {health:1});
-    paintBadges(r||{});
+    await paintBadges(r||{});
     const body=$('evBody'); body.innerHTML='';
     (r.events||[]).forEach(e=>{
       const tr=document.createElement('tr');
@@ -638,36 +573,19 @@ async function loadMonitoring(){
       body.appendChild(tr);
     });
     if(!loadMonitoring._timer){
-      loadMonitoring._timer = setInterval(()=>{
-        if(!views.monitoring.classList.contains('hidden')) loadMonitoring().catch(()=>{});
-      },15000);
+      loadMonitoring._timer=setInterval(()=>{ if(!views.monitoring.classList.contains('hidden')) loadMonitoring().catch(()=>{}); },15000);
     }
   }catch(e){
-    $('evBody').innerHTML = `<tr><td colspan="5">Failed: ${esc(e.message)}</td></tr>`;
+    $('evBody').innerHTML=`<tr><td colspan="5">Failed: ${esc(e.message)}</td></tr>`;
   }
 }
 
-/* ================ INIT ============================== */
+/* =============== INIT =============== */
 window.addEventListener('DOMContentLoaded', async ()=>{
-  try{
-    await initConfig();            // ← wait for public-config (sets GAS)
-  }catch{}
-  wireTabs();                      // wire after config to avoid race
-  $('inviteLink').value = STATE.INVITE;
-
-  // default view + badges
+  await ensureConfig();             // loads GAS_URL from public-config
+  $('inviteLink') && ($('inviteLink').value = 'https://superlative-pothos-ebf5f2.netlify.app/?ref=SUPREME_COMMANDER');
   loadOverview().catch(console.warn);
-  loadMonitoring().catch(console.warn);
-
-  // open hash tab if present
-  const h = (location.hash||'').replace('#','');
-  if(h && views[h]){
-    qa('.nav button').forEach(b=>{ if(b.dataset.tab===h) b.click(); });
-  }
-
-  // admin buttons in header
-  const btn = document.getElementById('btnSetAdmin');
-  if(btn){ btn.onclick = ()=>{ const v=prompt('Enter Admin Secret'); if(v) setAdmin(v); }; }
+  const h=(location.hash||'').replace('#',''); if(h && views[h]){ qa('.nav button').forEach(b=>{ if(b.dataset.tab===h) b.click(); }); }
 });
 </script>
 </body>

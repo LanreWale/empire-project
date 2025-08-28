@@ -1,7 +1,3 @@
-<script>
-  window.EMPIRE_API = '/.netlify/functions'; // default already
-  window.GAS_URL    = 'https://script.google.com/macros/s/…/exec'; // if you want fallback
-</script>
 <!doctype html>
 <html lang="en">
 <head>
@@ -10,11 +6,10 @@
 <title>Empire — Command Dashboard</title>
 <meta name="color-scheme" content="dark"/>
 
-<!-- Optional: your brand stylesheet (safe to remove if you prefer only inline styles) -->
+<!-- Optional brand CSS (safe to remove) -->
 <link rel="stylesheet" href="/app/styles/brand.css"/>
 
 <style>
-/* ===== Minimal inline styling (works even without brand.css) ===== */
 :root{
   --bg:#0b1220; --panel:#0f182a; --ink:#e8eefc; --muted:#9fb2d1; --line:#1f2b44; --ring:#2f3b58;
   --gold1:#ffd24d; --gold2:#ffb11a; --ok:#16a34a; --warn:#f59e0b; --bad:#dc2626;
@@ -26,35 +21,16 @@ body{
            linear-gradient(180deg, rgba(24,35,62,.55), rgba(24,35,62,.1)), var(--bg);
   color:var(--ink); font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,sans-serif;
 }
-
-/* Shell */
 .shell{display:grid; grid-template-columns:260px 1fr; gap:18px; max-width:1280px; margin:0 auto; padding:24px 14px 40px}
 @media(max-width:980px){ .shell{grid-template-columns:1fr} }
-
-/* Sidebar */
-.sidebar{
-  background:rgba(15,24,42,.9); border:1px solid var(--line); border-radius:16px; padding:16px;
-  box-shadow:0 10px 30px rgba(0,0,0,.25);
-}
+.sidebar{background:rgba(15,24,42,.9); border:1px solid var(--line); border-radius:16px; padding:16px; box-shadow:0 10px 30px rgba(0,0,0,.25)}
 .brandRow{display:flex; align-items:center; gap:10px; margin-bottom:16px}
 .brandRow img{width:44px;height:44px}
-.brandTitle{
-  font-weight:900; letter-spacing:.3px;
-  background:linear-gradient(90deg,var(--gold1),var(--gold2)); -webkit-background-clip:text; background-clip:text; color:transparent;
-}
-
-/* Tabs (left) */
+.brandTitle{font-weight:900; letter-spacing:.3px; background:linear-gradient(90deg,var(--gold1),var(--gold2)); -webkit-background-clip:text; background-clip:text; color:transparent}
 .nav{display:flex; flex-direction:column; gap:8px}
-.nav button{
-  text-align:left; width:100%; background:#0f182a; border:1px solid var(--line); color:#cfe0ff;
-  padding:10px 12px; border-radius:10px; cursor:pointer; font-weight:700;
-}
+.nav button{ text-align:left; width:100%; background:#0f182a; border:1px solid var(--line); color:#cfe0ff; padding:10px 12px; border-radius:10px; cursor:pointer; font-weight:700 }
 .nav button.active{ outline:2px solid var(--ring) }
-
-/* Top bar */
-.top{
-  display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px;
-}
+.top{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px }
 .top .right{display:flex; gap:8px; align-items:center}
 .btn{background:#2b66f6; color:#fff; border:0; padding:10px 12px; border-radius:10px; cursor:pointer; font-weight:800}
 .btn.alt{background:#25304a; color:#d1d5db; border:1px solid #2f3b58}
@@ -62,11 +38,9 @@ body{
 .badge.ok{background:rgba(22,163,74,.2); border-color:#166534}
 .badge.down{background:rgba(220,38,38,.2); border-color:#991b1b}
 .badge.warn{background:rgba(245,158,11,.2); border-color:#b45309}
-
-/* Content */
 .panel{background:rgba(15,24,42,.9); border:1px solid var(--line); border-radius:16px; padding:16px; margin-bottom:16px}
 .grid{display:grid; gap:14px}
-@media(min-width:960px){ .cols-2{grid-template-columns:1fr 1fr} .cols-3{grid-template-columns:repeat(3,1fr)} }
+@media(min-width:960px){ .cols-2{grid-template-columns:1fr 1fr} .cols-3{grid-template-columns:repeat(3,1fr)} .cols-4{grid-template-columns:repeat(4,1fr)} }
 .card{background:#0f182a; border:1px solid var(--line); border-radius:14px; padding:16px}
 .card .muted{color:var(--muted)}
 .kpi{font-size:34px; font-weight:900}
@@ -75,8 +49,6 @@ body{
 .table th{color:#cfe0ff}
 .tableScroll{overflow:auto}
 .hidden{display:none !important}
-
-/* Forms */
 label{display:block; font-size:13px; color:#cfe0ff; margin:10px 0 6px}
 input,select,textarea{width:100%; background:#0b162a; color:#e8eefc; border:1px solid var(--ring); border-radius:12px; padding:12px 10px}
 .row{display:flex; gap:10px; flex-wrap:wrap}
@@ -84,18 +56,14 @@ input,select,textarea{width:100%; background:#0b162a; color:#e8eefc; border:1px 
 .note{margin-top:10px; padding:10px; border-radius:10px}
 .note.ok{background:#0f2a18; border:1px solid #1e5d38; color:#b7f7c3}
 .note.err{background:#2a0f13; border:1px solid #5d1e28; color:#ffb4c0}
-
-/* Charts */
 .chartBox{height:260px}
-
-/* Status chips in lists */
 .status{padding:2px 8px; border-radius:999px; font-size:12px; border:1px solid var(--line); background:#121a2b}
 .status.ACTIVE{background:rgba(22,163,74,.18); border-color:#166534}
 .status.PENDING{background:rgba(245,158,11,.18); border-color:#b45309}
 .status.BLOCKED{background:rgba(220,38,38,.18); border-color:#991b1b}
 </style>
 
-<!-- Charts (no bundler needed) -->
+<!-- Charts -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
 </head>
 <body>
@@ -140,30 +108,12 @@ input,select,textarea{width:100%; background:#0b162a; color:#e8eefc; border:1px 
     <!-- ===== DASHBOARD OVERVIEW ===== -->
     <section id="view-dashboard" class="panel">
       <div class="grid cols-3">
-        <div class="card">
-          <div class="muted">Total Earnings (USD)</div>
-          <div id="kpi-earn" class="kpi">$0.00</div>
-        </div>
-        <div class="card">
-          <div class="muted">Active Users</div>
-          <div id="kpi-active" class="kpi">0</div>
-        </div>
-        <div class="card">
-          <div class="muted">Approval Rate</div>
-          <div id="kpi-approval" class="kpi">—</div>
-        </div>
-        <div class="card">
-          <div class="muted">Pending Reviews</div>
-          <div id="kpi-pending" class="kpi">0</div>
-        </div>
-        <div class="card">
-          <div class="muted">Total Clicks</div>
-          <div id="kpi-clicks" class="kpi">0</div>
-        </div>
-        <div class="card">
-          <div class="muted">Conversion Rate</div>
-          <div id="kpi-cr" class="kpi">—</div>
-        </div>
+        <div class="card"><div class="muted">Total Earnings (USD)</div><div id="kpi-earn" class="kpi">$0.00</div></div>
+        <div class="card"><div class="muted">Active Users</div><div id="kpi-active" class="kpi">0</div></div>
+        <div class="card"><div class="muted">Approval Rate</div><div id="kpi-approval" class="kpi">—</div></div>
+        <div class="card"><div class="muted">Pending Reviews</div><div id="kpi-pending" class="kpi">0</div></div>
+        <div class="card"><div class="muted">Total Clicks</div><div id="kpi-clicks" class="kpi">0</div></div>
+        <div class="card"><div class="muted">Conversion Rate</div><div id="kpi-cr" class="kpi">—</div></div>
       </div>
 
       <div class="grid cols-2" style="margin-top:12px">
@@ -190,29 +140,19 @@ input,select,textarea{width:100%; background:#0b162a; color:#e8eefc; border:1px 
       </div>
       <div id="cpaGrid" class="grid cols-3"></div>
 
-      <!-- Add Account Modal (lightweight) -->
+      <!-- Add Account Modal -->
       <div id="modalAddCpa" class="panel hidden">
         <h3 style="margin:0 0 6px">Add CPA Account</h3>
         <div class="row">
-          <div>
-            <label>Name</label><input id="cpaName" placeholder="Account Name"/>
-          </div>
-          <div>
-            <label>Domain</label><input id="cpaDomain" placeholder="example.com"/>
-          </div>
+          <div><label>Name</label><input id="cpaName" placeholder="Account Name"/></div>
+          <div><label>Domain</label><input id="cpaDomain" placeholder="example.com"/></div>
         </div>
         <div class="row">
-          <div>
-            <label>User ID</label><input id="cpaUserId" placeholder="UID from network"/>
-          </div>
-          <div>
-            <label>API Key</label><input id="cpaApiKey" placeholder="•••••••"/>
-          </div>
+          <div><label>User ID</label><input id="cpaUserId" placeholder="UID from network"/></div>
+          <div><label>API Key</label><input id="cpaApiKey" placeholder="•••••••"/></div>
         </div>
         <div class="row">
-          <div>
-            <label>Starting Revenue (USD)</label><input id="cpaStartRev" type="number" step="0.01" value="0"/>
-          </div>
+          <div><label>Starting Revenue (USD)</label><input id="cpaStartRev" type="number" step="0.01" value="0"/></div>
         </div>
         <div class="row" style="justify-content:flex-end">
           <button id="btnAddCpaSave" class="btn" type="button">Save</button>
@@ -381,7 +321,7 @@ input,select,textarea{width:100%; background:#0b162a; color:#e8eefc; border:1px 
 
 <script>
 /* ====================== CONFIG ====================== */
-/* If you want, set these in a small script tag BEFORE this file:
+/* You may also set these *above* this file:
    <script>
      window.EMPIRE_API = 'https://empireaffiliatemarketinghub.com/.netlify/functions';
      window.GAS_URL    = 'https://script.google.com/macros/s/AKfycbz.../exec';
@@ -406,7 +346,7 @@ function getAdmin(){ try{return localStorage.getItem(ADMIN_KEY)||'';}catch{retur
 function setAdmin(v){ try{localStorage.setItem(ADMIN_KEY,v||'')}catch{}; paintAdmin(); }
 function paintAdmin(){ const has = !!getAdmin(); const el=$('admStatus'); if(el){ el.textContent = has?'SET':'NOT SET'; el.className='badge '+(has?'ok':'warn'); }}
 
-/* HTTP */
+/* HTTP helpers */
 function headers(json=true, includeAdmin=false){
   const h={};
   if(json) h['Content-Type']='application/json';
@@ -414,20 +354,18 @@ function headers(json=true, includeAdmin=false){
   if(adm) h['X-Admin-Secret']=adm;
   return h;
 }
-async function fetchJSON(url, opts){ const r= await fetch(url, opts); if(!r.ok) throw new Error(r.status+' '+url); return r.json(); }
+async function fetchJSON(url, opts){ const r= await fetch(url, opts||{}); if(!r.ok) throw new Error(r.status+' '+url); return r.json(); }
 
 /* Primary→Fallback loader */
 async function loadMaybe(fnPath, gasParams){
-  // Try Netlify
   try{ return await fetchJSON(BASE + fnPath, {headers: headers(false)}); } catch(e){}
-  // Try GAS if available
   if(!GAS) throw new Error('No GAS_URL set and primary failed: '+fnPath);
   const u=new URL(GAS);
   Object.entries(gasParams||{}).forEach(([k,v])=>u.searchParams.set(k,String(v)));
   return await fetchJSON(u.toString(), {headers: headers(false)});
 }
 
-/* ====================== TABS ======================== */
+/* ======================== TABS ====================== */
 const views = {
   dashboard: $('view-dashboard'),
   cpa:       $('view-cpa'),
@@ -444,7 +382,6 @@ qa('.nav button').forEach(b=>{
     const k=b.dataset.tab;
     Object.values(views).forEach(v=>v.classList.add('hidden'));
     (views[k]||views.dashboard).classList.remove('hidden');
-    // lazy load
     if(k==='dashboard') loadOverview().catch(console.warn);
     if(k==='cpa')       loadCpa().catch(console.warn);
     if(k==='users')     loadUsers().catch(console.warn);
@@ -458,9 +395,252 @@ qa('.nav button').forEach(b=>{
 /* =================== OVERVIEW ======================= */
 let chartMonthly1, chartGeo1;
 async function loadOverview(){
-  // KPIs
   try{
     const s = await loadMaybe('/summary', {summary:1});
-    $('kpi-earn').textContent     = fmtUSD(s.totalEarnings||0);
-    $('kpi-active').textContent   = num(s.activeUsers||0);
-    $('kpi-approval').textContent = (s.approvalRate!=null)?pct(s.approvalRate
+    $('kpi-earn').textContent     = fmtUSD(s.totalEarnings ?? s.earnings ?? 0);
+    $('kpi-active').textContent   = num(s.activeUsers ?? 0);
+    $('kpi-pending').textContent  = num(s.pending ?? 0);
+    $('kpi-clicks').textContent   = num(s.clicks ?? 0);
+    $('kpi-approval').textContent = s.approvalRate!=null ? (typeof s.approvalRate==='string'?s.approvalRate:pct(s.approvalRate)) : '—';
+    $('kpi-cr').textContent       = s.conversionRate!=null ? (typeof s.conversionRate==='string'?s.conversionRate:pct(s.conversionRate)) : '—';
+
+    // Charts
+    const m = s.monthly || [];
+    const g = s.geo || s.geographic || [];
+    const live = s.live || [];
+
+    chartMonthly1 && chartMonthly1.destroy();
+    chartMonthly1 = new Chart($('#chartMonthly'), {
+      type:'line',
+      data:{ labels:m.map(x=>x.label||x.month),
+             datasets:[{ label:'Monthly Earnings', data:m.map(x=>x.value||x.amount||0), borderWidth:2, tension:.35 }]},
+      options:{plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}}}
+    });
+
+    chartGeo1 && chartGeo1.destroy();
+    chartGeo1 = new Chart($('#chartGeo'), {
+      type:'doughnut',
+      data:{ labels:g.map(x=>x.label||x.country),
+             datasets:[{ data:g.map(x=>x.value||x.amount||0)}]},
+      options:{plugins:{legend:{position:'right'}}}
+    });
+
+    // Live table
+    const tb = $('#tbl-live').querySelector('tbody'); tb.innerHTML='';
+    live.forEach(r=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML = `<td>${esc(r.time||'')}</td><td>${esc(r.country||'')}</td><td>${esc(r.offer||'')}</td>
+                      <td>${esc(r.device||'')}</td><td>${num(r.clicks||0)}</td><td>${num(r.leads||0)}</td>
+                      <td>${fmtUSD(r.earnings||0)}</td>`;
+      tb.appendChild(tr);
+    });
+  }catch(e){
+    console.warn('overview',e);
+  }
+}
+
+/* =================== CPA ACCOUNTS =================== */
+async function loadCpa(){
+  const grid = $('cpaGrid'); grid.innerHTML='';
+  try{
+    const r = await loadMaybe('/cpa/list', {cpa:1});
+    (r.items || r.accounts || []).forEach(acc=>{
+      const card=document.createElement('div'); card.className='card';
+      card.innerHTML = `
+        <div class="muted" style="margin-bottom:6px">${esc(acc.name||acc.id||'CPA')}</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <div><div class="muted">Active Offers</div><div class="kpi" style="font-size:22px">${num(acc.offers||acc.activeOffers||0)}</div></div>
+          <div><div class="muted">Revenue</div><div class="kpi" style="font-size:22px">${fmtUSD(acc.revenue||0)}</div></div>
+          <div><div class="muted">Clicks</div><div class="kpi" style="font-size:22px">${num(acc.clicks||0)}</div></div>
+          <div><div class="muted">Conversion</div><div class="kpi" style="font-size:22px">${acc.conversionRate!=null?(typeof acc.conversionRate==='string'?acc.conversionRate:pct(acc.conversionRate)):'—'}</div></div>
+        </div>`;
+      grid.appendChild(card);
+    });
+    if(!grid.children.length) grid.innerHTML = `<div class="note err">Failed to load accounts or none found.</div>`;
+  }catch(e){
+    grid.innerHTML = `<div class="note err">Failed: ${esc(e.message)}</div>`;
+  }
+  // modal handlers (UI only)
+  $('#btnAddCpaOpen').onclick = ()=> $('#modalAddCpa').classList.remove('hidden');
+  $('#btnAddCpaClose').onclick= ()=> $('#modalAddCpa').classList.add('hidden');
+  $('#btnAddCpaSave').onclick = async ()=>{
+    const payload={
+      name:$('#cpaName').value.trim(), domain:$('#cpaDomain').value.trim(),
+      user:$('#cpaUserId').value.trim(), apiKey:$('#cpaApiKey').value.trim(),
+      startingRevenue:+$('#cpaStartRev').value||0
+    };
+    try{
+      await fetchJSON(BASE+'/cpa/add',{method:'POST',headers:headers(true,true),body:JSON.stringify(payload)});
+      $('#cpaNote').classList.remove('hidden'); setTimeout(()=>location.hash='#cpa',1000);
+    }catch(e){ alert('Save failed: '+e.message); }
+  };
+}
+
+/* =================== USERS ========================== */
+async function loadUsers(){
+  // pending
+  try{
+    const p = await loadMaybe('/users/pending', {pending:1});
+    const body = $('pendingBody'); body.innerHTML='';
+    (p.items || p.users || []).forEach(u=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML = `<td>${esc(u.name||'')}</td><td>${esc(u.email||'')}</td><td>${esc(u.phone||'')}</td>
+                      <td><button class="btn alt btnApprove" data-id="${esc(u.id||'')}">Approve</button></td>`;
+      body.appendChild(tr);
+    });
+    body.querySelectorAll('.btnApprove').forEach(btn=>{
+      btn.onclick= async ()=>{
+        try{
+          await fetchJSON(BASE+'/admin-pending',{method:'POST',headers:headers(true,true),body:JSON.stringify({id:btn.dataset.id, action:'approve'})});
+          loadUsers();
+        }catch(e){ alert('Approve failed: '+e.message); }
+      };
+    });
+  }catch(e){ $('pendingBody').innerHTML=`<tr><td colspan="4">Failed: ${esc(e.message)}</td></tr>`; }
+
+  // approved
+  try{
+    const a = await loadMaybe('/users/approved', {approved:1});
+    const body = $('usersBody'); body.innerHTML='';
+    (a.items || a.users || []).forEach(u=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML = `<td>${esc(u.name||'')}</td><td>${esc(u.email||'')}</td><td>${esc(u.whatsapp||'')}</td>
+                      <td>${esc(u.bank||'')}</td><td>${esc(u.account||'')}</td>
+                      <td>${esc(u.authority||'User')}</td><td><span class="status ${esc(u.status||'ACTIVE')}">${esc(u.status||'ACTIVE')}</span></td>`;
+      body.appendChild(tr);
+    });
+  }catch(e){ $('usersBody').innerHTML=`<tr><td colspan="7">Failed: ${esc(e.message)}</td></tr>`; }
+
+  // modals (UI only)
+  $('#btnAddUserOpen').onclick = ()=> $('#modalAddUser').classList.remove('hidden');
+  $('#btnAddUserClose').onclick= ()=> $('#modalAddUser').classList.add('hidden');
+  $('#btnAddUserSave').onclick = async ()=>{
+    const payload={name:$('#uName').value,email:$('#uEmail').value,whatsapp:$('#uWa').value,authority:$('#uAuth').value,bank:$('#uBank').value,account:$('#uAcct').value};
+    try{
+      await fetchJSON(BASE+'/users/add',{method:'POST',headers:headers(true,true),body:JSON.stringify(payload)});
+      $('#userNote').classList.remove('hidden'); setTimeout(()=>location.hash='#users',1000);
+    }catch(e){ alert('Save failed: '+e.message); }
+  };
+}
+
+/* =================== ANALYTICS ====================== */
+let chartMonthly2, chartGeo2;
+async function loadAnalytics(){
+  try{
+    const s = await loadMaybe('/analytics/summary', {analytics:1});
+    const m = s.monthly || [];
+    const g = s.geo || s.geographic || [];
+    const live = s.live || [];
+
+    chartMonthly2 && chartMonthly2.destroy();
+    chartMonthly2 = new Chart($('#chartMonthly2'), {
+      type:'bar',
+      data:{ labels:m.map(x=>x.label||x.month), datasets:[{ label:'Monthly', data:m.map(x=>x.value||x.amount||0)}] },
+      options:{plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}}}
+    });
+
+    chartGeo2 && chartGeo2.destroy();
+    chartGeo2 = new Chart($('#chartGeo2'), {
+      type:'pie',
+      data:{ labels:g.map(x=>x.label||x.country), datasets:[{ data:g.map(x=>x.value||x.amount||0)}] }
+    });
+
+    const tb = $('#tbl-live2').querySelector('tbody'); tb.innerHTML='';
+    live.forEach(r=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML = `<td>${esc(r.time||'')}</td><td>${esc(r.country||'')}</td><td>${esc(r.offer||'')}</td>
+                      <td>${esc(r.device||'')}</td><td>${num(r.clicks||0)}</td><td>${num(r.leads||0)}</td><td>${fmtUSD(r.earnings||0)}</td>`;
+      tb.appendChild(tr);
+    });
+  }catch(e){
+    console.warn('analytics',e);
+  }
+}
+
+/* =================== WALLET ========================= */
+async function loadWallet(){
+  try{
+    const w = await loadMaybe('/wallet', {wallet:1});
+    $('w-available').textContent = fmtUSD(w.available ?? w.balance ?? 0);
+    $('w-withdraw').textContent  = fmtUSD(w.withdraw ?? 0);
+    $('w-proc').textContent      = fmtUSD(w.processing ?? 0);
+    const remaining = (w.available ?? w.balance ?? 0) - (w.withdraw ?? 0) - (w.processing ?? 0);
+    $('w-remaining').textContent = fmtUSD(remaining);
+
+    const list = $('walletList'); list.innerHTML='';
+    (w.items||w.history||[]).forEach(tx=>{
+      const wrap=document.createElement('div'); wrap.className='card';
+      wrap.innerHTML=`<div style="display:flex;justify-content:space-between">
+        <div><div class="muted">${esc(tx.method||'')}</div><div style="font-weight:800">${fmtUSD(tx.amount||0)}</div></div>
+        <div style="text-align:right"><div class="muted">${esc(tx.date||'')}</div><span class="status ${esc(tx.status||'COMPLETED')}">${esc(tx.status||'COMPLETED')}</span></div>
+      </div>`;
+      list.appendChild(wrap);
+    });
+  }catch(e){
+    $('walletList').innerHTML = `<div class="note err">Failed: ${esc(e.message)}</div>`;
+  }
+}
+
+/* =================== SECURITY ======================= */
+async function loadSecurity(){
+  paintAdmin();
+  $('btnAdminSet').onclick   = ()=>{ const v=prompt('Set admin secret'); if(v) setAdmin(v); };
+  $('btnAdminClear').onclick = ()=> setAdmin('');
+
+  try{
+    const cfg = await loadMaybe('/public-config', {config:1});
+    $('pubCfg').textContent = JSON.stringify(cfg,null,2);
+  }catch(e){
+    $('pubCfg').textContent = 'Failed to load public config: '+e.message;
+  }
+}
+
+/* =================== MONITORING ===================== */
+async function paintBadges(st){
+  const set=(el,ok)=>{ el.textContent = ok?'ONLINE':'OFFLINE'; el.className='badge '+(ok?'ok':'down'); };
+  set($('serverBadge'),  st.server   !==false);
+  set($('dbBadge'),      st.db       !==false);
+  set($('sheetsBadge'),  st.sheets   !==false);
+  set($('aiBadge'),      st.ai       !==false);
+  // section chips:
+  set($('h-server'),     st.server   !==false);
+  set($('h-db'),         st.db       !==false);
+  set($('h-sheets'),     st.sheets   !==false);
+  set($('h-ai'),         st.ai       !==false);
+}
+async function loadMonitoring(){
+  try{
+    const r = await loadMaybe('/health', {health:1});
+    await paintBadges(r||{});
+    const body=$('evBody'); body.innerHTML='';
+    (r.events||[]).forEach(e=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML=`<td>${esc(e.time||'')}</td><td>${esc(e.type||'')}</td><td>${esc(e.msg||'')}</td><td>${esc(e.ref||'')}</td><td>${esc(e.actor||'')}</td>`;
+      body.appendChild(tr);
+    });
+    // auto-refresh every 15s while on tab
+    if(!loadMonitoring._timer){
+      loadMonitoring._timer = setInterval(()=>{
+        if(!views.monitoring.classList.contains('hidden')) loadMonitoring().catch(()=>{});
+      },15000);
+    }
+  }catch(e){
+    $('evBody').innerHTML = `<tr><td colspan="5">Failed: ${esc(e.message)}</td></tr>`;
+  }
+}
+
+/* ================ INIT ============================== */
+window.addEventListener('DOMContentLoaded', ()=>{
+  // default view
+  loadOverview().catch(console.warn);
+  // invite link stays fresh
+  $('inviteLink').value = INVITE;
+  // if hash present, open that tab
+  const h = (location.hash||'').replace('#','');
+  if(h && views[h]){
+    qa('.nav button').forEach(b=>{ if(b.dataset.tab===h) b.click(); });
+  }
+});
+</script>
+</body>
+</html>

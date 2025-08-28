@@ -1,349 +1,674 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Empire — Command Dashboard</title>
-  <meta name="color-scheme" content="dark"/>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Empire — Command Dashboard</title>
+<meta name="color-scheme" content="dark"/>
 
-  <!-- Optional brand CSS (safe to remove if you prefer only inline styles) -->
-  <link rel="stylesheet" href="/app/styles/brand.css"/>
+<!-- Optional brand CSS (keeps your Empire look if present) -->
+<link rel="stylesheet" href="/app/styles/brand.css"/>
 
-  <style>
-    :root{
-      --bg:#0b1220; --panel:#0f182a; --ink:#e8eefc; --muted:#9fb2d1; --line:#1f2b44; --ring:#2f3b58;
-      --gold1:#ffd24d; --gold2:#ffb11a; --ok:#16a34a; --warn:#f59e0b; --bad:#dc2626;
-    }
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{
-      margin:0; background:radial-gradient(1200px 800px at 70% -10%, rgba(255,178,46,.12) 0%, rgba(255,178,46,0) 65%),
-               linear-gradient(180deg, rgba(24,35,62,.55), rgba(24,35,62,.1)), var(--bg);
-      color:var(--ink); font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,sans-serif;
-    }
-    .shell{display:grid; grid-template-columns:260px 1fr; gap:18px; max-width:1280px; margin:0 auto; padding:24px 14px 40px}
-    @media(max-width:980px){ .shell{grid-template-columns:1fr} }
+<style>
+:root{
+  --bg:#0b1220; --panel:#0f182a; --ink:#e8eefc; --muted:#9fb2d1; --line:#1f2b44; --ring:#2f3b58;
+  --gold1:#ffd24d; --gold2:#ffb11a; --ok:#16a34a; --warn:#f59e0b; --bad:#dc2626;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0; background:radial-gradient(1200px 800px at 70% -10%, rgba(255,178,46,.12) 0%, rgba(255,178,46,0) 65%),
+           linear-gradient(180deg, rgba(24,35,62,.55), rgba(24,35,62,.1)), var(--bg);
+  color:var(--ink); font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,sans-serif;
+}
+.shell{display:grid; grid-template-columns:260px 1fr; gap:18px; max-width:1280px; margin:0 auto; padding:24px 14px 40px}
+@media(max-width:980px){ .shell{grid-template-columns:1fr} }
+.sidebar{background:rgba(15,24,42,.9); border:1px solid var(--line); border-radius:16px; padding:16px; box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.brandRow{display:flex; align-items:center; gap:10px; margin-bottom:16px}
+.brandRow img{width:44px;height:44px}
+.brandTitle{font-weight:900; letter-spacing:.3px; background:linear-gradient(90deg,var(--gold1),var(--gold2)); -webkit-background-clip:text; background-clip:text; color:transparent}
+.nav{display:flex; flex-direction:column; gap:8px}
+.nav button{ text-align:left; width:100%; background:#0f182a; border:1px solid var(--line); color:#cfe0ff; padding:10px 12px; border-radius:10px; cursor:pointer; font-weight:700 }
+.nav button.active{ outline:2px solid var(--ring) }
+.top{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px }
+.top .right{display:flex; gap:8px; align-items:center}
+.btn{background:#2b66f6; color:#fff; border:0; padding:10px 12px; border-radius:10px; cursor:pointer; font-weight:800}
+.btn.alt{background:#25304a; color:#d1d5db; border:1px solid #2f3b58}
+.badge{display:inline-block; padding:4px 8px; border-radius:999px; font-size:12px; border:1px solid #2f3b58; background:#25304a}
+.badge.ok{background:rgba(22,163,74,.2); border-color:#166534}
+.badge.down{background:rgba(220,38,38,.2); border-color:#991b1b}
+.badge.warn{background:rgba(245,158,11,.2); border-color:#b45309}
+.panel{background:rgba(15,24,42,.9); border:1px solid var(--line); border-radius:16px; padding:16px; margin-bottom:16px}
+.grid{display:grid; gap:14px}
+@media(min-width:960px){ .cols-2{grid-template-columns:1fr 1fr} .cols-3{grid-template-columns:repeat(3,1fr)} .cols-4{grid-template-columns:repeat(4,1fr)} }
+.card{background:#0f182a; border:1px solid var(--line); border-radius:14px; padding:16px}
+.card .muted{color:var(--muted)}
+.kpi{font-size:34px; font-weight:900}
+.table{width:100%; border-collapse:collapse; font-size:14px}
+.table th,.table td{padding:10px; border-bottom:1px solid var(--line); text-align:left}
+.table th{color:#cfe0ff}
+.tableScroll{overflow:auto}
+.hidden{display:none !important}
+label{display:block; font-size:13px; color:#cfe0ff; margin:10px 0 6px}
+input,select,textarea{width:100%; background:#0b162a; color:#e8eefc; border:1px solid var(--ring); border-radius:12px; padding:12px 10px}
+.row{display:flex; gap:10px; flex-wrap:wrap}
+.row > *{flex:1}
+.note{margin-top:10px; padding:10px; border-radius:10px}
+.note.ok{background:#0f2a18; border:1px solid #1e5d38; color:#b7f7c3}
+.note.err{background:#2a0f13; border:1px solid #5d1e28; color:#ffb4c0}
+.chartBox{height:260px}
+.status{padding:2px 8px; border-radius:999px; font-size:12px; border:1px solid var(--line); background:#121a2b}
+.status.ACTIVE{background:rgba(22,163,74,.18); border-color:#166534}
+.status.PENDING{background:rgba(245,158,11,.18); border-color:#b45309}
+.status.BLOCKED{background:rgba(220,38,38,.18); border-color:#991b1b}
+</style>
 
-    /* Sidebar */
-    .sidebar{background:rgba(15,24,42,.9); border:1px solid var(--line); border-radius:16px; padding:16px; box-shadow:0 10px 30px rgba(0,0,0,.25)}
-    .brandRow{display:flex; align-items:center; gap:10px; margin-bottom:16px}
-    .brandRow img{width:44px;height:44px}
-    .brandTitle{font-weight:900; letter-spacing:.3px; background:linear-gradient(90deg,var(--gold1),var(--gold2)); -webkit-background-clip:text; background-clip:text; color:transparent}
-
-    /* Nav */
-    .nav{display:flex; flex-direction:column; gap:8px}
-    .nav button{ text-align:left; width:100%; background:#0f182a; border:1px solid var(--line); color:#cfe0ff; padding:10px 12px; border-radius:10px; cursor:pointer; font-weight:700 }
-    .nav button.active{ outline:2px solid var(--ring) }
-
-    /* Top bar */
-    .top{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px }
-    .top .right{display:flex; gap:8px; align-items:center}
-    .btn{background:#2b66f6; color:#fff; border:0; padding:10px 12px; border-radius:10px; cursor:pointer; font-weight:800}
-    .btn.alt{background:#25304a; color:#d1d5db; border:1px solid #2f3b58}
-    .badge{display:inline-block; padding:4px 8px; border-radius:999px; font-size:12px; border:1px solid #2f3b58; background:#25304a}
-    .badge.ok{background:rgba(22,163,74,.2); border-color:#166534}
-    .badge.down{background:rgba(220,38,38,.2); border-color:#991b1b}
-    .badge.warn{background:rgba(245,158,11,.2); border-color:#b45309}
-
-    /* Content */
-    .panel{background:rgba(15,24,42,.9); border:1px solid var(--line); border-radius:16px; padding:16px; margin-bottom:16px}
-    .grid{display:grid; gap:14px}
-    @media(min-width:960px){
-      .cols-2{grid-template-columns:1fr 1fr}
-      .cols-3{grid-template-columns:repeat(3,1fr)}
-      .cols-4{grid-template-columns:repeat(4,1fr)}
-    }
-    .card{background:#0f182a; border:1px solid var(--line); border-radius:14px; padding:16px}
-    .card .muted{color:var(--muted)}
-    .kpi{font-size:34px; font-weight:900}
-    .table{width:100%; border-collapse:collapse; font-size:14px}
-    .table th,.table td{padding:10px; border-bottom:1px solid var(--line); text-align:left}
-    .table th{color:#cfe0ff}
-    .tableScroll{overflow:auto}
-    .hidden{display:none !important}
-
-    /* Forms */
-    label{display:block; font-size:13px; color:#cfe0ff; margin:10px 0 6px}
-    input,select,textarea{width:100%; background:#0b162a; color:#e8eefc; border:1px solid var(--ring); border-radius:12px; padding:12px 10px}
-    .row{display:flex; gap:10px; flex-wrap:wrap}
-    .row > *{flex:1}
-    .note{margin-top:10px; padding:10px; border-radius:10px}
-    .note.ok{background:#0f2a18; border:1px solid #1e5d38; color:#b7f7c3}
-    .note.err{background:#2a0f13; border:1px solid #5d1e28; color:#ffb4c0}
-
-    /* Charts */
-    .chartBox{height:260px}
-
-    /* Status chips in lists */
-    .status{padding:2px 8px; border-radius:999px; font-size:12px; border:1px solid var(--line); background:#121a2b}
-    .status.ACTIVE{background:rgba(22,163,74,.18); border-color:#166534}
-    .status.PENDING{background:rgba(245,158,11,.18); border-color:#b45309}
-    .status.BLOCKED{background:rgba(220,38,38,.18); border-color:#991b1b}
-  </style>
-
-  <!-- Charts (no bundler required) -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+<!-- Charts -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js" defer></script>
 </head>
 <body>
 
-  <div class="shell">
-    <!-- ===== LEFT NAV ===== -->
-    <aside class="sidebar">
-      <div class="brandRow">
-        <img src="/app/assets/brand/commander_badge.png" alt="Supreme Command"/>
-        <div>
-          <div class="brandTitle">The Empire</div>
-          <div style="font-size:12px;color:var(--muted)">Command & Control</div>
-        </div>
+<div class="shell">
+  <!-- ===== LEFT NAV ===== -->
+  <aside class="sidebar">
+    <div class="brandRow">
+      <img src="/app/assets/brand/commander_badge.png" alt="Supreme Command"/>
+      <div>
+        <div class="brandTitle">The Empire</div>
+        <div style="font-size:12px;color:var(--muted)">Command & Control</div>
+      </div>
+    </div>
+
+    <div class="nav">
+      <button data-tab="dashboard" class="active">Dashboard Overview</button>
+      <button data-tab="cpa">CPA Accounts</button>
+      <button data-tab="users">User Management</button>
+      <button data-tab="analytics">Performance Analytics</button>
+      <button data-tab="wallet">Wallet</button>
+      <button data-tab="security">System Security</button>
+      <button data-tab="monitoring">Monitoring & Alerts</button>
+    </div>
+  </aside>
+
+  <!-- ===== MAIN ===== -->
+  <main>
+    <div class="top">
+      <div>
+        <span class="badge" id="serverBadge">SERVER — …</span>
+        <span class="badge" id="dbBadge">DB — …</span>
+        <span class="badge" id="sheetsBadge">SHEETS — …</span>
+        <span class="badge" id="aiBadge">AI — …</span>
+      </div>
+      <div class="right">
+        <button id="btnSetAdmin" class="btn alt" type="button">Unlock Admin</button>
+        <a class="btn" href="/index.html">Logout</a>
+      </div>
+    </div>
+
+    <!-- ===== DASHBOARD OVERVIEW ===== -->
+    <section id="view-dashboard" class="panel">
+      <div class="grid cols-3">
+        <div class="card"><div class="muted">Total Earnings (USD)</div><div id="kpi-earn" class="kpi">$0.00</div></div>
+        <div class="card"><div class="muted">Active Users</div><div id="kpi-active" class="kpi">0</div></div>
+        <div class="card"><div class="muted">Approval Rate</div><div id="kpi-approval" class="kpi">—</div></div>
+        <div class="card"><div class="muted">Pending Reviews</div><div id="kpi-pending" class="kpi">0</div></div>
+        <div class="card"><div class="muted">Total Clicks</div><div id="kpi-clicks" class="kpi">0</div></div>
+        <div class="card"><div class="muted">Conversion Rate</div><div id="kpi-cr" class="kpi">—</div></div>
       </div>
 
-      <div class="nav">
-        <button data-tab="dashboard" class="active">Dashboard Overview</button>
-        <button data-tab="cpa">CPA Accounts</button>
-        <button data-tab="users">User Management</button>
-        <button data-tab="analytics">Performance Analytics</button>
-        <button data-tab="wallet">Wallet</button>
-        <button data-tab="security">System Security</button>
-        <button data-tab="monitoring">Monitoring & Alerts</button>
-      </div>
-    </aside>
-
-    <!-- ===== MAIN ===== -->
-    <main>
-      <div class="top">
-        <div>
-          <span class="badge" id="serverBadge">SERVER — …</span>
-          <span class="badge" id="dbBadge">DB — …</span>
-          <span class="badge" id="sheetsBadge">SHEETS — …</span>
-          <span class="badge" id="aiBadge">AI — …</span>
-        </div>
-        <div class="right">
-          <button id="btnSetAdmin" class="btn alt" type="button">Unlock Admin</button>
-          <a class="btn" href="/index.html">Logout</a>
-        </div>
+      <div class="grid cols-2" style="margin-top:12px">
+        <div class="card"><div class="muted">Monthly Performance</div><div class="chartBox"><canvas id="chartMonthly"></canvas></div></div>
+        <div class="card"><div class="muted">Geographic Distribution</div><div class="chartBox"><canvas id="chartGeo"></canvas></div></div>
       </div>
 
-      <!-- ===== DASHBOARD OVERVIEW ===== -->
-      <section id="view-dashboard" class="panel">
-        <div class="grid cols-3">
-          <div class="card"><div class="muted">Total Earnings (USD)</div><div id="kpi-earn" class="kpi">$0.00</div></div>
-          <div class="card"><div class="muted">Active Users</div><div id="kpi-active" class="kpi">0</div></div>
-          <div class="card"><div class="muted">Approval Rate</div><div id="kpi-approval" class="kpi">—</div></div>
-          <div class="card"><div class="muted">Pending Reviews</div><div id="kpi-pending" class="kpi">0</div></div>
-          <div class="card"><div class="muted">Total Clicks</div><div id="kpi-clicks" class="kpi">0</div></div>
-          <div class="card"><div class="muted">Conversion Rate</div><div id="kpi-cr" class="kpi">—</div></div>
+      <div class="panel">
+        <div class="muted" style="margin-bottom:6px">Live Performance</div>
+        <div class="tableScroll">
+          <table class="table" id="tbl-live">
+            <thead><tr><th>Time</th><th>Country</th><th>Offer</th><th>Device</th><th>Clicks</th><th>Leads</th><th>Earnings (USD)</th></tr></thead>
+            <tbody></tbody>
+          </table>
         </div>
+      </div>
+    </section>
 
-        <div class="grid cols-2" style="margin-top:12px">
-          <div class="card"><div class="muted">Monthly Performance</div><div class="chartBox"><canvas id="chartMonthly"></canvas></div></div>
-          <div class="card"><div class="muted">Geographic Distribution</div><div class="chartBox"><canvas id="chartGeo"></canvas></div></div>
+    <!-- ===== CPA ACCOUNTS ===== -->
+    <section id="view-cpa" class="panel hidden">
+      <div class="top" style="margin:0 0 6px">
+        <div class="muted">All CPA Grip Accounts</div>
+        <button id="btnAddCpaOpen" class="btn" type="button">Add New Account</button>
+      </div>
+      <div id="cpaGrid" class="grid cols-3"></div>
+
+      <!-- Add Account Modal -->
+      <div id="modalAddCpa" class="panel hidden">
+        <h3 style="margin:0 0 6px">Add CPA Account</h3>
+        <div class="row">
+          <div><label>Name</label><input id="cpaName" placeholder="Account Name"/></div>
+          <div><label>Domain</label><input id="cpaDomain" placeholder="example.com"/></div>
         </div>
+        <div class="row">
+          <div><label>User ID</label><input id="cpaUserId" placeholder="UID from network"/></div>
+          <div><label>API Key</label><input id="cpaApiKey" placeholder="•••••••"/></div>
+        </div>
+        <div class="row">
+          <div><label>Starting Revenue (USD)</label><input id="cpaStartRev" type="number" step="0.01" value="0"/></div>
+        </div>
+        <div class="row" style="justify-content:flex-end">
+          <button id="btnAddCpaSave" class="btn" type="button">Save</button>
+          <button id="btnAddCpaClose" class="btn alt" type="button">Close</button>
+        </div>
+        <div id="cpaNote" class="note ok hidden">Saved.</div>
+      </div>
+    </section>
 
-        <div class="panel">
-          <div class="muted" style="margin-bottom:6px">Live Performance</div>
-          <div class="tableScroll">
-            <table class="table" id="tbl-live">
-              <thead><tr><th>Time</th><th>Country</th><th>Offer</th><th>Device</th><th>Clicks</th><th>Leads</th><th>Earnings (USD)</th></tr></thead>
-              <tbody></tbody>
-            </table>
+    <!-- ===== USER MANAGEMENT ===== -->
+    <section id="view-users" class="panel hidden">
+      <div class="grid cols-2">
+        <div class="card">
+          <div class="muted">Invite link (working)</div>
+          <input id="inviteLink" readonly value="https://superlative-pothos-ebf5f2.netlify.app/?ref=SUPREME_COMMANDER"/>
+        </div>
+        <div class="card">
+          <div class="muted">Pending Approvals</div>
+          <div class="tableScroll" style="max-height:240px">
+            <table class="table"><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th></th></tr></thead><tbody id="pendingBody"></tbody></table>
           </div>
         </div>
-      </section>
+      </div>
 
-      <!-- ===== CPA ACCOUNTS ===== -->
-      <section id="view-cpa" class="panel hidden">
+      <div class="panel">
         <div class="top" style="margin:0 0 6px">
-          <div class="muted">All CPA Grip Accounts</div>
-          <button id="btnAddCpaOpen" class="btn" type="button">Add New Account</button>
+          <div class="muted">Approved Users</div>
+          <button id="btnAddUserOpen" class="btn" type="button">Add New User</button>
         </div>
-        <div id="cpaGrid" class="grid cols-3"></div>
-
-        <!-- Add Account Modal -->
-        <div id="modalAddCpa" class="panel hidden">
-          <h3 style="margin:0 0 6px">Add CPA Account</h3>
-          <div class="row">
-            <div><label>Name</label><input id="cpaName" placeholder="Account Name"/></div>
-            <div><label>Domain</label><input id="cpaDomain" placeholder="example.com"/></div>
-          </div>
-          <div class="row">
-            <div><label>User ID</label><input id="cpaUserId" placeholder="UID from network"/></div>
-            <div><label>API Key</label><input id="cpaApiKey" placeholder="•••••••"/></div>
-          </div>
-          <div class="row">
-            <div><label>Starting Revenue (USD)</label><input id="cpaStartRev" type="number" step="0.01" value="0"/></div>
-          </div>
-          <div class="row" style="justify-content:flex-end">
-            <button id="btnAddCpaSave" class="btn" type="button">Save</button>
-            <button id="btnAddCpaClose" class="btn alt" type="button">Close</button>
-          </div>
-          <div id="cpaNote" class="note ok hidden">Saved.</div>
+        <div class="tableScroll">
+          <table class="table"><thead><tr><th>Name</th><th>Email</th><th>WhatsApp</th><th>Bank</th><th>Account</th><th>Authority</th><th>Status</th></tr></thead><tbody id="usersBody"></tbody></table>
         </div>
-      </section>
+      </div>
 
-      <!-- ===== USER MANAGEMENT ===== -->
-      <section id="view-users" class="panel hidden">
-        <div class="grid cols-2">
-          <div class="card">
-            <div class="muted">Invite link (working)</div>
-            <input id="inviteLink" readonly value="https://superlative-pothos-ebf5f2.netlify.app/?ref=SUPREME_COMMANDER"/>
-          </div>
-          <div class="card">
-            <div class="muted">Pending Approvals</div>
-            <div class="tableScroll" style="max-height:240px">
-              <table class="table"><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th></th></tr></thead><tbody id="pendingBody"></tbody></table>
+      <!-- Add User Modal -->
+      <div id="modalAddUser" class="panel hidden">
+        <h3 style="margin:0 0 6px">Add User</h3>
+        <div class="row">
+          <div><label>Name</label><input id="uName"/></div>
+          <div><label>Email</label><input id="uEmail" type="email"/></div>
+        </div>
+        <div class="row">
+          <div><label>WhatsApp</label><input id="uWa" placeholder="+234..."/></div>
+          <div><label>Authority</label><input id="uAuth" placeholder="User / Manager / Admin"/></div>
+        </div>
+        <div class="row">
+          <div><label>Bank</label><input id="uBank"/></div>
+          <div><label>Account</label><input id="uAcct"/></div>
+        </div>
+        <div class="row" style="justify-content:flex-end">
+          <button id="btnAddUserSave" class="btn" type="button">Save</button>
+          <button id="btnAddUserClose" class="btn alt" type="button">Close</button>
+        </div>
+        <div id="userNote" class="note ok hidden">Saved.</div>
+      </div>
+    </section>
+
+    <!-- ===== ANALYTICS ===== -->
+    <section id="view-analytics" class="panel hidden">
+      <div class="grid cols-2">
+        <div class="card"><div class="muted">Monthly Performance</div><div class="chartBox"><canvas id="chartMonthly2"></canvas></div></div>
+        <div class="card"><div class="muted">Geo Distribution</div><div class="chartBox"><canvas id="chartGeo2"></canvas></div></div>
+      </div>
+      <div class="panel">
+        <div class="muted" style="margin-bottom:6px">Live Performance</div>
+        <div class="tableScroll">
+          <table class="table" id="tbl-live2">
+            <thead><tr><th>Time</th><th>Country</th><th>Offer</th><th>Device</th><th>Clicks</th><th>Leads</th><th>Earnings (USD)</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== WALLET ===== -->
+    <section id="view-wallet" class="panel hidden">
+      <div class="grid cols-4">
+        <div class="card"><div class="muted">Available Balance</div><div id="w-available" class="kpi">$0.00</div></div>
+        <div class="card"><div class="muted">Withdrawal Amount</div><div id="w-withdraw" class="kpi">$0.00</div></div>
+        <div class="card"><div class="muted">Processing</div><div id="w-proc" class="kpi">$0.00</div></div>
+        <div class="card"><div class="muted">Remaining</div><div id="w-remaining" class="kpi">$0.00</div></div>
+      </div>
+
+      <div class="grid cols-2" style="margin-top:12px">
+        <div class="card">
+          <div class="muted">Request Withdrawal</div>
+          <div class="row">
+            <div><label>Amount (USD)</label><input id="wd-amt" type="number" step="0.01" value="0"/></div>
+            <div><label>Method</label>
+              <select id="wd-method">
+                <option value="">Select…</option>
+                <option value="bank">Bank</option>
+                <option value="wallet">Wallet</option>
+                <option value="fintech">Fintech</option>
+              </select>
             </div>
           </div>
-        </div>
-
-        <div class="panel">
-          <div class="top" style="margin:0 0 6px">
-            <div class="muted">Approved Users</div>
-            <button id="btnAddUserOpen" class="btn" type="button">Add New User</button>
-          </div>
-          <div class="tableScroll">
-            <table class="table"><thead><tr><th>Name</th><th>Email</th><th>WhatsApp</th><th>Bank</th><th>Account</th><th>Authority</th><th>Status</th></tr></thead><tbody id="usersBody"></tbody></table>
-          </div>
-        </div>
-
-        <!-- Add User Modal -->
-        <div id="modalAddUser" class="panel hidden">
-          <h3 style="margin:0 0 6px">Add User</h3>
           <div class="row">
-            <div><label>Name</label><input id="uName"/></div>
-            <div><label>Email</label><input id="uEmail" type="email"/></div>
+            <div><label>Bank / Channel</label><select id="wd-bank"><option value="">—</option></select></div>
+            <div><label>Account</label><input id="wd-acct" placeholder="1234567890"/></div>
           </div>
           <div class="row">
-            <div><label>WhatsApp</label><input id="uWa" placeholder="+234..."/></div>
-            <div><label>Authority</label><input id="uAuth" placeholder="User / Manager / Admin"/></div>
-          </div>
-          <div class="row">
-            <div><label>Bank</label><input id="uBank"/></div>
-            <div><label>Account</label><input id="uAcct"/></div>
+            <div><label>WhatsApp</label><input id="wd-wa" placeholder="+234..."/></div>
+            <div><label>Account Name</label><input id="wd-name" readonly placeholder="Validate to fetch name"/></div>
           </div>
           <div class="row" style="justify-content:flex-end">
-            <button id="btnAddUserSave" class="btn" type="button">Save</button>
-            <button id="btnAddUserClose" class="btn alt" type="button">Close</button>
+            <button id="btnValidate" class="btn alt" type="button">Validate Account</button>
+            <button id="btnWithdraw" class="btn" type="button">Submit Request</button>
           </div>
-          <div id="userNote" class="note ok hidden">Saved.</div>
+          <div id="wdNote" class="note ok hidden">Submitted.</div>
+          <div id="wdErr" class="note err hidden">Error.</div>
         </div>
-      </section>
 
-      <!-- ===== ANALYTICS ===== -->
-      <section id="view-analytics" class="panel hidden">
-        <div class="grid cols-2">
-          <div class="card"><div class="muted">Monthly Performance</div><div class="chartBox"><canvas id="chartMonthly2"></canvas></div></div>
-          <div class="card"><div class="muted">Geo Distribution</div><div class="chartBox"><canvas id="chartGeo2"></canvas></div></div>
+        <div class="card">
+          <div class="muted">Recent Wallet Activity</div>
+          <div id="walletList"></div>
         </div>
-        <div class="panel">
-          <div class="muted" style="margin-bottom:6px">Live Performance</div>
-          <div class="tableScroll">
-            <table class="table" id="tbl-live2">
-              <thead><tr><th>Time</th><th>Country</th><th>Offer</th><th>Device</th><th>Clicks</th><th>Leads</th><th>Earnings (USD)</th></tr></thead>
-              <tbody></tbody>
+      </div>
+    </section>
+
+    <!-- ===== SECURITY ===== -->
+    <section id="view-security" class="panel hidden">
+      <div class="grid cols-2">
+        <div class="card">
+          <div class="muted">Admin Controls</div>
+          <div>Admin Secret: <span id="admStatus" class="badge">NOT SET</span></div>
+          <div style="margin-top:10px">
+            <button id="btnAdminSet" class="btn alt" type="button">Set / Change Admin Secret</button>
+            <button id="btnAdminClear" class="btn alt" type="button">Clear</button>
+          </div>
+          <p class="muted" style="margin-top:8px">Used for approval actions via <code>/.netlify/functions/admin-pending</code>.</p>
+        </div>
+        <div class="card">
+          <div class="muted">Public Config</div>
+          <pre id="pubCfg" style="white-space:pre-wrap; font-size:12px"></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== MONITORING ===== -->
+    <section id="view-monitoring" class="panel hidden">
+      <div class="grid cols-2">
+        <div class="card">
+          <div class="muted">System Health</div>
+          <div style="margin-top:8px">Server: <span id="h-server" class="badge">—</span></div>
+          <div>Database: <span id="h-db" class="badge">—</span></div>
+          <div>Sheets: <span id="h-sheets" class="badge">—</span></div>
+          <div>AI: <span id="h-ai" class="badge">—</span></div>
+          <div class="muted" style="margin-top:10px">Auto-refresh every 15s.</div>
+        </div>
+        <div class="card">
+          <div class="muted">Event Feed</div>
+          <div class="tableScroll" style="max-height:340px">
+            <table class="table">
+              <thead><tr><th>Time</th><th>Type</th><th>Message</th><th>Ref</th><th>Actor</th></tr></thead>
+              <tbody id="evBody"></tbody>
             </table>
           </div>
         </div>
-      </section>
+      </div>
+    </section>
 
-      <!-- ===== WALLET ===== -->
-      <section id="view-wallet" class="panel hidden">
-        <div class="grid cols-4">
-          <div class="card"><div class="muted">Available Balance</div><div id="w-available" class="kpi">$0.00</div></div>
-          <div class="card"><div class="muted">Withdrawal Amount</div><div id="w-withdraw" class="kpi">$0.00</div></div>
-          <div class="card"><div class="muted">Processing</div><div id="w-proc" class="kpi">$0.00</div></div>
-          <div class="card"><div class="muted">Remaining</div><div id="w-remaining" class="kpi">$0.00</div></div>
-        </div>
+    <div class="panel" style="text-align:center;opacity:.75">© Empire Affiliate Marketing Hub</div>
+  </main>
+</div>
 
-        <div class="grid cols-2" style="margin-top:12px">
-          <div class="card">
-            <div class="muted">Request Withdrawal</div>
-            <div class="row">
-              <div><label>Amount (USD)</label><input id="wd-amt" type="number" step="0.01" value="0"/></div>
-              <div><label>Method</label>
-                <select id="wd-method">
-                  <option value="">Select…</option>
-                  <option value="bank">Bank</option>
-                  <option value="wallet">Wallet</option>
-                  <option value="fintech">Fintech</option>
-                </select>
-              </div>
-            </div>
-            <div class="row">
-              <div><label>Bank / Channel</label><select id="wd-bank"><option value="">—</option></select></div>
-              <div><label>Account</label><input id="wd-acct" placeholder="1234567890"/></div>
-            </div>
-            <div class="row">
-              <div><label>WhatsApp</label><input id="wd-wa" placeholder="+234..."/></div>
-              <div><label>Account Name</label><input id="wd-name" readonly placeholder="Validate to fetch name"/></div>
-            </div>
-            <div class="row" style="justify-content:flex-end">
-              <button id="btnValidate" class="btn alt" type="button">Validate Account</button>
-              <button id="btnWithdraw" class="btn" type="button">Submit Request</button>
-            </div>
-            <div id="wdNote" class="note ok hidden">Submitted.</div>
-            <div id="wdErr" class="note err hidden">Error.</div>
-          </div>
+<script>
+/* ====================== RUNTIME CONFIG ====================== */
+const STATE = { BASE: '/.netlify/functions', GAS: '', INVITE: "https://superlative-pothos-ebf5f2.netlify.app/?ref=SUPREME_COMMANDER" };
 
-          <div class="card">
-            <div class="muted">Recent Wallet Activity</div>
-            <div id="walletList"></div>
-          </div>
-        </div>
-      </section>
+async function initConfig(){
+  try{
+    const r = await fetch(STATE.BASE + '/public-config', { headers:{'Cache-Control':'no-cache'}});
+    const cfg = await r.json();
+    STATE.GAS = (cfg && cfg.gasUrl) ? String(cfg.gasUrl).replace(/\/+$/,'') : '';
+    const site = cfg && cfg.site ? cfg.site : '';
+    const tg   = { handle: cfg && cfg.telegramHandle, url: cfg && cfg.telegramChannelUrl };
+    const pub  = { site, gasUrl: STATE.GAS, telegram: tg };
+    const el   = document.getElementById('pubCfg'); if(el) el.textContent = JSON.stringify(pub,null,2);
+  }catch(e){
+    const el = document.getElementById('pubCfg'); if(el) el.textContent = 'No public-config. Using defaults.';
+  }
+}
 
-      <!-- ===== SECURITY ===== -->
-      <section id="view-security" class="panel hidden">
-        <div class="grid cols-2">
-          <div class="card">
-            <div class="muted">Admin Controls</div>
-            <div>Admin Secret: <span id="admStatus" class="badge">NOT SET</span></div>
-            <div style="margin-top:10px">
-              <button id="btnAdminSet" class="btn alt" type="button">Set / Change Admin Secret</button>
-              <button id="btnAdminClear" class="btn alt" type="button">Clear</button>
-            </div>
-            <p class="muted" style="margin-top:8px">Used for approval actions via <code>/.netlify/functions/admin-pending</code>.</p>
-          </div>
-          <div class="card">
-            <div class="muted">Public Config</div>
-            <pre id="pubCfg" style="white-space:pre-wrap; font-size:12px"></pre>
-          </div>
-        </div>
-      </section>
+/* ====================== UTILS ======================= */
+const $=id=>document.getElementById(id);
+const qa=(s,r=document)=>Array.from(r.querySelectorAll(s));
+const fmtUSD=n=> new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(+n||0);
+const num=n=> (+n||0).toLocaleString();
+const pct=n=> ((+n||0)*100).toFixed(1)+'%';
+const esc=s=> String(s??'').replace(/[&<>"']/g,m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
 
-      <!-- ===== MONITORING ===== -->
-      <section id="view-monitoring" class="panel hidden">
-        <div class="grid cols-2">
-          <div class="card">
-            <div class="muted">System Health</div>
-            <div style="margin-top:8px">Server: <span id="h-server" class="badge">—</span></div>
-            <div>Database: <span id="h-db" class="badge">—</span></div>
-            <div>Sheets: <span id="h-sheets" class="badge">—</span></div>
-            <div>AI: <span id="h-ai" class="badge">—</span></div>
-            <div class="muted" style="margin-top:10px">Auto-refresh every 15s.</div>
-          </div>
-          <div class="card">
-            <div class="muted">Event Feed</div>
-            <div class="tableScroll" style="max-height:340px">
-              <table class="table">
-                <thead><tr><th>Time</th><th>Type</th><th>Message</th><th>Ref</th><th>Actor</th></tr></thead>
-                <tbody id="evBody"></tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      </section>
+/* Admin secret in localStorage */
+const ADMIN_KEY = 'empire.admin.secret';
+function getAdmin(){ try{return localStorage.getItem(ADMIN_KEY)||'';}catch{return '';} }
+function setAdmin(v){ try{localStorage.setItem(ADMIN_KEY,v||'')}catch{}; paintAdmin(); }
+function paintAdmin(){ const has = !!getAdmin(); const el=$('admStatus'); if(el){ el.textContent = has?'SET':'NOT SET'; el.className='badge '+(has?'ok':'warn'); }}
 
-      <div class="panel" style="text-align:center;opacity:.75">© Empire Affiliate Marketing Hub</div>
-    </main>
-  </div>
+/* HTTP helpers */
+function headers(json=true, includeAdmin=false){
+  const h={};
+  if(json) h['Content-Type']='application/json';
+  const adm = includeAdmin && getAdmin();
+  if(adm) h['X-Admin-Secret']=adm;
+  return h;
+}
+async function fetchJSON(url, opts){ const r= await fetch(url, opts||{}); if(!r.ok) throw new Error(r.status+' '+url); return r.json(); }
 
-  <!-- ===== Footer bootstrapping (no secrets) =====
-       We only set EMPIRE_API. dashboard.js will fetch /public-config
-       and pick up gasUrl automatically as a fallback. -->
-  <script>
-    window.EMPIRE_API='/.netlify/functions';
-    /* Do NOT set window.GAS_URL here to avoid overriding the public-config fallback. */
-  </script>
-  <script src="/app/dashboard.js" defer></script>
+/* Primary→Fallback loader */
+async function loadMaybe(fnPath, gasParams){
+  // Try Netlify first
+  try{ return await fetchJSON(STATE.BASE + fnPath, {headers: headers(false)}); } catch(e){}
+  // Fallback to GAS if available
+  if(!STATE.GAS) throw new Error('Primary failed and GAS not configured');
+  const u=new URL(STATE.GAS);
+  Object.entries(gasParams||{}).forEach(([k,v])=>u.searchParams.set(k,String(v)));
+  return await fetchJSON(u.toString(), {headers: headers(false)});
+}
+
+/* ======================== TABS ====================== */
+const views = {
+  dashboard: $('view-dashboard'),
+  cpa:       $('view-cpa'),
+  users:     $('view-users'),
+  analytics: $('view-analytics'),
+  wallet:    $('view-wallet'),
+  security:  $('view-security'),
+  monitoring:$('view-monitoring')
+};
+function wireTabs(){
+  qa('.nav button').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      qa('.nav button').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active');
+      const k=b.dataset.tab;
+      Object.values(views).forEach(v=>v.classList.add('hidden'));
+      (views[k]||views.dashboard).classList.remove('hidden');
+      if(k==='dashboard') loadOverview().catch(console.warn);
+      if(k==='cpa')       loadCpa().catch(console.warn);
+      if(k==='users')     loadUsers().catch(console.warn);
+      if(k==='analytics') loadAnalytics().catch(console.warn);
+      if(k==='wallet')    loadWallet().catch(console.warn);
+      if(k==='security')  loadSecurity().catch(console.warn);
+      if(k==='monitoring')loadMonitoring().catch(console.warn);
+    });
+  });
+}
+
+/* =================== OVERVIEW ======================= */
+let chartMonthly1, chartGeo1;
+async function loadOverview(){
+  try{
+    const s = await loadMaybe('/summary', {summary:1});
+    $('kpi-earn').textContent     = fmtUSD(s.totalEarnings ?? s.earnings ?? 0);
+    $('kpi-active').textContent   = num(s.activeUsers ?? 0);
+    $('kpi-pending').textContent  = num(s.pending ?? 0);
+    $('kpi-clicks').textContent   = num(s.clicks ?? 0);
+    $('kpi-approval').textContent = s.approvalRate!=null ? (typeof s.approvalRate==='string'?s.approvalRate:pct(s.approvalRate)) : '—';
+    $('kpi-cr').textContent       = s.conversionRate!=null ? (typeof s.conversionRate==='string'?s.conversionRate:pct(s.conversionRate)) : '—';
+
+    const m = s.monthly || [];
+    const g = s.geo || s.geographic || [];
+    const live = s.live || [];
+
+    chartMonthly1 && chartMonthly1.destroy();
+    chartMonthly1 = new Chart($('#chartMonthly'), {
+      type:'line',
+      data:{ labels:m.map(x=>x.label||x.month),
+             datasets:[{ label:'Monthly Earnings', data:m.map(x=>x.value||x.amount||0), borderWidth:2, tension:.35 }]},
+      options:{plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}}}
+    });
+
+    chartGeo1 && chartGeo1.destroy();
+    chartGeo1 = new Chart($('#chartGeo'), {
+      type:'doughnut',
+      data:{ labels:g.map(x=>x.label||x.country),
+             datasets:[{ data:g.map(x=>x.value||x.amount||0)}]},
+      options:{plugins:{legend:{position:'right'}}}
+    });
+
+    const tb = $('#tbl-live').querySelector('tbody'); tb.innerHTML='';
+    live.forEach(r=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML = `<td>${esc(r.time||'')}</td><td>${esc(r.country||'')}</td><td>${esc(r.offer||'')}</td>
+                      <td>${esc(r.device||'')}</td><td>${num(r.clicks||0)}</td><td>${num(r.leads||0)}</td>
+                      <td>${fmtUSD(r.earnings||0)}</td>`;
+      tb.appendChild(tr);
+    });
+  }catch(e){
+    console.warn('overview',e);
+  }
+}
+
+/* =================== CPA ACCOUNTS =================== */
+async function loadCpa(){
+  const grid = $('cpaGrid'); grid.innerHTML='';
+  try{
+    const r = await loadMaybe('/cpa/list', {cpa:1});
+    (r.items || r.accounts || []).forEach(acc=>{
+      const card=document.createElement('div'); card.className='card';
+      card.innerHTML = `
+        <div class="muted" style="margin-bottom:6px">${esc(acc.name||acc.id||'CPA')}</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <div><div class="muted">Active Offers</div><div class="kpi" style="font-size:22px">${num(acc.offers||acc.activeOffers||0)}</div></div>
+          <div><div class="muted">Revenue</div><div class="kpi" style="font-size:22px">${fmtUSD(acc.revenue||0)}</div></div>
+          <div><div class="muted">Clicks</div><div class="kpi" style="font-size:22px">${num(acc.clicks||0)}</div></div>
+          <div><div class="muted">Conversion</div><div class="kpi" style="font-size:22px">${acc.conversionRate!=null?(typeof acc.conversionRate==='string'?acc.conversionRate:pct(acc.conversionRate)):'—'}</div></div>
+        </div>`;
+      grid.appendChild(card);
+    });
+    if(!grid.children.length) grid.innerHTML = `<div class="note err">No accounts found.</div>`;
+  }catch(e){
+    grid.innerHTML = `<div class="note err">Failed: ${esc(e.message)}</div>`;
+  }
+  // modal actions (UI)
+  $('#btnAddCpaOpen').onclick = ()=> $('#modalAddCpa').classList.remove('hidden');
+  $('#btnAddCpaClose').onclick= ()=> $('#modalAddCpa').classList.add('hidden');
+  $('#btnAddCpaSave').onclick = async ()=>{
+    const payload={
+      name:$('#cpaName').value.trim(), domain:$('#cpaDomain').value.trim(),
+      user:$('#cpaUserId').value.trim(), apiKey:$('#cpaApiKey').value.trim(),
+      startingRevenue:+$('#cpaStartRev').value||0
+    };
+    try{
+      await fetchJSON(STATE.BASE+'/cpa/add',{method:'POST',headers:headers(true,true),body:JSON.stringify(payload)});
+      $('#cpaNote').classList.remove('hidden'); setTimeout(()=>location.hash='#cpa',1000);
+    }catch(e){ alert('Save failed: '+e.message); }
+  };
+}
+
+/* =================== USERS ========================== */
+async function loadUsers(){
+  // Pending list (Netlify admin-pending or GAS fallback)
+  try{
+    const p = await (async ()=>{
+      try{
+        // Requires Admin Secret header; if missing will 401 and we’ll fall back
+        return await fetchJSON(STATE.BASE+'/admin-pending', { headers: headers(false,true) });
+      }catch(_){
+        return await loadMaybe('/users/pending', {pending:1});
+      }
+    })();
+    const body = $('pendingBody'); body.innerHTML='';
+    (p.items || p.users || []).forEach(u=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML = `<td>${esc(u.name||'')}</td><td>${esc(u.email||'')}</td><td>${esc(u.phone||'')}</td>
+                      <td><button class="btn alt btnApprove" data-id="${esc(u.id||'')}">Approve</button></td>`;
+      body.appendChild(tr);
+    });
+    body.querySelectorAll('.btnApprove').forEach(btn=>{
+      btn.onclick= async ()=>{
+        try{
+          await fetchJSON(STATE.BASE+'/admin-pending',{method:'POST',headers:headers(true,true),body:JSON.stringify({id:btn.dataset.id, action:'approve'})});
+          loadUsers();
+        }catch(e){ alert('Approve failed: '+e.message); }
+      };
+    });
+  }catch(e){ $('pendingBody').innerHTML=`<tr><td colspan="4">Failed: ${esc(e.message)}</td></tr>`; }
+
+  // Approved list
+  try{
+    const a = await loadMaybe('/users/approved', {approved:1});
+    const body = $('usersBody'); body.innerHTML='';
+    (a.items || a.users || []).forEach(u=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML = `<td>${esc(u.name||'')}</td><td>${esc(u.email||'')}</td><td>${esc(u.whatsapp||'')}</td>
+                      <td>${esc(u.bank||'')}</td><td>${esc(u.account||'')}</td>
+                      <td>${esc(u.authority||'User')}</td><td><span class="status ${esc(u.status||'ACTIVE')}">${esc(u.status||'ACTIVE')}</span></td>`;
+      body.appendChild(tr);
+    });
+  }catch(e){ $('usersBody').innerHTML=`<tr><td colspan="7">Failed: ${esc(e.message)}</td></tr>`; }
+
+  // Add user modal (UI)
+  $('#btnAddUserOpen').onclick = ()=> $('#modalAddUser').classList.remove('hidden');
+  $('#btnAddUserClose').onclick= ()=> $('#modalAddUser').classList.add('hidden');
+  $('#btnAddUserSave').onclick = async ()=>{
+    const payload={name:$('#uName').value,email:$('#uEmail').value,whatsapp:$('#uWa').value,authority:$('#uAuth').value,bank:$('#uBank').value,account:$('#uAcct').value};
+    try{
+      await fetchJSON(STATE.BASE+'/users/add',{method:'POST',headers:headers(true,true),body:JSON.stringify(payload)});
+      $('#userNote').classList.remove('hidden'); setTimeout(()=>location.hash='#users',1000);
+    }catch(e){ alert('Save failed: '+e.message); }
+  };
+}
+
+/* =================== ANALYTICS ====================== */
+let chartMonthly2, chartGeo2;
+async function loadAnalytics(){
+  try{
+    const s = await loadMaybe('/analytics/summary', {analytics:1});
+    const m = s.monthly || [];
+    const g = s.geo || s.geographic || [];
+    const live = s.live || [];
+
+    chartMonthly2 && chartMonthly2.destroy();
+    chartMonthly2 = new Chart($('#chartMonthly2'), {
+      type:'bar',
+      data:{ labels:m.map(x=>x.label||x.month), datasets:[{ label:'Monthly', data:m.map(x=>x.value||x.amount||0)}] },
+      options:{plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}}}
+    });
+
+    chartGeo2 && chartGeo2.destroy();
+    chartGeo2 = new Chart($('#chartGeo2'), {
+      type:'pie',
+      data:{ labels:g.map(x=>x.label||x.country), datasets:[{ data:g.map(x=>x.value||x.amount||0)}] }
+    });
+
+    const tb = $('#tbl-live2').querySelector('tbody'); tb.innerHTML='';
+    live.forEach(r=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML = `<td>${esc(r.time||'')}</td><td>${esc(r.country||'')}</td><td>${esc(r.offer||'')}</td>
+                      <td>${esc(r.device||'')}</td><td>${num(r.clicks||0)}</td><td>${num(r.leads||0)}</td><td>${fmtUSD(r.earnings||0)}</td>`;
+      tb.appendChild(tr);
+    });
+  }catch(e){
+    console.warn('analytics',e);
+  }
+}
+
+/* =================== WALLET ========================= */
+async function loadWallet(){
+  try{
+    const w = await loadMaybe('/wallet', {wallet:1});
+    $('w-available').textContent = fmtUSD(w.available ?? w.balance ?? 0);
+    $('w-withdraw').textContent  = fmtUSD(w.withdraw ?? 0);
+    $('w-proc').textContent      = fmtUSD(w.processing ?? 0);
+    const remaining = (w.available ?? w.balance ?? 0) - (w.withdraw ?? 0) - (w.processing ?? 0);
+    $('w-remaining').textContent = fmtUSD(remaining);
+
+    const list = $('walletList'); list.innerHTML='';
+    (w.items||w.history||[]).forEach(tx=>{
+      const wrap=document.createElement('div'); wrap.className='card';
+      wrap.innerHTML=`<div style="display:flex;justify-content:space-between">
+        <div><div class="muted">${esc(tx.method||'')}</div><div style="font-weight:800">${fmtUSD(tx.amount||0)}</div></div>
+        <div style="text-align:right"><div class="muted">${esc(tx.date||'')}</div><span class="status ${esc(tx.status||'COMPLETED')}">${esc(tx.status||'COMPLETED')}</span></div>
+      </div>`;
+      list.appendChild(wrap);
+    });
+
+    // Populate bank list (if available)
+    try{
+      const b = await fetchJSON(STATE.BASE + '/banks');
+      const sel = document.getElementById('wd-bank'); if(sel){ sel.innerHTML = '<option value="">—</option>' + (b.banks||[]).map(x=>`<option value="${esc(x.code)}">${esc(x.name)}</option>`).join(''); }
+    }catch{}
+  }catch(e){
+    $('walletList').innerHTML = `<div class="note err">Failed: ${esc(e.message)}</div>`;
+  }
+}
+
+/* =================== SECURITY ======================= */
+async function loadSecurity(){
+  paintAdmin();
+  $('btnAdminSet').onclick   = ()=>{ const v=prompt('Set admin secret'); if(v) setAdmin(v); };
+  $('btnAdminClear').onclick = ()=> setAdmin('');
+
+  try{
+    const r = await fetch(STATE.BASE + '/public-config'); const cfg = await r.json();
+    $('pubCfg').textContent = JSON.stringify({ site: cfg.site, gasUrl: cfg.gasUrl, telegram:{handle:cfg.telegramHandle,url:cfg.telegramChannelUrl}}, null, 2);
+  }catch(e){
+    $('pubCfg').textContent = 'Failed to load public config: '+e.message;
+  }
+}
+
+/* =================== MONITORING ===================== */
+function paintBadges(st){
+  const set=(el,ok)=>{ el.textContent = ok?'ONLINE':'OFFLINE'; el.className='badge '+(ok?'ok':'down'); };
+  set($('serverBadge'),  st.server   !==false);
+  set($('dbBadge'),      st.db       !==false);
+  set($('sheetsBadge'),  st.sheets   !==false);
+  set($('aiBadge'),      st.ai       !==false);
+  set($('h-server'),     st.server   !==false);
+  set($('h-db'),         st.db       !==false);
+  set($('h-sheets'),     st.sheets   !==false);
+  set($('h-ai'),         st.ai       !==false);
+}
+async function loadMonitoring(){
+  try{
+    const r = await loadMaybe('/health', {health:1});
+    paintBadges(r||{});
+    const body=$('evBody'); body.innerHTML='';
+    (r.events||[]).forEach(e=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML=`<td>${esc(e.time||'')}</td><td>${esc(e.type||'')}</td><td>${esc(e.msg||'')}</td><td>${esc(e.ref||'')}</td><td>${esc(e.actor||'')}</td>`;
+      body.appendChild(tr);
+    });
+    if(!loadMonitoring._timer){
+      loadMonitoring._timer = setInterval(()=>{
+        if(!views.monitoring.classList.contains('hidden')) loadMonitoring().catch(()=>{});
+      },15000);
+    }
+  }catch(e){
+    $('evBody').innerHTML = `<tr><td colspan="5">Failed: ${esc(e.message)}</td></tr>`;
+  }
+}
+
+/* ================ INIT ============================== */
+window.addEventListener('DOMContentLoaded', async ()=>{
+  try{
+    await initConfig();            // ← wait for public-config (sets GAS)
+  }catch{}
+  wireTabs();                      // wire after config to avoid race
+  $('inviteLink').value = STATE.INVITE;
+
+  // default view + badges
+  loadOverview().catch(console.warn);
+  loadMonitoring().catch(console.warn);
+
+  // open hash tab if present
+  const h = (location.hash||'').replace('#','');
+  if(h && views[h]){
+    qa('.nav button').forEach(b=>{ if(b.dataset.tab===h) b.click(); });
+  }
+
+  // admin buttons in header
+  const btn = document.getElementById('btnSetAdmin');
+  if(btn){ btn.onclick = ()=>{ const v=prompt('Enter Admin Secret'); if(v) setAdmin(v); }; }
+});
+</script>
 </body>
 </html>

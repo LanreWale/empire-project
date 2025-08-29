@@ -1,13 +1,6 @@
-cat > netlify/functions/monitor-feed.js <<'JS'
 "use strict";
-
-// zero-literal event feed: reads ONLY from env, uses built-in fetch wrapper
 const http = require("./lib/http");
-const json = (s, b) => ({
-  statusCode: s,
-  headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
-  body: JSON.stringify(b),
-});
+const json = (s, b) => ({ statusCode: s, headers: { "Content-Type": "application/json", "Cache-Control": "no-store" }, body: JSON.stringify(b) });
 const safe = (s) => { try { return JSON.parse(s || "{}"); } catch { return {}; } };
 
 exports.handler = async (event) => {
@@ -26,14 +19,7 @@ exports.handler = async (event) => {
 
     if (method === "POST") {
       const body = safe(event.body);
-      const rec = {
-        ts: new Date().toISOString(),
-        type: body.type || "INFO",
-        message: body.message || "",
-        ref: body.ref || "",
-        actor: body.actor || "system",
-        meta: body.meta ? JSON.stringify(body.meta) : "",
-      };
+      const rec = { ts: new Date().toISOString(), type: body.type || "INFO", message: body.message || "", ref: body.ref || "", actor: body.actor || "system", meta: body.meta ? JSON.stringify(body.meta) : "" };
       const payload = { key: WEBAPP_KEY, action: "append", sheet: "Log_Event", values: Object.values(rec) };
       const r = await http.post(WEBAPP_URL, payload, { headers: { "Content-Type": "application/json" }, timeout: 15000 });
       return json(200, { ok: true, result: r.data ?? r });
@@ -44,4 +30,3 @@ exports.handler = async (event) => {
     return json(500, { ok: false, error: String(e && e.message || e) });
   }
 };
-JS

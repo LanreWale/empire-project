@@ -1,13 +1,6 @@
-cat > netlify/functions/gs-bridge.js <<'JS'
 "use strict";
-
-// zero-literal bridge: reads ONLY from env, uses built-in fetch wrapper
 const http = require("./lib/http");
-const json = (s, b) => ({
-  statusCode: s,
-  headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
-  body: JSON.stringify(b),
-});
+const json = (s, b) => ({ statusCode: s, headers: { "Content-Type": "application/json", "Cache-Control": "no-store" }, body: JSON.stringify(b) });
 const safe = (s) => { try { return JSON.parse(s || "{}"); } catch { return {}; } };
 
 exports.handler = async (event) => {
@@ -36,4 +29,3 @@ exports.handler = async (event) => {
     return json(500, { ok: false, error: String(e && e.message || e) });
   }
 };
-JS

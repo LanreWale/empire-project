@@ -1,53 +1,33 @@
-// netlify/functions/gs-bridge.js
-function json(status, body) {
-  return {
-    statusCode: status,
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  };
-}
-
-const WEBAPP = process.env.GS_WEBHOOK_URL; // your Apps Script WebApp endpoint
-const SHEET_ID = process.env.GS_SHEET_ID || "";
-const RANGE = process.env.GS_RANGE || "";
-const APP_KEY = process.env.GS_WEBAPP_KEY || ""; // optional
+"use strict";
+const axios = require("./lib/http");
+const json = (s, b) => ({ statusCode: s, headers: { "Content-Type": "application/json", "Cache-Control": "no-store" }, body: JSON.stringify(b) });
+const safe = (s) => { try { return JSON.parse(s || "{}"); } catch { return {}; } };
 
 exports.handler = async (event) => {
-  if (!WEBAPP) {
-    return json(500, { ok: false, error: "GS_WEBHOOK_URL not set" });
-  }
-
   try {
-    if (event.httpMethod === "GET") {
-      // Forward GET → GAS WebApp
-      const u = new URL(WEBAPP);
-      if (SHEET_ID) u.searchParams.set("sheetId", SHEET_ID);
-      if (RANGE) u.searchParams.set("range", RANGE);
-      if (APP_KEY) u.searchParams.set("key", APP_KEY);
+    // ✅ env-only, prefer webhook then webapp
+    const WEBAPP_URL = (process.env.GS_WEBHOOK_URL || process.env.GS_WEBAPP_URL || "").trim();
+    const WEBAPP_KEY = (process.env.GS_WEBAPP_KEY || "").trim();
+    if (!WEBAPP_URL) return json(500, { ok: false, error: "GS WebApp URL missing" });
 
-      const r = await fetch(u.toString(), { method: "GET" });
-      const data = await r.json().catch(() => ({}));
-      return json(200, { ok: true, data });
+    const method = (event.httpMethod || "GET").toUpperCase();
+
+    if (method === "GET") {
+      const params = { key: WEBAPP_KEY, action: "read", sheet: "Bridge" };
+      const r = await axios.get(WEBAPP_URL, { params, timeout: 15000 });
+      const data = r.data?.data ?? r.data;
+      return json(200, { ok: true, data: Array.isArray(data) ? data : [] });
     }
 
-    if (event.httpMethod === "POST") {
-      // Forward POST payload → GAS WebApp
-      const payload = JSON.parse(event.body || "{}");
-      const r = await fetch(WEBAPP, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          sheetId: SHEET_ID,
-          key: APP_KEY,
-          ...payload,
-        }),
-      });
-      const data = await r.json().catch(() => ({}));
-      return json(200, { ok: true, data });
+    if (method === "POST") {
+      const body = safe(event.body);
+      const payload = { key: WEBAPP_KEY, action: "append", sheet: "Bridge", values: body.values || [] };
+      const r = await axios.post(WEBAPP_URL, payload, { headers: { "Content-Type": "application/json" }, timeout: 15000 });
+      return json(200, { ok: true, result: r.data });
     }
 
     return json(405, { ok: false, error: "Method not allowed" });
   } catch (e) {
-    return json(500, { ok: false, error: e.message });
+    return json(500, { ok: false, error: String(e) });
   }
 };

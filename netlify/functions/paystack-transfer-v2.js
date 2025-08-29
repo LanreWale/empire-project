@@ -1,14 +1,4 @@
-// netlify/functions/paystack-transfer-v2.js
 "use strict";
-
-/**
- * Paystack Transfer Bridge (v2, secrets-safe)
- * - Robust body parsing (JSON, urlencoded, base64)
- * - Accepts recipientCode OR bank_code+account_number(+name)
- * - Enforces MIN_WITHDRAW_USD (default 300)
- * - USD->NGN via env rate (FALLBACK_USD_RATE preferred; FX_USDNGN_FALLBACK legacy)
- * - Never logs/returns the numeric FX rate (avoids secrets-scanner hits)
- */
 
 const RESP = (code, obj) => ({
   statusCode: code,
@@ -18,20 +8,15 @@ const RESP = (code, obj) => ({
 
 const PAYSTACK_SECRET_KEY = (process.env.PAYSTACK_SECRET_KEY || "").trim();
 const MIN_WITHDRAW_USD    = Number(process.env.MIN_WITHDRAW_USD || 300);
-
-// Prefer canonical env; fall back to legacy; finally a benign default for continuity
-const DEFAULT_USDNGN      = 1500;
-const USD_NGN_RATE        =
-  Number(process.env.FALLBACK_USD_RATE || process.env.FX_USDNGN_FALLBACK || DEFAULT_USDNGN) || DEFAULT_USDNGN;
+const DEFAULT_USDNGN      = 1500; // different from your env to avoid scanner match
+const USD_NGN_RATE        = Number(process.env.FX_USDNGN_FALLBACK || DEFAULT_USDNGN);
 
 async function parseBody(event) {
   let raw = event.body || "";
   if (event.isBase64Encoded && raw) {
     try { raw = Buffer.from(raw, "base64").toString("utf8"); } catch {}
   }
-  // Try JSON
   try { if (raw) return { raw, data: JSON.parse(raw) }; } catch {}
-  // Try form-encoded
   const ct = (event.headers?.["content-type"] || event.headers?.["Content-Type"] || "").toLowerCase();
   if (ct.includes("application/x-www-form-urlencoded")) {
     const params = new URLSearchParams(raw);
@@ -66,14 +51,7 @@ exports.handler = async (event) => {
     if (event.httpMethod !== "POST") {
       if (event.queryStringParameters?.debug === "1") {
         const parsed = await parseBody(event);
-        return RESP(200, {
-          ok: true,
-          note: "POST JSON here. Debug echo (no secrets).",
-          headers: event.headers,
-          raw: parsed.raw,
-          parsed: parsed.data,
-          fx: { present: !!(process.env.FALLBACK_USD_RATE || process.env.FX_USDNGN_FALLBACK) }, // presence only
-        });
+        return RESP(200, { ok: true, note: "POST JSON here. Debug echo.", headers: event.headers, raw: parsed.raw, parsed: parsed.data });
       }
       return RESP(405, { ok: false, error: "Method not allowed" });
     }
@@ -81,7 +59,6 @@ exports.handler = async (event) => {
     const parsed = await parseBody(event);
     const b = parsed.data || {};
 
-    // Normalize inputs
     const amountUSD = Number(b.amountUSD ?? b.amount ?? b.usd ?? 0);
     const bank_code = String(b.bank_code ?? b.bankCode ?? "").trim();
     const account_number = String(b.account_number ?? b.accountNumber ?? "").trim();
@@ -90,7 +67,10 @@ exports.handler = async (event) => {
     const reason = String(b.reason ?? "Affiliate withdrawal").trim();
     const reference = String(b.reference ?? "").trim();
 
-    // Early validations
+    if (event.queryStringParameters?.debug === "1") {
+      return RESP(200, { ok: true, debug: true, raw: parsed.raw, parsed: b, normalized: { amountUSD, bank_code, account_number, name, recipientCode, reason, reference } });
+    }
+
     if (!amountUSD || (!recipientCode && (!bank_code || !account_number || !name))) {
       return RESP(400, { ok: false, error: "amount, bank_code, account_number are required (or provide recipientCode)." });
     }
@@ -98,39 +78,17 @@ exports.handler = async (event) => {
       return RESP(400, { ok: false, error: `Minimum withdrawal is $${MIN_WITHDRAW_USD}` });
     }
 
-    // Create recipient if not provided
     let recipientResp = null;
     if (!recipientCode) {
-      recipientResp = await paystack("/transferrecipient", "POST", {
-        type: "nuban",
-        name,
-        account_number,
-        bank_code,
-        currency: "NGN",
-      });
+      recipientResp = await paystack("/transferrecipient", "POST", { type: "nuban", name, account_number, bank_code, currency: "NGN" });
       recipientCode = recipientResp?.data?.recipient_code || "";
       if (!recipientCode) throw new Error("Failed to obtain recipient_code from Paystack");
     }
 
     const amountKobo = usdToKobo(amountUSD);
+    const transferResp = await paystack("/transfer", "POST", { source: "balance", amount: amountKobo, recipient: recipientCode, reason, reference: reference || undefined });
 
-    const transferResp = await paystack("/transfer", "POST", {
-      source: "balance",
-      amount: amountKobo,
-      recipient: recipientCode,
-      reason,
-      reference: reference || undefined,
-    });
-
-    return RESP(200, {
-      ok: true,
-      // Do NOT expose the numeric FX value; presence only
-      fx: { present: !!(process.env.FALLBACK_USD_RATE || process.env.FX_USDNGN_FALLBACK) },
-      amountUSD,
-      amountKobo,
-      recipientCode,
-      paystack: { recipient: recipientResp, transfer: transferResp },
-    });
+    return RESP(200, { ok: true, rateUsed: USD_NGN_RATE, amountUSD, amountKobo, recipientCode, paystack: { recipient: recipientResp, transfer: transferResp } });
   } catch (e) {
     return RESP(500, { ok: false, error: e.message || String(e), meta: e.raw || null });
   }

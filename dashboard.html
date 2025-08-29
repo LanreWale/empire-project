@@ -1,3 +1,4 @@
+<script>
 /* ====================== CONFIG ====================== */
 const BASE   = (window.EMPIRE_API || '/.netlify/functions').replace(/\/+$/,'');
 const GAS    = (window.GAS_URL || '').replace(/\/+$/,'');
@@ -131,7 +132,6 @@ async function loadCpa(){
   }catch(e){
     grid.innerHTML = `<div class="note err">Failed: ${esc(e.message)}</div>`;
   }
-  // modal handlers (UI only)
   const open=$('#btnAddCpaOpen'), close=$('#btnAddCpaClose'), save=$('#btnAddCpaSave');
   if(open) open.onclick = ()=> $('#modalAddCpa').classList.remove('hidden');
   if(close) close.onclick= ()=> $('#modalAddCpa').classList.add('hidden');
@@ -285,14 +285,17 @@ async function paintBadges(st){
 }
 async function loadMonitoring(){
   try{
-    const r = await loadMaybe('/health', {health:1});
+    const r = await loadMaybe('/monitor-health', {health:1});
     await paintBadges(r||{});
     const body=$('evBody'); body.innerHTML='';
-    (r.events||[]).forEach(e=>{
-      const tr=document.createElement('tr');
-      tr.innerHTML=`<td>${esc(e.time||'')}</td><td>${esc(e.type||'')}</td><td>${esc(e.msg||'')}</td><td>${esc(e.ref||'')}</td><td>${esc(e.actor||'')}</td>`;
-      body.appendChild(tr);
-    });
+    try{
+      const feed = await loadMaybe('/monitor-feed', {feed:1});
+      (feed.events||[]).forEach(e=>{
+        const tr=document.createElement('tr');
+        tr.innerHTML=`<td>${esc(e.time||'')}</td><td>${esc(e.type||'')}</td><td>${esc(e.msg||'')}</td><td>${esc(e.ref||'')}</td><td>${esc(e.actor||'')}</td>`;
+        body.appendChild(tr);
+      });
+    }catch(_){}
     if(!loadMonitoring._timer){
       loadMonitoring._timer = setInterval(()=>{
         if(!views.monitoring.classList.contains('hidden')) loadMonitoring().catch(()=>{});
@@ -315,3 +318,4 @@ window.addEventListener('DOMContentLoaded', ()=>{
     qa('.nav button').forEach(b=>{ if(b.dataset.tab===h) b.click(); });
   }
 });
+</script>

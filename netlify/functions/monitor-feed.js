@@ -1,6 +1,13 @@
+cat > netlify/functions/monitor-feed.js <<'JS'
 "use strict";
-const axios = require("./lib/http");
-const json = (s, b) => ({ statusCode: s, headers: { "Content-Type": "application/json", "Cache-Control": "no-store" }, body: JSON.stringify(b) });
+
+// zero-literal event feed: reads ONLY from env, uses built-in fetch wrapper
+const http = require("./lib/http");
+const json = (s, b) => ({
+  statusCode: s,
+  headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
+  body: JSON.stringify(b),
+});
 const safe = (s) => { try { return JSON.parse(s || "{}"); } catch { return {}; } };
 
 exports.handler = async (event) => {
@@ -12,23 +19,29 @@ exports.handler = async (event) => {
     const method = (event.httpMethod || "GET").toUpperCase();
 
     if (method === "GET") {
-      const params = { key: WEBAPP_KEY, action: "read", sheet: "Log_Event" };
-      const r = await axios.get(WEBAPP_URL, { params, timeout: 15000 });
+      const r = await http.get(WEBAPP_URL, { params: { key: WEBAPP_KEY, action: "read", sheet: "Log_Event" }, timeout: 15000 });
       const data = r.data?.data ?? r.data;
-      return json(200, { ok: true, via: "apps_script", mode: "GET", events: Array.isArray(data) ? data : [] });
+      return json(200, { ok: true, events: Array.isArray(data) ? data : [] });
     }
 
     if (method === "POST") {
       const body = safe(event.body);
-      const ts = new Date().toISOString();
-      const record = { ts, type: body.type || "INFO", message: body.message || "", ref: body.ref || "", actor: body.actor || "system", meta: body.meta ? JSON.stringify(body.meta) : "" };
-      const payload = { key: WEBAPP_KEY, action: "append", sheet: "Log_Event", values: Object.values(record) };
-      const r = await axios.post(WEBAPP_URL, payload, { headers: { "Content-Type": "application/json" }, timeout: 15000 });
-      return json(200, { ok: true, via: "apps_script", mode: "POST", result: r.data });
+      const rec = {
+        ts: new Date().toISOString(),
+        type: body.type || "INFO",
+        message: body.message || "",
+        ref: body.ref || "",
+        actor: body.actor || "system",
+        meta: body.meta ? JSON.stringify(body.meta) : "",
+      };
+      const payload = { key: WEBAPP_KEY, action: "append", sheet: "Log_Event", values: Object.values(rec) };
+      const r = await http.post(WEBAPP_URL, payload, { headers: { "Content-Type": "application/json" }, timeout: 15000 });
+      return json(200, { ok: true, result: r.data ?? r });
     }
 
     return json(405, { ok: false, error: "METHOD" });
-  } catch (err) {
-    return json(500, { ok: false, error: String(err) });
+  } catch (e) {
+    return json(500, { ok: false, error: String(e && e.message || e) });
   }
 };
+JS

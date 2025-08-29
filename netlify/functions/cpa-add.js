@@ -1,69 +1,30 @@
-// netlify/functions/cpa-add.js
-function json(status, body) {
-  return {
-    statusCode: status,
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  };
-}
-
-const WEBAPP = process.env.GS_WEBHOOK_URL;
-const SHEET_ID = process.env.GS_SHEET_ID || "";
-const APP_KEY = process.env.GS_WEBAPP_KEY || ""; // optional
-
-const REQUIRED = ["name", "domain", "user", "apiKey"];
+"use strict";
+const axios = require("./lib/http");
+const json = (s, b) => ({ statusCode: s, headers: { "Content-Type": "application/json", "Cache-Control": "no-store" }, body: JSON.stringify(b) });
 
 exports.handler = async (event) => {
-  if (event.httpMethod !== "POST") {
-    return json(405, { ok: false, error: "Method not allowed" });
-  }
-
-  // Admin guard
-  const admin = event.headers["x-admin-secret"] || event.headers["X-Admin-Secret"];
-  if (!admin) {
-    return json(401, { ok: false, error: "Missing admin secret" });
-  }
-
-  let body = {};
+  if ((event.httpMethod || "GET").toUpperCase() !== "POST") return json(405, { ok: false, error: "Method not allowed" });
   try {
-    body = JSON.parse(event.body || "{}");
-  } catch {
-    return json(400, { ok: false, error: "Invalid JSON" });
-  }
+    // ✅ only env reads, no literals
+    const CPA_API_URL = (process.env.CPA_API_URL || "").trim();
+    const CPA_API_KEY = (process.env.CPA_API_KEY || "").trim();
+    if (!CPA_API_URL || !CPA_API_KEY) return json(500, { ok: false, error: "CPA configuration missing" });
 
-  const missing = REQUIRED.filter((k) => !(k in body) || String(body[k]).trim() === "");
-  if (missing.length) {
-    return json(400, { ok: false, error: `Missing fields: ${missing.join(", ")}` });
-  }
+    const b = JSON.parse(event.body || "{}");
+    const payload = {
+      name: String(b.name || ""),
+      domain: String(b.domain || ""),
+      user: String(b.user || ""),
+      apiKey: String(b.apiKey || ""),
+      startingRevenue: Number(b.startingRevenue || 0) || 0,
+    };
 
-  const payload = {
-    sheetId: SHEET_ID,
-    key: APP_KEY,
-    type: "CPA_ADD",
-    data: {
-      name: String(body.name).trim(),
-      domain: String(body.domain).trim(),
-      user: String(body.user).trim(),
-      apiKey: String(body.apiKey).trim(),
-      startingRevenue: Number(body.startingRevenue || 0) || 0,
-      createdAt: new Date().toISOString(),
-    },
-  };
-
-  // Forward to Apps Script
-  if (!WEBAPP) {
-    return json(500, { ok: false, error: "GS_WEBHOOK_URL not set" });
-  }
-
-  try {
-    const r = await fetch(WEBAPP, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+    const r = await axios.post(CPA_API_URL.replace(/\/+$/, "") + "/accounts", payload, {
+      headers: { Authorization: `Bearer ${CPA_API_KEY}`, "Content-Type": "application/json" },
+      timeout: 20000,
     });
-    const data = await r.json().catch(() => ({}));
-    return json(200, { ok: true, message: "CPA account saved", data });
+    return json(200, { ok: true, result: r.data || null });
   } catch (e) {
-    return json(500, { ok: false, error: e.message });
+    return json(500, { ok: false, error: e.message || String(e) });
   }
 };

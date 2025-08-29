@@ -5,7 +5,7 @@
   <title>Empire – Commander Console</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <!-- Inline EmpireAuth so it's always available -->
+  <!-- Inline EmpireAuth (always available, no external file) -->
   <script>
   window.EmpireAuth = (function () {
     const KEY = "EMPIRE_TOKEN";
@@ -57,6 +57,7 @@
 <body>
   <div class="wrap grid">
 
+    <!-- PIN Controls -->
     <div class="card">
       <h1>Commander Console <span class="pill">Empire</span></h1>
       <div class="muted small">Mobile-first controls for Invites, Approvals, Levels & Performance.</div>
@@ -68,11 +69,95 @@
       <div id="pinStatus" class="small muted" style="margin-top:8px"></div>
     </div>
 
-    <!-- same forms for Invite, Approve, Level, Performance (unchanged)… -->
+    <!-- Create Invite -->
+    <div class="card">
+      <h2>Create Invite</h2>
+      <div class="row">
+        <div><label>Name</label><input id="inv_name" placeholder="Full name" /></div>
+        <div><label>Email</label><input id="inv_email" placeholder="email@example.com" type="email" /></div>
+      </div>
+      <div class="row">
+        <div><label>Phone (WhatsApp, optional)</label><input id="inv_phone" placeholder="+23480..." /></div>
+        <div><label>Telegram (optional)</label><input id="inv_tg" placeholder="@channel" /></div>
+      </div>
+      <button id="btnInvite">Generate Invite</button>
+      <div id="inviteMsg"></div>
+    </div>
+
+    <!-- Approve User -->
+    <div class="card">
+      <h2>Approve User</h2>
+      <div class="row">
+        <div><label>Name</label><input id="appr_name" placeholder="Full name" /></div>
+        <div><label>Email</label><input id="appr_email" placeholder="email@example.com" type="email" /></div>
+      </div>
+      <div class="row">
+        <div><label>Phone (WhatsApp)</label><input id="appr_phone" placeholder="+234803..." /></div>
+        <div><label>Approve?</label>
+          <select id="appr_approve">
+            <option value="true" selected>Approve</option>
+            <option value="false">Reject</option>
+          </select>
+        </div>
+      </div>
+      <button id="btnApprove">Send Approval</button>
+      <div id="apprMsg"></div>
+    </div>
+
+    <!-- Set User Level -->
+    <div class="card">
+      <h2>Set User Level</h2>
+      <div class="row">
+        <div><label>Email</label><input id="lvl_email" placeholder="user@example.com" type="email" /></div>
+        <div><label>Level</label>
+          <select id="lvl_level">
+            <option>1x</option><option>2x</option><option>3x</option>
+            <option>4x</option><option>5x</option><option>10x (Commander)</option>
+            <option>0x (Suspended)</option>
+          </select>
+        </div>
+      </div>
+      <label>Reason / Note</label>
+      <input id="lvl_reason" placeholder="e.g., performance upgrade" />
+      <button id="btnLevel">Apply Level</button>
+      <div id="lvlMsg"></div>
+    </div>
+
+    <!-- Log Performance -->
+    <div class="card">
+      <h2>Log Performance</h2>
+      <div class="row">
+        <div><label>Email</label><input id="perf_email" placeholder="user@example.com" /></div>
+        <div><label>Level Snapshot</label>
+          <select id="perf_level">
+            <option>1x</option><option>2x</option><option>3x</option>
+            <option>4x</option><option>5x</option><option>10x</option>
+          </select>
+        </div>
+      </div>
+      <div class="row">
+        <div><label>Clicks</label><input id="perf_clicks" type="number" inputmode="numeric" value="0" /></div>
+        <div><label>Conversions</label><input id="perf_conversions" type="number" inputmode="numeric" value="0" /></div>
+      </div>
+      <div class="row">
+        <div><label>Revenue (USD)</label><input id="perf_revenue" type="number" step="0.01" value="0" /></div>
+        <div><label>Notify</label>
+          <select id="perf_notify">
+            <option value="true" selected>Yes</option>
+            <option value="false">No</option>
+          </select>
+        </div>
+      </div>
+      <label>Notes</label><textarea id="perf_notes" placeholder="e.g., evening push"></textarea>
+      <label>WhatsApp (optional)</label><input id="perf_phone" placeholder="+234803..." />
+      <button id="btnPerf">Record Performance</button>
+      <div id="perfMsg"></div>
+    </div>
 
     <div class="footer">© Empire Affiliate Marketing Hub</div>
   </div>
 
+  <!-- Main logic -->
   <script>
     const KEY_PIN = "empire_cmd_user";
     function getPIN(){ try { return localStorage.getItem(KEY_PIN) || ""; } catch { return ""; } }
@@ -89,15 +174,21 @@
 
     function setMsg(el, ok, html){ el.className = "msg " + (ok ? "ok" : "bad"); el.innerHTML = html; }
     function escapeHTML(s){ return String(s).replace(/[&<>]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[ch])); }
+
     async function callJSON(path, body, msgEl){
       try{
-        const r = await fetch(path, { method:"POST", headers: authz({ "content-type": "application/json" }), body: JSON.stringify(body || {}) });
+        const r = await fetch(path, {
+          method:"POST",
+          headers: authz({ "content-type": "application/json" }),
+          body: JSON.stringify(body || {})
+        });
         const data = await r.json().catch(()=>({ok:false,error:"Bad JSON"}));
         setMsg(msgEl, data.ok !== false, `<pre>${escapeHTML(JSON.stringify(data, null, 2))}</pre>`);
       }catch(e){ setMsg(msgEl, false, escapeHTML(String(e))); }
     }
 
     window.addEventListener("DOMContentLoaded", () => {
+      // PIN Controls
       const pinInput = document.getElementById("pin");
       const pinStatus = document.getElementById("pinStatus");
       document.getElementById("savePin").onclick = () => { setPIN(pinInput.value.trim()); pinStatus.textContent = "PIN saved."; };
@@ -105,7 +196,48 @@
       pinInput.value = getPIN();
       pinStatus.textContent = getPIN() ? "PIN loaded." : "No PIN saved.";
 
-      // wire up buttons: btnInvite, btnApprove, btnLevel, btnPerf (same as before)
+      // Invite
+      document.getElementById("btnInvite").onclick = () => {
+        callJSON("/.netlify/functions/invite-create", {
+          name: document.getElementById("inv_name").value.trim(),
+          email: document.getElementById("inv_email").value.trim(),
+          phone: document.getElementById("inv_phone").value.trim(),
+          telegramHandle: document.getElementById("inv_tg").value.trim()
+        }, document.getElementById("inviteMsg"));
+      };
+
+      // Approve
+      document.getElementById("btnApprove").onclick = () => {
+        callJSON("/.netlify/functions/approve-user", {
+          name: document.getElementById("appr_name").value.trim(),
+          email: document.getElementById("appr_email").value.trim(),
+          phone: document.getElementById("appr_phone").value.trim(),
+          approve: document.getElementById("appr_approve").value === "true"
+        }, document.getElementById("apprMsg"));
+      };
+
+      // Set Level
+      document.getElementById("btnLevel").onclick = () => {
+        callJSON("/.netlify/functions/user-level-set", {
+          email: document.getElementById("lvl_email").value.trim(),
+          level: document.getElementById("lvl_level").value.trim(),
+          reason: document.getElementById("lvl_reason").value.trim()
+        }, document.getElementById("lvlMsg"));
+      };
+
+      // Performance
+      document.getElementById("btnPerf").onclick = () => {
+        callJSON("/.netlify/functions/log-performance", {
+          email: document.getElementById("perf_email").value.trim(),
+          clicks: Number(document.getElementById("perf_clicks").value || 0),
+          conversions: Number(document.getElementById("perf_conversions").value || 0),
+          revenueUSD: Number(document.getElementById("perf_revenue").value || 0),
+          level: document.getElementById("perf_level").value.trim(),
+          notes: document.getElementById("perf_notes").value.trim(),
+          phone: document.getElementById("perf_phone").value.trim(),
+          notify: document.getElementById("perf_notify").value === "true"
+        }, document.getElementById("perfMsg"));
+      };
     });
   </script>
 </body>

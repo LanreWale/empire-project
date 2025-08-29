@@ -91,9 +91,9 @@ export default function Monitoring() {
             <tbody>
               {events.map((e, idx) => (
                 <tr key={idx} className="border-t border-zinc-800 text-zinc-200">
-                  <td className="py-2 pr-4 whitespace-nowrap">{e.ts || e[0] || ""}</td>
+                  <td className="py-2 pr-4 whitespace-nowrap">{e.time || e.ts || e[0] || ""}</td>
                   <td className="py-2 pr-4">{e.type || e[1] || ""}</td>
-                  <td className="py-2 pr-4 max-w-xl truncate">{e.message || e[2] || ""}</td>
+                  <td className="py-2 pr-4 max-w-xl truncate">{e.msg || e.message || e[2] || ""}</td>
                   <td className="py-2 pr-4">{e.ref || e[3] || ""}</td>
                   <td className="py-2 pr-4">{e.actor || e[4] || ""}</td>
                 </tr>

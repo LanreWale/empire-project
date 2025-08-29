@@ -1,0 +1,2 @@
+# Create a 1x1 px favicon.ico placeholder
+echo "" > favicon.ico

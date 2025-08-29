@@ -1,34 +1,45 @@
+// netlify/functions/monitor-feed.js
+"use strict";
+
 const axios = require("./lib/http");
+
+function resp(status, body) {
+  return {
+    statusCode: status,
+    headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
+    body: JSON.stringify(body),
+  };
+}
+function safeJson(s) { try { return JSON.parse(s || "{}"); } catch { return {}; } }
 
 exports.handler = async (event) => {
   try {
-    const WEBAPP_URL = process.env.GOOGLE_SHEETS_WEBAPP_URL || "";
+    // ✅ Use ONLY the cleaned envs (no GOOGLE_*). GS_WEBHOOK_URL preferred.
+    const WEBAPP_URL = process.env.GS_WEBHOOK_URL || process.env.GS_WEBAPP_URL || "";
     const WEBAPP_KEY = process.env.GS_WEBAPP_KEY || "";
-    if (!WEBAPP_URL) {
-      return resp(400, { ok: false, error: "WEBAPP_URL not set" });
-    }
+
+    if (!WEBAPP_URL) return resp(400, { ok: false, error: "WEBAPP_URL not set" });
 
     const method = (event.httpMethod || "GET").toUpperCase();
 
     if (method === "GET") {
       // Pull recent events
-      // Expect Apps Script to return { ok:true, data:[...] } or raw array
       const params = {
         key: WEBAPP_KEY,
         action: "read",
         sheet: "Log_Event",
-        // optional: add range/limit if your WebApp supports it
       };
       const r = await axios.get(WEBAPP_URL, { params, timeout: 15000 });
 
-      // Normalize shape
-      const data = r.data?.data ?? r.data;
-      return resp(200, { ok: true, via: "apps_script", mode: "GET", events: data });
+      // Normalize shape: Apps Script may return {ok:true,data:[...]} or raw array
+      const data = (r.data && r.data.data) ? r.data.data : r.data;
+
+      // 🔒 Do NOT include any env values (e.g., FALLBACK_USD_RATE) in output
+      return resp(200, { ok: true, via: "apps_script", mode: "GET", events: Array.isArray(data) ? data : [] });
     }
 
     if (method === "POST") {
       // Append a single event
-      // Accepts JSON: { type, message, ref, actor, meta }
       const body = safeJson(event.body);
       const ts = new Date().toISOString();
 
@@ -41,7 +52,6 @@ exports.handler = async (event) => {
         meta: body.meta ? JSON.stringify(body.meta) : "",
       };
 
-      // Convert to values array for your WebApp
       const payload = {
         key: WEBAPP_KEY,
         action: "append",
@@ -54,6 +64,7 @@ exports.handler = async (event) => {
         timeout: 15000,
       });
 
+      // 🔒 No secrets in output
       return resp(200, { ok: true, via: "apps_script", mode: "POST", result: r.data });
     }
 
@@ -62,8 +73,3 @@ exports.handler = async (event) => {
     return resp(500, { ok: false, error: String(err) });
   }
 };
-
-function resp(status, body) {
-  return { statusCode: status, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) };
-}
-function safeJson(s) { try { return JSON.parse(s || "{}"); } catch { return {}; } }

@@ -130,4 +130,178 @@ async function loadCpa(){
   }catch(e){
     grid.innerHTML = `<div class="note err">Failed: ${esc(e.message)}</div>`;
   }
-  $('#btnAddCpaOpen').
+  $('#btnAddCpaOpen').onclick = ()=> $('#modalAddCpa').classList.remove('hidden');
+  $('#btnAddCpaClose').onclick= ()=> $('#modalAddCpa').classList.add('hidden');
+  $('#btnAddCpaSave').onclick = async ()=>{
+    const payload={
+      name:$('#cpaName').value.trim(), domain:$('#cpaDomain').value.trim(),
+      user:$('#cpaUserId').value.trim(), apiKey:$('#cpaApiKey').value.trim(),
+      startingRevenue:+$('#cpaStartRev').value||0
+    };
+    try{
+      await fetchJSON(BASE+'/cpa-add',{method:'POST',headers:headers(true,true),body:JSON.stringify(payload)});
+      $('#cpaNote').classList.remove('hidden'); setTimeout(()=>location.hash='#cpa',1000);
+    }catch(e){ alert('Save failed: '+e.message); }
+  };
+}
+
+/* =================== USERS ========================== */
+async function loadUsers(){
+  try{
+    const p = await loadMaybe('/users/pending', {pending:1});
+    const body = $('pendingBody'); body.innerHTML='';
+    (p.items || p.users || []).forEach(u=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML = `<td>${esc(u.name||'')}</td><td>${esc(u.email||'')}</td><td>${esc(u.phone||'')}</td>
+                      <td><button class="btn alt btnApprove" data-id="${esc(u.id||'')}">Approve</button></td>`;
+      body.appendChild(tr);
+    });
+    body.querySelectorAll('.btnApprove').forEach(btn=>{
+      btn.onclick= async ()=>{
+        try{
+          await fetchJSON(BASE+'/admin-pending',{method:'POST',headers:headers(true,true),body:JSON.stringify({id:btn.dataset.id, action:'approve'})});
+          loadUsers();
+        }catch(e){ alert('Approve failed: '+e.message); }
+      };
+    });
+  }catch(e){ $('pendingBody').innerHTML=`<tr><td colspan="4">Failed: ${esc(e.message)}</td></tr>`; }
+
+  try{
+    const a = await loadMaybe('/users/approved', {approved:1});
+    const body = $('usersBody'); body.innerHTML='';
+    (a.items || a.users || []).forEach(u=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML = `<td>${esc(u.name||'')}</td><td>${esc(u.email||'')}</td><td>${esc(u.whatsapp||'')}</td>
+                      <td>${esc(u.bank||'')}</td><td>${esc(u.account||'')}</td>
+                      <td>${esc(u.authority||'User')}</td><td><span class="status ${esc(u.status||'ACTIVE')}">${esc(u.status||'ACTIVE')}</span></td>`;
+      body.appendChild(tr);
+    });
+  }catch(e){ $('usersBody').innerHTML=`<tr><td colspan="7">Failed: ${esc(e.message)}</td></tr>`; }
+
+  $('#btnAddUserOpen').onclick = ()=> $('#modalAddUser').classList.remove('hidden');
+  $('#btnAddUserClose').onclick= ()=> $('#modalAddUser').classList.add('hidden');
+  $('#btnAddUserSave').onclick = async ()=>{
+    const payload={name:$('#uName').value,email:$('#uEmail').value,whatsapp:$('#uWa').value,authority:$('#uAuth').value,bank:$('#uBank').value,account:$('#uAcct').value};
+    try{
+      await fetchJSON(BASE+'/users-add',{method:'POST',headers:headers(true,true),body:JSON.stringify(payload)});
+      $('#userNote').classList.remove('hidden'); setTimeout(()=>location.hash='#users',1000);
+    }catch(e){ alert('Save failed: '+e.message); }
+  };
+}
+
+/* =================== ANALYTICS ====================== */
+let chartMonthly2, chartGeo2;
+async function loadAnalytics(){
+  try{
+    const s = await loadMaybe('/analytics/summary', {analytics:1});
+    const m = s.monthly || [];
+    const g = s.geo || s.geographic || [];
+    const live = s.live || [];
+
+    chartMonthly2 && chartMonthly2.destroy();
+    chartMonthly2 = new Chart($('#chartMonthly2'), {
+      type:'bar',
+      data:{ labels:m.map(x=>x.label||x.month), datasets:[{ label:'Monthly', data:m.map(x=>x.value||x.amount||0)}] },
+      options:{plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}}}
+    });
+
+    chartGeo2 && chartGeo2.destroy();
+    chartGeo2 = new Chart($('#chartGeo2'), {
+      type:'pie',
+      data:{ labels:g.map(x=>x.label||x.country), datasets:[{ data:g.map(x=>x.value||x.amount||0)}] }
+    });
+
+    const tb = $('#tbl-live2').querySelector('tbody'); tb.innerHTML='';
+    live.forEach(r=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML = `<td>${esc(r.time||'')}</td><td>${esc(r.country||'')}</td><td>${esc(r.offer||'')}</td>
+                      <td>${esc(r.device||'')}</td><td>${num(r.clicks||0)}</td><td>${num(r.leads||0)}</td><td>${fmtUSD(r.earnings||0)}</td>`;
+      tb.appendChild(tr);
+    });
+  }catch(e){
+    console.warn('analytics',e);
+  }
+}
+
+/* =================== WALLET ========================= */
+async function loadWallet(){
+  try{
+    const w = await loadMaybe('/wallet', {wallet:1});
+    $('w-available').textContent = fmtUSD(w.available ?? w.balance ?? 0);
+    $('w-withdraw').textContent  = fmtUSD(w.withdraw ?? 0);
+    $('w-proc').textContent      = fmtUSD(w.processing ?? 0);
+    const remaining = (w.available ?? w.balance ?? 0) - (w.withdraw ?? 0) - (w.processing ?? 0);
+    $('w-remaining').textContent = fmtUSD(remaining);
+
+    const list = $('walletList'); list.innerHTML='';
+    (w.items||w.history||[]).forEach(tx=>{
+      const wrap=document.createElement('div'); wrap.className='card';
+      wrap.innerHTML=`<div style="display:flex;justify-content:space-between">
+        <div><div class="muted">${esc(tx.method||'')}</div><div style="font-weight:800">${fmtUSD(tx.amount||0)}</div></div>
+        <div style="text-align:right"><div class="muted">${esc(tx.date||'')}</div><span class="status ${esc(tx.status||'COMPLETED')}">${esc(tx.status||'COMPLETED')}</span></div>
+      </div>`;
+      list.appendChild(wrap);
+    });
+  }catch(e){
+    $('walletList').innerHTML = `<div class="note err">Failed: ${esc(e.message)}</div>`;
+  }
+}
+
+/* =================== SECURITY ======================= */
+async function loadSecurity(){
+  paintAdmin();
+  $('btnAdminSet').onclick   = ()=>{ const v=prompt('Set admin secret'); if(v) setAdmin(v); };
+  $('btnAdminClear').onclick = ()=> setAdmin('');
+
+  try{
+    const cfg = await loadMaybe('/public-config', {config:1});
+    $('pubCfg').textContent = JSON.stringify(cfg,null,2);
+  }catch(e){
+    $('pubCfg').textContent = 'Failed to load public config: '+e.message;
+  }
+}
+
+/* =================== MONITORING ===================== */
+async function paintBadges(st){
+  const set=(el,ok)=>{ el.textContent = ok?'ONLINE':'OFFLINE'; el.className='badge '+(ok?'ok':'down'); };
+  set($('serverBadge'),  st.server   !==false);
+  set($('dbBadge'),      st.db       !==false);
+  set($('sheetsBadge'),  st.sheets   !==false);
+  set($('aiBadge'),      st.ai       !==false);
+  set($('h-server'),     st.server   !==false);
+  set($('h-db'),         st.db       !==false);
+  set($('h-sheets'),     st.sheets   !==false);
+  set($('h-ai'),         st.ai       !==false);
+}
+async function loadMonitoring(){
+  try{
+    const r = await loadMaybe('/monitor-health', {health:1});
+    await paintBadges(r||{});
+    const body=$('evBody'); body.innerHTML='';
+    try{
+      const feed = await loadMaybe('/monitor-feed', {feed:1});
+      (feed.events||[]).forEach(e=>{
+        const tr=document.createElement('tr');
+        tr.innerHTML=`<td>${esc(e.time||'')}</td><td>${esc(e.type||'')}</td><td>${esc(e.msg||'')}</td><td>${esc(e.ref||'')}</td><td>${esc(e.actor||'')}</td>`;
+        body.appendChild(tr);
+      });
+    }catch(_){}
+    if(!loadMonitoring._timer){
+      loadMonitoring._timer = setInterval(()=>{
+        if(!views.monitoring.classList.contains('hidden')) loadMonitoring().catch(()=>{});
+      },15000);
+    }
+  }catch(e){
+    $('evBody').innerHTML = `<tr><td colspan="5">Failed: ${esc(e.message)}</td></tr>`;
+  }
+}
+
+/* ================ INIT ============================== */
+window.addEventListener('DOMContentLoaded', ()=>{
+  loadOverview().catch(console.warn);
+  const inv = $('inviteLink'); if(inv) inv.value = INVITE;
+  const h = (location.hash||'').replace('#','');
+  if(h && views[h]){
+    qa('.nav button').forEach(b=>{ if(b.dataset.tab===h) b.click(); });
+  }
+});

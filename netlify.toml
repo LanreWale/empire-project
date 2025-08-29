@@ -1,21 +1,26 @@
 [build]
   publish = "."
+  # (optional) if you build a frontend, set your build command here:
+  # command = "npm run build"
 
 [functions]
   directory = "netlify/functions"
   node_bundler = "esbuild"
+  # (optional) include files if you read JSON/SQL/etc at runtime:
+  # included_files = ["netlify/functions/**/assets/**"]
 
-# Comment out if you don't have the edge source file
-# [[edge_functions]]
-# function = "shortener"
-# path = "/i/*"
+# --- Edge Function routing (SHORTENER) ---
+[[edge_functions]]
+  function = "shortener"
+  path = "/i/*"
+
+# --- Redirects (unchanged) ---
+[[redirects]]
+  from = "/admin"
+  to = "/admin/"
+  status = 301
 
 [[redirects]]
-from = "/admin"
-to = "/admin/"
-status = 301
-
-[[redirects]]
-from = "/app"
-to = "/app/"
-status = 301
+  from = "/app"
+  to = "/app/"
+  status = 301

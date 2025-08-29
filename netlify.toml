@@ -1,7 +1,5 @@
 [build]
   publish = "."
-  # (optional) if you build a frontend, set your build command here:
-  # command = "npm run build"
 
 [build.environment]
   SECRETS_SCAN_OMIT_KEYS = "FALLBACK_USD_RATE,FX_USDNGN_FALLBACK"
@@ -10,15 +8,11 @@
 [functions]
   directory = "netlify/functions"
   node_bundler = "esbuild"
-  # (optional) include files if you read JSON/SQL/etc at runtime:
-  # included_files = ["netlify/functions/**/assets/**"]
 
-# --- Edge Function routing (SHORTENER) ---
 [[edge_functions]]
   function = "shortener"
   path = "/i/*"
 
-# --- Redirects (unchanged) ---
 [[redirects]]
   from = "/admin"
   to = "/admin/"

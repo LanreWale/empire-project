@@ -1,6 +1,4 @@
 // netlify/functions/cpa-add.js
-const REQUIRED = ["name", "domain", "user", "apiKey"];
-
 function json(status, body) {
   return {
     statusCode: status,
@@ -9,19 +7,23 @@ function json(status, body) {
   };
 }
 
+const WEBAPP = process.env.GS_WEBHOOK_URL;
+const SHEET_ID = process.env.GS_SHEET_ID || "";
+const APP_KEY = process.env.GS_WEBAPP_KEY || ""; // optional
+
+const REQUIRED = ["name", "domain", "user", "apiKey"];
+
 exports.handler = async (event) => {
-  // Method guard
   if (event.httpMethod !== "POST") {
     return json(405, { ok: false, error: "Method not allowed" });
   }
 
-  // Admin secret guard (matches frontend headers(true, true))
+  // Admin guard
   const admin = event.headers["x-admin-secret"] || event.headers["X-Admin-Secret"];
-  if (!admin || admin.trim() === "") {
+  if (!admin) {
     return json(401, { ok: false, error: "Missing admin secret" });
   }
 
-  // Parse & validate
   let body = {};
   try {
     body = JSON.parse(event.body || "{}");
@@ -34,37 +36,34 @@ exports.handler = async (event) => {
     return json(400, { ok: false, error: `Missing fields: ${missing.join(", ")}` });
   }
 
-  // Normalize fields
   const payload = {
-    name: String(body.name).trim(),
-    domain: String(body.domain).trim(),
-    user: String(body.user).trim(),
-    apiKey: String(body.apiKey).trim(),
-    startingRevenue: Number(body.startingRevenue || 0) || 0,
-    createdAt: new Date().toISOString(),
-    actor: "cpa-add",
+    sheetId: SHEET_ID,
+    key: APP_KEY,
+    type: "CPA_ADD",
+    data: {
+      name: String(body.name).trim(),
+      domain: String(body.domain).trim(),
+      user: String(body.user).trim(),
+      apiKey: String(body.apiKey).trim(),
+      startingRevenue: Number(body.startingRevenue || 0) || 0,
+      createdAt: new Date().toISOString(),
+    },
   };
 
-  // Optional forward to Google Sheets / App Script webhook
-  const hook = process.env.GS_WEBHOOK_URL || "";
-  if (hook) {
-    try {
-      const res = await fetch(hook, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type: "CPA_ADD", data: payload }),
-      });
-      // We don’t fail add() just because webhook is down; we report but continue
-      if (!res.ok) {
-        const txt = await res.text().catch(() => "");
-        console.warn("GS_WEBHOOK_URL failed:", res.status, txt);
-      }
-    } catch (e) {
-      console.warn("GS_WEBHOOK_URL error:", e.message);
-    }
+  // Forward to Apps Script
+  if (!WEBAPP) {
+    return json(500, { ok: false, error: "GS_WEBHOOK_URL not set" });
   }
 
-  // TODO: If you later want to persist in a DB (Fauna, Supabase, Firestore),
-  // add the write here. For now we return the normalized data.
-  return json(200, { ok: true, message: "CPA account recorded", payload });
+  try {
+    const r = await fetch(WEBAPP, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const data = await r.json().catch(() => ({}));
+    return json(200, { ok: true, message: "CPA account saved", data });
+  } catch (e) {
+    return json(500, { ok: false, error: e.message });
+  }
 };

@@ -5,8 +5,31 @@
   <title>Empire – Commander Console</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <!-- Load EmpireAuth early (defines window.EmpireAuth). Defer so it executes after parsing. -->
-  <script src="/js/empire-auth.js" defer></script>
+  <!-- Inline EmpireAuth so it’s always available -->
+  <script>
+  /* Tiny auth helper for Empire admin (browser) */
+  window.EmpireAuth = (function () {
+    const KEY = "EMPIRE_TOKEN";
+    function get(){ try{ return localStorage.getItem(KEY) || ""; }catch(_){ return "" } }
+    function set(tok){ try{ localStorage.setItem(KEY, tok||""); }catch(_){} }
+    function clear(){ try{ localStorage.removeItem(KEY); }catch(_){} }
+    function has(){ return !!get(); }
+    function authz(headers){
+      headers = headers || {};
+      const t = get();
+      if (t) headers["Authorization"] = "Bearer " + t;
+      return headers;
+    }
+    async function authedFetch(url, opts){
+      opts = opts || {};
+      const headers = authz(Object.assign({ "Content-Type": "application/json" }, opts.headers||{}));
+      const r = await fetch(url, Object.assign({}, opts, { headers }));
+      if (r.status === 401) throw new Error("Unauthorized");
+      return r;
+    }
+    return { get, set, clear, has, authz, authedFetch };
+  })();
+  </script>
 
   <style>
     :root { --bg:#0b1220; --card:#111827; --muted:#97a0b6; --ok:#18b26b; --bad:#de524c; --txt:#e7ecf7; --accent:#4bb1ff; }
@@ -38,8 +61,8 @@
     <div class="card">
       <h1>Commander Console <span class="pill">Empire</span></h1>
       <div class="muted small">Mobile-first controls for Invites, Approvals, Levels & Performance.</div>
-      <div id="pinRow" class="flex" style="margin-top:10px;gap:10px">
-        <input id="pin" placeholder="Admin PIN (CMD_USER)" />
+      <div class="flex" style="margin-top:10px;gap:10px">
+        <input id="pin" placeholder="Admin PIN (CMD_USER)" aria-label="Admin PIN" />
         <button id="savePin" style="width:auto">Save</button>
         <button id="clearPin" style="width:auto;background:#334155;color:#dbe4f7">Clear</button>
       </div>
@@ -50,21 +73,21 @@
       <h2>Create Invite</h2>
       <div class="row">
         <div>
-          <label>Name</label>
+          <label for="inv_name">Name</label>
           <input id="inv_name" placeholder="Full name" />
         </div>
         <div>
-          <label>Email</label>
+          <label for="inv_email">Email</label>
           <input id="inv_email" placeholder="email@example.com" type="email" />
         </div>
       </div>
       <div class="row">
         <div>
-          <label>Phone (WhatsApp, optional)</label>
+          <label for="inv_phone">Phone (WhatsApp, optional)</label>
           <input id="inv_phone" placeholder="+23480..." />
         </div>
         <div>
-          <label>Telegram (optional)</label>
+          <label for="inv_tg">Telegram (optional)</label>
           <input id="inv_tg" placeholder="@channel" />
         </div>
       </div>
@@ -76,21 +99,21 @@
       <h2>Approve User</h2>
       <div class="row">
         <div>
-          <label>Name</label>
+          <label for="appr_name">Name</label>
           <input id="appr_name" placeholder="Full name" />
         </div>
         <div>
-          <label>Email</label>
+          <label for="appr_email">Email</label>
           <input id="appr_email" placeholder="email@example.com" type="email" />
         </div>
       </div>
       <div class="row">
         <div>
-          <label>Phone (WhatsApp)</label>
+          <label for="appr_phone">Phone (WhatsApp)</label>
           <input id="appr_phone" placeholder="+234803..." />
         </div>
         <div>
-          <label>Approve?</label>
+          <label for="appr_approve">Approve?</label>
           <select id="appr_approve">
             <option value="true" selected>Approve</option>
             <option value="false">Reject</option>
@@ -105,17 +128,18 @@
       <h2>Set User Level</h2>
       <div class="row">
         <div>
-          <label>Email</label>
+          <label for="lvl_email">Email</label>
           <input id="lvl_email" placeholder="user@example.com" type="email" />
         </div>
         <div>
-          <label>Level</label>
+          <label for="lvl_level">Level</label>
           <select id="lvl_level">
-            <option>1x</option><option>2x</option><option>3x</option><option>4x</option><option>5x</option><option>10x (Commander)</option><option>0x (Suspended)</option>
+            <option>1x</option><option>2x</option><option>3x</option><option>4x</option>
+            <option>5x</option><option>10x (Commander)</option><option>0x (Suspended)</option>
           </select>
         </div>
       </div>
-      <label>Reason / Note</label>
+      <label for="lvl_reason">Reason / Note</label>
       <input id="lvl_reason" placeholder="e.g., performance upgrade" />
       <button id="btnLevel">Apply Level</button>
       <div id="lvlMsg"></div>
@@ -125,42 +149,43 @@
       <h2>Log Performance</h2>
       <div class="row">
         <div>
-          <label>Email</label>
+          <label for="perf_email">Email</label>
           <input id="perf_email" placeholder="user@example.com" />
         </div>
         <div>
-          <label>Level Snapshot</label>
+          <label for="perf_level">Level Snapshot</label>
           <select id="perf_level">
-            <option>1x</option><option>2x</option><option>3x</option><option>4x</option><option>5x</option><option>10x</option>
+            <option>1x</option><option>2x</option><option>3x</option><option>4x</option>
+            <option>5x</option><option>10x</option>
           </select>
         </div>
       </div>
       <div class="row">
         <div>
-          <label>Clicks</label>
+          <label for="perf_clicks">Clicks</label>
           <input id="perf_clicks" type="number" inputmode="numeric" value="0" />
         </div>
         <div>
-          <label>Conversions</label>
+          <label for="perf_conversions">Conversions</label>
           <input id="perf_conversions" type="number" inputmode="numeric" value="0" />
         </div>
       </div>
       <div class="row">
         <div>
-          <label>Revenue (USD)</label>
+          <label for="perf_revenue">Revenue (USD)</label>
           <input id="perf_revenue" type="number" step="0.01" value="0" />
         </div>
         <div>
-          <label>Notify</label>
+          <label for="perf_notify">Notify</label>
           <select id="perf_notify">
             <option value="true" selected>Yes</option>
             <option value="false">No</option>
           </select>
         </div>
       </div>
-      <label>Notes</label>
+      <label for="perf_notes">Notes</label>
       <textarea id="perf_notes" placeholder="e.g., evening push"></textarea>
-      <label>WhatsApp (optional)</label>
+      <label for="perf_phone">WhatsApp (optional)</label>
       <input id="perf_phone" placeholder="+234803..." />
       <button id="btnPerf">Record Performance</button>
       <div id="perfMsg"></div>
@@ -171,26 +196,24 @@
 
   <!-- Main page logic -->
   <script>
-    // ---------------- PIN fallback (x-cmd-user) ----------------
+    // PIN stored as x-cmd-user fallback
     const KEY_PIN = "empire_cmd_user";
     function getPIN(){ try { return localStorage.getItem(KEY_PIN) || ""; } catch { return ""; } }
     function setPIN(v){ try { localStorage.setItem(KEY_PIN, v || ""); } catch {} }
 
-    // ---------------- Header composer (EmpireAuth -> PIN) ------
+    // Compose headers: EmpireAuth (Authorization) + PIN (x-cmd-user)
     function authz(headers = {}) {
-      // 1) If EmpireAuth is present, let it add Authorization
       if (window.EmpireAuth && typeof window.EmpireAuth.authz === "function") {
         headers = window.EmpireAuth.authz(headers);
       }
-      // 2) Also include x-cmd-user if a PIN is saved
       const pin = getPIN();
       if (pin) headers["x-cmd-user"] = pin;
       return headers;
     }
 
-    // ---------------- Helpers ---------------------------------
     function setMsg(el, ok, html){ el.className = "msg " + (ok ? "ok" : "bad"); el.innerHTML = html; }
     function escapeHTML(s){ return String(s).replace(/[&<>]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[ch])); }
+
     async function callJSON(path, body, msgEl){
       try{
         const r = await fetch(path, {
@@ -205,21 +228,16 @@
       }
     }
 
-    // ---------------- Wire up UI after DOM ready ---------------
     window.addEventListener("DOMContentLoaded", () => {
       // PIN controls
-      const pinInput = document.getElementById("pin");
-      const pinStatus = document.getElementById("pinStatus");
-      document.getElementById("savePin").onclick = () => {
-        setPIN(pinInput.value.trim()); pinStatus.textContent = "PIN saved (x-cmd-user header).";
-      };
-      document.getElementById("clearPin").onclick = () => {
-        setPIN(""); pinInput.value = ""; pinStatus.textContent = "PIN cleared.";
-      };
+      const pinInput   = document.getElementById("pin");
+      const pinStatus  = document.getElementById("pinStatus");
+      document.getElementById("savePin").onclick  = () => { setPIN(pinInput.value.trim()); pinStatus.textContent = "PIN saved (x-cmd-user header)."; };
+      document.getElementById("clearPin").onclick = () => { setPIN(""); pinInput.value = ""; pinStatus.textContent = "PIN cleared."; };
       pinInput.value = getPIN();
       pinStatus.textContent = getPIN() ? "PIN loaded." : "No PIN saved.";
 
-      // Create invite
+      // Actions
       document.getElementById("btnInvite").onclick = () => {
         const body = {
           name:  document.getElementById("inv_name").value.trim(),
@@ -230,7 +248,6 @@
         callJSON("/.netlify/functions/invite-create", body, document.getElementById("inviteMsg"));
       };
 
-      // Approve user
       document.getElementById("btnApprove").onclick = () => {
         const body = {
           name:    document.getElementById("appr_name").value.trim(),
@@ -241,7 +258,6 @@
         callJSON("/.netlify/functions/approve-user", body, document.getElementById("apprMsg"));
       };
 
-      // Set Level
       document.getElementById("btnLevel").onclick = () => {
         const body = {
           email:  document.getElementById("lvl_email").value.trim(),
@@ -251,7 +267,6 @@
         callJSON("/.netlify/functions/user-level-set", body, document.getElementById("lvlMsg"));
       };
 
-      // Log Performance
       document.getElementById("btnPerf").onclick = () => {
         const body = {
           email:        document.getElementById("perf_email").value.trim(),

@@ -7,7 +7,7 @@ exports.handler = async (event) => {
   try {
     const WEBAPP_URL = (process.env.GS_WEBHOOK_URL || process.env.GS_WEBAPP_URL || "").trim();
     const WEBAPP_KEY = (process.env.GS_WEBAPP_KEY || "").trim();
-    const SHEET_NAME = (process.env.SHEETS_EVENTS_SHEET || "Event_Log").trim(); // <-- here
+    const SHEET_NAME = (process.env.SHEETS_EVENTS_SHEET || "Event_Log").trim();
     if (!WEBAPP_URL) return json(400, { ok: false, error: "WEBAPP_URL not set" });
 
     const method = (event.httpMethod || "GET").toUpperCase();

@@ -2,12 +2,12 @@
 "use strict";
 
 /**
- * Paystack Transfer Bridge (v2, debug-friendly)
+ * Paystack Transfer Bridge (v2, secrets-safe)
  * - Robust body parsing (JSON, urlencoded, base64)
  * - Accepts recipientCode OR bank_code+account_number(+name)
  * - Enforces MIN_WITHDRAW_USD (default 300)
- * - USD->NGN via FX_USDNGN_FALLBACK env (safe default 1500). Sent to Paystack in kobo.
- * - Add ?debug=1 to echo what the function actually received (no secrets).
+ * - USD->NGN via env rate (FALLBACK_USD_RATE preferred; FX_USDNGN_FALLBACK legacy)
+ * - Never logs/returns the numeric FX rate (avoids secrets-scanner hits)
  */
 
 const RESP = (code, obj) => ({
@@ -19,9 +19,10 @@ const RESP = (code, obj) => ({
 const PAYSTACK_SECRET_KEY = (process.env.PAYSTACK_SECRET_KEY || "").trim();
 const MIN_WITHDRAW_USD    = Number(process.env.MIN_WITHDRAW_USD || 300);
 
-// IMPORTANT: keep this literal DIFFERENT from your env value to avoid secret-scan matches
+// Prefer canonical env; fall back to legacy; finally a benign default for continuity
 const DEFAULT_USDNGN      = 1500;
-const USD_NGN_RATE        = Number(process.env.FX_USDNGN_FALLBACK || DEFAULT_USDNGN);
+const USD_NGN_RATE        =
+  Number(process.env.FALLBACK_USD_RATE || process.env.FX_USDNGN_FALLBACK || DEFAULT_USDNGN) || DEFAULT_USDNGN;
 
 async function parseBody(event) {
   let raw = event.body || "";
@@ -37,7 +38,6 @@ async function parseBody(event) {
     const obj = {}; for (const [k,v] of params.entries()) obj[k] = v;
     return { raw, data: obj };
   }
-  // Nothing useful
   return { raw, data: {} };
 }
 
@@ -68,10 +68,11 @@ exports.handler = async (event) => {
         const parsed = await parseBody(event);
         return RESP(200, {
           ok: true,
-          note: "POST JSON here. Debug echo.",
+          note: "POST JSON here. Debug echo (no secrets).",
           headers: event.headers,
           raw: parsed.raw,
-          parsed: parsed.data
+          parsed: parsed.data,
+          fx: { present: !!(process.env.FALLBACK_USD_RATE || process.env.FX_USDNGN_FALLBACK) }, // presence only
         });
       }
       return RESP(405, { ok: false, error: "Method not allowed" });
@@ -89,20 +90,7 @@ exports.handler = async (event) => {
     const reason = String(b.reason ?? "Affiliate withdrawal").trim();
     const reference = String(b.reference ?? "").trim();
 
-    // Debug echo (never returns env values)
-    if (event.queryStringParameters?.debug === "1") {
-      return RESP(200, {
-        ok: true,
-        debug: true,
-        headers: event.headers,
-        base64: !!event.isBase64Encoded,
-        raw: parsed.raw,
-        parsed: b,
-        normalized: { amountUSD, bank_code, account_number, name, recipientCode, reason, reference }
-      });
-    }
-
-    // Validate
+    // Early validations
     if (!amountUSD || (!recipientCode && (!bank_code || !account_number || !name))) {
       return RESP(400, { ok: false, error: "amount, bank_code, account_number are required (or provide recipientCode)." });
     }
@@ -136,8 +124,8 @@ exports.handler = async (event) => {
 
     return RESP(200, {
       ok: true,
-      // We expose the numeric rate used, but never the env value itself
-      rateUsed: USD_NGN_RATE,
+      // Do NOT expose the numeric FX value; presence only
+      fx: { present: !!(process.env.FALLBACK_USD_RATE || process.env.FX_USDNGN_FALLBACK) },
       amountUSD,
       amountKobo,
       recipientCode,

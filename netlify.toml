@@ -3,6 +3,10 @@
   # (optional) if you build a frontend, set your build command here:
   # command = "npm run build"
 
+[build.environment]
+  SECRETS_SCAN_OMIT_KEYS = "FALLBACK_USD_RATE,FX_USDNGN_FALLBACK"
+  SECRETS_SCAN_OMIT_PATHS = ".netlify/plugins/**,node_modules/**/doc/**,node_modules/**/CHANGELOG.md,node_modules/**/test/**,node_modules/**/*.d.ts"
+
 [functions]
   directory = "netlify/functions"
   node_bundler = "esbuild"

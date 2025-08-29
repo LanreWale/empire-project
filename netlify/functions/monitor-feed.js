@@ -18,13 +18,16 @@ exports.handler = async (event) => {
     const method = (event.httpMethod || "GET").toUpperCase();
 
     if (method === "GET") {
-      const r = await http.get(WEBAPP_URL, {
-        params: { key: WEBAPP_KEY, action: "read", sheet: SHEET_NAME },
-        timeout: 15000,
-      });
-      const data = r.data?.data ?? r.data;
-      return json(200, { ok:true, sheet:SHEET_NAME, events: Array.isArray(data) ? data : [] });
-    }
+  const r = await http.get(WEBAPP_URL, {
+    params: { key: WEBAPP_KEY, action: "read", sheet: SHEET_NAME },
+    timeout: 15000,
+  });
+
+  const raw = r.data?.data ?? r.data;
+  const events = Array.isArray(raw) ? raw : (raw && raw.ts ? [raw] : []);
+
+  return json(200, { ok: true, events });
+}
 
     if (method === "POST") {
       const b = safe(event.body);

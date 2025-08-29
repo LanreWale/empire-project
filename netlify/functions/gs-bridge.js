@@ -5,7 +5,8 @@ const safe = (s) => { try { return JSON.parse(s || "{}"); } catch { return {}; }
 
 exports.handler = async (event) => {
   try {
-    const WEBAPP_URL = (process.env.GS_WEBHOOK_URL || process.env.GS_WEBAPP_URL || "").trim();
+    const WEBAPP_URL = process.env.GS_WEBHOOK_URL || process.env.GS_WEBAPP_URL || "";
+const WEBAPP_KEY = process.env.GS_WEBAPP_KEY ? "***" : "";
     const WEBAPP_KEY = (process.env.GS_WEBAPP_KEY || "").trim();
     if (!WEBAPP_URL) return json(500, { ok: false, error: "GS WebApp URL missing" });
 

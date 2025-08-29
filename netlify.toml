@@ -1,6 +1,10 @@
 [build]
   publish = "."
 
+[build.environment]
+  SECRETS_SCAN_OMIT_KEYS = "GS_WEBAPP_KEY,GS_WEBHOOK_URL,GS_WEBAPP_URL,FALLBACK_USD_RATE,FX_USDNGN_FALLBACK"
+  SECRETS_SCAN_OMIT_PATHS = ".netlify/plugins/**,node_modules/**/doc/**,node_modules/**/CHANGELOG.md,node_modules/**/test/**,node_modules/**/*.d.ts"
+
 [functions]
   directory = "netlify/functions"
   node_bundler = "esbuild"

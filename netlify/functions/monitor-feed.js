@@ -1,6 +1,8 @@
-// netlify/functions/monitor-feed.js
 "use strict";
 const http = require("./lib/http");
+
+// Change this when you want to prove a new deployment landed
+const VERSION = "monitor-feed:get-v3";
 
 const json = (s, b) => ({
   statusCode: s,
@@ -13,9 +15,9 @@ exports.handler = async (event) => {
   try {
     const WEBAPP_URL = (process.env.GS_WEBHOOK_URL || process.env.GS_WEBAPP_URL || "").trim();
     const WEBAPP_KEY = (process.env.GS_WEBAPP_KEY || "").trim();
-    const SHEET_NAME = (process.env.SHEETS_EVENTS_SHEET || "Log_Event").trim(); // your sheet now
+    const SHEET_NAME = (process.env.SHEETS_EVENTS_SHEET || "Log_Event").trim();
 
-    if (!WEBAPP_URL) return json(400, { ok: false, error: "WEBAPP_URL not set" });
+    if (!WEBAPP_URL) return json(400, { ok:false, version:VERSION, error:"WEBAPP_URL not set" });
 
     const method = (event.httpMethod || "GET").toUpperCase();
 
@@ -26,9 +28,9 @@ exports.handler = async (event) => {
       });
 
       const raw = r.data?.data ?? r.data;
-      // Normalize to array for UI
+      // Normalize to array
       const events = Array.isArray(raw) ? raw : (raw && raw.ts ? [raw] : []);
-      return json(200, { ok: true, events });
+      return json(200, { ok:true, version:VERSION, events });
     }
 
     if (method === "POST") {
@@ -42,23 +44,16 @@ exports.handler = async (event) => {
         meta: b.meta ? JSON.stringify(b.meta) : "",
       };
 
-      const payload = {
-        key: WEBAPP_KEY,
-        action: "append",
-        sheet: SHEET_NAME,
-        values: Object.values(rec),
-      };
-
+      const payload = { key: WEBAPP_KEY, action:"append", sheet:SHEET_NAME, values:Object.values(rec) };
       const r = await http.post(WEBAPP_URL, payload, {
-        headers: { "Content-Type": "application/json" },
-        timeout: 15000,
+        headers: { "Content-Type": "application/json" }, timeout: 15000,
       });
 
-      return json(200, { ok: true, result: r.data ?? r });
+      return json(200, { ok:true, version:VERSION, result: r.data ?? r });
     }
 
-    return json(405, { ok: false, error: "METHOD" });
+    return json(405, { ok:false, version:VERSION, error:"METHOD" });
   } catch (e) {
-    return json(500, { ok: false, error: String(e && e.message || e) });
+    return json(500, { ok:false, error:String(e && e.message || e) });
   }
 };

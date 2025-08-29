@@ -1,72 +1,53 @@
 // netlify/functions/gs-bridge.js
-const axios = require("./lib/http");
-
-exports.handler = async (event) => {
-  try {
-    const APP_URL = process.env.GOOGLE_SHEETS_WEBAPP_URL; // Apps Script /exec URL
-    const KEY = process.env.GS_WEBAPP_KEY;
-
-    if (!APP_URL) {
-      return json(500, { ok: false, error: "GOOGLE_SHEETS_WEBAPP_URL not set" });
-    }
-
-    if (event.httpMethod === "GET") {
-      // simple health/ping passthrough
-      const url = new URL(APP_URL);
-      url.searchParams.set("action", "ping");
-      if (KEY) url.searchParams.set("key", KEY);
-
-      const r = await axios.get(url.toString(), { timeout: 15000, maxRedirects: 5 });
-      return json(200, typeof r.data === "string" ? safeParse(r.data) : r.data);
-    }
-
-    if (event.httpMethod === "POST") {
-      const body = safeParse(event.body || "{}");
-      const { action, sheet, values, key } = body;
-
-      const payload = {
-        action: action || "append",
-        sheet,
-        values,
-        key: key || KEY,
-      };
-
-      // Use form-encoded POST (Apps Script is picky about JSON)
-      const params = new URLSearchParams();
-      Object.entries(payload).forEach(([k, v]) =>
-        params.append(k, typeof v === "string" ? v : JSON.stringify(v))
-      );
-
-      const r = await axios.post(APP_URL, params, {
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        maxRedirects: 5,
-        timeout: 20000,
-      });
-
-      const data = typeof r.data === "string" ? safeParse(r.data) : r.data;
-      return json(200, { ok: true, upstream: data });
-    }
-
-    return json(405, { ok: false, error: "Method not allowed" });
-  } catch (err) {
-    const status = err.response?.status || 500;
-    const contentType = err.response?.headers?.["content-type"] || "";
-    if (contentType.includes("text/html")) {
-      const snippet = String(err.response.data).slice(0, 400);
-      return json(200, { ok: false, error: `Upstream non-JSON (${status}): ${snippet}` });
-    }
-    return json(200, { ok: false, error: err.message || String(err) });
-  }
-};
-
-function json(statusCode, obj) {
+function json(status, body) {
   return {
-    statusCode,
+    statusCode: status,
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(obj),
+    body: JSON.stringify(body),
   };
 }
 
-function safeParse(s) {
-  try { return JSON.parse(s); } catch { return { raw: String(s) }; }
-}
+const WEBAPP = process.env.GS_WEBHOOK_URL; // your Apps Script WebApp endpoint
+const SHEET_ID = process.env.GS_SHEET_ID || "";
+const RANGE = process.env.GS_RANGE || "";
+const APP_KEY = process.env.GS_WEBAPP_KEY || ""; // optional
+
+exports.handler = async (event) => {
+  if (!WEBAPP) {
+    return json(500, { ok: false, error: "GS_WEBHOOK_URL not set" });
+  }
+
+  try {
+    if (event.httpMethod === "GET") {
+      // Forward GET → GAS WebApp
+      const u = new URL(WEBAPP);
+      if (SHEET_ID) u.searchParams.set("sheetId", SHEET_ID);
+      if (RANGE) u.searchParams.set("range", RANGE);
+      if (APP_KEY) u.searchParams.set("key", APP_KEY);
+
+      const r = await fetch(u.toString(), { method: "GET" });
+      const data = await r.json().catch(() => ({}));
+      return json(200, { ok: true, data });
+    }
+
+    if (event.httpMethod === "POST") {
+      // Forward POST payload → GAS WebApp
+      const payload = JSON.parse(event.body || "{}");
+      const r = await fetch(WEBAPP, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sheetId: SHEET_ID,
+          key: APP_KEY,
+          ...payload,
+        }),
+      });
+      const data = await r.json().catch(() => ({}));
+      return json(200, { ok: true, data });
+    }
+
+    return json(405, { ok: false, error: "Method not allowed" });
+  } catch (e) {
+    return json(500, { ok: false, error: e.message });
+  }
+};

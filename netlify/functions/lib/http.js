@@ -1,90 +1,60 @@
 // netlify/functions/lib/http.js
+"use strict";
 
-// ---------- Existing helpers (keep) ----------
-function json(statusCode, obj) {
-  return {
-    statusCode,
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(obj),
-  };
+// Minimal axios-like wrapper using global fetch (Node 18+)
+
+function buildUrl(url, params) {
+  if (!params) return url;
+  const u = new URL(url);
+  for (const [k, v] of Object.entries(params)) u.searchParams.set(k, String(v));
+  return u.toString();
 }
 
-function requireEnv(keys = []) {
-  const missing = keys.filter(k => !process.env[k] || String(process.env[k]).trim() === "");
-  if (missing.length) {
-    const msg = `Missing required env: ${missing.join(", ")}`;
-    return { ok: false, error: msg };
-  }
-  return { ok: true };
-}
-
-function baseUrl() {
-  return process.env.URL || process.env.DEPLOY_URL || process.env.SITE_URL || "";
-}
-
-// ---------- New: lightweight axios-like HTTP wrapper using native fetch ----------
-const qs = (obj = {}) =>
-  Object.entries(obj).map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`).join("&");
-
-function withTimeout(ms) {
-  const c = new AbortController();
-  const t = ms ? setTimeout(() => c.abort(), ms) : null;
-  return { signal: c.signal, clear: () => t && clearTimeout(t) };
-}
-
-async function doFetch(url, { method = "GET", headers = {}, params, data, timeout, maxRedirects, ...rest } = {}) {
-  let u = new URL(url);
-  if (params && typeof params === "object" && Object.keys(params).length) {
-    u = new URL(u.toString());
-    u.search = u.search ? `${u.search}&${qs(params)}` : `?${qs(params)}`;
-  }
-
-  const { signal, clear } = withTimeout(timeout);
-  const init = {
-    method,
-    headers: { ...(headers || {}) },
-    signal,
-    redirect: "follow",
-    ...rest,
-  };
-
-  if (data !== undefined) {
-    if (!init.headers["Content-Type"] && !(data instanceof FormData)) {
-      init.headers["Content-Type"] = "application/json";
-    }
-    init.body =
-      init.headers["Content-Type"] === "application/json" && !(data instanceof FormData)
-        ? JSON.stringify(data)
-        : data;
-  }
+async function doFetch(method, url, { params, headers, timeout, body } = {}) {
+  const controller = new AbortController();
+  const id = timeout ? setTimeout(() => controller.abort(), timeout) : null;
 
   try {
-    const res = await fetch(u.toString(), init);
-    const ct = res.headers.get("content-type") || "";
-    const parsed = ct.includes("application/json") ? await res.json().catch(() => ({})) : await res.text();
+    const res = await fetch(buildUrl(url, params), {
+      method,
+      headers,
+      body,
+      signal: controller.signal,
+    });
+
+    const text = await res.text();
+    let data;
+    try { data = text ? JSON.parse(text) : null; } catch { data = text; }
+
     if (!res.ok) {
-      const err = new Error(res.statusText || `HTTP ${res.status}`);
-      err.response = { status: res.status, data: parsed };
+      const err = new Error((data && (data.message || data.error)) || `${res.status} ${res.statusText}`);
+      err.status = res.status;
+      err.data = data;
       throw err;
     }
-    return { status: res.status, data: parsed, headers: res.headers };
+    return { status: res.status, data };
   } finally {
-    clear();
+    if (id) clearTimeout(id);
   }
 }
 
-async function get(url, opts = {})         { return doFetch(url, { ...opts, method: "GET" }); }
-async function post(url, data, opts = {})  { return doFetch(url, { ...opts, method: "POST", data }); }
-async function put(url, data, opts = {})   { return doFetch(url, { ...opts, method: "PUT", data }); }
-async function del(url, opts = {})         { return doFetch(url, { ...opts, method: "DELETE" }); }
+async function get(url, opts = {}) {
+  return doFetch("GET", url, {
+    params: opts.params,
+    headers: opts.headers,
+    timeout: opts.timeout,
+  });
+}
 
-// CommonJS exports (keep old + add new)
-module.exports = {
-  json,
-  requireEnv,
-  baseUrl,
-  get,
-  post,
-  put,
-  delete: del,
-};
+async function post(url, data, opts = {}) {
+  const headers = Object.assign({ "Content-Type": "application/json" }, opts.headers || {});
+  const body = headers["Content-Type"] === "application/json" ? JSON.stringify(data ?? {}) : data;
+  return doFetch("POST", url, {
+    params: opts.params,
+    headers,
+    timeout: opts.timeout,
+    body,
+  });
+}
+
+module.exports = { get, post };

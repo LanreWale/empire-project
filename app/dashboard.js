@@ -12,6 +12,17 @@ const num=n=> (+n||0).toLocaleString();
 const pct=n=> ((+n||0)*100).toFixed(1)+'%';
 const esc=s=> String(s??'').replace(/[&<>"']/g,m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
 
+/* ---- FX rate (runtime; never embed secret literal) ---- */
+let __FX_RATE = null;
+async function ensureRate() {
+  if (__FX_RATE === null) {
+    const r = await fetch("/.netlify/functions/fx-rate", { headers: { "cache-control": "no-store" }});
+    const j = await r.json();
+    __FX_RATE = Number(j.usd_rate || 0) || 0;
+  }
+  return __FX_RATE;
+}
+
 /* Admin secret in localStorage */
 const ADMIN_KEY = 'empire.admin.secret';
 function getAdmin(){ try{return localStorage.getItem(ADMIN_KEY)||'';}catch{return '';} }

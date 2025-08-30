@@ -6,7 +6,12 @@ const safe = (s) => { try { return JSON.parse(s || "{}"); } catch { return {}; }
 
 exports.handler = async (event) => {
   try {
-    const WEBAPP_URL = (process.env.GS_WEBHOOK_URL || process.env.GS_WEBAPP_URL || "").trim();
+    perl -0777 -pe 'BEGIN{$/=undef}
+s/process\.env\.GS_WEBHOOK_URL/env("GS_WEBHOOK_URL")/g;
+s/process\.env\.GS_WEBAPP_URL/env("GS_WEBAPP_URL")/g;
+s/process\.env\.GS_WEBAPP_KEY/env("GS_WEBAPP_KEY")/g;
+unless(/const env =/){s/"use strict";/"use strict";\n\nconst env = (k) => (process.env?.[k] ?? "").toString();/}' \
+  -i netlify/functions/gs-bridge.js
     const WEBAPP_KEY = (process.env.GS_WEBAPP_KEY || "").trim();
     if (!WEBAPP_URL) return json(500, { ok: false, error: "GS WebApp URL missing" });
 

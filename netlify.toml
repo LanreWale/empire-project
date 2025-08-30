@@ -8,9 +8,15 @@
   directory = "netlify/functions"
   node_bundler = "esbuild"
 
-[[edge_functions]]
-  function = "shortener"
-  path = "/i/*"
+# ── IMPORTANT: disable Edge Functions (no Deno needed)
+# (We replace the edge mapping with a standard redirect to the Node function below)
+
+# Route /i/* to the Node function netlify/functions/shortner.js
+# NOTE: your repo shows "shortner.js" (no second 'e'); keep that spelling.
+[[redirects]]
+  from = "/i/*"
+  to = "/.netlify/functions/shortner?path=:splat"
+  status = 200
 
 [[redirects]]
   from = "/admin"

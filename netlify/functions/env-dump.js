@@ -1,53 +1,47 @@
 // netlify/functions/env-dump.js
-export async function handler(event, context) {
-  const safe = (key) => {
-    const v = process.env[key];
-    return v ? v.length : null;
-  };
+"use strict";
 
-  const payload = {
+exports.handler = async () => {
+  const mask = (v) => (typeof v === "string" ? v.length : 0);
+
+  const pick = (k) => (process.env[k] ?? "");
+  const out = {
     time: new Date().toISOString(),
     node: process.version,
 
-    // Invites
-    INVITES_BASE_URL: process.env.INVITES_BASE_URL,
-    INVITES_SIGNING_KEY_len: safe("INVITES_SIGNING_KEY"),
-    INVITE_TTL_HOURS: process.env.INVITE_TTL_HOURS,
+    // already present in your current dump
+    INVITES_BASE_URL: pick("INVITES_BASE_URL"),
+    INVITES_SIGNING_KEY_len: mask(pick("INVITES_SIGNING_KEY")),
+    INVITE_TTL_HOURS: pick("INVITE_TTL_HOURS"),
+    SHORTENER_PREFIX: pick("SHORTENER_PREFIX"),
 
-    // Shortener
-    SHORTENER_PREFIX: process.env.SHORT_BASE_URL,
+    SMTP_HOST: pick("SMTP_HOST"),
+    SMTP_PORT: pick("SMTP_PORT"),
+    SMTP_SECURE: pick("SMTP_SECURE"),
+    SMTP_FROM: pick("SMTP_FROM"),
+    SMTP_USER_len: mask(pick("SMTP_USER")),
+    SMTP_PASS_len: mask(pick("SMTP_PASS")),
 
-    // SMTP / Email
-    SMTP_HOST: process.env.SMTP_HOST,
-    SMTP_PORT: process.env.SMTP_PORT,
-    SMTP_SECURE: process.env.SMTP_SECURE,
-    SMTP_FROM: process.env.SMTP_FROM,
-    SMTP_USER_len: safe("SMTP_USER"),
-    SMTP_PASS_len: safe("SMTP_PASS"),
+    TELEGRAM_BOT_TOKEN_len: mask(pick("TELEGRAM_BOT_TOKEN")),
+    TELEGRAM_CHANNEL_USERNAME: pick("TELEGRAM_CHANNEL_USERNAME"),
+    TELEGRAM_CHAT_VALUE: pick("TELEGRAM_CHAT_VALUE"),
 
-    // Telegram
-    TELEGRAM_BOT_TOKEN_len: safe("TELEGRAM_BOT_TOKEN"),
-    TELEGRAM_CHAT_ID: process.env.TELEGRAM_CHAT_ID,
-    TELEGRAM_CHANNEL_USERNAME: process.env.TELEGRAM_CHANNEL_USERNAME,
-    TELEGRAM_CHAT_VALUE: process.env.TELEGRAM_CHAT_VALUE,
+    TWILIO_ACCOUNT_SID_len: mask(pick("TWILIO_ACCOUNT_SID")),
+    TWILIO_AUTH_TOKEN_len: mask(pick("TWILIO_AUTH_TOKEN")),
+    TWILIO_WHATSAPP_FROM: pick("TWILIO_WHATSAPP_FROM"),
 
-    // Twilio / WhatsApp
-    TWILIO_ACCOUNT_SID_len: safe("TWILIO_ACCOUNT_SID"),
-    TWILIO_AUTH_TOKEN_len: safe("TWILIO_AUTH_TOKEN"),
-    TWILIO_WHATSAPP_FROM: process.env.TWILIO_WHATSAPP_FROM,
+    GS_WEBAPP_KEY_len: mask(pick("GS_WEBAPP_KEY")),
+    GS_SHEET_ID: pick("GS_SHEET_ID"),
 
-    // Google Sheets
-    GOOGLE_SHEETS_PUBLIC: process.env.GOOGLE_SHEETS_PUBLIC,
-    GOOGLE_SHEETS_ID: process.env.GOOGLE_SHEETS_ID,
-    GOOGLE_SHEETS_RANGE: process.env.GOOGLE_SHEETS_RANGE,
-    GOOGLE_SHEETS_WEBAPP_URL: process.env.GOOGLE_SHEETS_WEBAPP_URL,
-    GS_WEBAPP_KEY_len: safe("GS_WEBAPP_KEY"),
-    GS_SHEET_ID: process.env.GS_SHEET_ID,
+    // 👇 add Flutterwave here
+    FLW_SECRET_KEY_len: mask(pick("FLW_SECRET_KEY")),
+    FLW_PUBLIC_KEY_len: mask(pick("FLW_PUBLIC_KEY")),
+    FLW_ENCRYPTION_KEY_len: mask(pick("FLW_ENCRYPTION_KEY")),
   };
 
   return {
     statusCode: 200,
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify(payload, null, 2),
+    headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
+    body: JSON.stringify(out),
   };
-}
+};

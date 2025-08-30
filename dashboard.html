@@ -1,53 +1,62 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <title>Empire Admin</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <!-- Minimal styling -->
+  <!-- Chart.js (for the two charts we render) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
+
   <style>
     :root{
-      --bg:#0b0f14; --card:#121821; --muted:#9fb0c0; --text:#eaf2fa; --ok:#1db954; --warn:#f5a524; --down:#e11d48; --accent:#2eaadc;
-      --br:14px;
+      --bg:#0b0f14; --panel:#121822; --muted:#93a0b4; --text:#e8eef7; --accent:#2dd4bf; --accent-2:#60a5fa;
+      --ok:#16a34a; --warn:#f59e0b; --down:#ef4444; --card:#0f1520; --border:#1f2937;
     }
-    *{box-sizing:border-box}
-    body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 system-ui,Segoe UI,Roboto,Helvetica,Arial}
-    .wrap{max-width:1200px;margin:0 auto;padding:18px}
-    .nav{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
-    .nav button{background:#0f1520;color:#fff;border:1px solid #243142;border-radius:10px;padding:10px 14px;cursor:pointer}
-    .nav button.active{background:var(--accent);border-color:var(--accent)}
-    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
-    .kpi{font-weight:800;font-size:26px}
-    .card{background:var(--card);border:1px solid #1d2734;border-radius:var(--br);padding:14px}
+    html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font:14px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;}
+    .wrap{max-width:1200px;margin:0 auto;padding:18px;}
+    .topbar{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+    .title{font-weight:700;font-size:18px;margin-right:auto}
+    .nav{display:flex;flex-wrap:wrap;gap:8px}
+    .nav button{background:#152033;border:1px solid var(--border);color:var(--text);padding:8px 10px;border-radius:8px;cursor:pointer}
+    .nav button.active{border-color:var(--accent);color:var(--accent)}
+    .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:12px}
+    .col-3{grid-column:span 3}.col-4{grid-column:span 4}.col-6{grid-column:span 6}.col-8{grid-column:span 8}.col-12{grid-column:span 12}
+    .card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:14px}
+    .kpi{font-size:26px;font-weight:800}
     .muted{color:var(--muted)}
-    .badge{display:inline-block;padding:4px 8px;border-radius:999px;font-weight:700}
-    .badge.ok{background:#0f2a1b;color:#7dffaf}
-    .badge.warn{background:#2a230f;color:#ffe07d}
-    .badge.down{background:#2a0f16;color:#ff90a5}
     .hidden{display:none !important}
-    .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-    .row > *{flex:1}
-    input,select,textarea{width:100%;background:#0f1520;border:1px solid #243142;color:#fff;border-radius:10px;padding:10px}
-    label{display:block;margin-top:10px;margin-bottom:6px;color:#cfe3f5}
-    .btn{background:var(--accent);color:#000;border:0;padding:10px 14px;border-radius:10px;cursor:pointer;font-weight:700}
-    .btn.alt{background:#1f2937;color:#fff}
+    .badge{display:inline-block;padding:3px 8px;border-radius:999px;font-weight:700;font-size:12px}
+    .badge.ok{background:#032e1b;color:#9affc8;border:1px solid #064e3b}
+    .badge.warn{background:#3a2a02;color:#ffe3a3;border:1px solid #b45309}
+    .badge.down{background:#3b0a0a;color:#ffb3b3;border:1px solid #b91c1c}
     table{width:100%;border-collapse:collapse}
-    th,td{padding:8px;border-bottom:1px solid #203044}
-    .status{padding:2px 8px;border-radius:999px;background:#162336}
-    .note{padding:10px;border-radius:10px}
-    .note.err{background:#2a1217;color:#ff9fb0;border:1px solid #53202a}
-    pre{white-space:pre-wrap;word-wrap:break-word}
+    th,td{padding:8px;border-bottom:1px solid var(--border);text-align:left}
+    .status{padding:2px 8px;border-radius:999px;background:#13253c;border:1px solid #1f3350}
+    .btn{background:var(--accent-2);color:#06111d;border:0;padding:8px 10px;border-radius:8px;cursor:pointer;font-weight:700}
+    .btn.alt{background:#1f2a44;color:#cbd5e1}
+    .note{padding:10px;border-radius:8px}
+    .note.err{background:#3b0a0a;border:1px solid #7f1d1d}
+    .note.ok{background:#052e1b;border:1px solid #065f46}
+    .section-title{font-weight:800;margin:0 0 10px}
+    .pill{display:inline-block;padding:2px 8px;border:1px solid var(--border);border-radius:999px;color:var(--muted)}
+    input,select,textarea{background:#0f1624;border:1px solid var(--border);color:var(--text);border-radius:8px;padding:8px;width:100%}
+    .actions{display:flex;gap:8px;flex-wrap:wrap}
+    .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;}
   </style>
-
-  <!-- Chart.js (for Overview/Analytics) -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
 </head>
+
 <body>
   <div class="wrap">
+    <div class="topbar">
+      <div class="title">Empire Control</div>
+      <!-- role pills just for quick visual debug; JS also uses ?role=USER to simulate -->
+      <div class="pill mono" id="rolePill">role: —</div>
+    </div>
+
     <div class="nav">
-      <button class="active" data-tab="dashboard">Overview</button>
-      <button data-tab="cpa">CPA</button>
+      <button data-tab="dashboard" class="active">Overview</button>
+      <button data-tab="cpa">CPA Accounts</button>
       <button data-tab="users">Users</button>
       <button data-tab="analytics">Analytics</button>
       <button data-tab="wallet">Wallet</button>
@@ -55,166 +64,180 @@
       <button data-tab="monitoring">Monitoring</button>
     </div>
 
-    <!-- OVERVIEW -->
-    <section id="view-dashboard">
+    <!-- ===================== DASHBOARD ===================== -->
+    <section id="view-dashboard" class="card" style="margin-top:12px">
+      <h3 class="section-title">Overview</h3>
       <div class="grid">
-        <div class="card"><div class="muted">Earnings</div><div id="kpi-earn" class="kpi">$0</div></div>
-        <div class="card"><div class="muted">Active Users</div><div id="kpi-active" class="kpi">0</div></div>
-        <div class="card"><div class="muted">Pending</div><div id="kpi-pending" class="kpi">0</div></div>
-        <div class="card"><div class="muted">Clicks</div><div id="kpi-clicks" class="kpi">0</div></div>
-        <div class="card"><div class="muted">Approval Rate</div><div id="kpi-approval" class="kpi">—</div></div>
-        <div class="card"><div class="muted">Conversion Rate</div><div id="kpi-cr" class="kpi">—</div></div>
-      </div>
-      <div class="grid" style="margin-top:14px">
-        <div class="card"><canvas id="chartMonthly" height="180"></canvas></div>
-        <div class="card"><canvas id="chartGeo" height="180"></canvas></div>
-      </div>
-      <div class="card" style="margin-top:14px">
-        <div class="muted" style="margin-bottom:8px">Live Feed</div>
-        <table id="tbl-live"><thead><tr><th>Time</th><th>Country</th><th>Offer</th><th>Device</th><th>Clicks</th><th>Leads</th><th>Earnings</th></tr></thead><tbody></tbody></table>
+        <div class="card col-3"><div class="muted">Total Earnings</div><div id="kpi-earn" class="kpi">$0.00</div></div>
+        <div class="card col-3"><div class="muted">Active Users</div><div id="kpi-active" class="kpi">0</div></div>
+        <div class="card col-3"><div class="muted">Pending</div><div id="kpi-pending" class="kpi">0</div></div>
+        <div class="card col-3"><div class="muted">Clicks</div><div id="kpi-clicks" class="kpi">0</div></div>
+        <div class="card col-6"><canvas id="chartMonthly" height="120"></canvas></div>
+        <div class="card col-6"><canvas id="chartGeo" height="120"></canvas></div>
+        <div class="card col-12">
+          <div class="muted" style="margin-bottom:8px">Live Events</div>
+          <table id="tbl-live">
+            <thead><tr><th>Time</th><th>Country</th><th>Offer</th><th>Device</th><th>Clicks</th><th>Leads</th><th>Earnings</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
       </div>
     </section>
 
-    <!-- CPA -->
-    <section id="view-cpa" class="hidden">
-      <div id="cpaGrid" class="grid"></div>
-      <div class="card" style="margin-top:14px">
-        <div class="row">
-          <button id="btnAddCpaOpen" class="btn alt" type="button">Add CPA Account</button>
-          <span id="cpaNote" class="note ok hidden">Saved!</span>
-        </div>
-      </div>
-      <div id="modalAddCpa" class="card hidden" style="margin-top:14px">
-        <div class="row"><div><label>Name</label><input id="cpaName"></div><div><label>Domain</label><input id="cpaDomain"></div></div>
-        <div class="row"><div><label>User Id</label><input id="cpaUserId"></div><div><label>API Key</label><input id="cpaApiKey"></div></div>
-        <div class="row"><div><label>Starting Revenue (USD)</label><input id="cpaStartRev" type="number" step="0.01"></div></div>
-        <div class="row"><button id="btnAddCpaSave" class="btn" type="button">Save</button><button id="btnAddCpaClose" class="btn alt" type="button">Close</button></div>
-      </div>
-    </section>
-
-    <!-- USERS -->
-    <section id="view-users" class="hidden">
-      <div class="card">
-        <div class="muted" style="margin-bottom:6px">Pending</div>
-        <table><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Action</th></tr></thead><tbody id="pendingBody"></tbody></table>
-      </div>
-      <div class="card" style="margin-top:14px">
-        <div class="muted" style="margin-bottom:6px">Approved</div>
-        <table><thead><tr><th>Name</th><th>Email</th><th>WhatsApp</th><th>Bank</th><th>Account</th><th>Authority</th><th>Status</th></tr></thead><tbody id="usersBody"></tbody></table>
-      </div>
-
-      <div class="card" style="margin-top:14px">
-        <div class="row">
-          <button id="btnAddUserOpen" class="btn alt" type="button">Add User</button>
-          <span id="userNote" class="note ok hidden">Saved!</span>
-        </div>
-      </div>
-      <div id="modalAddUser" class="card hidden" style="margin-top:14px">
-        <div class="row"><div><label>Name</label><input id="uName"></div><div><label>Email</label><input id="uEmail" type="email"></div></div>
-        <div class="row"><div><label>WhatsApp</label><input id="uWa"></div><div><label>Authority</label>
-          <select id="uAuth"><option>User</option><option>Commander</option><option>Admin</option></select></div>
-        </div>
-        <div class="row"><div><label>Bank</label><input id="uBank"></div><div><label>Account</label><input id="uAcct"></div></div>
-        <div class="row"><button id="btnAddUserSave" class="btn" type="button">Save</button><button id="btnAddUserClose" class="btn alt" type="button">Close</button></div>
-      </div>
-    </section>
-
-    <!-- ANALYTICS -->
-    <section id="view-analytics" class="hidden">
+    <!-- ======================= CPA ========================= -->
+    <section id="view-cpa" class="hidden" style="margin-top:12px">
       <div class="grid">
-        <div class="card"><canvas id="chartMonthly2" height="200"></canvas></div>
-        <div class="card"><canvas id="chartGeo2" height="200"></canvas></div>
+        <div class="col-12 card" style="display:flex;justify-content:space-between;align-items:center">
+          <h3 class="section-title" style="margin:0">CPA Accounts</h3>
+          <div class="actions">
+            <button id="btnAddCpaOpen" class="btn">Add CPA</button>
+          </div>
+        </div>
+        <div class="col-12 card" id="cpaGrid">Loading…</div>
       </div>
-      <div class="card" style="margin-top:14px">
-        <div class="muted" style="margin-bottom:8px">Live</div>
-        <table id="tbl-live2"><thead><tr><th>Time</th><th>Country</th><th>Offer</th><th>Device</th><th>Clicks</th><th>Leads</th><th>Earnings</th></tr></thead><tbody></tbody></table>
+
+      <!-- Add CPA Modal (hidden by default) -->
+      <div id="modalAddCpa" class="card hidden" style="margin-top:12px">
+        <h4 class="section-title" style="margin-top:0">Add CPA Account</h4>
+        <div class="grid">
+          <div class="col-4"><label class="muted">Name</label><input id="cpaName" placeholder="Network name"></div>
+          <div class="col-4"><label class="muted">Domain</label><input id="cpaDomain" placeholder="api.example.com"></div>
+          <div class="col-4"><label class="muted">User ID</label><input id="cpaUserId" placeholder="publisher id"></div>
+          <div class="col-6"><label class="muted">API Key</label><input id="cpaApiKey" placeholder="••••••••"></div>
+          <div class="col-6"><label class="muted">Starting Revenue</label><input id="cpaStartRev" type="number" step="0.01" placeholder="0.00"></div>
+        </div>
+        <div class="actions" style="margin-top:10px">
+          <button id="btnAddCpaSave" class="btn">Save</button>
+          <button id="btnAddCpaClose" class="btn alt">Close</button>
+        </div>
+        <div id="cpaNote" class="note ok hidden" style="margin-top:10px">Saved!</div>
       </div>
     </section>
 
-    <!-- WALLET (Commander UI requires Admin Secret) -->
-    <section id="view-wallet" class="hidden">
+    <!-- ===================== USERS (admin) ================= -->
+    <section id="view-users" class="hidden" style="margin-top:12px">
       <div class="grid">
-        <div class="card"><div class="muted">Available</div><div id="w-available" class="kpi">$0</div></div>
-        <div class="card"><div class="muted">Withdrawn</div><div id="w-withdraw" class="kpi">$0</div></div>
-        <div class="card"><div class="muted">Processing</div><div id="w-proc" class="kpi">$0</div></div>
-        <div class="card"><div class="muted">Remaining</div><div id="w-remaining" class="kpi">$0</div></div>
+        <div class="col-12 card">
+          <h3 class="section-title">Pending Users</h3>
+          <table>
+            <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Action</th></tr></thead>
+            <tbody id="pendingBody"><tr><td colspan="4">Loading…</td></tr></tbody>
+          </table>
+        </div>
+        <div class="col-12 card">
+          <h3 class="section-title">Approved Users</h3>
+          <table>
+            <thead><tr><th>Name</th><th>Email</th><th>WhatsApp</th><th>Bank</th><th>Account</th><th>Authority</th><th>Status</th></tr></thead>
+            <tbody id="usersBody"><tr><td colspan="7">Loading…</td></tr></tbody>
+          </table>
+        </div>
       </div>
 
-      <div class="card" style="margin-top:14px">
-        <div class="row" style="align-items:flex-end">
-          <div>
-            <label>Amount (USD)</label>
-            <input id="psAmount" type="number" step="0.01" placeholder="e.g. 500" />
-            <div class="muted" id="psNairaHint" style="margin-top:6px">≈ ₦—</div>
-          </div>
-          <div>
-            <label>Account Number</label>
-            <input id="psAccount" inputmode="numeric" placeholder="0123456789" />
-          </div>
-          <div>
-            <label>Bank</label>
-            <input id="psBankQuery" placeholder="Type bank name (e.g., GTBank)" />
-            <select id="psBankSelect" style="margin-top:6px"></select>
-          </div>
-          <div>
-            <label>Account Name (optional)</label>
-            <input id="psAcctName" placeholder="e.g., John Doe" />
-          </div>
+      <!-- Add User Modal (UI only; admin area) -->
+      <div id="modalAddUser" class="card hidden" style="margin-top:12px">
+        <h4 class="section-title" style="margin-top:0">Add User</h4>
+        <div class="grid">
+          <div class="col-4"><label class="muted">Name</label><input id="uName"></div>
+          <div class="col-4"><label class="muted">Email</label><input id="uEmail"></div>
+          <div class="col-4"><label class="muted">WhatsApp</label><input id="uWa"></div>
+          <div class="col-4"><label class="muted">Authority</label><select id="uAuth"><option>USER</option><option>COMMANDER</option><option>ADMIN</option></select></div>
+          <div class="col-4"><label class="muted">Bank</label><input id="uBank"></div>
+          <div class="col-4"><label class="muted">Account</label><input id="uAcct"></div>
         </div>
-        <div class="row" style="margin-top:10px">
-          <div>
-            <label>Reason</label>
-            <input id="psReason" placeholder="Affiliate withdrawal" />
-          </div>
-          <div style="max-width:220px">
-            <label>Admin Secret</label>
-            <input id="adminInput" placeholder="Set in Security tab" />
-          </div>
-          <div style="max-width:180px">
-            <label>&nbsp;</label>
-            <button id="psSubmit" class="btn" type="button" disabled>Send via Paystack</button>
-          </div>
+        <div class="actions" style="margin-top:10px">
+          <button id="btnAddUserSave" class="btn">Save</button>
+          <button id="btnAddUserClose" class="btn alt">Close</button>
         </div>
-        <div id="psStatus" class="muted" style="margin-top:8px">Enter Admin Secret to enable payout.</div>
+        <div id="userNote" class="note ok hidden" style="margin-top:10px">Saved!</div>
       </div>
-
-      <div class="card" style="margin-top:14px">
-        <div class="muted" style="margin-bottom:6px">Recent Transactions</div>
-        <div id="walletList" class="grid"></div>
+      <div class="actions" style="margin-top:10px">
+        <button id="btnAddUserOpen" class="btn">Add User</button>
       </div>
     </section>
 
-    <!-- SECURITY -->
-    <section id="view-security" class="hidden">
-      <div class="card">
-        <div class="row">
-          <button id="btnAdminSet" class="btn" type="button">Set Admin Secret</button>
-          <button id="btnAdminClear" class="btn alt" type="button">Clear Admin Secret</button>
-          <span class="badge warn" id="admStatus">NOT SET</span>
-        </div>
-      </div>
-      <div class="card" style="margin-top:14px">
-        <div class="muted" style="margin-bottom:6px">Public Config</div>
-        <pre id="pubCfg">{}</pre>
-      </div>
-    </section>
-
-    <!-- MONITORING -->
-    <section id="view-monitoring" class="hidden">
+    <!-- ===================== ANALYTICS ==================== -->
+    <section id="view-analytics" class="hidden" style="margin-top:12px">
       <div class="grid">
-        <div class="card">Server <span id="serverBadge" class="badge down">OFFLINE</span></div>
-        <div class="card">DB <span id="dbBadge" class="badge down">OFFLINE</span></div>
-        <div class="card">Sheets <span id="sheetsBadge" class="badge down">OFFLINE</span></div>
-        <div class="card">AI <span id="aiBadge" class="badge down">OFFLINE</span></div>
+        <div class="card col-6"><canvas id="chartMonthly2" height="140"></canvas></div>
+        <div class="card col-6"><canvas id="chartGeo2" height="140"></canvas></div>
+        <div class="card col-12">
+          <div class="muted" style="margin-bottom:8px">Live Events (analytics)</div>
+          <table id="tbl-live2">
+            <thead><tr><th>Time</th><th>Country</th><th>Offer</th><th>Device</th><th>Clicks</th><th>Leads</th><th>Earnings</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
       </div>
-      <div class="card" style="margin-top:14px">
-        <div class="muted" style="margin-bottom:6px">Events</div>
-        <table><thead><tr><th>Time</th><th>Type</th><th>Message</th><th>Ref</th><th>Actor</th></tr></thead><tbody id="evBody"></tbody></table>
+    </section>
+
+    <!-- ======================= WALLET ===================== -->
+    <section id="view-wallet" class="hidden" style="margin-top:12px">
+      <div class="grid">
+        <div class="card col-3"><div class="muted">Available</div><div id="w-available" class="kpi">$0.00</div></div>
+        <div class="card col-3"><div class="muted">Withdrawn</div><div id="w-withdraw" class="kpi">$0.00</div></div>
+        <div class="card col-3"><div class="muted">Processing</div><div id="w-proc" class="kpi">$0.00</div></div>
+        <div class="card col-3"><div class="muted">Remaining</div><div id="w-remaining" class="kpi">$0.00</div></div>
+
+        <div class="card col-12" id="walletList">Loading…</div>
+
+        <!-- Payout form (auto-hidden for USER; also requires local Admin Secret) -->
+        <div id="walletPayoutCard" class="card col-12 hidden">
+          <h4 class="section-title" style="margin-top:0">Payout (Admin/Commander only)</h4>
+          <div class="grid">
+            <div class="col-3"><label class="muted">Amount (NGN)</label><input id="po-amount" type="number" step="0.01" placeholder="5000"></div>
+            <div class="col-3"><label class="muted">Bank Code</label><input id="po-bank" placeholder="e.g. 058"></div>
+            <div class="col-3"><label class="muted">Account Number</label><input id="po-account" placeholder="0123456789"></div>
+            <div class="col-3"><label class="muted">Narration</label><input id="po-note" placeholder="Payout memo"></div>
+          </div>
+          <div class="actions" style="margin-top:10px">
+            <button id="btnDoPayout" class="btn">Send Payout</button>
+            <span class="muted">Admin secret: <span id="admStatus" class="badge warn">NOT SET</span></span>
+          </div>
+          <div id="poResult" class="note hidden" style="margin-top:10px"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== SECURITY ===================== -->
+    <section id="view-security" class="hidden" style="margin-top:12px">
+      <div class="grid">
+        <div class="card col-6">
+          <h3 class="section-title">Admin Secret (local)</h3>
+          <div class="actions">
+            <button id="btnAdminSet" class="btn">Set Secret</button>
+            <button id="btnAdminClear" class="btn alt">Clear Secret</button>
+            <span class="muted">Status: <span id="admStatus2" class="badge warn">NOT SET</span></span>
+          </div>
+        </div>
+        <div class="card col-6">
+          <h3 class="section-title">Public Config</h3>
+          <pre id="pubCfg" class="mono" style="white-space:pre-wrap">Loading…</pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== MONITORING ==================== -->
+    <section id="view-monitoring" class="hidden" style="margin-top:12px">
+      <div class="grid">
+        <div class="card col-12">
+          <div class="actions" style="gap:12px">
+            <div>Server <span id="serverBadge" class="badge down">OFFLINE</span></div>
+            <div>Database <span id="dbBadge" class="badge down">OFFLINE</span></div>
+            <div>Sheets <span id="sheetsBadge" class="badge down">OFFLINE</span></div>
+            <div>AI <span id="aiBadge" class="badge down">OFFLINE</span></div>
+          </div>
+        </div>
+        <div class="card col-12">
+          <table>
+            <thead><tr><th>Time</th><th>Type</th><th>Message</th><th>Ref</th><th>Actor</th></tr></thead>
+            <tbody id="evBody"><tr><td colspan="5">Loading…</td></tr></tbody>
+          </table>
+        </div>
       </div>
     </section>
   </div>
 
-  <!-- ========================= APP SCRIPT ========================= -->
+  <!-- =========================== APP SCRIPT =========================== -->
   <script>
   /* ====================== CONFIG ====================== */
   const BASE   = (window.EMPIRE_API || '/.netlify/functions').replace(/\/+$/,'');
@@ -230,13 +253,12 @@
   const pct=n=> ((+n||0)*100).toFixed(1)+'%';
   const esc=s=> String(s??'').replace(/[&<>"']/g,m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
 
-  /* ---- FX rate ---- */
+  /* ---- FX rate (runtime; never embed secret literal) ---- */
   let __FX_RATE = null;
   async function ensureRate() {
     if (__FX_RATE === null) {
       const r = await fetch("/.netlify/functions/fx-rate", { headers: { "cache-control": "no-store" }});
-      const j = await r.json();
-      __FX_RATE = Number(j.usd_rate || 0) || 0;
+      const j = await r.json(); __FX_RATE = Number(j.usd_rate || 0) || 0;
     }
     return __FX_RATE;
   }
@@ -245,10 +267,11 @@
   const ADMIN_KEY = 'empire.admin.secret';
   function getAdmin(){ try{return localStorage.getItem(ADMIN_KEY)||'';}catch{return '';} }
   function setAdmin(v){ try{localStorage.setItem(ADMIN_KEY,v||'')}catch{}; paintAdmin(); }
-  function paintAdmin(){ const has = !!getAdmin(); const el=$('admStatus'); if(el){ el.textContent = has?'SET':'NOT SET'; el.className='badge '+(has?'ok':'warn'); }
-    const ai=$('#adminInput'); if(ai) ai.value=getAdmin();
-    const btn=$('#psSubmit'); if(btn) btn.disabled = !has;
-    if(has){ $('#psStatus').textContent = 'Ready: Admin Secret present.'; } else { $('#psStatus').textContent = 'Enter Admin Secret to enable payout.'; }
+  function paintAdmin(){
+    const has = !!getAdmin();
+    const el1=$('admStatus'), el2=$('admStatus2');
+    if(el1){ el1.textContent = has?'SET':'NOT SET'; el1.className='badge '+(has?'ok':'warn'); }
+    if(el2){ el2.textContent = has?'SET':'NOT SET'; el2.className='badge '+(has?'ok':'warn'); }
   }
 
   /* HTTP helpers */
@@ -261,7 +284,7 @@
   }
   async function fetchJSON(url, opts){ const r= await fetch(url, opts||{}); if(!r.ok) throw new Error(r.status+' '+url); return r.json(); }
 
-  /* Primary→Fallback loader (GETs) */
+  /* Primary→Fallback loader */
   async function loadMaybe(fnPath, gasParams){
     try{ return await fetchJSON(BASE + fnPath, {headers: headers(false)}); } catch(e){}
     if(!GAS) throw new Error('No GAS_URL set and primary failed: '+fnPath);
@@ -269,6 +292,67 @@
     Object.entries(gasParams||{}).forEach(([k,v])=>u.searchParams.set(k,String(v)));
     return await fetchJSON(u.toString(), {headers: headers(false)});
   }
+
+  /* ====== ROLE + ACCESS CONTROL ====== */
+  function getRole(){
+    const u = new URL(location.href);
+    const p = (u.searchParams.get('role')||'').toUpperCase();
+    if(['ADMIN','COMMANDER','USER'].includes(p)) return p;
+    return 'USER'; // default
+  }
+  const __ROLE = getRole();
+  const ALLOWED_TABS = {
+    ADMIN:     ['dashboard','cpa','users','analytics','wallet','security','monitoring'],
+    COMMANDER: ['dashboard','cpa','users','analytics','wallet','security','monitoring'],
+    USER:      ['dashboard','cpa','analytics','wallet'] // read-only
+  };
+  (function applyRole(){
+    const allowed = new Set(ALLOWED_TABS[__ROLE]||[]);
+    $('#rolePill').textContent = `role: ${__ROLE}`;
+    // hide nav buttons not allowed
+    qa('.nav button').forEach(b=>{
+      if(!allowed.has(b.dataset.tab)) b.classList.add('hidden');
+    });
+    // start on first visible tab if current active was hidden
+    const active = q('.nav button.active');
+    if(active && active.classList.contains('hidden')){
+      const first = qa('.nav button').find(x=>!x.classList.contains('hidden'));
+      if(first){ active.classList.remove('active'); first.classList.add('active'); }
+    }
+    // wallet payout card requires non-USER + admin secret
+    const payoutCard = $('walletPayoutCard');
+    if(payoutCard){
+      const show = (__ROLE !== 'USER') && !!getAdmin();
+      payoutCard.classList.toggle('hidden', !show);
+    }
+  })();
+
+  /* ======================== TABS ====================== */
+  const views = {
+    dashboard: $('view-dashboard'),
+    cpa:       $('view-cpa'),
+    users:     $('view-users'),
+    analytics: $('view-analytics'),
+    wallet:    $('view-wallet'),
+    security:  $('view-security'),
+    monitoring:$('view-monitoring')
+  };
+  qa('.nav button').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      qa('.nav button').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active');
+      const k=b.dataset.tab;
+      Object.values(views).forEach(v=>v.classList.add('hidden'));
+      (views[k]||views.dashboard).classList.remove('hidden');
+      if(k==='dashboard') loadOverview().catch(console.warn);
+      if(k==='cpa')       loadCpa().catch(console.warn);
+      if(k==='users')     loadUsers().catch(console.warn);
+      if(k==='analytics') loadAnalytics().catch(console.warn);
+      if(k==='wallet')    loadWallet().catch(console.warn);
+      if(k==='security')  loadSecurity().catch(console.warn);
+      if(k==='monitoring')loadMonitoring().catch(console.warn);
+    });
+  });
 
   /* =================== OVERVIEW ======================= */
   let chartMonthly1, chartGeo1;
@@ -315,11 +399,12 @@
     }
   }
 
-  /* =================== CPA =================== */
+  /* =================== CPA ACCOUNTS =================== */
   async function loadCpa(){
-    const grid = $('cpaGrid'); grid.innerHTML='';
+    const grid = $('cpaGrid'); grid.innerHTML='Loading…';
     try{
       const r = await loadMaybe('/cpa-list', {cpa:1});
+      grid.innerHTML='';
       (r.items || r.accounts || []).forEach(acc=>{
         const card=document.createElement('div'); card.className='card';
         card.innerHTML = `
@@ -336,6 +421,8 @@
     }catch(e){
       grid.innerHTML = `<div class="note err">Failed: ${esc(e.message)}</div>`;
     }
+
+    // modal wiring
     const open=$('#btnAddCpaOpen'), close=$('#btnAddCpaClose'), save=$('#btnAddCpaSave');
     if(open) open.onclick = ()=> $('#modalAddCpa').classList.remove('hidden');
     if(close) close.onclick= ()=> $('#modalAddCpa').classList.add('hidden');
@@ -350,9 +437,19 @@
         $('#cpaNote').classList.remove('hidden'); setTimeout(()=>location.hash='#cpa',1000);
       }catch(e){ alert('Save failed: '+e.message); }
     };
+
+    // --- Read-only for USER: hide "Add CPA" controls ---
+    if (__ROLE === 'USER') {
+      const addBtn   = document.getElementById('btnAddCpaOpen');
+      const modal    = document.getElementById('modalAddCpa');
+      const saveBtn  = document.getElementById('btnAddCpaSave');
+      if (addBtn)  addBtn.classList.add('hidden');
+      if (saveBtn) saveBtn.disabled = true;
+      if (modal)   modal.classList.add('hidden');
+    }
   }
 
-  /* =================== USERS =================== */
+  /* =================== USERS (admin) ================== */
   async function loadUsers(){
     // pending
     try{
@@ -402,7 +499,7 @@
     };
   }
 
-  /* =================== ANALYTICS =================== */
+  /* =================== ANALYTICS ====================== */
   let chartMonthly2, chartGeo2;
   async function loadAnalytics(){
     try{
@@ -436,33 +533,7 @@
     }
   }
 
-  /* =================== BANK LIST + WALLET =================== */
-  let __BANKS = [];
-  let __BANKS_LOADED = false;
-
-  async function loadBanks(){
-    if(__BANKS_LOADED) return __BANKS;
-    try{
-      const r = await fetchJSON(BASE+'/paystack-banks');
-      __BANKS = (r?.data || r?.banks || []).map(b=>({code:b.code || b.id || '', name:b.name || ''}))
-                 .filter(b=>b.code && b.name);
-      __BANKS_LOADED = true;
-    }catch(e){
-      console.warn('banks load failed', e);
-      __BANKS = [];
-    }
-    paintBanks('');
-    return __BANKS;
-  }
-
-  function paintBanks(query){
-    const sel = $('#psBankSelect');
-    if(!sel) return;
-    const qstr = (query||'').toLowerCase();
-    const list = __BANKS.filter(b=>!qstr || b.name.toLowerCase().includes(qstr));
-    sel.innerHTML = list.map(b=>`<option value="${esc(b.code)}">${esc(b.name)}  —  ${esc(b.code)}</option>`).join('') || '<option value="">(no banks loaded)</option>';
-  }
-
+  /* =================== WALLET ========================= */
   async function loadWallet(){
     try{
       const w = await loadMaybe('/wallet', {wallet:1});
@@ -477,58 +548,17 @@
         const wrap=document.createElement('div'); wrap.className='card';
         wrap.innerHTML=`<div style="display:flex;justify-content:space-between">
           <div><div class="muted">${esc(tx.method||'')}</div><div style="font-weight:800">${fmtUSD(tx.amount||0)}</div></div>
-          <div style="text-align:right"><div class="muted">${esc(tx.date||tx.ts||'')}</div><span class="status ${esc(tx.status||'COMPLETED')}">${esc(tx.status||'COMPLETED')}</span></div>
+          <div style="text-align:right"><div class="muted">${esc(tx.date||'')}</div><span class="status ${esc(tx.status||'COMPLETED')}">${esc(tx.status||'COMPLETED')}</span></div>
         </div>`;
         list.appendChild(wrap);
       });
 
-      // prepare bank list + listeners
-      await loadBanks();
-      $('#psBankQuery').addEventListener('input', (e)=>paintBanks(e.target.value));
-      const amt = $('#psAmount');
-      amt.addEventListener('input', async ()=>{
-        const rate = await ensureRate();
-        const naira = Math.round((+amt.value||0) * rate).toLocaleString();
-        $('#psNairaHint').textContent = `≈ ₦${naira}`;
-      });
-
-      // Admin wireup
-      $('#adminInput').addEventListener('change', (e)=>{ setAdmin(e.target.value.trim()); });
-
-      // Submit transfer
-      $('#psSubmit').addEventListener('click', async ()=>{
-        if(!getAdmin()){ alert('Set Admin Secret in Security tab first.'); return; }
-        try{
-          const amountUSD = +$('#psAmount').value || 0;
-          const account_number = $('#psAccount').value.trim();
-          const bank_code = $('#psBankSelect').value.trim();
-          const name = $('#psAcctName').value.trim();
-          const reason = $('#psReason').value.trim() || 'Affiliate withdrawal';
-          if(!amountUSD || !account_number || !bank_code){ alert('Amount, account number and bank are required.'); return; }
-
-          // call the v2 function
-          const res = await fetchJSON(BASE+'/paystack-transfer-v2', {
-            method:'POST',
-            headers: headers(true,true),
-            body: JSON.stringify({ amountUSD, account_number, bank_code, name, reason })
-          });
-
-          $('#psStatus').textContent = `Success: Ref = ${res?.paystack?.transfer?.data?.reference || res?.reference || 'OK'}`;
-          // optionally log to monitor-feed
-          try{
-            await fetchJSON(BASE+'/monitor-feed', {
-              method:'POST',
-              headers: headers(true,false),
-              body: JSON.stringify({ type:'PAYOUT', message:`Paystack ₦ via USD ${amountUSD}`, ref: res?.paystack?.transfer?.data?.reference || '', actor:'Commander' })
-            });
-          }catch(_){}
-        }catch(e){
-          $('#psStatus').textContent = `Failed: ${e.message}`;
-        }
-      });
-
-      // Reflect admin secret
-      paintAdmin();
+      // show/hide payout card based on role + local admin secret
+      const payoutCard = $('walletPayoutCard');
+      if(payoutCard){
+        const show = (__ROLE !== 'USER') && !!getAdmin();
+        payoutCard.classList.toggle('hidden', !show);
+      }
     }catch(e){
       $('walletList').innerHTML = `<div class="note err">Failed: ${esc(e.message)}</div>`;
     }
@@ -540,7 +570,6 @@
     const setBtn=$('btnAdminSet'), clrBtn=$('btnAdminClear');
     if(setBtn) setBtn.onclick   = ()=>{ const v=prompt('Set admin secret'); if(v) setAdmin(v); };
     if(clrBtn) clrBtn.onclick   = ()=> setAdmin('');
-
     try{
       const cfg = await loadMaybe('/public-config', {config:1});
       $('pubCfg').textContent = JSON.stringify(cfg,null,2);
@@ -566,13 +595,13 @@
         const feed = await loadMaybe('/monitor-feed', {feed:1});
         (feed.events||[]).forEach(e=>{
           const tr=document.createElement('tr');
-          tr.innerHTML=`<td>${esc(e.time||e.timestamp||'')}</td><td>${esc(e.type||'')}</td><td>${esc(e.msg||e.message||'')}</td><td>${esc(e.ref||'')}</td><td>${esc(e.actor||'')}</td>`;
+          tr.innerHTML=`<td>${esc(e.time||e.timestamp||'')}</td><td>${esc(e.type||'')}</td><td>${esc(e.msg||e.message||'')}</td><td>${esc(e.ref||'')}</td><td>${esc(e.actor||e.user||'')}</td>`;
           body.appendChild(tr);
         });
       }catch(_){}
       if(!loadMonitoring._timer){
         loadMonitoring._timer = setInterval(()=>{
-          if(!q('#view-monitoring').classList.contains('hidden')) loadMonitoring().catch(()=>{});
+          if(!views.monitoring.classList.contains('hidden')) loadMonitoring().catch(()=>{});
         },15000);
       }
     }catch(e){
@@ -580,36 +609,14 @@
     }
   }
 
-  /* ================ NAV ============================== */
-  const views = {
-    dashboard: $('view-dashboard'),
-    cpa:       $('view-cpa'),
-    users:     $('view-users'),
-    analytics: $('view-analytics'),
-    wallet:    $('view-wallet'),
-    security:  $('view-security'),
-    monitoring:$('view-monitoring')
-  };
-  qa('.nav button').forEach(b=>{
-    b.addEventListener('click', ()=>{
-      qa('.nav button').forEach(x=>x.classList.remove('active'));
-      b.classList.add('active');
-      const k=b.dataset.tab;
-      Object.values(views).forEach(v=>v.classList.add('hidden'));
-      (views[k]||views.dashboard).classList.remove('hidden');
-      if(k==='dashboard') loadOverview().catch(console.warn);
-      if(k==='cpa')       loadCpa().catch(console.warn);
-      if(k==='users')     loadUsers().catch(console.warn);
-      if(k==='analytics') loadAnalytics().catch(console.warn);
-      if(k==='wallet')    loadWallet().catch(console.warn);
-      if(k==='security')  loadSecurity().catch(console.warn);
-      if(k==='monitoring')loadMonitoring().catch(console.warn);
-    });
-  });
-
   /* ================ INIT ============================== */
   window.addEventListener('DOMContentLoaded', ()=>{
-    loadOverview().catch(console.warn);
+    // default view + invite value (if you have an input#inviteLink in your real page)
+    const inv = $('inviteLink'); if(inv) inv.value = INVITE;
+
+    // open hash tab if present, else load default visible one
+    const firstVisible = qa('.nav button').find(x=>!x.classList.contains('hidden'));
+    (firstVisible||q('.nav button')).click();
   });
   </script>
 </body>

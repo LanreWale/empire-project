@@ -5,13 +5,13 @@ const GAS    = (window.GAS_URL || '').replace(/\/+$/,'');
 const INVITE = "https://superlative-pothos-ebf5f2.netlify.app/?ref=SUPREME_COMMANDER";
 
 /* ====================== UTILS ======================= */
-const $=id=>document.getElementById(id);
-const q=(s,r=document)=>r.querySelector(s);
-const qa=(s,r=document)=>Array.from(r.querySelectorAll(s));
-const fmtUSD=n=> new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(+n||0);
-const num=n=> (+n||0).toLocaleString();
-const pct=n=> ((+n||0)*100).toFixed(1)+'%';
-const esc=s=> String(s??'').replace(/[&<>"']/g,m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
+const $ = id => document.getElementById(id);
+const q = (s, r=document) => r.querySelector(s);
+const qa = (s, r=document) => Array.from(r.querySelectorAll(s));
+const fmtUSD = n => new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(+n||0);
+const num = n => (+n||0).toLocaleString();
+const pct = n => ((+n||0)*100).toFixed(1)+'%';
+const esc = s => String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 
 /* ---- FX rate (runtime; never embed secret literal) ---- */
 let __FX_RATE = null;
@@ -122,7 +122,6 @@ async function loadOverview(){
 }
 
 /* =================== CPA ACCOUNTS =================== */
-/* Uses ONLY `/.netlify/functions/cpa-list` */
 async function loadCpa(){
   const grid = $('cpaGrid'); grid.innerHTML='';
   try{
@@ -161,7 +160,6 @@ async function loadCpa(){
 
 /* =================== USERS ========================== */
 async function loadUsers(){
-  // pending
   try{
     const p = await loadMaybe('/users/pending', {pending:1});
     const body = $('pendingBody'); if(body){ body.innerHTML='';
@@ -182,7 +180,6 @@ async function loadUsers(){
     }
   }catch(e){ const body=$('pendingBody'); if(body) body.innerHTML=`<tr><td colspan="4">Failed: ${esc(e.message)}</td></tr>`; }
 
-  // approved
   try{
     const a = await loadMaybe('/users/approved', {approved:1});
     const body = $('usersBody'); if(body){ body.innerHTML='';
@@ -196,7 +193,6 @@ async function loadUsers(){
     }
   }catch(e){ const body=$('usersBody'); if(body) body.innerHTML=`<tr><td colspan="7">Failed: ${esc(e.message)}</td></tr>`; }
 
-  // modals (UI only)
   const open=$('#btnAddUserOpen'), close=$('#btnAddUserClose'), save=$('#btnAddUserSave');
   if(open) open.onclick = ()=> $('#modalAddUser').classList.remove('hidden');
   if(close) close.onclick= ()=> $('#modalAddUser').classList.add('hidden');
@@ -243,7 +239,7 @@ async function loadAnalytics(){
   }
 }
 
-/* =================== WALLET ========================= */
+/* =================== WALLET (view & Paystack) ======= */
 async function loadWallet(){
   try{
     const w = await loadMaybe('/wallet', {wallet:1});
@@ -265,6 +261,136 @@ async function loadWallet(){
   }catch(e){
     $('walletList').innerHTML = `<div class="note err">Failed: ${esc(e.message)}</div>`;
   }
+
+  // --- Paystack quick-withdraw UI wiring (only if elements exist) ---
+  setupPaystackUI();
+}
+
+/* ===== Paystack helpers (optional UI present) ===== */
+let __banksCache = null;
+
+async function loadBanks(){
+  if (__banksCache) return __banksCache;
+  try{
+    const r = await fetchJSON(`${BASE}/paystack-banks`);
+    __banksCache = (r.data || r.banks || []).map(b => ({
+      name: String(b.name||'').trim(),
+      code: String(b.code||'').trim()
+    }));
+  }catch(e){
+    __banksCache = [];
+  }
+  return __banksCache;
+}
+
+async function resolveAccount(bankCode, accountNumber){
+  const u = new URL(`${BASE}/paystack-resolve`, location.origin);
+  u.searchParams.set('bank_code', bankCode);
+  u.searchParams.set('account_number', accountNumber);
+  const r = await fetchJSON(u.toString());
+  const ok = r.status !== false && !!(r.data && r.data.account_name);
+  return { ok, name: (r.data && r.data.account_name) || '' };
+}
+
+async function submitPaystack(){
+  const btn = $('withdrawBtn');
+  const status = $('psStatus');
+  if (!btn || !status) return;
+  status.textContent = 'Submitting…';
+
+  try{
+    const usd = Number(($('amountUsd')||{}).value || 0);
+    const bankCode = String(($('bankCode')||{}).value || '').trim();
+    const acct = String(($('accountNumber')||{}).value || '').trim();
+    const acctName = String(($('accountName')||{}).value || '').trim();
+
+    if (!usd || !bankCode || !acct || !acctName) {
+      status.textContent = 'Missing amount / bank / account / name';
+      return;
+    }
+
+    const payload = {
+      amountUSD: usd,
+      bank_code: bankCode,
+      account_number: acct,
+      name: acctName,
+      reason: 'Affiliate withdrawal'
+    };
+
+    const res = await fetchJSON(`${BASE}/paystack-transfer-v2`, {
+      method: 'POST',
+      headers: headers(true, true),
+      body: JSON.stringify(payload)
+    });
+
+    status.textContent = res.ok ? 'Transfer submitted ✅' : ('Failed: '+(res.error||'unknown'));
+  }catch(e){
+    status.textContent = 'Error: ' + e.message;
+  }
+}
+
+function setupPaystackUI(){
+  // Only attach once
+  if (setupPaystackUI._wired) return;
+  setupPaystackUI._wired = true;
+
+  const bankSearch = $('bankSearch');   // text input for filtering banks
+  const bankCodeEl = $('bankCode');     // hidden/readonly to store code
+  const acctNumEl  = $('accountNumber');
+  const acctNameEl = $('accountName');
+  const chooseEl   = $('bankChoose');   // <select> or <datalist> target
+  const btn        = $('withdrawBtn');
+  const status     = $('psStatus');
+
+  if (!bankSearch && !chooseEl && !btn) return; // UI not present; skip
+
+  // Load & populate bank list (if dropdown/datalist exists)
+  loadBanks().then(list=>{
+    if (!chooseEl) return;
+    chooseEl.innerHTML = '';
+    list.forEach(b=>{
+      const opt = document.createElement('option');
+      opt.value = b.code;
+      opt.textContent = `${b.name} (${b.code})`;
+      chooseEl.appendChild(opt);
+    });
+  });
+
+  // Simple search: update code field when user types exact match name/code
+  if (bankSearch && bankCodeEl) {
+    bankSearch.addEventListener('input', async ()=>{
+      const term = bankSearch.value.trim().toLowerCase();
+      const banks = await loadBanks();
+      const hit = banks.find(b => b.code === term || b.name.toLowerCase() === term);
+      bankCodeEl.value = hit ? hit.code : '';
+    });
+  }
+  if (chooseEl && bankCodeEl) {
+    chooseEl.addEventListener('change', ()=>{
+      bankCodeEl.value = chooseEl.value || '';
+    });
+  }
+
+  // Resolve account name automatically when both bank+account present
+  if (acctNumEl && bankCodeEl && acctNameEl) {
+    const maybeResolve = async ()=>{
+      const code = bankCodeEl.value.trim();
+      const n = acctNumEl.value.trim();
+      if (code && n.length >= 10) {
+        status && (status.textContent = 'Resolving account…');
+        try{
+          const { ok, name } = await resolveAccount(code, n);
+          if (ok) { acctNameEl.value = name; status && (status.textContent = 'Account verified ✅'); }
+          else    { status && (status.textContent = 'Cannot resolve account'); }
+        }catch(e){ status && (status.textContent = 'Resolve failed'); }
+      }
+    };
+    acctNumEl.addEventListener('blur', maybeResolve);
+    bankCodeEl.addEventListener('change', maybeResolve);
+  }
+
+  // Submit
+  if (btn) btn.addEventListener('click', submitPaystack);
 }
 
 /* =================== SECURITY ======================= */
@@ -319,14 +445,15 @@ async function loadMonitoring(){
 
 /* ================ INIT ============================== */
 window.addEventListener('DOMContentLoaded', ()=>{
-  // default view + invite value
   loadOverview().catch(console.warn);
   const inv = $('inviteLink'); if(inv) inv.value = INVITE;
 
-  // open hash tab if present
   const h = (location.hash||'').replace('#','');
   if(h && views[h]){
     qa('.nav button').forEach(b=>{ if(b.dataset.tab===h) b.click(); });
   }
+
+  // If wallet tab is default-opened in markup, wire paystack now too
+  setupPaystackUI();
 });
 </script>

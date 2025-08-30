@@ -1,4 +1,5 @@
 "use strict";
+const env = (k) => (process.env?.[k] ?? "").toString();
 
 const http = require("./lib/http");
 const json = (s, b) => ({ statusCode: s, headers: { "Content-Type": "application/json", "Cache-Control": "no-store" }, body: JSON.stringify(b) });

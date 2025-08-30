@@ -1,5 +1,5 @@
 "use strict";
-const env = (k) => (process.env?.[k] ?? "").toString();
+const env  = (k) => (process.env?.[k] ?? "").toString();
 const http = require("./lib/http");
 
 const json = (s, b) => ({
@@ -11,14 +11,9 @@ const safe = (s) => { try { return JSON.parse(s || "{}"); } catch { return {}; }
 
 exports.handler = async (event) => {
   try {
-    perl -0777 -pe 'BEGIN{$/=undef}
-s/process\.env\.GS_WEBHOOK_URL/env("GS_WEBHOOK_URL")/g;
-s/process\.env\.GS_WEBAPP_URL/env("GS_WEBAPP_URL")/g;
-s/process\.env\.GS_WEBAPP_KEY/env("GS_WEBAPP_KEY")/g;
-unless(/const env =/){s/"use strict";/"use strict";\nconst env = (k) => (process.env?.[k] ?? "").toString();/}' \
-  -i netlify/functions/monitor-feed.js
-    const WEBAPP_KEY = (env("GS_WEBAPP_KEY") || "").trim();
-    const SHEET_NAME = (process.env.SHEETS_EVENTS_SHEET || "Log_Event").trim(); // your tab name
+    const WEBAPP_URL = (env("GS_WEBHOOK_URL") || env("GS_WEBAPP_URL") || "").trim();
+    const WEBAPP_KEY = (env("GS_WEBAPP_KEY")   || "").trim();
+    const SHEET_NAME = (process.env.SHEETS_EVENTS_SHEET || "Log_Event").trim();
 
     if (!WEBAPP_URL) return json(400, { ok: false, error: "WEBAPP_URL not set" });
 
@@ -29,7 +24,7 @@ unless(/const env =/){s/"use strict";/"use strict";\nconst env = (k) => (process
         params: { key: WEBAPP_KEY, action: "read", sheet: SHEET_NAME },
         timeout: 15000,
       });
-      const raw = r.data?.data ?? r.data;
+      const raw    = r.data?.data ?? r.data;
       const events = Array.isArray(raw) ? raw : (raw && raw.ts ? [raw] : []);
       return json(200, { ok: true, events });
     }
@@ -54,6 +49,6 @@ unless(/const env =/){s/"use strict";/"use strict";\nconst env = (k) => (process
 
     return json(405, { ok: false, error: "METHOD" });
   } catch (e) {
-    return json(500, { ok: false, error: String(e && e.message || e) });
+    return json(500, { ok: false, error: String((e && e.message) || e) });
   }
 };

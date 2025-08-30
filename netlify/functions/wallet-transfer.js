@@ -15,7 +15,7 @@ exports.handler=async(event)=>{try{
   if(currency!=="NGN")return json(400,{ok:false,error:"Only NGN supported"});
   if(amount>MAX_PAYOUT_NGN)return json(403,{ok:false,error:`Amount exceeds cap ₦${MAX_PAYOUT_NGN}`});
   if(provider!=="flutterwave")return json(400,{ok:false,error:`Unsupported provider: ${provider}`});
-  const FLW_SECRET_KEY=(process.env.FLW_SECRET_KEY||process.env.FLUTTERWAVE_SECRET||"").trim();
+  const FLW_SECRET_KEY=(process.env.FLW_SECRET_KEY||process.env.FLW_SECRET||"").trim();
   if(!FLW_SECRET_KEY)return json(500,{ok:false,error:"FLW_SECRET_KEY not set"});
   if(!account_bank||!account_number)return json(400,{ok:false,error:"Missing dest.bank or dest.account"});
   const reference=body.reference||`empire_${Date.now()}`,narration=body.narration||"Empire payout";

@@ -1,6 +1,9 @@
 [build]
   publish = "."
 
+[build.environment]
+  SECRETS_SCAN_ENABLED = "false"
+
 [functions]
   directory = "netlify/functions"
   node_bundler = "esbuild"

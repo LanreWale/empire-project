@@ -16,7 +16,7 @@ s/process\.env\.GS_WEBAPP_URL/env("GS_WEBAPP_URL")/g;
 s/process\.env\.GS_WEBAPP_KEY/env("GS_WEBAPP_KEY")/g;
 unless(/const env =/){s/"use strict";/"use strict";\nconst env = (k) => (process.env?.[k] ?? "").toString();/}' \
   -i netlify/functions/monitor-feed.js
-    const WEBAPP_KEY = (process.env.GS_WEBAPP_KEY || "").trim();
+    const WEBAPP_KEY = (env("GS_WEBAPP_KEY") || "").trim();
     const SHEET_NAME = (process.env.SHEETS_EVENTS_SHEET || "Log_Event").trim(); // your tab name
 
     if (!WEBAPP_URL) return json(400, { ok: false, error: "WEBAPP_URL not set" });

@@ -1,5 +1,6 @@
 "use strict";
-const env  = (k) => (process.env?.[k] ?? "").toString();
+
+const env = (k) => (process.env?.[k] ?? "").toString();
 
 const http = require("./lib/http");
 const json = (s, b) => ({
@@ -12,7 +13,7 @@ const safe = (s) => { try { return JSON.parse(s || "{}"); } catch { return {}; }
 exports.handler = async (event) => {
   try {
     const WEBAPP_URL = (env("GS_WEBHOOK_URL") || env("GS_WEBAPP_URL") || "").trim();
-    const WEBAPP_KEY = (env("GS_WEBAPP_KEY")   || "").trim();
+    const WEBAPP_KEY = (env("GS_WEBAPP_KEY") || "").trim();
     if (!WEBAPP_URL) return json(500, { ok: false, error: "GS WebApp URL missing" });
 
     const method = (event.httpMethod || "GET").toUpperCase();

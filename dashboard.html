@@ -1,459 +1,616 @@
-<script>
-/* ====================== CONFIG ====================== */
-const BASE   = (window.EMPIRE_API || '/.netlify/functions').replace(/\/+$/,'');
-const GAS    = (window.GAS_URL || '').replace(/\/+$/,'');
-const INVITE = "https://superlative-pothos-ebf5f2.netlify.app/?ref=SUPREME_COMMANDER";
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Empire Admin</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-/* ====================== UTILS ======================= */
-const $ = id => document.getElementById(id);
-const q = (s, r=document) => r.querySelector(s);
-const qa = (s, r=document) => Array.from(r.querySelectorAll(s));
-const fmtUSD = n => new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(+n||0);
-const num = n => (+n||0).toLocaleString();
-const pct = n => ((+n||0)*100).toFixed(1)+'%';
-const esc = s => String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  <!-- Minimal styling -->
+  <style>
+    :root{
+      --bg:#0b0f14; --card:#121821; --muted:#9fb0c0; --text:#eaf2fa; --ok:#1db954; --warn:#f5a524; --down:#e11d48; --accent:#2eaadc;
+      --br:14px;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 system-ui,Segoe UI,Roboto,Helvetica,Arial}
+    .wrap{max-width:1200px;margin:0 auto;padding:18px}
+    .nav{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+    .nav button{background:#0f1520;color:#fff;border:1px solid #243142;border-radius:10px;padding:10px 14px;cursor:pointer}
+    .nav button.active{background:var(--accent);border-color:var(--accent)}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+    .kpi{font-weight:800;font-size:26px}
+    .card{background:var(--card);border:1px solid #1d2734;border-radius:var(--br);padding:14px}
+    .muted{color:var(--muted)}
+    .badge{display:inline-block;padding:4px 8px;border-radius:999px;font-weight:700}
+    .badge.ok{background:#0f2a1b;color:#7dffaf}
+    .badge.warn{background:#2a230f;color:#ffe07d}
+    .badge.down{background:#2a0f16;color:#ff90a5}
+    .hidden{display:none !important}
+    .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    .row > *{flex:1}
+    input,select,textarea{width:100%;background:#0f1520;border:1px solid #243142;color:#fff;border-radius:10px;padding:10px}
+    label{display:block;margin-top:10px;margin-bottom:6px;color:#cfe3f5}
+    .btn{background:var(--accent);color:#000;border:0;padding:10px 14px;border-radius:10px;cursor:pointer;font-weight:700}
+    .btn.alt{background:#1f2937;color:#fff}
+    table{width:100%;border-collapse:collapse}
+    th,td{padding:8px;border-bottom:1px solid #203044}
+    .status{padding:2px 8px;border-radius:999px;background:#162336}
+    .note{padding:10px;border-radius:10px}
+    .note.err{background:#2a1217;color:#ff9fb0;border:1px solid #53202a}
+    pre{white-space:pre-wrap;word-wrap:break-word}
+  </style>
 
-/* ---- FX rate (runtime; never embed secret literal) ---- */
-let __FX_RATE = null;
-async function ensureRate() {
-  if (__FX_RATE === null) {
-    const r = await fetch("/.netlify/functions/fx-rate", { headers: { "cache-control": "no-store" }});
-    const j = await r.json();
-    __FX_RATE = Number(j.usd_rate || 0) || 0;
+  <!-- Chart.js (for Overview/Analytics) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
+</head>
+<body>
+  <div class="wrap">
+    <div class="nav">
+      <button class="active" data-tab="dashboard">Overview</button>
+      <button data-tab="cpa">CPA</button>
+      <button data-tab="users">Users</button>
+      <button data-tab="analytics">Analytics</button>
+      <button data-tab="wallet">Wallet</button>
+      <button data-tab="security">Security</button>
+      <button data-tab="monitoring">Monitoring</button>
+    </div>
+
+    <!-- OVERVIEW -->
+    <section id="view-dashboard">
+      <div class="grid">
+        <div class="card"><div class="muted">Earnings</div><div id="kpi-earn" class="kpi">$0</div></div>
+        <div class="card"><div class="muted">Active Users</div><div id="kpi-active" class="kpi">0</div></div>
+        <div class="card"><div class="muted">Pending</div><div id="kpi-pending" class="kpi">0</div></div>
+        <div class="card"><div class="muted">Clicks</div><div id="kpi-clicks" class="kpi">0</div></div>
+        <div class="card"><div class="muted">Approval Rate</div><div id="kpi-approval" class="kpi">—</div></div>
+        <div class="card"><div class="muted">Conversion Rate</div><div id="kpi-cr" class="kpi">—</div></div>
+      </div>
+      <div class="grid" style="margin-top:14px">
+        <div class="card"><canvas id="chartMonthly" height="180"></canvas></div>
+        <div class="card"><canvas id="chartGeo" height="180"></canvas></div>
+      </div>
+      <div class="card" style="margin-top:14px">
+        <div class="muted" style="margin-bottom:8px">Live Feed</div>
+        <table id="tbl-live"><thead><tr><th>Time</th><th>Country</th><th>Offer</th><th>Device</th><th>Clicks</th><th>Leads</th><th>Earnings</th></tr></thead><tbody></tbody></table>
+      </div>
+    </section>
+
+    <!-- CPA -->
+    <section id="view-cpa" class="hidden">
+      <div id="cpaGrid" class="grid"></div>
+      <div class="card" style="margin-top:14px">
+        <div class="row">
+          <button id="btnAddCpaOpen" class="btn alt" type="button">Add CPA Account</button>
+          <span id="cpaNote" class="note ok hidden">Saved!</span>
+        </div>
+      </div>
+      <div id="modalAddCpa" class="card hidden" style="margin-top:14px">
+        <div class="row"><div><label>Name</label><input id="cpaName"></div><div><label>Domain</label><input id="cpaDomain"></div></div>
+        <div class="row"><div><label>User Id</label><input id="cpaUserId"></div><div><label>API Key</label><input id="cpaApiKey"></div></div>
+        <div class="row"><div><label>Starting Revenue (USD)</label><input id="cpaStartRev" type="number" step="0.01"></div></div>
+        <div class="row"><button id="btnAddCpaSave" class="btn" type="button">Save</button><button id="btnAddCpaClose" class="btn alt" type="button">Close</button></div>
+      </div>
+    </section>
+
+    <!-- USERS -->
+    <section id="view-users" class="hidden">
+      <div class="card">
+        <div class="muted" style="margin-bottom:6px">Pending</div>
+        <table><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Action</th></tr></thead><tbody id="pendingBody"></tbody></table>
+      </div>
+      <div class="card" style="margin-top:14px">
+        <div class="muted" style="margin-bottom:6px">Approved</div>
+        <table><thead><tr><th>Name</th><th>Email</th><th>WhatsApp</th><th>Bank</th><th>Account</th><th>Authority</th><th>Status</th></tr></thead><tbody id="usersBody"></tbody></table>
+      </div>
+
+      <div class="card" style="margin-top:14px">
+        <div class="row">
+          <button id="btnAddUserOpen" class="btn alt" type="button">Add User</button>
+          <span id="userNote" class="note ok hidden">Saved!</span>
+        </div>
+      </div>
+      <div id="modalAddUser" class="card hidden" style="margin-top:14px">
+        <div class="row"><div><label>Name</label><input id="uName"></div><div><label>Email</label><input id="uEmail" type="email"></div></div>
+        <div class="row"><div><label>WhatsApp</label><input id="uWa"></div><div><label>Authority</label>
+          <select id="uAuth"><option>User</option><option>Commander</option><option>Admin</option></select></div>
+        </div>
+        <div class="row"><div><label>Bank</label><input id="uBank"></div><div><label>Account</label><input id="uAcct"></div></div>
+        <div class="row"><button id="btnAddUserSave" class="btn" type="button">Save</button><button id="btnAddUserClose" class="btn alt" type="button">Close</button></div>
+      </div>
+    </section>
+
+    <!-- ANALYTICS -->
+    <section id="view-analytics" class="hidden">
+      <div class="grid">
+        <div class="card"><canvas id="chartMonthly2" height="200"></canvas></div>
+        <div class="card"><canvas id="chartGeo2" height="200"></canvas></div>
+      </div>
+      <div class="card" style="margin-top:14px">
+        <div class="muted" style="margin-bottom:8px">Live</div>
+        <table id="tbl-live2"><thead><tr><th>Time</th><th>Country</th><th>Offer</th><th>Device</th><th>Clicks</th><th>Leads</th><th>Earnings</th></tr></thead><tbody></tbody></table>
+      </div>
+    </section>
+
+    <!-- WALLET (Commander UI requires Admin Secret) -->
+    <section id="view-wallet" class="hidden">
+      <div class="grid">
+        <div class="card"><div class="muted">Available</div><div id="w-available" class="kpi">$0</div></div>
+        <div class="card"><div class="muted">Withdrawn</div><div id="w-withdraw" class="kpi">$0</div></div>
+        <div class="card"><div class="muted">Processing</div><div id="w-proc" class="kpi">$0</div></div>
+        <div class="card"><div class="muted">Remaining</div><div id="w-remaining" class="kpi">$0</div></div>
+      </div>
+
+      <div class="card" style="margin-top:14px">
+        <div class="row" style="align-items:flex-end">
+          <div>
+            <label>Amount (USD)</label>
+            <input id="psAmount" type="number" step="0.01" placeholder="e.g. 500" />
+            <div class="muted" id="psNairaHint" style="margin-top:6px">≈ ₦—</div>
+          </div>
+          <div>
+            <label>Account Number</label>
+            <input id="psAccount" inputmode="numeric" placeholder="0123456789" />
+          </div>
+          <div>
+            <label>Bank</label>
+            <input id="psBankQuery" placeholder="Type bank name (e.g., GTBank)" />
+            <select id="psBankSelect" style="margin-top:6px"></select>
+          </div>
+          <div>
+            <label>Account Name (optional)</label>
+            <input id="psAcctName" placeholder="e.g., John Doe" />
+          </div>
+        </div>
+        <div class="row" style="margin-top:10px">
+          <div>
+            <label>Reason</label>
+            <input id="psReason" placeholder="Affiliate withdrawal" />
+          </div>
+          <div style="max-width:220px">
+            <label>Admin Secret</label>
+            <input id="adminInput" placeholder="Set in Security tab" />
+          </div>
+          <div style="max-width:180px">
+            <label>&nbsp;</label>
+            <button id="psSubmit" class="btn" type="button" disabled>Send via Paystack</button>
+          </div>
+        </div>
+        <div id="psStatus" class="muted" style="margin-top:8px">Enter Admin Secret to enable payout.</div>
+      </div>
+
+      <div class="card" style="margin-top:14px">
+        <div class="muted" style="margin-bottom:6px">Recent Transactions</div>
+        <div id="walletList" class="grid"></div>
+      </div>
+    </section>
+
+    <!-- SECURITY -->
+    <section id="view-security" class="hidden">
+      <div class="card">
+        <div class="row">
+          <button id="btnAdminSet" class="btn" type="button">Set Admin Secret</button>
+          <button id="btnAdminClear" class="btn alt" type="button">Clear Admin Secret</button>
+          <span class="badge warn" id="admStatus">NOT SET</span>
+        </div>
+      </div>
+      <div class="card" style="margin-top:14px">
+        <div class="muted" style="margin-bottom:6px">Public Config</div>
+        <pre id="pubCfg">{}</pre>
+      </div>
+    </section>
+
+    <!-- MONITORING -->
+    <section id="view-monitoring" class="hidden">
+      <div class="grid">
+        <div class="card">Server <span id="serverBadge" class="badge down">OFFLINE</span></div>
+        <div class="card">DB <span id="dbBadge" class="badge down">OFFLINE</span></div>
+        <div class="card">Sheets <span id="sheetsBadge" class="badge down">OFFLINE</span></div>
+        <div class="card">AI <span id="aiBadge" class="badge down">OFFLINE</span></div>
+      </div>
+      <div class="card" style="margin-top:14px">
+        <div class="muted" style="margin-bottom:6px">Events</div>
+        <table><thead><tr><th>Time</th><th>Type</th><th>Message</th><th>Ref</th><th>Actor</th></tr></thead><tbody id="evBody"></tbody></table>
+      </div>
+    </section>
+  </div>
+
+  <!-- ========================= APP SCRIPT ========================= -->
+  <script>
+  /* ====================== CONFIG ====================== */
+  const BASE   = (window.EMPIRE_API || '/.netlify/functions').replace(/\/+$/,'');
+  const GAS    = (window.GAS_URL || '').replace(/\/+$/,'');
+  const INVITE = "https://superlative-pothos-ebf5f2.netlify.app/?ref=SUPREME_COMMANDER";
+
+  /* ====================== UTILS ======================= */
+  const $=id=>document.getElementById(id);
+  const q=(s,r=document)=>r.querySelector(s);
+  const qa=(s,r=document)=>Array.from(r.querySelectorAll(s));
+  const fmtUSD=n=> new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(+n||0);
+  const num=n=> (+n||0).toLocaleString();
+  const pct=n=> ((+n||0)*100).toFixed(1)+'%';
+  const esc=s=> String(s??'').replace(/[&<>"']/g,m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
+
+  /* ---- FX rate ---- */
+  let __FX_RATE = null;
+  async function ensureRate() {
+    if (__FX_RATE === null) {
+      const r = await fetch("/.netlify/functions/fx-rate", { headers: { "cache-control": "no-store" }});
+      const j = await r.json();
+      __FX_RATE = Number(j.usd_rate || 0) || 0;
+    }
+    return __FX_RATE;
   }
-  return __FX_RATE;
-}
 
-/* Admin secret in localStorage */
-const ADMIN_KEY = 'empire.admin.secret';
-function getAdmin(){ try{return localStorage.getItem(ADMIN_KEY)||'';}catch{return '';} }
-function setAdmin(v){ try{localStorage.setItem(ADMIN_KEY,v||'')}catch{}; paintAdmin(); }
-function paintAdmin(){ const has = !!getAdmin(); const el=$('admStatus'); if(el){ el.textContent = has?'SET':'NOT SET'; el.className='badge '+(has?'ok':'warn'); }}
-
-/* HTTP helpers */
-function headers(json=true, includeAdmin=false){
-  const h={};
-  if(json) h['Content-Type']='application/json';
-  const adm = includeAdmin && getAdmin();
-  if(adm) h['X-Admin-Secret']=adm;
-  return h;
-}
-async function fetchJSON(url, opts){ const r= await fetch(url, opts||{}); if(!r.ok) throw new Error(r.status+' '+url); return r.json(); }
-
-/* Primary→Fallback loader */
-async function loadMaybe(fnPath, gasParams){
-  try{ return await fetchJSON(BASE + fnPath, {headers: headers(false)}); } catch(e){}
-  if(!GAS) throw new Error('No GAS_URL set and primary failed: '+fnPath);
-  const u=new URL(GAS);
-  Object.entries(gasParams||{}).forEach(([k,v])=>u.searchParams.set(k,String(v)));
-  return await fetchJSON(u.toString(), {headers: headers(false)});
-}
-
-/* ======================== TABS ====================== */
-const views = {
-  dashboard: $('view-dashboard'),
-  cpa:       $('view-cpa'),
-  users:     $('view-users'),
-  analytics: $('view-analytics'),
-  wallet:    $('view-wallet'),
-  security:  $('view-security'),
-  monitoring:$('view-monitoring')
-};
-qa('.nav button').forEach(b=>{
-  b.addEventListener('click', ()=>{
-    qa('.nav button').forEach(x=>x.classList.remove('active'));
-    b.classList.add('active');
-    const k=b.dataset.tab;
-    Object.values(views).forEach(v=>v.classList.add('hidden'));
-    (views[k]||views.dashboard).classList.remove('hidden');
-    if(k==='dashboard') loadOverview().catch(console.warn);
-    if(k==='cpa')       loadCpa().catch(console.warn);
-    if(k==='users')     loadUsers().catch(console.warn);
-    if(k==='analytics') loadAnalytics().catch(console.warn);
-    if(k==='wallet')    loadWallet().catch(console.warn);
-    if(k==='security')  loadSecurity().catch(console.warn);
-    if(k==='monitoring')loadMonitoring().catch(console.warn);
-  });
-});
-
-/* =================== OVERVIEW ======================= */
-let chartMonthly1, chartGeo1;
-async function loadOverview(){
-  try{
-    const s = await loadMaybe('/summary', {summary:1});
-    $('kpi-earn').textContent     = fmtUSD(s.totalEarnings ?? s.earnings ?? 0);
-    $('kpi-active').textContent   = num(s.activeUsers ?? 0);
-    $('kpi-pending').textContent  = num(s.pending ?? 0);
-    $('kpi-clicks').textContent   = num(s.clicks ?? 0);
-    $('kpi-approval').textContent = s.approvalRate!=null ? (typeof s.approvalRate==='string'?s.approvalRate:pct(s.approvalRate)) : '—';
-    $('kpi-cr').textContent       = s.conversionRate!=null ? (typeof s.conversionRate==='string'?s.conversionRate:pct(s.conversionRate)) : '—';
-
-    const m = s.monthly || [];
-    const g = s.geo || s.geographic || [];
-    const live = s.live || [];
-
-    chartMonthly1 && chartMonthly1.destroy();
-    chartMonthly1 = new Chart($('#chartMonthly'), {
-      type:'line',
-      data:{ labels:m.map(x=>x.label||x.month),
-             datasets:[{ label:'Monthly Earnings', data:m.map(x=>x.value||x.amount||0), borderWidth:2, tension:.35 }]},
-      options:{plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}}}
-    });
-
-    chartGeo1 && chartGeo1.destroy();
-    chartGeo1 = new Chart($('#chartGeo'), {
-      type:'doughnut',
-      data:{ labels:g.map(x=>x.label||x.country),
-             datasets:[{ data:g.map(x=>x.value||x.amount||0)}]},
-      options:{plugins:{legend:{position:'right'}}}
-    });
-
-    const tb = $('#tbl-live').querySelector('tbody'); tb.innerHTML='';
-    live.forEach(r=>{
-      const tr=document.createElement('tr');
-      tr.innerHTML = `<td>${esc(r.time||'')}</td><td>${esc(r.country||'')}</td><td>${esc(r.offer||'')}</td>
-                      <td>${esc(r.device||'')}</td><td>${num(r.clicks||0)}</td><td>${num(r.leads||0)}</td>
-                      <td>${fmtUSD(r.earnings||0)}</td>`;
-      tb.appendChild(tr);
-    });
-  }catch(e){
-    console.warn('overview',e);
+  /* Admin secret in localStorage */
+  const ADMIN_KEY = 'empire.admin.secret';
+  function getAdmin(){ try{return localStorage.getItem(ADMIN_KEY)||'';}catch{return '';} }
+  function setAdmin(v){ try{localStorage.setItem(ADMIN_KEY,v||'')}catch{}; paintAdmin(); }
+  function paintAdmin(){ const has = !!getAdmin(); const el=$('admStatus'); if(el){ el.textContent = has?'SET':'NOT SET'; el.className='badge '+(has?'ok':'warn'); }
+    const ai=$('#adminInput'); if(ai) ai.value=getAdmin();
+    const btn=$('#psSubmit'); if(btn) btn.disabled = !has;
+    if(has){ $('#psStatus').textContent = 'Ready: Admin Secret present.'; } else { $('#psStatus').textContent = 'Enter Admin Secret to enable payout.'; }
   }
-}
 
-/* =================== CPA ACCOUNTS =================== */
-async function loadCpa(){
-  const grid = $('cpaGrid'); grid.innerHTML='';
-  try{
-    const r = await loadMaybe('/cpa-list', {cpa:1});
-    (r.items || r.accounts || []).forEach(acc=>{
-      const card=document.createElement('div'); card.className='card';
-      card.innerHTML = `
-        <div class="muted" style="margin-bottom:6px">${esc(acc.name||acc.id||'CPA')}</div>
-        <div style="display:flex;gap:10px;flex-wrap:wrap">
-          <div><div class="muted">Active Offers</div><div class="kpi" style="font-size:22px">${num(acc.offers||acc.activeOffers||0)}</div></div>
-          <div><div class="muted">Revenue</div><div class="kpi" style="font-size:22px">${fmtUSD(acc.revenue||0)}</div></div>
-          <div><div class="muted">Clicks</div><div class="kpi" style="font-size:22px">${num(acc.clicks||0)}</div></div>
-          <div><div class="muted">Conversion</div><div class="kpi" style="font-size:22px">${acc.conversionRate!=null?(typeof acc.conversionRate==='string'?acc.conversionRate:pct(acc.conversionRate)):'—'}</div></div>
-        </div>`;
-      grid.appendChild(card);
-    });
-    if(!grid.children.length) grid.innerHTML = `<div class="note err">No accounts loaded.</div>`;
-  }catch(e){
-    grid.innerHTML = `<div class="note err">Failed: ${esc(e.message)}</div>`;
+  /* HTTP helpers */
+  function headers(json=true, includeAdmin=false){
+    const h={};
+    if(json) h['Content-Type']='application/json';
+    const adm = includeAdmin && getAdmin();
+    if(adm) h['X-Admin-Secret']=adm;
+    return h;
   }
-  const open=$('#btnAddCpaOpen'), close=$('#btnAddCpaClose'), save=$('#btnAddCpaSave');
-  if(open) open.onclick = ()=> $('#modalAddCpa').classList.remove('hidden');
-  if(close) close.onclick= ()=> $('#modalAddCpa').classList.add('hidden');
-  if(save) save.onclick = async ()=>{
-    const payload={
-      name:$('#cpaName').value.trim(), domain:$('#cpaDomain').value.trim(),
-      user:$('#cpaUserId').value.trim(), apiKey:$('#cpaApiKey').value.trim(),
-      startingRevenue:+$('#cpaStartRev').value||0
-    };
+  async function fetchJSON(url, opts){ const r= await fetch(url, opts||{}); if(!r.ok) throw new Error(r.status+' '+url); return r.json(); }
+
+  /* Primary→Fallback loader (GETs) */
+  async function loadMaybe(fnPath, gasParams){
+    try{ return await fetchJSON(BASE + fnPath, {headers: headers(false)}); } catch(e){}
+    if(!GAS) throw new Error('No GAS_URL set and primary failed: '+fnPath);
+    const u=new URL(GAS);
+    Object.entries(gasParams||{}).forEach(([k,v])=>u.searchParams.set(k,String(v)));
+    return await fetchJSON(u.toString(), {headers: headers(false)});
+  }
+
+  /* =================== OVERVIEW ======================= */
+  let chartMonthly1, chartGeo1;
+  async function loadOverview(){
     try{
-      await fetchJSON(BASE+'/cpa-add',{method:'POST',headers:headers(true,true),body:JSON.stringify(payload)});
-      $('#cpaNote').classList.remove('hidden'); setTimeout(()=>location.hash='#cpa',1000);
-    }catch(e){ alert('Save failed: '+e.message); }
-  };
-}
+      const s = await loadMaybe('/summary', {summary:1});
+      $('kpi-earn').textContent     = fmtUSD(s.totalEarnings ?? s.earnings ?? 0);
+      $('kpi-active').textContent   = num(s.activeUsers ?? 0);
+      $('kpi-pending').textContent  = num(s.pending ?? 0);
+      $('kpi-clicks').textContent   = num(s.clicks ?? 0);
+      $('kpi-approval').textContent = s.approvalRate!=null ? (typeof s.approvalRate==='string'?s.approvalRate:pct(s.approvalRate)) : '—';
+      $('kpi-cr').textContent       = s.conversionRate!=null ? (typeof s.conversionRate==='string'?s.conversionRate:pct(s.conversionRate)) : '—';
 
-/* =================== USERS ========================== */
-async function loadUsers(){
-  try{
-    const p = await loadMaybe('/users/pending', {pending:1});
-    const body = $('pendingBody'); if(body){ body.innerHTML='';
-      (p.items || p.users || []).forEach(u=>{
+      const m = s.monthly || [];
+      const g = s.geo || s.geographic || [];
+      const live = s.live || [];
+
+      chartMonthly1 && chartMonthly1.destroy();
+      chartMonthly1 = new Chart($('#chartMonthly'), {
+        type:'line',
+        data:{ labels:m.map(x=>x.label||x.month),
+               datasets:[{ label:'Monthly Earnings', data:m.map(x=>x.value||x.amount||0), borderWidth:2, tension:.35 }]},
+        options:{plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}}}
+      });
+
+      chartGeo1 && chartGeo1.destroy();
+      chartGeo1 = new Chart($('#chartGeo'), {
+        type:'doughnut',
+        data:{ labels:g.map(x=>x.label||x.country),
+               datasets:[{ data:g.map(x=>x.value||x.amount||0)}]},
+        options:{plugins:{legend:{position:'right'}}}
+      });
+
+      const tb = $('#tbl-live').querySelector('tbody'); tb.innerHTML='';
+      live.forEach(r=>{
         const tr=document.createElement('tr');
-        tr.innerHTML = `<td>${esc(u.name||'')}</td><td>${esc(u.email||'')}</td><td>${esc(u.phone||'')}</td>
-                        <td><button class="btn alt btnApprove" data-id="${esc(u.id||'')}">Approve</button></td>`;
-        body.appendChild(tr);
+        tr.innerHTML = `<td>${esc(r.time||'')}</td><td>${esc(r.country||'')}</td><td>${esc(r.offer||'')}</td>
+                        <td>${esc(r.device||'')}</td><td>${num(r.clicks||0)}</td><td>${num(r.leads||0)}</td>
+                        <td>${fmtUSD(r.earnings||0)}</td>`;
+        tb.appendChild(tr);
       });
-      body.querySelectorAll('.btnApprove').forEach(btn=>{
-        btn.onclick= async ()=>{
-          try{
-            await fetchJSON(BASE+'/admin-pending',{method:'POST',headers:headers(true,true),body:JSON.stringify({id:btn.dataset.id, action:'approve'})});
-            loadUsers();
-          }catch(e){ alert('Approve failed: '+e.message); }
-        };
-      });
+    }catch(e){
+      console.warn('overview',e);
     }
-  }catch(e){ const body=$('pendingBody'); if(body) body.innerHTML=`<tr><td colspan="4">Failed: ${esc(e.message)}</td></tr>`; }
+  }
 
-  try{
-    const a = await loadMaybe('/users/approved', {approved:1});
-    const body = $('usersBody'); if(body){ body.innerHTML='';
-      (a.items || a.users || []).forEach(u=>{
-        const tr=document.createElement('tr');
-        tr.innerHTML = `<td>${esc(u.name||'')}</td><td>${esc(u.email||'')}</td><td>${esc(u.whatsapp||'')}</td>
-                        <td>${esc(u.bank||'')}</td><td>${esc(u.account||'')}</td>
-                        <td>${esc(u.authority||'User')}</td><td><span class="status ${esc(u.status||'ACTIVE')}">${esc(u.status||'ACTIVE')}</span></td>`;
-        body.appendChild(tr);
-      });
-    }
-  }catch(e){ const body=$('usersBody'); if(body) body.innerHTML=`<tr><td colspan="7">Failed: ${esc(e.message)}</td></tr>`; }
-
-  const open=$('#btnAddUserOpen'), close=$('#btnAddUserClose'), save=$('#btnAddUserSave');
-  if(open) open.onclick = ()=> $('#modalAddUser').classList.remove('hidden');
-  if(close) close.onclick= ()=> $('#modalAddUser').classList.add('hidden');
-  if(save) save.onclick = async ()=>{
-    const payload={name:$('#uName').value,email:$('#uEmail').value,whatsapp:$('#uWa').value,authority:$('#uAuth').value,bank:$('#uBank').value,account:$('#uAcct').value};
+  /* =================== CPA =================== */
+  async function loadCpa(){
+    const grid = $('cpaGrid'); grid.innerHTML='';
     try{
-      await fetchJSON(BASE+'/users-add',{method:'POST',headers:headers(true,true),body:JSON.stringify(payload)});
-      $('#userNote').classList.remove('hidden'); setTimeout(()=>location.hash='#users',1000);
-    }catch(e){ alert('Save failed: '+e.message); }
-  };
-}
-
-/* =================== ANALYTICS ====================== */
-let chartMonthly2, chartGeo2;
-async function loadAnalytics(){
-  try{
-    const s = await loadMaybe('/analytics/summary', {analytics:1});
-    const m = s.monthly || [];
-    const g = s.geo || s.geographic || [];
-    const live = s.live || [];
-
-    chartMonthly2 && chartMonthly2.destroy();
-    chartMonthly2 = new Chart($('#chartMonthly2'), {
-      type:'bar',
-      data:{ labels:m.map(x=>x.label||x.month), datasets:[{ label:'Monthly', data:m.map(x=>x.value||x.amount||0)}] },
-      options:{plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}}}
-    });
-
-    chartGeo2 && chartGeo2.destroy();
-    chartGeo2 = new Chart($('#chartGeo2'), {
-      type:'pie',
-      data:{ labels:g.map(x=>x.label||x.country), datasets:[{ data:g.map(x=>x.value||x.amount||0)}] }
-    });
-
-    const tb = $('#tbl-live2').querySelector('tbody'); tb.innerHTML='';
-    live.forEach(r=>{
-      const tr=document.createElement('tr');
-      tr.innerHTML = `<td>${esc(r.time||'')}</td><td>${esc(r.country||'')}</td><td>${esc(r.offer||'')}</td>
-                      <td>${esc(r.device||'')}</td><td>${num(r.clicks||0)}</td><td>${num(r.leads||0)}</td><td>${fmtUSD(r.earnings||0)}</td>`;
-      tb.appendChild(tr);
-    });
-  }catch(e){
-    console.warn('analytics',e);
-  }
-}
-
-/* =================== WALLET (view & Paystack) ======= */
-async function loadWallet(){
-  try{
-    const w = await loadMaybe('/wallet', {wallet:1});
-    $('w-available').textContent = fmtUSD(w.available ?? w.balance ?? 0);
-    $('w-withdraw').textContent  = fmtUSD(w.withdraw ?? 0);
-    $('w-proc').textContent      = fmtUSD(w.processing ?? 0);
-    const remaining = (w.available ?? w.balance ?? 0) - (w.withdraw ?? 0) - (w.processing ?? 0);
-    $('w-remaining').textContent = fmtUSD(remaining);
-
-    const list = $('walletList'); list.innerHTML='';
-    (w.items||w.history||[]).forEach(tx=>{
-      const wrap=document.createElement('div'); wrap.className='card';
-      wrap.innerHTML=`<div style="display:flex;justify-content:space-between">
-        <div><div class="muted">${esc(tx.method||'')}</div><div style="font-weight:800">${fmtUSD(tx.amount||0)}</div></div>
-        <div style="text-align:right"><div class="muted">${esc(tx.date||'')}</div><span class="status ${esc(tx.status||'COMPLETED')}">${esc(tx.status||'COMPLETED')}</span></div>
-      </div>`;
-      list.appendChild(wrap);
-    });
-  }catch(e){
-    $('walletList').innerHTML = `<div class="note err">Failed: ${esc(e.message)}</div>`;
-  }
-
-  // --- Paystack quick-withdraw UI wiring (only if elements exist) ---
-  setupPaystackUI();
-}
-
-/* ===== Paystack helpers (optional UI present) ===== */
-let __banksCache = null;
-
-async function loadBanks(){
-  if (__banksCache) return __banksCache;
-  try{
-    const r = await fetchJSON(`${BASE}/paystack-banks`);
-    __banksCache = (r.data || r.banks || []).map(b => ({
-      name: String(b.name||'').trim(),
-      code: String(b.code||'').trim()
-    }));
-  }catch(e){
-    __banksCache = [];
-  }
-  return __banksCache;
-}
-
-async function resolveAccount(bankCode, accountNumber){
-  const u = new URL(`${BASE}/paystack-resolve`, location.origin);
-  u.searchParams.set('bank_code', bankCode);
-  u.searchParams.set('account_number', accountNumber);
-  const r = await fetchJSON(u.toString());
-  const ok = r.status !== false && !!(r.data && r.data.account_name);
-  return { ok, name: (r.data && r.data.account_name) || '' };
-}
-
-async function submitPaystack(){
-  const btn = $('withdrawBtn');
-  const status = $('psStatus');
-  if (!btn || !status) return;
-  status.textContent = 'Submitting…';
-
-  try{
-    const usd = Number(($('amountUsd')||{}).value || 0);
-    const bankCode = String(($('bankCode')||{}).value || '').trim();
-    const acct = String(($('accountNumber')||{}).value || '').trim();
-    const acctName = String(($('accountName')||{}).value || '').trim();
-
-    if (!usd || !bankCode || !acct || !acctName) {
-      status.textContent = 'Missing amount / bank / account / name';
-      return;
+      const r = await loadMaybe('/cpa-list', {cpa:1});
+      (r.items || r.accounts || []).forEach(acc=>{
+        const card=document.createElement('div'); card.className='card';
+        card.innerHTML = `
+          <div class="muted" style="margin-bottom:6px">${esc(acc.name||acc.id||'CPA')}</div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <div><div class="muted">Active Offers</div><div class="kpi" style="font-size:22px">${num(acc.offers||acc.activeOffers||0)}</div></div>
+            <div><div class="muted">Revenue</div><div class="kpi" style="font-size:22px">${fmtUSD(acc.revenue||0)}</div></div>
+            <div><div class="muted">Clicks</div><div class="kpi" style="font-size:22px">${num(acc.clicks||0)}</div></div>
+            <div><div class="muted">Conversion</div><div class="kpi" style="font-size:22px">${acc.conversionRate!=null?(typeof acc.conversionRate==='string'?acc.conversionRate:pct(acc.conversionRate)):'—'}</div></div>
+          </div>`;
+        grid.appendChild(card);
+      });
+      if(!grid.children.length) grid.innerHTML = `<div class="note err">No accounts loaded.</div>`;
+    }catch(e){
+      grid.innerHTML = `<div class="note err">Failed: ${esc(e.message)}</div>`;
     }
-
-    const payload = {
-      amountUSD: usd,
-      bank_code: bankCode,
-      account_number: acct,
-      name: acctName,
-      reason: 'Affiliate withdrawal'
+    const open=$('#btnAddCpaOpen'), close=$('#btnAddCpaClose'), save=$('#btnAddCpaSave');
+    if(open) open.onclick = ()=> $('#modalAddCpa').classList.remove('hidden');
+    if(close) close.onclick= ()=> $('#modalAddCpa').classList.add('hidden');
+    if(save) save.onclick = async ()=>{
+      const payload={
+        name:$('#cpaName').value.trim(), domain:$('#cpaDomain').value.trim(),
+        user:$('#cpaUserId').value.trim(), apiKey:$('#cpaApiKey').value.trim(),
+        startingRevenue:+$('#cpaStartRev').value||0
+      };
+      try{
+        await fetchJSON(BASE+'/cpa-add',{method:'POST',headers:headers(true,true),body:JSON.stringify(payload)});
+        $('#cpaNote').classList.remove('hidden'); setTimeout(()=>location.hash='#cpa',1000);
+      }catch(e){ alert('Save failed: '+e.message); }
     };
-
-    const res = await fetchJSON(`${BASE}/paystack-transfer-v2`, {
-      method: 'POST',
-      headers: headers(true, true),
-      body: JSON.stringify(payload)
-    });
-
-    status.textContent = res.ok ? 'Transfer submitted ✅' : ('Failed: '+(res.error||'unknown'));
-  }catch(e){
-    status.textContent = 'Error: ' + e.message;
-  }
-}
-
-function setupPaystackUI(){
-  // Only attach once
-  if (setupPaystackUI._wired) return;
-  setupPaystackUI._wired = true;
-
-  const bankSearch = $('bankSearch');   // text input for filtering banks
-  const bankCodeEl = $('bankCode');     // hidden/readonly to store code
-  const acctNumEl  = $('accountNumber');
-  const acctNameEl = $('accountName');
-  const chooseEl   = $('bankChoose');   // <select> or <datalist> target
-  const btn        = $('withdrawBtn');
-  const status     = $('psStatus');
-
-  if (!bankSearch && !chooseEl && !btn) return; // UI not present; skip
-
-  // Load & populate bank list (if dropdown/datalist exists)
-  loadBanks().then(list=>{
-    if (!chooseEl) return;
-    chooseEl.innerHTML = '';
-    list.forEach(b=>{
-      const opt = document.createElement('option');
-      opt.value = b.code;
-      opt.textContent = `${b.name} (${b.code})`;
-      chooseEl.appendChild(opt);
-    });
-  });
-
-  // Simple search: update code field when user types exact match name/code
-  if (bankSearch && bankCodeEl) {
-    bankSearch.addEventListener('input', async ()=>{
-      const term = bankSearch.value.trim().toLowerCase();
-      const banks = await loadBanks();
-      const hit = banks.find(b => b.code === term || b.name.toLowerCase() === term);
-      bankCodeEl.value = hit ? hit.code : '';
-    });
-  }
-  if (chooseEl && bankCodeEl) {
-    chooseEl.addEventListener('change', ()=>{
-      bankCodeEl.value = chooseEl.value || '';
-    });
   }
 
-  // Resolve account name automatically when both bank+account present
-  if (acctNumEl && bankCodeEl && acctNameEl) {
-    const maybeResolve = async ()=>{
-      const code = bankCodeEl.value.trim();
-      const n = acctNumEl.value.trim();
-      if (code && n.length >= 10) {
-        status && (status.textContent = 'Resolving account…');
-        try{
-          const { ok, name } = await resolveAccount(code, n);
-          if (ok) { acctNameEl.value = name; status && (status.textContent = 'Account verified ✅'); }
-          else    { status && (status.textContent = 'Cannot resolve account'); }
-        }catch(e){ status && (status.textContent = 'Resolve failed'); }
+  /* =================== USERS =================== */
+  async function loadUsers(){
+    // pending
+    try{
+      const p = await loadMaybe('/users/pending', {pending:1});
+      const body = $('pendingBody'); if(body){ body.innerHTML='';
+        (p.items || p.users || []).forEach(u=>{
+          const tr=document.createElement('tr');
+          tr.innerHTML = `<td>${esc(u.name||'')}</td><td>${esc(u.email||'')}</td><td>${esc(u.phone||'')}</td>
+                          <td><button class="btn alt btnApprove" data-id="${esc(u.id||'')}">Approve</button></td>`;
+          body.appendChild(tr);
+        });
+        body.querySelectorAll('.btnApprove').forEach(btn=>{
+          btn.onclick= async ()=>{
+            try{
+              await fetchJSON(BASE+'/admin-pending',{method:'POST',headers:headers(true,true),body:JSON.stringify({id:btn.dataset.id, action:'approve'})});
+              loadUsers();
+            }catch(e){ alert('Approve failed: '+e.message); }
+          };
+        });
       }
-    };
-    acctNumEl.addEventListener('blur', maybeResolve);
-    bankCodeEl.addEventListener('change', maybeResolve);
-  }
+    }catch(e){ const body=$('pendingBody'); if(body) body.innerHTML=`<tr><td colspan="4">Failed: ${esc(e.message)}</td></tr>`; }
 
-  // Submit
-  if (btn) btn.addEventListener('click', submitPaystack);
-}
-
-/* =================== SECURITY ======================= */
-async function loadSecurity(){
-  paintAdmin();
-  const setBtn=$('btnAdminSet'), clrBtn=$('btnAdminClear');
-  if(setBtn) setBtn.onclick   = ()=>{ const v=prompt('Set admin secret'); if(v) setAdmin(v); };
-  if(clrBtn) clrBtn.onclick   = ()=> setAdmin('');
-
-  try{
-    const cfg = await loadMaybe('/public-config', {config:1});
-    $('pubCfg').textContent = JSON.stringify(cfg,null,2);
-  }catch(e){
-    $('pubCfg').textContent = 'Failed to load public config: '+e.message;
-  }
-}
-
-/* =================== MONITORING ===================== */
-async function paintBadges(st){
-  const set=(el,ok)=>{ el.textContent = ok?'ONLINE':'OFFLINE'; el.className='badge '+(ok?'ok':'down'); };
-  set($('serverBadge'),  st.server   !==false);
-  set($('dbBadge'),      st.db       !==false);
-  set($('sheetsBadge'),  st.sheets   !==false);
-  set($('aiBadge'),      st.ai       !==false);
-  set($('h-server'),     st.server   !==false);
-  set($('h-db'),         st.db       !==false);
-  set($('h-sheets'),     st.sheets   !==false);
-  set($('h-ai'),         st.ai       !==false);
-}
-async function loadMonitoring(){
-  try{
-    const r = await loadMaybe('/monitor-health', {health:1});
-    await paintBadges(r||{});
-    const body=$('evBody'); body.innerHTML='';
+    // approved
     try{
-      const feed = await loadMaybe('/monitor-feed', {feed:1});
-      (feed.events||[]).forEach(e=>{
-        const tr=document.createElement('tr');
-        tr.innerHTML=`<td>${esc(e.time||'')}</td><td>${esc(e.type||'')}</td><td>${esc(e.msg||'')}</td><td>${esc(e.ref||'')}</td><td>${esc(e.actor||'')}</td>`;
-        body.appendChild(tr);
+      const a = await loadMaybe('/users/approved', {approved:1});
+      const body = $('usersBody'); if(body){ body.innerHTML='';
+        (a.items || a.users || []).forEach(u=>{
+          const tr=document.createElement('tr');
+          tr.innerHTML = `<td>${esc(u.name||'')}</td><td>${esc(u.email||'')}</td><td>${esc(u.whatsapp||'')}</td>
+                          <td>${esc(u.bank||'')}</td><td>${esc(u.account||'')}</td>
+                          <td>${esc(u.authority||'User')}</td><td><span class="status ${esc(u.status||'ACTIVE')}">${esc(u.status||'ACTIVE')}</span></td>`;
+          body.appendChild(tr);
+        });
+      }
+    }catch(e){ const body=$('usersBody'); if(body) body.innerHTML=`<tr><td colspan="7">Failed: ${esc(e.message)}</td></tr>`; }
+
+    // modals (UI only)
+    const open=$('#btnAddUserOpen'), close=$('#btnAddUserClose'), save=$('#btnAddUserSave');
+    if(open) open.onclick = ()=> $('#modalAddUser').classList.remove('hidden');
+    if(close) close.onclick= ()=> $('#modalAddUser').classList.add('hidden');
+    if(save) save.onclick = async ()=>{
+      const payload={name:$('#uName').value,email:$('#uEmail').value,whatsapp:$('#uWa').value,authority:$('#uAuth').value,bank:$('#uBank').value,account:$('#uAcct').value};
+      try{
+        await fetchJSON(BASE+'/users-add',{method:'POST',headers:headers(true,true),body:JSON.stringify(payload)});
+        $('#userNote').classList.remove('hidden'); setTimeout(()=>location.hash='#users',1000);
+      }catch(e){ alert('Save failed: '+e.message); }
+    };
+  }
+
+  /* =================== ANALYTICS =================== */
+  let chartMonthly2, chartGeo2;
+  async function loadAnalytics(){
+    try{
+      const s = await loadMaybe('/analytics/summary', {analytics:1});
+      const m = s.monthly || [];
+      const g = s.geo || s.geographic || [];
+      const live = s.live || [];
+
+      chartMonthly2 && chartMonthly2.destroy();
+      chartMonthly2 = new Chart($('#chartMonthly2'), {
+        type:'bar',
+        data:{ labels:m.map(x=>x.label||x.month), datasets:[{ label:'Monthly', data:m.map(x=>x.value||x.amount||0)}] },
+        options:{plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}}}
       });
-    }catch(_){}
-    if(!loadMonitoring._timer){
-      loadMonitoring._timer = setInterval(()=>{
-        if(!views.monitoring.classList.contains('hidden')) loadMonitoring().catch(()=>{});
-      },15000);
+
+      chartGeo2 && chartGeo2.destroy();
+      chartGeo2 = new Chart($('#chartGeo2'), {
+        type:'pie',
+        data:{ labels:g.map(x=>x.label||x.country), datasets:[{ data:g.map(x=>x.value||x.amount||0)}] }
+      });
+
+      const tb = $('#tbl-live2').querySelector('tbody'); tb.innerHTML='';
+      live.forEach(r=>{
+        const tr=document.createElement('tr');
+        tr.innerHTML = `<td>${esc(r.time||'')}</td><td>${esc(r.country||'')}</td><td>${esc(r.offer||'')}</td>
+                        <td>${esc(r.device||'')}</td><td>${num(r.clicks||0)}</td><td>${num(r.leads||0)}</td><td>${fmtUSD(r.earnings||0)}</td>`;
+        tb.appendChild(tr);
+      });
+    }catch(e){
+      console.warn('analytics',e);
     }
-  }catch(e){
-    $('evBody').innerHTML = `<tr><td colspan="5">Failed: ${esc(e.message)}</td></tr>`;
-  }
-}
-
-/* ================ INIT ============================== */
-window.addEventListener('DOMContentLoaded', ()=>{
-  loadOverview().catch(console.warn);
-  const inv = $('inviteLink'); if(inv) inv.value = INVITE;
-
-  const h = (location.hash||'').replace('#','');
-  if(h && views[h]){
-    qa('.nav button').forEach(b=>{ if(b.dataset.tab===h) b.click(); });
   }
 
-  // If wallet tab is default-opened in markup, wire paystack now too
-  setupPaystackUI();
-});
-</script>
+  /* =================== BANK LIST + WALLET =================== */
+  let __BANKS = [];
+  let __BANKS_LOADED = false;
+
+  async function loadBanks(){
+    if(__BANKS_LOADED) return __BANKS;
+    try{
+      const r = await fetchJSON(BASE+'/paystack-banks');
+      __BANKS = (r?.data || r?.banks || []).map(b=>({code:b.code || b.id || '', name:b.name || ''}))
+                 .filter(b=>b.code && b.name);
+      __BANKS_LOADED = true;
+    }catch(e){
+      console.warn('banks load failed', e);
+      __BANKS = [];
+    }
+    paintBanks('');
+    return __BANKS;
+  }
+
+  function paintBanks(query){
+    const sel = $('#psBankSelect');
+    if(!sel) return;
+    const qstr = (query||'').toLowerCase();
+    const list = __BANKS.filter(b=>!qstr || b.name.toLowerCase().includes(qstr));
+    sel.innerHTML = list.map(b=>`<option value="${esc(b.code)}">${esc(b.name)}  —  ${esc(b.code)}</option>`).join('') || '<option value="">(no banks loaded)</option>';
+  }
+
+  async function loadWallet(){
+    try{
+      const w = await loadMaybe('/wallet', {wallet:1});
+      $('w-available').textContent = fmtUSD(w.available ?? w.balance ?? 0);
+      $('w-withdraw').textContent  = fmtUSD(w.withdraw ?? 0);
+      $('w-proc').textContent      = fmtUSD(w.processing ?? 0);
+      const remaining = (w.available ?? w.balance ?? 0) - (w.withdraw ?? 0) - (w.processing ?? 0);
+      $('w-remaining').textContent = fmtUSD(remaining);
+
+      const list = $('walletList'); list.innerHTML='';
+      (w.items||w.history||[]).forEach(tx=>{
+        const wrap=document.createElement('div'); wrap.className='card';
+        wrap.innerHTML=`<div style="display:flex;justify-content:space-between">
+          <div><div class="muted">${esc(tx.method||'')}</div><div style="font-weight:800">${fmtUSD(tx.amount||0)}</div></div>
+          <div style="text-align:right"><div class="muted">${esc(tx.date||tx.ts||'')}</div><span class="status ${esc(tx.status||'COMPLETED')}">${esc(tx.status||'COMPLETED')}</span></div>
+        </div>`;
+        list.appendChild(wrap);
+      });
+
+      // prepare bank list + listeners
+      await loadBanks();
+      $('#psBankQuery').addEventListener('input', (e)=>paintBanks(e.target.value));
+      const amt = $('#psAmount');
+      amt.addEventListener('input', async ()=>{
+        const rate = await ensureRate();
+        const naira = Math.round((+amt.value||0) * rate).toLocaleString();
+        $('#psNairaHint').textContent = `≈ ₦${naira}`;
+      });
+
+      // Admin wireup
+      $('#adminInput').addEventListener('change', (e)=>{ setAdmin(e.target.value.trim()); });
+
+      // Submit transfer
+      $('#psSubmit').addEventListener('click', async ()=>{
+        if(!getAdmin()){ alert('Set Admin Secret in Security tab first.'); return; }
+        try{
+          const amountUSD = +$('#psAmount').value || 0;
+          const account_number = $('#psAccount').value.trim();
+          const bank_code = $('#psBankSelect').value.trim();
+          const name = $('#psAcctName').value.trim();
+          const reason = $('#psReason').value.trim() || 'Affiliate withdrawal';
+          if(!amountUSD || !account_number || !bank_code){ alert('Amount, account number and bank are required.'); return; }
+
+          // call the v2 function
+          const res = await fetchJSON(BASE+'/paystack-transfer-v2', {
+            method:'POST',
+            headers: headers(true,true),
+            body: JSON.stringify({ amountUSD, account_number, bank_code, name, reason })
+          });
+
+          $('#psStatus').textContent = `Success: Ref = ${res?.paystack?.transfer?.data?.reference || res?.reference || 'OK'}`;
+          // optionally log to monitor-feed
+          try{
+            await fetchJSON(BASE+'/monitor-feed', {
+              method:'POST',
+              headers: headers(true,false),
+              body: JSON.stringify({ type:'PAYOUT', message:`Paystack ₦ via USD ${amountUSD}`, ref: res?.paystack?.transfer?.data?.reference || '', actor:'Commander' })
+            });
+          }catch(_){}
+        }catch(e){
+          $('#psStatus').textContent = `Failed: ${e.message}`;
+        }
+      });
+
+      // Reflect admin secret
+      paintAdmin();
+    }catch(e){
+      $('walletList').innerHTML = `<div class="note err">Failed: ${esc(e.message)}</div>`;
+    }
+  }
+
+  /* =================== SECURITY ======================= */
+  async function loadSecurity(){
+    paintAdmin();
+    const setBtn=$('btnAdminSet'), clrBtn=$('btnAdminClear');
+    if(setBtn) setBtn.onclick   = ()=>{ const v=prompt('Set admin secret'); if(v) setAdmin(v); };
+    if(clrBtn) clrBtn.onclick   = ()=> setAdmin('');
+
+    try{
+      const cfg = await loadMaybe('/public-config', {config:1});
+      $('pubCfg').textContent = JSON.stringify(cfg,null,2);
+    }catch(e){
+      $('pubCfg').textContent = 'Failed to load public config: '+e.message;
+    }
+  }
+
+  /* =================== MONITORING ===================== */
+  async function paintBadges(st){
+    const set=(el,ok)=>{ el.textContent = ok?'ONLINE':'OFFLINE'; el.className='badge '+(ok?'ok':'down'); };
+    set($('serverBadge'),  st.server   !==false);
+    set($('dbBadge'),      st.db       !==false);
+    set($('sheetsBadge'),  st.sheets   !==false);
+    set($('aiBadge'),      st.ai       !==false);
+  }
+  async function loadMonitoring(){
+    try{
+      const r = await loadMaybe('/monitor-health', {health:1});
+      await paintBadges(r||{});
+      const body=$('evBody'); body.innerHTML='';
+      try{
+        const feed = await loadMaybe('/monitor-feed', {feed:1});
+        (feed.events||[]).forEach(e=>{
+          const tr=document.createElement('tr');
+          tr.innerHTML=`<td>${esc(e.time||e.timestamp||'')}</td><td>${esc(e.type||'')}</td><td>${esc(e.msg||e.message||'')}</td><td>${esc(e.ref||'')}</td><td>${esc(e.actor||'')}</td>`;
+          body.appendChild(tr);
+        });
+      }catch(_){}
+      if(!loadMonitoring._timer){
+        loadMonitoring._timer = setInterval(()=>{
+          if(!q('#view-monitoring').classList.contains('hidden')) loadMonitoring().catch(()=>{});
+        },15000);
+      }
+    }catch(e){
+      $('evBody').innerHTML = `<tr><td colspan="5">Failed: ${esc(e.message)}</td></tr>`;
+    }
+  }
+
+  /* ================ NAV ============================== */
+  const views = {
+    dashboard: $('view-dashboard'),
+    cpa:       $('view-cpa'),
+    users:     $('view-users'),
+    analytics: $('view-analytics'),
+    wallet:    $('view-wallet'),
+    security:  $('view-security'),
+    monitoring:$('view-monitoring')
+  };
+  qa('.nav button').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      qa('.nav button').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active');
+      const k=b.dataset.tab;
+      Object.values(views).forEach(v=>v.classList.add('hidden'));
+      (views[k]||views.dashboard).classList.remove('hidden');
+      if(k==='dashboard') loadOverview().catch(console.warn);
+      if(k==='cpa')       loadCpa().catch(console.warn);
+      if(k==='users')     loadUsers().catch(console.warn);
+      if(k==='analytics') loadAnalytics().catch(console.warn);
+      if(k==='wallet')    loadWallet().catch(console.warn);
+      if(k==='security')  loadSecurity().catch(console.warn);
+      if(k==='monitoring')loadMonitoring().catch(console.warn);
+    });
+  });
+
+  /* ================ INIT ============================== */
+  window.addEventListener('DOMContentLoaded', ()=>{
+    loadOverview().catch(console.warn);
+  });
+  </script>
+</body>
+</html>

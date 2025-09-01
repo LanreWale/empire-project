@@ -627,3 +627,12 @@
   </script>
 </body>
 </html>
+
+<a href="#" id="logout">Logout</a>
+<script>
+  document.getElementById("logout")?.addEventListener("click",(e)=>{
+    e.preventDefault();
+    EmpireAuth.clear();
+    location.href="/login.html";
+  });
+</script>

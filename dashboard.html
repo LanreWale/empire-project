@@ -1,3 +1,9 @@
+<script src="/js/empire-auth.js"></script>
+<script>
+  if (!window.EmpireAuth?.has()) {
+    window.location.replace("/login.html");
+  }
+</script>
 <!doctype html>
 <html lang="en">
 <head>

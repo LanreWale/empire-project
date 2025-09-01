@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>The Empire — Welcome</title>
+  <style>
+    :root {
+      --bg:#0b0e12; --panel:#121624; --text:#e8eaed; --muted:#b6b9c2;
+      --gold:#f1c40f; --ink:#111318; --shadow:rgba(0,0,0,.5);
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+    .container{max-width:980px;margin:0 auto;padding:24px}
+    header.header{display:flex;align-items:center;gap:12px;padding:14px 16px;background:var(--panel);box-shadow:0 8px 20px -12px var(--shadow);border-bottom:1px solid rgba(255,255,255,.04)}
+    header .brand{display:flex;align-items:center;gap:10px}
+    header .brand img{width:28px;height:28px;border-radius:6px;box-shadow:0 6px 18px -8px rgba(241,196,15,.8)}
+    header .title{font-weight:700;letter-spacing:.3px}
+    header .title small{color:var(--muted);font-weight:500}
+    /* Tabs will mount below header */
+    #emp-tabs-mount{margin:8px 16px}
+
+    /* HERO */
+    .hero{position:relative;display:grid;place-items:center;min-height:64vh;overflow:hidden}
+    .hero:before{
+      content:"";position:absolute;inset:0;
+      background:url("/assets/brand/empire-hero.jpg") center/cover no-repeat;
+      opacity:.28;filter:grayscale(20%) blur(0px);
+      transform:scale(1.03);
+    }
+    .hero-inner{position:relative;text-align:center;padding:64px 18px}
+    .kicker{font-size:.9rem;color:var(--gold);font-weight:700;letter-spacing:.22em;text-transform:uppercase;margin-bottom:10px}
+    .hero h1{font-size:clamp(40px,8vw,84px);line-height:.95;margin-bottom:12px;letter-spacing:.02em}
+    .sub{font-size:clamp(16px,2.6vw,22px);color:var(--muted);max-width:780px;margin:0 auto 26px}
+    .cta-row{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+    .btn{border:none;border-radius:14px;padding:14px 22px;font-weight:700;cursor:pointer}
+    .btn-primary{background:var(--gold);color:#1a1200;box-shadow:0 12px 30px -14px var(--gold)}
+    .btn-ghost{background:#1a1f2b;border:1px solid rgba(255,255,255,.06);color:var(--text)}
+    footer{margin:36px 0 18px;text-align:center;color:var(--muted)}
+  </style>
+<link rel="stylesheet" href="/assets/css/empire-style.css">
+<script src="/assets/js/empire-layout.js" defer></script>
+</head>
+<body>
+  <header class="header">
+    <div class="brand">
+      <img src="/assets/brand/empire-logo.png" alt="Empire crown">
+      <div class="title">THE EMPIRE <small>— Command Interface</small></div>
+    </div>
+  </header>
+
+  <!-- Empire Tabs (loader) -->
+  <script>
+    fetch('/fragments/tabs.html').then(r=>r.text()).then(h=>{
+      const n=document.getElementById('emp-tabs-mount'); if(n) n.outerHTML=h;
+    });
+  </script>
+
+  <main class="container">
+    <section class="hero">
+      <div class="hero-inner">
+        <div class="kicker">⚔️ The Empire Affiliate System ⚔️</div>
+        <h1>Welcome to THE EMPIRE</h1>
+        <p class="sub">Automated. Intelligent. Profitable. 24/7.</p>
+        <div class="cta-row">
+          <a class="btn btn-primary" href="/login.html">Enter Command</a>
+          <a class="btn btn-ghost" href="/dashboard.html">View Dashboard</a>
+          <a class="btn btn-ghost" href="/admin/">Join HQ</a>
+        </div>
+      </div>
+    </section>
+
+    <footer>Commanding the Future of Affiliate Marketing</footer>
+  </main>
+</body>
+</html>

@@ -1,20 +1,13 @@
-// netlify/functions/users-pending.js
-"use strict";
-const { get } = require("./lib/gas");
+const { getJSON } = require('./lib/fetchFromSheet');
+const { jsonOK, jsonError, preflight } = require('./lib/http');
 
-const RESP = (code, obj) => ({
-  statusCode: code,
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify(obj),
-});
-
-exports.handler = async () => {
+exports.handler = async (event) => {
+  if (event.httpMethod === 'OPTIONS') return preflight();
   try {
-    // GAS should return: { ok:true, users:[{id,name,email,phone,...}] }
-    const data = await get({ action: "usersPending" });
-    if (!data.ok) return RESP(502, data);
-    return RESP(200, data);
+    const d = await getJSON('PENDING');
+    const pending = Array.isArray(d?.users) ? d.users : Array.isArray(d?.pending) ? d.pending : Array.isArray(d) ? d : [];
+    return jsonOK({ ok:true, users: pending, pendingReviews: pending.length });
   } catch (e) {
-    return RESP(500, { ok: false, error: String(e) });
+    return jsonError(e.message || e, 500);
   }
 };

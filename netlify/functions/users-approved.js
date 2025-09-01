@@ -1,20 +1,19 @@
-// netlify/functions/users-approved.js
-"use strict";
-const { get } = require("./lib/gas");
-
-const RESP = (code, obj) => ({
-  statusCode: code,
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify(obj),
-});
+const {getJSON, resolveURL, cors} = require("./lib/fetchFromSheet");
 
 exports.handler = async () => {
   try {
-    // GAS should return: { ok:true, users:[...] }
-    const data = await get({ action: "usersApproved" });
-    if (!data.ok) return RESP(502, data);
-    return RESP(200, data);
+    const url = resolveURL(
+      process.env.SHEETS_USERS_URL,
+      [
+        process.env.SHEETS_BASE_URL && `${process.env.SHEETS_BASE_URL}/users`,
+        process.env.EMPIRE_APPS_SCRIPT_BASE && `${process.env.EMPIRE_APPS_SCRIPT_BASE}/users`
+      ]
+    );
+    const data = await getJSON(url, {apikey: process.env.GS_WEBAPP_KEY});
+    const all = data.users ?? data ?? [];
+    const approved = all.filter(u => String(u.status || u.approval || "").toLowerCase() === "active");
+    return cors({ok:true, users: approved, totalEarnings: data.totalEarnings ?? 0, activeUsers: approved.length});
   } catch (e) {
-    return RESP(500, { ok: false, error: String(e) });
+    return cors({ok:false, error:String(e.message || e)}, 500);
   }
 };

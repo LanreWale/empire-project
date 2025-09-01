@@ -1,21 +1,18 @@
-// netlify/functions/health.js
-"use strict";
-const { get } = require("./lib/gas");
+import { preflight, json, fail, buildUrl, fetchJson } from './_util.js';
 
-const RESP = (code, obj) => ({
-  statusCode: code,
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify(obj),
-});
-
-exports.handler = async () => {
+export const handler = async (event) => {
+  if (event.httpMethod === 'OPTIONS') return preflight(event);
   try {
-    // GAS may return: { ok:true, server:true, db:true, sheets:true, ai:true, events:[...] }
-    const data = await get({ action: "health" });
-    if (!data.ok) return RESP(200, { ok:true, server:true, sheets:true, ai:true, db:true, events:[] }); // fallback “online”
-    return RESP(200, data);
-  } catch {
-    // soft fallback so the UI doesn't look dead
-    return RESP(200, { ok:true, server:true, sheets:true, ai:true, db:true, events:[] });
+    const url = buildUrl('');
+    const s = await fetchJson(url);
+    return json({
+      ok: true,
+      totalEarnings: s.totalEarnings ?? 0,
+      activeUsers: s.activeUsers ?? 0,
+      approvalRate: s.approvalRate ?? 0,
+      pendingReviews: s.pendingReviews ?? 0,
+    });
+  } catch (err) {
+    return fail(String(err));
   }
 };

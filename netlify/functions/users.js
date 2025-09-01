@@ -1,39 +1,17 @@
-// netlify/functions/users.js
-"use strict";
+import { preflight, json, fail, buildUrl, fetchJson } from './_util.js';
 
-exports.handler = async () => {
+export const handler = async (event) => {
+  if (event.httpMethod === 'OPTIONS') return preflight(event);
   try {
-    const base = process.env.EMPIRE_APPS_SCRIPT_BASE || "";
-    if (!base) {
-      return {
-        statusCode: 500,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ok:false, error:"EMPIRE_APPS_SCRIPT_BASE not set" })
-      };
+    const url = buildUrl('users');
+    const data = await fetchJson(url);
+    if (!Array.isArray(data)) {
+      return fail('No users array found. Check GAS route=users output.', 500, {
+        preview: Object.keys(data || {}).slice(0, 8),
+      });
     }
-
-    const url = `${base}?action=users&limit=200`;
-    const r = await fetch(url, {
-      method: "GET",
-      headers: { "Accept": "application/json" }
-    });
-    const text = await r.text();
-
-    // Try JSON parse, otherwise wrap raw
-    let out;
-    try { out = JSON.parse(text); } 
-    catch { out = { ok:false, raw:text }; }
-
-    return {
-      statusCode: 200,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(out)
-    };
+    return json({ ok: true, users: data });
   } catch (err) {
-    return {
-      statusCode: 500,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ok:false, error:String(err) })
-    };
+    return fail(String(err));
   }
 };

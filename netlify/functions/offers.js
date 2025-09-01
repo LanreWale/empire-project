@@ -3,10 +3,15 @@ import { preflight, json, fail, buildUrl, fetchJson } from './_util.js';
 export const handler = async (event) => {
   if (event.httpMethod === 'OPTIONS') return preflight(event);
   try {
-    const url = buildUrl('');
+    const url = buildUrl('offers');
     const data = await fetchJson(url);
-    // Expect the object your GAS returns in doGet default.
-    return json({ ok: true, ...data });
+
+    if (!Array.isArray(data)) {
+      return fail('No offers array found. Check GAS route=offers output.', 500, {
+        preview: Object.keys(data || {}).slice(0, 8),
+      });
+    }
+    return json({ ok: true, offers: data });
   } catch (err) {
     return fail(String(err));
   }

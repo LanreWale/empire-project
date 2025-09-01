@@ -1,0 +1,16 @@
+<nav class="emp-tabs" role="navigation" aria-label="Empire tabs">
+  <a class="tab" href="/welcome.html"   data-key="welcome">Welcome</a>
+  <a class="tab" href="/dashboard.html" data-key="dashboard">Dashboard</a>
+  <a class="tab" href="/login.html"     data-key="login">Commander Login</a>
+</nav>
+<script>
+(function(){
+  const p = location.pathname.toLowerCase();
+  const key = p.includes('dashboard') ? 'dashboard'
+           : p.includes('login')     ? 'login'
+           : 'welcome';
+  document.querySelectorAll('.emp-tabs .tab').forEach(a=>{
+    if (a.dataset.key === key) a.classList.add('active');
+  });
+})();
+</script>

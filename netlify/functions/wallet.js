@@ -1,21 +1,17 @@
-// netlify/functions/wallet.js
-"use strict";
-const { get } = require("./lib/gas");
+import { preflight, json, fail, buildUrl, fetchJson } from './_util.js';
 
-const RESP = (code, obj) => ({
-  statusCode: code,
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify(obj),
-});
-
-exports.handler = async (event) => {
+export const handler = async (event) => {
+  if (event.httpMethod === 'OPTIONS') return preflight(event);
   try {
-    const limit = Math.max(1, Math.min(500, parseInt(event.queryStringParameters?.limit || "50", 10) || 50));
-    // GAS should return: { ok:true, available/balance, withdraw, processing, items:[{date,amount,method,status}] }
-    const data = await get({ action: "wallet", limit });
-    if (!data.ok) return RESP(502, data);
-    return RESP(200, data);
-  } catch (e) {
-    return RESP(500, { ok: false, error: String(e) });
+    const url = buildUrl('wallet');
+    const data = await fetchJson(url);
+    if (!Array.isArray(data)) {
+      return fail('No wallet array found. Check GAS route=wallet output.', 500, {
+        preview: Object.keys(data || {}).slice(0, 8),
+      });
+    }
+    return json({ ok: true, wallet: data });
+  } catch (err) {
+    return fail(String(err));
   }
 };

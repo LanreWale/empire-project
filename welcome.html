@@ -74,3 +74,12 @@
   </main>
 </body>
 </html>
+<script src="/js/empire-auth.js"></script>
+<script>
+  function enterCommand(){
+    if (window.EmpireAuth?.has()) location.href="/dashboard.html";
+    else location.href="/login.html";
+  }
+</script>
+<!-- Button -->
+<button onclick="enterCommand()">Enter Command</button>

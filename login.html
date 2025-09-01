@@ -78,3 +78,36 @@
   </script>
 </body>
 </html>
+
+<script src="/js/empire-auth.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const form = document.getElementById("empire-login-form");
+  const idInput = document.getElementById("login-id");
+
+  if (window.EmpireAuth?.has()) { location.replace("/dashboard.html"); return; }
+
+  form?.addEventListener("submit", async (ev) => {
+    ev.preventDefault();
+    const id = (idInput?.value || "").trim();
+    if (!id) return;
+
+    const exec = (window.ENV?.EXEC_URL) || (import.meta?.env?.VITE_EMPIRE_EXEC_URL) || "";
+    const key  = (window.ENV?.API_KEY)  || (import.meta?.env?.VITE_EMPIRE_API_KEY)  || "";
+    const url  = `${exec}?action=whois&key=${encodeURIComponent(key)}&id=${encodeURIComponent(id)}`;
+
+    try {
+      const r = await fetch(url);
+      const res = await r.json();
+      if (res.ok && res.found) {
+        const identifier = res.email || res.phone || id;
+        const token = `OK:${identifier}:${Date.now()}`;
+        EmpireAuth.set(token);
+        location.href = "/dashboard.html";
+      } else {
+        alert(res.error || "Unauthorized");
+      }
+    } catch { alert("Network error"); }
+  });
+});
+</script>

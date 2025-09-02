@@ -10,6 +10,7 @@
       background:#0b0e12;
     }
     .hero {
+      position:relative;
       min-height:100vh;
       background:url("/assets/brand/empire-hero-final.jpg") center/cover no-repeat;
       display:flex;
@@ -18,20 +19,24 @@
     }
     .hero a {
       position:absolute;
-      bottom:20%;
-      background:#f1c40f;
+      bottom:22%;   /* adjust this % to match vertical alignment of the gold bar */
+      background:transparent; /* invisible background, relies on image’s gold button */
       color:#000;
       font-weight:800;
-      padding:14px 28px;
+      padding:16px 40px; /* size matches the gold rectangle in image */
       border-radius:8px;
       text-decoration:none;
-      box-shadow:0 10px 24px -8px rgba(0,0,0,.6);
+      font-size:1.1rem;
+      cursor:pointer;
+    }
+    .hero a:active {
+      transform:scale(0.96);
     }
   </style>
 </head>
 <body>
   <main class="hero">
-    <!-- Single functional button on top of designed background -->
+    <!-- Clickable overlay button on top of the gold bar -->
     <a href="/login.html">ENTER COMMAND</a>
   </main>
 </body>

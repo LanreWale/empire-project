@@ -5,117 +5,71 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>The Empire — Welcome</title>
 
-  <!-- Preload hero to avoid flashes -->
-  <link rel="preload" as="image" href="/assets/brand/empire-hero-final.jpg"/>
+  <!-- Preload the cleaned hero (no button baked in) -->
+  <link rel="preload" as="image" href="/assets/brand/empire-hero-clean.jpg"/>
 
   <style>
-    :root{
-      --bg:#0b0e12;
-      --text:#e8eaed;
-      --muted:#b6b9c2;
-      --gold:#f1c40f;
-      --ink:#1a1200;
+    :root {
+      --bg:#0b0e12; --text:#e8eaed; --muted:#b6b9c2; --gold:#f1c40f;
     }
     *{box-sizing:border-box;margin:0;padding:0}
     html,body{height:100%}
     body{
       min-height:100%;
+      background: var(--bg) url("/assets/brand/empire-hero-clean.jpg") center top / cover no-repeat fixed;
       color:var(--text);
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-      background:var(--bg) url("/assets/brand/empire-hero-final.jpg") center top / cover no-repeat fixed;
-      /* gentle vignette for text contrast */
-      position:relative;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      display:flex;
+      align-items:center;
+      justify-content:center;
     }
-    body::after{
+
+    /* Dark vignette so the button reads everywhere */
+    .shade::before{
       content:""; position:fixed; inset:0;
-      background: radial-gradient(ellipse at center, rgba(0,0,0,.0), rgba(0,0,0,.35) 60%, rgba(0,0,0,.6) 100%);
+      background: radial-gradient(1200px 800px at 50% 58%, rgba(0,0,0,.22) 0%, rgba(0,0,0,.50) 85%, rgba(0,0,0,.60) 100%);
       pointer-events:none;
     }
 
-    /* Single CTA — placed exactly over the image button area */
+    /* CTA hotspot (the only real button) */
     .cta-wrap{
-      position:fixed; left:50%; transform:translateX(-50%);
-      /* Tune this top value to align with the printed button in the image across devices */
-      top: 63.5vh;  /* adjust +/- if needed (e.g., 62–66vh depending on device) */
-      z-index: 10;
+      position:relative; z-index:2;
+      display:flex; align-items:center; justify-content:center;
+      width:100%;
+      margin-top:clamp(22vh, 36vh, 42vh); /* vertical placement */
     }
     .cta-hotspot{
-      display:inline-block;
-      padding:16px 28px;
-      font-weight:900;
-      letter-spacing:.02em;
-      text-decoration:none;
-      background:linear-gradient(#f6d44e,#e0b426);
-      color:#1a1200;
-      border-radius:14px;
-      box-shadow:0 18px 32px -16px rgba(0,0,0,.6), inset 0 -2px 0 rgba(0,0,0,.15);
+      display:inline-block; text-decoration:none; cursor:pointer;
+      padding:16px 26px; border-radius:14px; font-weight:900; letter-spacing:.02em;
+      font-size:clamp(18px, 4.4vw, 28px); line-height:1;
+      color:#1a1200; background:linear-gradient(#ffd65a, #f1c40f);
+      box-shadow:0 16px 36px -12px rgba(0,0,0,.6), inset 0 -2px 0 rgba(0,0,0,.15);
       border:1px solid rgba(0,0,0,.25);
-      text-transform:uppercase;
-      font-size:clamp(16px,2.8vw,22px);
-      line-height:1;
-      -webkit-tap-highlight-color: transparent;
+      transform:translateZ(0);
     }
-    .cta-hotspot:active{
-      transform:translateX(-50%) translateY(1px);
+    .cta-hotspot:hover{ filter:brightness(1.06) }
+    .cta-hotspot:active{ transform:translateY(1px) }
+
+    /* Footer micro mark (optional; remove if you want) */
+    .mark{
+      position:fixed; inset:auto 0 8px 0; text-align:center;
+      color:rgba(255,255,255,.45); font-size:10px; z-index:1;
     }
 
-    /* Footer micro-credit (tiny, centered) */
-    .tiny{
-      position:fixed; bottom:10px; left:50%; transform:translateX(-50%);
-      font-size:11px; color:#9aa1ad; opacity:.7; z-index:1;
-      text-shadow:0 2px 8px rgba(0,0,0,.8);
+    /* Safety: if the image fails to load */
+    @media (prefers-reduced-transparency: reduce){
+      .shade::before{ background: rgba(0,0,0,.35); }
     }
-
-    /* Remove any accidental outlines on mobile tap */
-    a,button{outline:none}
   </style>
 </head>
 <body>
+  <div class="shade"></div>
 
-  <!-- The ONLY interactive element on the page -->
+  <!-- One single real, clickable button -->
   <div class="cta-wrap">
-    <a class="cta-hotspot" id="enterCommand" href="/login.html" aria-label="Enter Command">
-      Enter Command
-    </a>
+    <a class="cta-hotspot" href="/login.html" aria-label="Enter Command">ENTER COMMAND</a>
   </div>
 
-  <div class="tiny">© 2025 The Empire</div>
-
-  <script>
-    // Hard-kill any old modal remnants and force redirect on tap.
-    (function () {
-      const killModal = () => {
-        const el = document.getElementById('loginModal');
-        if (el && el.parentNode) el.parentNode.removeChild(el);
-        // Hide generic overlay classes if any remain from legacy code
-        const overlays = document.querySelectorAll('.modal, .overlay, .login-modal');
-        overlays.forEach(n => n.remove());
-      };
-
-      const forceRedirect = (ev) => {
-        // In case any legacy listener tries to stop us:
-        ev.stopImmediatePropagation();
-        ev.preventDefault();
-        window.location.href = '/login.html';
-      };
-
-      document.addEventListener('DOMContentLoaded', () => {
-        // Remove stray modal if injected by other scripts
-        killModal();
-
-        const btn = document.getElementById('enterCommand');
-        if (btn) {
-          // Capture phase ensures we preempt other listeners that might show a popup
-          btn.addEventListener('click', forceRedirect, true);
-          // Also make the whole area behave as a link even if other scripts meddle
-          btn.addEventListener('touchend', forceRedirect, { capture:true, passive:false });
-        }
-
-        // Last line of defense: if a modal appears later, nuke it quickly.
-        const mo = new MutationObserver(killModal);
-        mo.observe(document.documentElement, { childList:true, subtree:true });
-      });
-    })();
-  </script>
+  <div class="mark">© 2025 The Empire</div>
 </body>
 </html>

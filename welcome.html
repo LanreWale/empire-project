@@ -5,40 +5,35 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>The Empire — Welcome</title>
   <style>
-    /* Page base */
     html,body{height:100%;margin:0}
     body{background:#0b0e12}
 
-    /* Full-bleed hero using your final artwork */
     .hero{
       position:relative;
-      min-height:100svh;                 /* mobile-friendly viewport height */
-      background:url("/assets/brand/empire-hero-final.jpg?v=2") center top / cover no-repeat;
-      overflow:hidden;                    /* ensure no scroll caused by hotspot */
-      -webkit-tap-highlight-color: transparent;
+      min-height:100svh;
+      background:url("/assets/brand/empire-hero-final.jpg?v=3") center top / cover no-repeat;
+      overflow:hidden;
+      -webkit-tap-highlight-color:transparent;
     }
 
-    /* Invisible, clickable hotspot aligned to the image's gold button */
+    /* Invisible, clickable hotspot aligned to the drawn gold button */
     .cta-hotspot{
       position:absolute;
       left:50%;
-      top:66%;                            /* << adjust 64–70% if you need tiny nudges */
+      top:66%;
       transform:translate(-50%,-50%);
-      width:min(82vw,560px);              /* follows artwork button width responsively */
-      height:clamp(52px,7.2vw,68px);      /* follows artwork button height responsively */
+      width:min(82vw,560px);
+      height:clamp(52px,7.2vw,68px);
       display:block;
       cursor:pointer;
       z-index:9999;
-      background:rgba(255,255,255,0.001); /* fully transparent but clickable */
+      background:rgba(255,255,255,0.001);
       border:0;
       outline:none;
       pointer-events:auto;
-      text-decoration:none;
     }
-
-    /* (Optional) keyboard focus ring for accessibility */
     .cta-hotspot:focus-visible{
-      outline:3px solid rgba(241,196,15,.8);
+      outline:3px solid rgba(241,196,15,.85);
       outline-offset:6px;
       border-radius:10px;
     }
@@ -46,20 +41,16 @@
 </head>
 <body>
   <main class="hero">
-    <!-- Transparent hotspot sitting over the drawn button -->
-    <a class="cta-hotspot"
-       href="/login.html"
-       aria-label="Enter Command"></a>
+    <!-- Button (not an <a>) so no SPA/modal interception -->
+    <button type="button" class="cta-hotspot" aria-label="Enter Command"></button>
   </main>
 
   <script>
-    // As a fallback, force navigation on tap/click and keypress (Enter/Space)
     (function(){
+      const go = () => { window.location.href = "/login.html"; };
       const el = document.querySelector('.cta-hotspot');
       if(!el) return;
-      const go = () => { window.location.href = "/login.html"; };
-
-      el.addEventListener('click', (e)=>{ e.preventDefault(); go(); });
+      el.addEventListener('click', go);
       el.addEventListener('keydown', (e)=>{
         if(e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); }
       });

@@ -4,26 +4,60 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>The Empire — Welcome</title>
+
+  <!-- Use the final hero you uploaded -->
+  <link rel="preload" as="image" href="/assets/brand/empire-hero-final.jpg"/>
+
   <style>
-    html,body{height:100%;margin:0;background:#0b0e12}
-    .hero{
-      position:relative;min-height:100svh;
-      background:url("/assets/brand/empire-hero-final.jpg?v=6") center top/cover no-repeat;
+    :root { --bg:#0b0e12; }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    html, body { height:100%; }
+    body {
+      background: var(--bg) url("/assets/brand/empire-hero-final.jpg") center top / cover no-repeat fixed;
+      min-height:100vh;
     }
-    .cta{position:absolute;left:50%;top:72.25%;transform:translate(-50%,-50%);
-      width:min(82vw,560px);height:clamp(52px,7.2vw,68px);
-      background:rgba(255,255,255,.001);border:0;cursor:pointer;z-index:1}
+
+    /* Clickable hotspot that sits exactly where the gold button is in the image */
+    .cta-hotspot {
+      position: fixed; /* stick to viewport so it aligns with the artwork */
+      left: 50%;
+      transform: translateX(-50%);
+      width: min(82vw, 520px);       /* responsive width, capped on desktop */
+      height: clamp(54px, 9.5vw, 84px); /* responsive height */
+      border-radius: 18px;
+      /* Placement: push it down to sit on top of the button in the image */
+      top: clamp(58vh, 61vh, 64vh);
+      /* make the area clickable but visually invisible */
+      background: rgba(255,255,255,0); 
+      display: block;
+      text-indent: -9999px; /* hide text for visual; still accessible to SRs */
+      outline: none;
+    }
+    .cta-hotspot:focus-visible { outline: 3px solid rgba(241,196,15,.9); border-radius: 18px; }
+    
+    /* Fallback footer to avoid blank below-the-fold on very tall screens */
+    .foot {
+      position: fixed; left:0; right:0; bottom:10px;
+      text-align:center; color: rgba(255,255,255,.45);
+      font: 500 12px/1.4 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      user-select:none;
+    }
+
+    /* Small phones: nudge hotspot a bit higher */
+    @media (max-width: 420px) {
+      .cta-hotspot { top: 60vh; width: 88vw; }
+    }
+    /* Large desktop: tighten placement */
+    @media (min-width: 1280px) {
+      .cta-hotspot { top: 59.5vh; width: 520px; height: 84px; }
+    }
   </style>
 </head>
 <body>
-  <main class="hero" aria-label="The Empire hero">
-    <button class="cta" aria-label="Enter Command"></button>
-  </main>
-  <script>
-    document.querySelector('.cta').addEventListener('click', e=>{
-      e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
-      location.assign('/login.html');
-    }, {capture:true});
-  </script>
+  <!-- Invisible but accessible link over the gold button in the artwork -->
+  <a class="cta-hotspot" href="/login.html" aria-label="Enter Command">Enter Command</a>
+
+  <div class="foot">© <span id="y"></span> The Empire</div>
+  <script>document.getElementById('y').textContent = new Date().getFullYear();</script>
 </body>
 </html>

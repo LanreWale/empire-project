@@ -5,33 +5,55 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>The Empire — Welcome</title>
 
-  <!-- Shared styles -->
+  <!-- Global Empire styles (includes hero + footer classes) -->
   <link rel="stylesheet" href="/assets/css/empire-style.css" />
-
-  <!-- Shared shell (injects header + nav + footer) -->
-  <script src="/assets/js/empire-shell.js" defer></script>
 </head>
 <body>
-  <!-- Injected by empire-shell.js -->
+  <!-- Shared header (brand + nav links) -->
   <header id="emp-header" class="emp-header"></header>
 
-  <main class="emp-container">
+  <main class="container" style="max-width:980px;margin:0 auto;padding:24px">
+    <!-- HERO -->
     <section class="emp-hero">
       <div class="emp-hero__inner">
-        <div class="emp-hero__kicker">⚔️ The Empire Affiliate System ⚔️</div>
-        <h1 class="emp-hero__title">Welcome to THE EMPIRE</h1>
+        <div class="emp-hero__kicker">⚔️ THE EMPIRE AFFILIATE SYSTEM ⚔️</div>
+        <h1 class="emp-hero__title">Welcome to THE<br/>EMPIRE</h1>
         <p class="emp-hero__sub">Automated. Intelligent. Profitable. 24/7.</p>
 
         <div class="emp-cta-row">
-          <a class="emp-btn emp-btn--primary" href="/login.html">Enter Command</a>
+          <!-- Primary: decides login vs dashboard based on token -->
+          <button id="enterCmd" class="emp-btn emp-btn--primary">Enter Command</button>
+
+          <!-- Secondary quick links -->
           <a class="emp-btn emp-btn--ghost" href="/dashboard.html">View Dashboard</a>
           <a class="emp-btn emp-btn--ghost" href="/admin/">Join HQ</a>
         </div>
       </div>
     </section>
+
+    <footer id="emp-footer" class="emp-footer">
+      <div class="emp-footer__inner">
+        <p>Commanding the Future of Affiliate Marketing</p>
+        <small>© <span id="yr"></span> The Empire</small>
+      </div>
+    </footer>
   </main>
 
-  <!-- Injected by empire-shell.js -->
-  <footer id="emp-footer" class="emp-footer"></footer>
+  <!-- Scripts (order matters) -->
+  <script src="/js/empire-auth.js"></script>
+  <script src="/assets/js/empire-shell.js" defer></script>
+  <script>
+    // Year in footer
+    document.getElementById('yr').textContent = new Date().getFullYear();
+
+    // Smart "Enter Command" routing
+    document.getElementById('enterCmd').addEventListener('click', () => {
+      if (window.EmpireAuth?.has()) {
+        location.href = "/dashboard.html";
+      } else {
+        location.href = "/login.html";
+      }
+    });
+  </script>
 </body>
 </html>

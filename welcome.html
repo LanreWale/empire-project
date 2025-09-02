@@ -1,71 +1,58 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>The Empire — Welcome</title>
-  <style>
-    :root {
-      --gold:#f1c40f;
-      --muted:#b6b9c2;
-      --bg:#0b0e12;
-    }
-    body {
-      margin:0;
-      background:url("/assets/brand/empire-hero.jpg") center/cover no-repeat;
-      color:#fff;
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-      text-align:center;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      min-height:100vh;
-    }
-    .hero {
-      max-width:800px;
-      padding:20px;
-    }
-    .hero h1 {
-      font-size:clamp(26px,5vw,48px);
-      font-weight:800;
-      margin:22px 0 18px;
-      color:#fff;
-      text-shadow:0 2px 8px rgba(0,0,0,.6);
-    }
-    .btn {
-      background:var(--gold);
-      color:#111;
-      border:none;
-      padding:14px 28px;
-      border-radius:12px;
-      font-weight:700;
-      font-size:1rem;
-      cursor:pointer;
-      text-decoration:none;
-      box-shadow:0 6px 18px rgba(0,0,0,.4);
-      transition:.2s;
-    }
-    .btn:hover {
-      background:#ffd84d;
-      transform:translateY(-2px);
-    }
-    .tagline {
-      color:var(--muted);
-      font-size:1rem;
-      margin:6px 0;
-    }
-  </style>
+
+  <!-- Base styles -->
+  <link rel="stylesheet" href="/assets/css/empire-style.css">
+
+  <!-- Favicons (optional) -->
+  <link rel="icon" href="/favicon.ico" />
+  <meta name="theme-color" content="#0b0e12">
 </head>
 <body>
-  <section class="hero">
-    <h2>Affiliate Command Intelligence · Real-Time Earnings · Global Performance Engine</h2>
+  <!-- Shared Header (brand + tabs) -->
+  <header id="emp-header" class="emp-header"></header>
 
-    <!-- Inserted in the gap -->
-    <h1>Welcome to THE EMPIRE</h1>
-    <a href="/login.html" class="btn">Enter Command</a>
+  <!-- Hero cover uses the background image itself as the page -->
+  <main>
+    <section class="hero-cover" role="banner" aria-label="The Empire Welcome">
+      <div class="hero-inner">
+        <p class="kicker">THE EMPIRE AFFILIATE SYSTEM</p>
+        <h1 class="hero-title">
+          Welcome to <span>THE&nbsp;EMPIRE</span>
+        </h1>
+        <p class="hero-sub">Automated. Intelligent. Profitable. 24/7.</p>
 
-    <h3 class="tagline">BUILT FOR LEGENDS. POWERED BY TRUTH. DEPLOYED FOR VICTORY.</h3>
-  </section>
+        <div class="hero-cta">
+          <a id="enterBtn" class="cta-primary" href="/login.html">Enter Command</a>
+        </div>
+      </div>
+
+      <!-- footer line from the artwork area -->
+      <div class="hero-bottom-note">
+        BUILT FOR LEGENDS. POWERED BY TRUTH. DEPLOYED FOR VICTORY.
+      </div>
+    </section>
+  </main>
+
+  <!-- Shared Footer -->
+  <footer id="emp-footer" class="emp-footer"></footer>
+
+  <!-- Scripts -->
+  <script src="/assets/js/empire-shell.js" defer></script>
+  <script src="/js/empire-auth.js"></script>
+  <script>
+    // If already authenticated, send straight to the dashboard
+    (function () {
+      try {
+        if (window.EmpireAuth?.has()) {
+          document.getElementById('enterBtn').setAttribute('href', '/dashboard.html');
+        }
+      } catch(e) {}
+    })();
+  </script>
 </body>
 </html>

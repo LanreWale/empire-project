@@ -4,55 +4,41 @@
   <meta charset="utf-8" />
   <title>Empire Control — Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-
-  <!-- Global styles (keep your existing theme tokens there) -->
+  <link rel="icon" href="/assets/brand/favicon.ico" />
   <link rel="stylesheet" href="/assets/css/empire-style.css" />
 
-  <!-- Charts (if your dashboard JS renders any) -->
+  <!-- Charts (if used by your dashboard JS) -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
 
   <!-- Auth must load BEFORE anything else -->
   <script src="/js/empire-auth.js"></script>
   <script>
-    // Hard gate: no token, no dashboard.
     if (!window.EmpireAuth?.has()) {
       window.location.replace("/login.html");
     }
   </script>
 
-  <!-- Shared shell (header/footer + active tab highlight) -->
+  <!-- Shared shell + (optionally) your dashboard logic -->
   <script src="/assets/js/empire-shell.js" defer></script>
-
-  <!-- Your existing, full dashboard logic & layout renderer -->
-  <script src="/assets/js/empire-dashboard.js" defer></script>
+  <!-- If you have a dedicated dashboard script, include it here -->
+  <!-- <script src="/assets/js/empire-dashboard.js" defer></script> -->
 </head>
 <body>
-  <!-- Shared Empire Header injected by empire-shell.js -->
   <header id="emp-header" class="emp-header"></header>
 
-  <!-- Main app container (your dashboard JS can take over inside here) -->
   <main id="emp-dashboard" class="emp-container">
-    <!--
-      Minimal scaffolding so your /assets/js/empire-dashboard.js
-      has stable anchors to populate. If your script already
-      builds everything, it can simply target #emp-dashboard.
-    -->
-
-    <!-- Example top nav (optional: your JS can replace/augment it) -->
-    <nav class="emp-nav" aria-label="Empire sections">
-      <a href="#dashboard" data-tab="dashboard" class="emp-tab active">Overview</a>
-      <a href="#cpa"       data-tab="cpa"       class="emp-tab">CPA Accounts</a>
-      <a href="#users"     data-tab="users"     class="emp-tab">Users</a>
-      <a href="#analytics" data-tab="analytics" class="emp-tab">Analytics</a>
-      <a href="#wallet"    data-tab="wallet"    class="emp-tab">Wallet</a>
-      <a href="#security"  data-tab="security"  class="emp-tab">Security</a>
-      <a href="#monitoring"data-tab="monitoring"class="emp-tab">Monitoring</a>
-
-      <span class="emp-spacer"></span>
+    <nav class="emp-nav" aria-label="Empire sections" style="margin:16px 0; display:flex; gap:8px; flex-wrap:wrap;">
+      <a href="#dashboard"  data-tab="dashboard"  class="emp-tab active">Overview</a>
+      <a href="#cpa"        data-tab="cpa"        class="emp-tab">CPA Accounts</a>
+      <a href="#users"      data-tab="users"      class="emp-tab">Users</a>
+      <a href="#analytics"  data-tab="analytics"  class="emp-tab">Analytics</a>
+      <a href="#wallet"     data-tab="wallet"     class="emp-tab">Wallet</a>
+      <a href="#security"   data-tab="security"   class="emp-tab">Security</a>
+      <a href="#monitoring" data-tab="monitoring" class="emp-tab">Monitoring</a>
+      <span style="flex:1"></span>
       <button id="emp-logout" class="emp-btn small">Logout</button>
     </nav>
 
-    <!-- Views (empty shells; fill them in your JS or keep your existing markup) -->
     <section id="view-dashboard"  class="emp-view"></section>
     <section id="view-cpa"        class="emp-view hidden"></section>
     <section id="view-users"      class="emp-view hidden"></section>
@@ -62,38 +48,27 @@
     <section id="view-monitoring" class="emp-view hidden"></section>
   </main>
 
-  <!-- Shared Empire Footer injected by empire-shell.js -->
   <footer id="emp-footer" class="emp-footer"></footer>
 
-  <!-- Tiny, page-local behaviors that don’t belong in the shared shell -->
   <script>
-    // Basic tab switching helper (safe if your dashboard JS already handles tabs)
     document.addEventListener("click", (ev) => {
       const a = ev.target.closest(".emp-tab");
       if (!a) return;
       ev.preventDefault();
-
-      // update active tab
       document.querySelectorAll(".emp-tab").forEach(t => t.classList.remove("active"));
       a.classList.add("active");
-
-      // show matching view
       const key = a.dataset.tab || "dashboard";
       document.querySelectorAll(".emp-view").forEach(v => v.classList.add("hidden"));
       const target = document.getElementById(`view-${key}`) || document.getElementById("view-dashboard");
       target.classList.remove("hidden");
-
-      // let your dashboard JS know which pane to (re)load
       window.dispatchEvent(new CustomEvent("empire:tabchange", { detail: { tab: key }}));
     });
 
-    // Logout button
     document.getElementById("emp-logout")?.addEventListener("click", () => {
       try { window.EmpireAuth?.clear(); } catch {}
       location.href = "/login.html";
     });
 
-    // If someone lands on /dashboard.html#analytics etc, open that tab
     window.addEventListener("DOMContentLoaded", () => {
       const hash = (location.hash || "").replace(/^#/, "") || "dashboard";
       const starter = document.querySelector(`.emp-tab[data-tab="${hash}"]`) || document.querySelector('.emp-tab[data-tab="dashboard"]');

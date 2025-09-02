@@ -1,41 +1,51 @@
 <!DOCTYPE html>
-<html lang="en" data-version="welcome-1.0.3">
+<html lang="en" data-version="welcome-1.0.4">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>The Empire — Welcome</title>
 
-  <!-- Preload background image for faster paint -->
-  <link rel="preload" as="image" href="/assets/brand/empire-hero.jpg">
+  <!-- Preload hero to avoid flicker (cache-busted) -->
+  <link rel="preload" as="image" href="/assets/brand/empire-hero.jpg?v=4">
 
   <style>
-    :root { --bg:#0b0e12; --text:#e8eaed; --muted:#b6b9c2; --gold:#f1c40f; }
+    :root{--bg:#0b0e12;--text:#e8eaed;--muted:#b6b9c2;--gold:#f1c40f}
     *{box-sizing:border-box;margin:0;padding:0}
     body{background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
     .container{max-width:1100px;margin:0 auto;padding:16px}
+
+    /* HERO (uses the background image itself) */
     .hero{
-      position:relative;min-height:80vh;display:grid;place-items:center;
-      background:url("/assets/brand/empire-hero.jpg") center/cover no-repeat;
+      position:relative;
+      min-height:100svh; /* full mobile viewport height */
+      background:url("/assets/brand/empire-hero.jpg?v=4") center/cover no-repeat;
       isolation:isolate;
     }
+    /* Gentle darkening for readability */
     .hero::after{
       content:"";position:absolute;inset:0;
-      background:radial-gradient(ellipse at center,rgba(0,0,0,.15),rgba(0,0,0,.6) 65%);
+      background:radial-gradient(ellipse at 50% 58%, rgba(0,0,0,.15), rgba(0,0,0,.62) 65%);
       z-index:0;
     }
-    .hero-inner{position:relative;z-index:1;text-align:center;padding:28px 18px}
-    .kicker{font-size:.8rem;letter-spacing:.28em;color:#ffdf7a;font-weight:800;margin-bottom:10px}
-    h1{font-size:clamp(36px,6vw,68px);line-height:1.05;margin-bottom:10px}
-    .sub{color:var(--muted);font-size:clamp(16px,2.6vw,20px);margin:0 auto 20px;max-width:760px}
+    /* <<< place the block BETWEEN the two lines on the image >>> */
+    .hero-inner{
+      position:absolute;left:50%;top:58% !important;transform:translate(-50%,-50%);
+      text-align:center;padding:28px 18px;z-index:1;width:min(92vw,860px);
+    }
+
+    .kicker{font-size:.8rem;letter-spacing:.28em;color:#ffdf7a;font-weight:800;margin-bottom:10px;text-shadow:0 2px 6px rgba(0,0,0,.45)}
+    h1{font-size:clamp(34px,6vw,66px);line-height:1.05;margin-bottom:10px;text-shadow:0 3px 10px rgba(0,0,0,.5)}
+    .sub{color:var(--muted);font-size:clamp(15px,2.6vw,20px);margin:0 auto 18px;max-width:760px;text-shadow:0 2px 6px rgba(0,0,0,.45)}
+
     .cta-row{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
-    .btn{border:none;border-radius:14px;padding:12px 20px;font-weight:800;cursor:pointer;text-decoration:none}
+    .btn{border:none;border-radius:14px;padding:12px 20px;font-weight:800;cursor:pointer}
     .btn-primary{background:var(--gold);color:#1a1200;box-shadow:0 12px 30px -14px var(--gold)}
     .btn-ghost{background:#1a1f2b;border:1px solid rgba(255,255,255,.12);color:var(--text)}
     footer{padding:18px 0;color:var(--muted);text-align:center}
   </style>
 </head>
 <body>
-  <!-- Shared Header -->
+  <!-- Shared header (logo + nav) -->
   <header id="emp-header" class="emp-header"></header>
 
   <main class="container">
@@ -53,10 +63,10 @@
     </section>
   </main>
 
-  <!-- Shared Footer -->
+  <!-- Shared footer -->
   <footer id="emp-footer" class="emp-footer"></footer>
 
-  <!-- Shell (header/footer + nav) -->
+  <!-- Shell (header/footer) -->
   <script src="/assets/js/empire-shell.js" defer></script>
 </body>
 </html>

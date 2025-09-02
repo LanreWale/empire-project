@@ -1,88 +1,38 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Welcome to THE EMPIRE</title>
-  <link rel="preload" as="image" href="/assets/brand/empire-hero-final.jpg" />
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>The Empire — Welcome</title>
   <style>
-    :root {
-      --gold:#f1c40f;
-      --muted:#b6b9c2;
-    }
-    *{margin:0;padding:0;box-sizing:border-box}
     body {
-      font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-      color:#fff;
+      margin:0; padding:0;
+      background:#0b0e12;
     }
     .hero {
-      position:relative;
       min-height:100vh;
-      display:grid;
-      place-items:center;
       background:url("/assets/brand/empire-hero-final.jpg") center/cover no-repeat;
+      display:flex;
+      align-items:center;
+      justify-content:center;
     }
-    .hero::after {
-      content:"";
+    .hero a {
       position:absolute;
-      inset:0;
-      background:rgba(0,0,0,.45);
-      z-index:0;
-    }
-    .hero-inner {
-      position:relative;
-      z-index:1;
-      text-align:center;
-      padding:28px 18px;
-    }
-    .kicker {
-      font-size:.85rem;
-      letter-spacing:.28em;
-      color:#ffdf7a;
+      bottom:20%;
+      background:#f1c40f;
+      color:#000;
       font-weight:800;
-      margin-bottom:10px;
-    }
-    h1 {
-      font-size:clamp(36px,6vw,68px);
-      line-height:1.1;
-      margin-bottom:20px;
-      font-weight:800;
-    }
-    .btn {
-      display:inline-block;
       padding:14px 28px;
-      border-radius:14px;
-      font-weight:800;
-      font-size:1rem;
+      border-radius:8px;
       text-decoration:none;
-      background:var(--gold);
-      color:#1a1200;
-      box-shadow:0 14px 34px -16px var(--gold);
-    }
-    footer {
-      position:absolute;
-      bottom:10px;
-      left:0;
-      right:0;
-      text-align:center;
-      font-size:.85rem;
-      color:var(--muted);
+      box-shadow:0 10px 24px -8px rgba(0,0,0,.6);
     }
   </style>
 </head>
 <body>
-  <section class="hero" role="img" aria-label="The Empire">
-    <div class="hero-inner">
-      <div class="kicker">✦ THE EMPIRE AFFILIATE SYSTEM ✦</div>
-      <h1>WELCOME TO THE EMPIRE</h1>
-      <a class="btn" href="/login.html">ENTER COMMAND</a>
-    </div>
-    <footer>
-      © <span id="year"></span> The Empire
-    </footer>
-  </section>
-  <script>
-    document.getElementById("year").textContent = new Date().getFullYear();
-  </script>
+  <main class="hero">
+    <!-- Single functional button on top of designed background -->
+    <a href="/login.html">ENTER COMMAND</a>
+  </main>
 </body>
 </html>

@@ -1,22 +1,27 @@
 // /assets/js/empire-shell.js
 (function () {
+  // ⬇️ Set your canonical domain ONCE here (include https)
+  // e.g. "https://empire.yourdomain.com"
+  const DOMAIN = "https://empire.yourdomain.com";
+
+  function url(path){ return DOMAIN.replace(/\/+$/,"") + path; }
+
   function isAuthed() {
     try { return !!(window.EmpireAuth && window.EmpireAuth.has && window.EmpireAuth.has()); }
     catch { return false; }
   }
-
   const authed = isAuthed();
 
   const LINKS = [
-    { href: "/welcome.html",   label: "Welcome", show: true },
-    { href: "/login.html",     label: "Commander Login", show: !authed },
-    { href: "/dashboard.html", label: "Dashboard", show: true } // keep visible; CTA handles smart jump
+    { href: url("/welcome.html"),   label: "Welcome",          show: true },
+    { href: url("/login.html"),     label: "Commander Login",  show: !authed },
+    { href: url("/dashboard.html"), label: "Dashboard",        show: true },
   ];
 
-  function isActive(href) {
+  function isActive(absHref) {
     try {
       const here = location.pathname.replace(/\/+$/, "") || "/index.html";
-      const there = href.replace(/\/+$/, "");
+      const there = new URL(absHref, location.origin).pathname.replace(/\/+$/,"");
       if (here === "" || here === "/") return (there === "/welcome.html");
       return here === there;
     } catch { return false; }
@@ -32,14 +37,13 @@
 
   const headerHTML = `
     <div class="emp-header__inner">
-      <a class="emp-brand" href="/welcome.html" aria-label="The Empire">
+      <a class="emp-brand" href="${url("/welcome.html")}" aria-label="The Empire">
         <img src="/assets/brand/empire-logo.png" alt="Empire crown" />
         <span class="emp-brand__title">THE EMPIRE <small>— Command Interface</small></span>
       </a>
       <nav class="emp-nav" aria-label="Primary">${navHTML()}</nav>
-
       <div class="emp-cta">
-        <a id="emp-enter-btn" class="emp-enter-btn" href="${authed ? "/dashboard.html" : "/login.html"}">
+        <a id="emp-enter-btn" class="emp-enter-btn" href="${authed ? url("/dashboard.html") : url("/login.html")}">
           Enter Empire
         </a>
       </div>
@@ -58,7 +62,7 @@
     if (slot) slot.innerHTML = html;
   }
 
-  // Inline styles (kept minimal and consistent with your theme)
+  // Inline styles
   const css = `
     .emp-header{background:#121624;border-bottom:1px solid rgba(255,255,255,.06);box-shadow:0 8px 20px -12px rgba(0,0,0,.5)}
     .emp-header__inner{max-width:980px;margin:0 auto;padding:14px 16px;display:flex;align-items:center;gap:16px}
@@ -75,9 +79,7 @@
     .emp-enter-btn:hover{filter:brightness(1.05)}
     .emp-footer{margin-top:24px;border-top:1px solid rgba(255,255,255,.06);background:#0f1520}
     .emp-footer__inner{max-width:980px;margin:0 auto;padding:16px;color:#b6b9c2;text-align:center}
-    @media (max-width:740px){
-      .emp-nav{display:none} /* keep header clean on small screens; CTA remains */
-    }
+    @media (max-width:740px){ .emp-nav{display:none} }
   `;
   const style = document.createElement("style");
   style.textContent = css;
@@ -86,13 +88,7 @@
   window.addEventListener("DOMContentLoaded", () => {
     inject("emp-header", headerHTML);
     inject("emp-footer", footerHTML);
-
-    // Keep CTA accurate if auth state changes on this page
     const btn = document.getElementById("emp-enter-btn");
-    if (btn) {
-      try {
-        btn.setAttribute("href", isAuthed() ? "/dashboard.html" : "/login.html");
-      } catch {}
-    }
+    if (btn) { btn.setAttribute("href", isAuthed() ? url("/dashboard.html") : url("/login.html")); }
   });
 })();

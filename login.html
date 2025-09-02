@@ -1,156 +1,71 @@
-l<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>The Empire — Commander Login</title>
-  <meta name="description" content="Secure access to THE EMPIRE Command Interface." />
-  <link rel="icon" href="/assets/brand/favicon.ico" />
   <style>
-    :root{--bg:#0b0e12;--panel:#121624;--text:#e8eaed;--muted:#b6b9c2;--gold:#f1c40f;--shadow:rgba(0,0,0,.5)}
+    :root{ --bg:#0b0e12; --panel:#121826; --text:#e8eaed; --muted:#b6b9c2; --gold:#f1c40f; }
     *{box-sizing:border-box;margin:0;padding:0}
-    body{background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-    .container{max-width:980px;margin:0 auto;padding:24px}
-
-    .card{background:#121826;border:1px solid rgba(255,255,255,.06);box-shadow:0 30px 60px -30px var(--shadow);border-radius:28px;padding:28px;margin:40px auto;max-width:460px;text-align:center}
-    .logo-wrap img{width:220px;max-width:70vw;border-radius:14px;box-shadow:0 10px 28px -16px rgba(241,196,15,.6)}
-    .login-title{display:flex;align-items:center;justify-content:center;gap:18px;font-size:clamp(22px,4vw,32px);font-weight:800;letter-spacing:.3px;margin:20px 0}
-    .login-title .sword{filter:drop-shadow(0 6px 12px rgba(0,0,0,.35));font-size:1.2em}
-    .field{margin:14px 0}
-    .field input{width:100%;background:#0f131d;color:var(--text);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:14px 16px;font-size:1rem;outline:none}
-    .btn{width:100%;border:none;border-radius:14px;padding:14px 22px;font-weight:800;cursor:pointer}
-    .btn-primary{background:var(--gold);color:#1a1200;box-shadow:0 14px 34px -16px var(--gold)}
-    .terms{margin-top:12px;text-align:center;color:var(--muted)}
-    .msg{margin-top:12px;font-size:.95rem}
-    .msg.err{color:#ffb4b4}
-    .msg.ok{color:#9affc8}
+    body{background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;min-height:100vh;display:grid;place-items:center}
+    .card{
+      width:min(92vw,460px); background:var(--panel);
+      border:1px solid rgba(255,255,255,.06); border-radius:24px;
+      padding:28px; text-align:center; box-shadow:0 30px 60px -30px rgba(0,0,0,.5);
+    }
+    .logo{display:block;margin:6px auto 14px;width:220px;max-width:70vw}
+    h1{font-size:clamp(22px,3.8vw,28px);margin:6px 0 18px;font-weight:800;letter-spacing:.3px}
+    .field{margin:12px 0}
+    .field input{
+      width:100%; padding:14px 16px; border-radius:14px;
+      border:1px solid rgba(255,255,255,.08); background:#0f131d; color:var(--text);
+      font-size:1rem; outline:none;
+    }
+    .btn{
+      width:100%; margin-top:10px; border:0; border-radius:14px;
+      background:var(--gold); color:#1a1200; font-weight:800;
+      padding:14px 22px; cursor:pointer; box-shadow:0 14px 34px -16px var(--gold);
+    }
+    .terms{margin-top:12px;color:var(--muted);font-size:.9rem}
   </style>
 </head>
 <body>
-  <!-- Shared Empire Header -->
-  <header id="emp-header" class="emp-header"></header>
+  <section class="card">
+    <img class="logo" src="/assets/brand/empire-logo.png" alt="The Empire">
+    <h1>Commander Login</h1>
 
-  <main class="container">
-    <section class="card">
-      <div class="logo-wrap">
-        <img src="/assets/brand/empire-logo.png" alt="The Empire">
+    <form id="empire-login-form" autocomplete="on">
+      <div class="field">
+        <input id="login-id" type="text" placeholder="Email or Phone" autocomplete="username" />
       </div>
-
-      <div class="login-title">
-        <span class="sword">⚔️</span>
-        <span>Commander Login</span>
-        <span class="sword">⚔️</span>
+      <div class="field">
+        <input id="accessKey" type="password" placeholder="Access Key" autocomplete="current-password" />
       </div>
+      <button class="btn" type="submit">Enter The Empire</button>
+    </form>
 
-      <form id="empire-login-form" autocomplete="on">
-        <div class="field">
-          <input id="login-id" type="text" placeholder="Email or Phone" autocomplete="username" required autofocus>
-        </div>
-        <div class="field">
-          <input id="accessKey" type="password" placeholder="Access Key" autocomplete="current-password" required>
-        </div>
-        <button class="btn btn-primary" type="submit" id="loginBtn">Enter The Empire</button>
-        <div id="loginMsg" class="msg" role="alert" aria-live="polite"></div>
-      </form>
-      <p class="terms">By entering you agree to Empire terms.</p>
-    </section>
-  </main>
+    <p class="terms">By entering you agree to Empire terms.</p>
+  </section>
 
-  <!-- Shared Empire Footer -->
-  <footer id="emp-footer" class="emp-footer"></footer>
-
-  <!-- Core scripts -->
   <script src="/js/empire-auth.js"></script>
-  <script src="/assets/js/empire-shell.js" defer></script>
-
-  <!-- GAS-first auth config (fill these two values) -->
   <script>
-    window.ENV = {
-      EXEC_URL: "https://script.google.com/macros/s/REPLACE_WITH_YOUR_EXEC_ID/exec",
-      API_KEY:  "REPLACE_WITH_YOUR_GAS_API_KEY"
-    };
-  </script>
+    // If already logged in, jump straight to dashboard
+    if (window.EmpireAuth?.has()) {
+      location.replace("/dashboard.html");
+    } else {
+      const form = document.getElementById("empire-login-form");
+      form?.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const id  = (document.getElementById("login-id")?.value || "").trim();
+        const key = (document.getElementById("accessKey")?.value || "").trim();
+        if (!id || !key) { alert("Enter your ID and access key."); return; }
 
-  <!-- Login handler (GAS-first with graceful fallback) -->
-  <script>
-    (function(){
-      const form   = document.getElementById("empire-login-form");
-      const idEl   = document.getElementById("login-id");
-      const keyEl  = document.getElementById("accessKey");
-      const btn    = document.getElementById("loginBtn");
-      const msgEl  = document.getElementById("loginMsg");
-
-      // Already authenticated? Bounce to dashboard.
-      if (window.EmpireAuth?.has()) {
-        location.replace("/dashboard.html");
-        return;
-      }
-
-      function paintMsg(text, ok=false){
-        if(!msgEl) return;
-        msgEl.textContent = text || "";
-        msgEl.className = "msg " + (ok ? "ok" : "err");
-      }
-
-      async function whoisLogin(id, apiKey, execUrl){
-        const u = new URL(execUrl);
-        u.searchParams.set("action","whois");
-        u.searchParams.set("key", apiKey);
-        u.searchParams.set("id", id);
-        const r = await fetch(u.toString(), { headers: { "cache-control":"no-store" } });
-        if(!r.ok) throw new Error("Network "+r.status);
-        return r.json();
-      }
-
-      form?.addEventListener("submit", async (ev)=>{
-        ev.preventDefault();
-        const id  = (idEl?.value  || "").trim();
-        const key = (keyEl?.value || "").trim();
-        if(!id || !key){ paintMsg("Enter your ID and access key."); return; }
-
-        const EXEC_URL = (window.ENV && window.ENV.EXEC_URL) || "";
-        const API_KEY  = (window.ENV && window.ENV.API_KEY)  || "";
-
-        btn.disabled = true; paintMsg("");
-
-        try{
-          if (EXEC_URL && API_KEY) {
-            // GAS-first verification
-            const res = await whoisLogin(id, API_KEY, EXEC_URL);
-            if (res && res.ok && (res.found || res.email || res.phone)) {
-              const status = String(res.status || res.approval || "Approved").toLowerCase();
-              if (["rejected","suspended","blocked","disabled"].includes(status)) {
-                paintMsg("Access denied: " + (res.status || "SUSPENDED"));
-              } else {
-                const ident = res.email || res.phone || id;
-                const token = `OK:${ident}:${Date.now()}`;
-                window.EmpireAuth?.set(token);
-                location.href = "/dashboard.html";
-              }
-            } else {
-              paintMsg(res?.error || "Unauthorized.");
-            }
-          } else {
-            // Fallback (no ENV): local acceptance to avoid lockout
-            const token = `OK:${id}:${Date.now()}`;
-            window.EmpireAuth?.set(token);
-            location.href = "/dashboard.html";
-          }
-        } catch(e){
-          // Graceful fallback on GAS errors
-          const token = `OK:${id}:${Date.now()}`;
-          window.EmpireAuth?.set(token);
-          location.href = "/dashboard.html";
-        } finally {
-          btn.disabled = false;
-        }
+        // Placeholder: accept any non-empty values and create a local token
+        const token = `OK:${id}:${Date.now()}`;
+        window.EmpireAuth.set(token);
+        location.href = "/dashboard.html";
       });
-    })();
+    }
   </script>
-
-  <noscript>
-    <style>main{display:none}</style>
-    <div style="padding:18px;color:#ffb4b4;text-align:center">JavaScript is required to sign in.</div>
-  </noscript>
 </body>
 </html>

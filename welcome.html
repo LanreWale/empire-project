@@ -1,75 +1,98 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>The Empire — Welcome</title>
 
-  <!-- Preload the cleaned hero (no button baked in) -->
+  <!-- Preload the clean hero image -->
   <link rel="preload" as="image" href="/assets/brand/empire-hero-clean.jpg"/>
 
   <style>
-    :root {
-      --bg:#0b0e12; --text:#e8eaed; --muted:#b6b9c2; --gold:#f1c40f;
+    :root{
+      --bg:#0b0e12; --text:#e8eaed; --muted:#b6b9c2;
+      --gold:#f6c243; --gold-deep:#c89d1a; --shadow:rgba(0,0,0,.65);
     }
     *{box-sizing:border-box;margin:0;padding:0}
     html,body{height:100%}
     body{
-      min-height:100%;
-      background: var(--bg) url("/assets/brand/empire-hero-clean.jpg") center top / cover no-repeat fixed;
+      background:var(--bg);
       color:var(--text);
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      display:flex;
-      align-items:center;
-      justify-content:center;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
     }
 
-    /* Dark vignette so the button reads everywhere */
-    .shade::before{
-      content:""; position:fixed; inset:0;
-      background: radial-gradient(1200px 800px at 50% 58%, rgba(0,0,0,.22) 0%, rgba(0,0,0,.50) 85%, rgba(0,0,0,.60) 100%);
-      pointer-events:none;
+    .hero{
+      position:relative; min-height:100dvh;
+      display:grid; place-items:center;
+      background:
+        radial-gradient(ellipse at center, rgba(0,0,0,.18) 0%, rgba(0,0,0,.68) 70%),
+        url("/assets/brand/empire-hero-clean.jpg") center top / cover no-repeat fixed;
+      overflow:hidden;
     }
 
-    /* CTA hotspot (the only real button) */
-    .cta-wrap{
+    .hero-inner{
       position:relative; z-index:2;
-      display:flex; align-items:center; justify-content:center;
-      width:100%;
-      margin-top:clamp(22vh, 36vh, 42vh); /* vertical placement */
-    }
-    .cta-hotspot{
-      display:inline-block; text-decoration:none; cursor:pointer;
-      padding:16px 26px; border-radius:14px; font-weight:900; letter-spacing:.02em;
-      font-size:clamp(18px, 4.4vw, 28px); line-height:1;
-      color:#1a1200; background:linear-gradient(#ffd65a, #f1c40f);
-      box-shadow:0 16px 36px -12px rgba(0,0,0,.6), inset 0 -2px 0 rgba(0,0,0,.15);
-      border:1px solid rgba(0,0,0,.25);
-      transform:translateZ(0);
-    }
-    .cta-hotspot:hover{ filter:brightness(1.06) }
-    .cta-hotspot:active{ transform:translateY(1px) }
-
-    /* Footer micro mark (optional; remove if you want) */
-    .mark{
-      position:fixed; inset:auto 0 8px 0; text-align:center;
-      color:rgba(255,255,255,.45); font-size:10px; z-index:1;
+      text-align:center; padding:24px 18px;
+      max-width:980px; width:100%;
     }
 
-    /* Safety: if the image fails to load */
-    @media (prefers-reduced-transparency: reduce){
-      .shade::before{ background: rgba(0,0,0,.35); }
+    .headline{
+      font-size:clamp(36px,6vw,64px);
+      line-height:1.05; letter-spacing:.02em;
+      text-shadow: 0 4px 20px var(--shadow);
+      margin: 16px auto 18px;
+    }
+
+    .cta{
+      display:inline-flex; align-items:center; justify-content:center;
+      min-width: clamp(220px, 44vw, 540px);
+      padding: 16px 24px;
+      border-radius: 16px;
+      font-weight: 900; letter-spacing:.02em;
+      text-decoration:none; user-select:none; cursor:pointer;
+      color:#1b1300; background:linear-gradient(#ffd972,#f2c23b);
+      box-shadow:
+        0 14px 36px -14px rgba(246,194,67,.65),
+        inset 0 -2px 0 0 rgba(0,0,0,.15);
+      border: 1px solid rgba(255,255,255,.12);
+      transition: transform .06s ease, box-shadow .12s ease, filter .12s ease;
+    }
+    .cta:active{ transform: translateY(1px); filter:saturate(1.06) }
+    .cta:focus-visible{ outline:2px solid #fff; outline-offset:4px }
+
+    .foot{
+      position:absolute; inset:auto 0 14px 0;
+      text-align:center; color:var(--muted);
+      font-size:.8rem; opacity:.85;
+    }
+
+    @media (max-width:440px){
+      .cta{ min-width:70vw; padding:14px 18px; border-radius:14px }
     }
   </style>
 </head>
 <body>
-  <div class="shade"></div>
+  <main class="hero" aria-label="Welcome to The Empire">
+    <div class="hero-inner">
+      <h1 class="headline">WELCOME TO THE EMPIRE</h1>
+      <a id="enterCmd" class="cta" href="/login.html" aria-label="Enter Command">
+        ENTER COMMAND
+      </a>
+    </div>
 
-  <!-- One single real, clickable button -->
-  <div class="cta-wrap">
-    <a class="cta-hotspot" href="/login.html" aria-label="Enter Command">ENTER COMMAND</a>
-  </div>
+    <div class="foot">© 2025 The Empire</div>
+  </main>
 
-  <div class="mark">© 2025 The Empire</div>
+  <script>
+    (function(){
+      const btn = document.getElementById('enterCmd');
+      if (!btn) return;
+      btn.addEventListener('click', function(ev){
+        ev.preventDefault();
+        window.location.href = "/login.html";
+      }, { capture:true });
+    })();
+  </script>
 </body>
 </html>

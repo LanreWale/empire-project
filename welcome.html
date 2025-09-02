@@ -1,72 +1,115 @@
 <!DOCTYPE html>
-<html lang="en" data-version="welcome-1.0.4">
+<html lang="en" data-version="welcome-img-1.0.0">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>The Empire — Welcome</title>
 
-  <!-- Preload hero to avoid flicker (cache-busted) -->
-  <link rel="preload" as="image" href="/assets/brand/empire-hero.jpg?v=4">
+  <!-- Preload the hero image to avoid pop-in -->
+  <link rel="preload" as="image" href="/assets/brand/empire-hero.jpg" />
 
   <style>
-    :root{--bg:#0b0e12;--text:#e8eaed;--muted:#b6b9c2;--gold:#f1c40f}
+    :root{
+      --bg:#0b0e12; --text:#e8eaed; --muted:#b6b9c2; --gold:#f1c40f;
+    }
     *{box-sizing:border-box;margin:0;padding:0}
-    body{background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-    .container{max-width:1100px;margin:0 auto;padding:16px}
+    body{
+      background:var(--bg);
+      color:var(--text);
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      min-height:100dvh;
+      display:flex; flex-direction:column;
+    }
 
-    /* HERO (uses the background image itself) */
+    /* Header/Footer containers filled by /assets/js/empire-shell.js */
+    .emp-header, .emp-footer { isolation:isolate; }
+
+    /* Hero section is JUST the image. Text is baked into the image. */
     .hero{
       position:relative;
-      min-height:100svh; /* full mobile viewport height */
-      background:url("/assets/brand/empire-hero.jpg?v=4") center/cover no-repeat;
-      isolation:isolate;
-    }
-    /* Gentle darkening for readability */
-    .hero::after{
-      content:"";position:absolute;inset:0;
-      background:radial-gradient(ellipse at 50% 58%, rgba(0,0,0,.15), rgba(0,0,0,.62) 65%);
-      z-index:0;
-    }
-    /* <<< place the block BETWEEN the two lines on the image >>> */
-    .hero-inner{
-      position:absolute;left:50%;top:58% !important;transform:translate(-50%,-50%);
-      text-align:center;padding:28px 18px;z-index:1;width:min(92vw,860px);
+      flex:1 0 auto;
+      display:grid;
+      place-items:center;
+      background:url("/assets/brand/empire-hero.jpg") center/cover no-repeat;
+      /* subtle vignette for button readability */
+      box-shadow: inset 0 0 160px rgba(0,0,0,.55);
     }
 
-    .kicker{font-size:.8rem;letter-spacing:.28em;color:#ffdf7a;font-weight:800;margin-bottom:10px;text-shadow:0 2px 6px rgba(0,0,0,.45)}
-    h1{font-size:clamp(34px,6vw,66px);line-height:1.05;margin-bottom:10px;text-shadow:0 3px 10px rgba(0,0,0,.5)}
-    .sub{color:var(--muted);font-size:clamp(15px,2.6vw,20px);margin:0 auto 18px;max-width:760px;text-shadow:0 2px 6px rgba(0,0,0,.45)}
+    /* Only one real control on top of the image */
+    .cta-wrap{
+      position:relative;
+      z-index:1;
+      display:flex;
+      gap:12px;
+      align-items:center;
+      justify-content:center;
+      padding:20px 16px;
+      /* ensures button sits roughly in the “gap” area visually */
+      transform: translateY(6vh);
+    }
 
-    .cta-row{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
-    .btn{border:none;border-radius:14px;padding:12px 20px;font-weight:800;cursor:pointer}
-    .btn-primary{background:var(--gold);color:#1a1200;box-shadow:0 12px 30px -14px var(--gold)}
-    .btn-ghost{background:#1a1f2b;border:1px solid rgba(255,255,255,.12);color:var(--text)}
-    footer{padding:18px 0;color:var(--muted);text-align:center}
+    .btn{
+      border:none;
+      border-radius:14px;
+      padding:12px 20px;
+      font-weight:800;
+      cursor:pointer;
+      text-decoration:none;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      white-space:nowrap;
+    }
+    .btn-primary{
+      background:var(--gold);
+      color:#1a1200;
+      box-shadow:0 14px 34px -16px var(--gold), 0 1px 0 rgba(255,255,255,.25) inset;
+    }
+
+    /* Footer */
+    .emp-footer__inner{
+      max-width:1100px;margin:0 auto;padding:14px 16px;
+      color:var(--muted); text-align:center;
+    }
+
+    @media (max-width:640px){
+      .cta-wrap{ transform: translateY(4vh); }
+    }
   </style>
 </head>
 <body>
-  <!-- Shared header (logo + nav) -->
+  <!-- Shared header/nav (Welcome • Commander Login • Dashboard • Enter Empire) -->
   <header id="emp-header" class="emp-header"></header>
 
-  <main class="container">
-    <section class="hero" role="img" aria-label="The Empire">
-      <div class="hero-inner">
-        <div class="kicker">✦ THE EMPIRE AFFILIATE SYSTEM ✦</div>
-        <h1>Welcome to THE EMPIRE</h1>
-        <p class="sub">Automated. Intelligent. Profitable. 24/7.</p>
-        <div class="cta-row">
-          <a class="btn btn-primary" href="/login.html">Enter Command</a>
-          <a class="btn btn-ghost" href="/dashboard.html">View Dashboard</a>
-          <a class="btn btn-ghost" href="/admin/">Join HQ</a>
-        </div>
-      </div>
-    </section>
+  <!-- Full-bleed hero with composited artwork -->
+  <main class="hero" role="img" aria-label="The Empire">
+    <div class="cta-wrap">
+      <button class="btn btn-primary" id="enterBtn">Enter Command</button>
+    </div>
   </main>
 
   <!-- Shared footer -->
-  <footer id="emp-footer" class="emp-footer"></footer>
+  <footer id="emp-footer" class="emp-footer">
+    <div class="emp-footer__inner">
+      Commanding the Future of Affiliate Marketing<br/>© <span id="yr"></span> The Empire
+    </div>
+  </footer>
 
-  <!-- Shell (header/footer) -->
+  <!-- Scripts -->
+  <script src="/js/empire-auth.js"></script>
   <script src="/assets/js/empire-shell.js" defer></script>
+  <script>
+    // Footer year
+    document.getElementById('yr').textContent = new Date().getFullYear();
+
+    // Decide where to send the user when they click Enter Command
+    function enterEmpire(){
+      try{
+        if (window.EmpireAuth?.has()) location.href = "/dashboard.html";
+        else                          location.href = "/login.html";
+      }catch{ location.href = "/login.html"; }
+    }
+    document.getElementById('enterBtn')?.addEventListener('click', enterEmpire);
+  </script>
 </body>
 </html>

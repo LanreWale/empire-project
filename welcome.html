@@ -5,97 +5,69 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>The Empire — Welcome</title>
   <style>
-    /* Page reset */
     :root { --bg:#0b0e12; }
     html,body{height:100%}
     body{margin:0;background:var(--bg);}
 
-    /* Fullscreen hero with your composed image */
     .hero{
       position:relative;
       min-height:100vh;
       background:url("/assets/brand/empire-hero-final.jpg") center/cover no-repeat;
-      /* keep the image steady; content is only the invisible button */
-      display:block;
       overflow:hidden;
       touch-action:manipulation;
     }
 
-    /* Clickable overlay exactly where the gold bar is on the image */
+    /* CLICKABLE HOTSPOT OVER THE GOLD BAR */
     .cta{
       position:absolute;
       left:50%;
       transform:translateX(-50%);
-      /* Default placement tuned for common phone portrait */
-      bottom: 29.5%;
-      /* Make the click area the size of the gold bar */
-      padding:16px 44px;
-      border-radius:10px;
+      /* tuned default for phones; media queries adjust below */
+      bottom:29.5%;
 
-      /* Invisible, we rely on the image visuals */
-      background:transparent;
-      color:transparent;             /* hide text (visuals are in the image) */
-      text-shadow:none;
+      /* make it unmistakably clickable on all browsers */
+      display:block;
+      z-index:5;
+      background:rgba(0,0,0,0.001);   /* virtually invisible, but receives taps */
+      color:transparent;               /* text hidden (visual is in the image) */
       border:0;
       text-decoration:none;
       user-select:none;
       -webkit-tap-highlight-color:transparent;
       cursor:pointer;
-    }
-    .cta:active{ transform:translateX(-50%) scale(.98); }
 
-    /* Improve tap size on very small phones */
-    @media (max-width: 380px){
-      .cta{
-        bottom: 28.5%;
-        padding:14px 40px;
-      }
+      /* size to match the gold bar area */
+      width:min(78vw, 520px);
+      height:56px;
+      border-radius:10px;
     }
+    .cta:active{ transform:translateX(-50%) scale(.985); }
 
-    /* Typical phones (portrait) */
-    @media (min-width: 381px) and (max-width: 599px){
-      .cta{
-        bottom: 29.5%;
-        padding:16px 44px;
-      }
+    /* Very small phones */
+    @media (max-width:380px){
+      .cta{ width:78vw; height:48px; bottom:28.5%; }
     }
-
     /* Large phones / small tablets (portrait) */
-    @media (min-width: 600px) and (max-width: 899px){
-      .cta{
-        bottom: 30%;
-        padding:18px 50px;
-      }
+    @media (min-width:600px) and (max-width:899px){
+      .cta{ width:min(66vw, 560px); height:60px; bottom:30%; }
     }
-
-    /* Tablets / small laptops (landscape-ish aspect) */
-    @media (min-width: 900px) and (max-width: 1279px){
-      .cta{
-        bottom: 27.5%;
-        padding:18px 52px;
-      }
+    /* Tablets / small laptops */
+    @media (min-width:900px) and (max-width:1279px){
+      .cta{ width:min(52vw, 580px); height:60px; bottom:27.5%; }
     }
-
-    /* Desktops / wide screens */
-    @media (min-width: 1280px){
-      .cta{
-        bottom: 26.5%;
-        padding:20px 56px;
-      }
+    /* Desktops / wide */
+    @media (min-width:1280px){
+      .cta{ width:min(42vw, 600px); height:64px; bottom:26.5%; }
     }
-
-    /* Very short viewports (e.g., mobile landscape with little height) */
-    @media (max-height: 620px){
-      .cta{
-        bottom: 22%;
-      }
+    /* Very short viewports (mobile landscape) */
+    @media (max-height:620px){
+      .cta{ bottom:22%; }
     }
   </style>
 </head>
 <body>
   <main class="hero">
-    <!-- Real, clickable button overlaying the gold rectangle in the image -->
-    <a class="cta" href="/login.html" aria-label="Enter Command">ENTER COMMAND</a>
+    <a class="cta" href="/login.html" role="button" aria-label="Enter Command">ENTER COMMAND</a>
   </main>
 </body>
 </html>

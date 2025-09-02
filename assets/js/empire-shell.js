@@ -1,12 +1,11 @@
 // /assets/js/empire-shell.js
 (function () {
-  // ⬇️ Set your canonical domain ONCE here (include https)
-  // e.g. "https://empire.yourdomain.com"
+  // ✅ Set your canonical domain ONCE (include https)
   const DOMAIN = "https://empire.yourdomain.com";
 
-  function url(path){ return DOMAIN.replace(/\/+$/,"") + path; }
+  const url = (path) => DOMAIN.replace(/\/+$/,"") + path;
 
-  function isAuthed() {
+  function isAuthed(){
     try { return !!(window.EmpireAuth && window.EmpireAuth.has && window.EmpireAuth.has()); }
     catch { return false; }
   }
@@ -18,17 +17,17 @@
     { href: url("/dashboard.html"), label: "Dashboard",        show: true },
   ];
 
-  function isActive(absHref) {
-    try {
-      const here = location.pathname.replace(/\/+$/, "") || "/index.html";
+  function isActive(absHref){
+    try{
+      const here  = location.pathname.replace(/\/+$/,"") || "/index.html";
       const there = new URL(absHref, location.origin).pathname.replace(/\/+$/,"");
       if (here === "" || here === "/") return (there === "/welcome.html");
       return here === there;
-    } catch { return false; }
+    }catch{ return false; }
   }
 
-  function navHTML() {
-    return LINKS.filter(l => l.show).map(l => `
+  function navHTML(){
+    return LINKS.filter(l=>l.show).map(l=>`
       <a class="emp-nav__link ${isActive(l.href) ? "active" : ""}" href="${l.href}">
         ${l.label}
       </a>
@@ -57,12 +56,9 @@
     </div>
   `;
 
-  function inject(id, html) {
-    const slot = document.getElementById(id);
-    if (slot) slot.innerHTML = html;
-  }
+  function inject(id, html){ const slot=document.getElementById(id); if(slot) slot.innerHTML = html; }
 
-  // Inline styles
+  // Inline shell styles
   const css = `
     .emp-header{background:#121624;border-bottom:1px solid rgba(255,255,255,.06);box-shadow:0 8px 20px -12px rgba(0,0,0,.5)}
     .emp-header__inner{max-width:980px;margin:0 auto;padding:14px 16px;display:flex;align-items:center;gap:16px}
@@ -81,14 +77,12 @@
     .emp-footer__inner{max-width:980px;margin:0 auto;padding:16px;color:#b6b9c2;text-align:center}
     @media (max-width:740px){ .emp-nav{display:none} }
   `;
-  const style = document.createElement("style");
-  style.textContent = css;
-  document.head.appendChild(style);
+  const style = document.createElement("style"); style.textContent = css; document.head.appendChild(style);
 
-  window.addEventListener("DOMContentLoaded", () => {
+  window.addEventListener("DOMContentLoaded", ()=>{
     inject("emp-header", headerHTML);
     inject("emp-footer", footerHTML);
     const btn = document.getElementById("emp-enter-btn");
-    if (btn) { btn.setAttribute("href", isAuthed() ? url("/dashboard.html") : url("/login.html")); }
+    if (btn) btn.setAttribute("href", isAuthed() ? url("/dashboard.html") : url("/login.html"));
   });
 })();

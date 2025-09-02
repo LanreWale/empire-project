@@ -5,22 +5,33 @@
   <title>The Empire — Entry</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <script src="/js/empire-auth.js"></script>
+
+  <!-- Optional: force canonical host (set host only if you want hard redirect) -->
+  <script>
+    (function(){
+      var CANON = "empire.yourdomain.com";  // ← change this (host only) or leave as-is to disable
+      if (CANON && location.hostname && location.hostname !== CANON) {
+        var target = "https://" + CANON + (location.pathname || "/") + location.search + location.hash;
+        location.replace(target);
+      }
+    })();
+  </script>
+
+  <!-- Route by auth -->
   <script>
     (function () {
       try {
         if (window.EmpireAuth && window.EmpireAuth.has && window.EmpireAuth.has()) {
-          location.replace("/dashboard.html");   // already signed in
+          location.replace("/dashboard.html");
         } else {
-          location.replace("/welcome.html");      // not signed in yet
+          location.replace("/welcome.html");
         }
       } catch {
         location.replace("/welcome.html");
       }
     })();
   </script>
-  <noscript>
-    <meta http-equiv="refresh" content="0; url=/welcome.html">
-  </noscript>
+  <noscript><meta http-equiv="refresh" content="0; url=/welcome.html"></noscript>
 </head>
 <body></body>
 </html>

@@ -4,6 +4,15 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>The Empire — Commander Login</title>
+
+  <!-- Auth helper + guard: if already logged in, go to dashboard -->
+  <script src="/js/empire-auth.js"></script>
+  <script>
+    if (window.EmpireAuth?.has()) {
+      window.location.replace("/dashboard.html");
+    }
+  </script>
+
   <style>
     :root{--bg:#0b0e12;--panel:#121624;--text:#e8eaed;--muted:#b6b9c2;--gold:#f1c40f;--shadow:rgba(0,0,0,.5)}
     *{box-sizing:border-box;margin:0;padding:0}
@@ -28,8 +37,10 @@
     .terms{margin-top:12px;text-align:center;color:var(--muted)}
     footer{margin:26px 0 10px;text-align:center;color:var(--muted)}
   </style>
-<link rel="stylesheet" href="/assets/css/empire-style.css">
-<script src="/assets/js/empire-layout.js" defer></script>
+
+  <!-- (Optional) your shared layout/css if you use them elsewhere -->
+  <link rel="stylesheet" href="/assets/css/empire-style.css">
+  <script src="/assets/js/empire-layout.js" defer></script>
 </head>
 <body>
   <header class="header">
@@ -38,10 +49,11 @@
   </header>
 
   <!-- Empire Tabs (loader) -->
+  <div id="emp-tabs-mount"></div>
   <script>
     fetch('/fragments/tabs.html').then(r=>r.text()).then(h=>{
       const n=document.getElementById('emp-tabs-mount'); if(n) n.outerHTML=h;
-    });
+    }).catch(()=>{});
   </script>
 
   <main class="container">
@@ -56,58 +68,66 @@
         <span class="sword">⚔️</span>
       </div>
 
-      <div class="field">
-        <input id="accessKey" type="password" placeholder="Access Key" autocomplete="current-password">
-      </div>
-      <div class="cta">
-        <button class="btn btn-primary" id="enterBtn">Enter The Empire</button>
-      </div>
+      <!-- Login form -->
+      <form id="empire-login-form" class="login-form" autocomplete="on">
+        <div class="field">
+          <input id="login-id" type="password" placeholder="Access Key" autocomplete="current-password" />
+        </div>
+        <div class="cta">
+          <button class="btn btn-primary" type="submit" id="enterBtn">Enter The Empire</button>
+        </div>
+      </form>
+
       <p class="terms">By entering you agree to Empire terms.</p>
     </section>
 
     <footer>Commanding the Future of Affiliate Marketing</footer>
   </main>
 
+  <!-- Login logic -->
   <script>
-    document.getElementById('enterBtn').addEventListener('click',()=>{
-      const key=document.getElementById('accessKey').value.trim();
-      if(!key){ alert('Enter your access key.'); return; }
-      // Placeholder auth redirect:
-      location.href='/dashboard.html';
+    document.addEventListener("DOMContentLoaded", () => {
+      const form = document.getElementById("empire-login-form");
+      const idInput = document.getElementById("login-id");
+
+      // Already logged in? bounce to dashboard.
+      if (window.EmpireAuth?.has()) { location.replace("/dashboard.html"); return; }
+
+      form?.addEventListener("submit", async (ev) => {
+        ev.preventDefault();
+        const id = (idInput?.value || "").trim();
+        if (!id) { alert("Enter your access key."); return; }
+
+        // Resolve exec and key (can be injected via a <script> that sets window.ENV)
+        const exec = (window.ENV && window.ENV.EXEC_URL) || "";
+        const key  = (window.ENV && window.ENV.API_KEY)  || "";
+
+        if (!exec || !key) {
+          // If you haven't wired the backend yet, succeed locally for now:
+          const token = `OK:${id}:${Date.now()}`;
+          window.EmpireAuth?.set(token);
+          location.href = "/dashboard.html";
+          return;
+        }
+
+        const url  = `${exec}?action=whois&key=${encodeURIComponent(key)}&id=${encodeURIComponent(id)}`;
+
+        try {
+          const r = await fetch(url);
+          const res = await r.json();
+          if (res.ok && res.found) {
+            const identifier = res.email || res.phone || id;
+            const token = `OK:${identifier}:${Date.now()}`;
+            window.EmpireAuth?.set(token);
+            location.href = "/dashboard.html";
+          } else {
+            alert(res.error || "Unauthorized");
+          }
+        } catch {
+          alert("Network error");
+        }
+      });
     });
   </script>
 </body>
 </html>
-
-<script src="/js/empire-auth.js"></script>
-<script>
-document.addEventListener("DOMContentLoaded", () => {
-  const form = document.getElementById("empire-login-form");
-  const idInput = document.getElementById("login-id");
-
-  if (window.EmpireAuth?.has()) { location.replace("/dashboard.html"); return; }
-
-  form?.addEventListener("submit", async (ev) => {
-    ev.preventDefault();
-    const id = (idInput?.value || "").trim();
-    if (!id) return;
-
-    const exec = (window.ENV?.EXEC_URL) || (import.meta?.env?.VITE_EMPIRE_EXEC_URL) || "";
-    const key  = (window.ENV?.API_KEY)  || (import.meta?.env?.VITE_EMPIRE_API_KEY)  || "";
-    const url  = `${exec}?action=whois&key=${encodeURIComponent(key)}&id=${encodeURIComponent(id)}`;
-
-    try {
-      const r = await fetch(url);
-      const res = await r.json();
-      if (res.ok && res.found) {
-        const identifier = res.email || res.phone || id;
-        const token = `OK:${identifier}:${Date.now()}`;
-        EmpireAuth.set(token);
-        location.href = "/dashboard.html";
-      } else {
-        alert(res.error || "Unauthorized");
-      }
-    } catch { alert("Network error"); }
-  });
-});
-</script>

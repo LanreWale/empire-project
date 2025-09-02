@@ -4,6 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>The Empire — Welcome</title>
+
+  <!-- Auth helper so we can route Enter Command properly -->
+  <script src="/js/empire-auth.js"></script>
+
   <style>
     :root {
       --bg:#0b0e12; --panel:#121624; --text:#e8eaed; --muted:#b6b9c2;
@@ -17,10 +21,8 @@
     header .brand img{width:28px;height:28px;border-radius:6px;box-shadow:0 6px 18px -8px rgba(241,196,15,.8)}
     header .title{font-weight:700;letter-spacing:.3px}
     header .title small{color:var(--muted);font-weight:500}
-    /* Tabs will mount below header */
     #emp-tabs-mount{margin:8px 16px}
 
-    /* HERO */
     .hero{position:relative;display:grid;place-items:center;min-height:64vh;overflow:hidden}
     .hero:before{
       content:"";position:absolute;inset:0;
@@ -38,8 +40,10 @@
     .btn-ghost{background:#1a1f2b;border:1px solid rgba(255,255,255,.06);color:var(--text)}
     footer{margin:36px 0 18px;text-align:center;color:var(--muted)}
   </style>
-<link rel="stylesheet" href="/assets/css/empire-style.css">
-<script src="/assets/js/empire-layout.js" defer></script>
+
+  <!-- (Optional) shared layout assets -->
+  <link rel="stylesheet" href="/assets/css/empire-style.css">
+  <script src="/assets/js/empire-layout.js" defer></script>
 </head>
 <body>
   <header class="header">
@@ -49,11 +53,12 @@
     </div>
   </header>
 
-  <!-- Empire Tabs (loader) -->
+  <!-- Tabs mount (will be replaced by fragment) -->
+  <div id="emp-tabs-mount"></div>
   <script>
     fetch('/fragments/tabs.html').then(r=>r.text()).then(h=>{
       const n=document.getElementById('emp-tabs-mount'); if(n) n.outerHTML=h;
-    });
+    }).catch(()=>{});
   </script>
 
   <main class="container">
@@ -63,7 +68,8 @@
         <h1>Welcome to THE EMPIRE</h1>
         <p class="sub">Automated. Intelligent. Profitable. 24/7.</p>
         <div class="cta-row">
-          <a class="btn btn-primary" href="/login.html">Enter Command</a>
+          <!-- Smart route: if authed ➜ dashboard, else ➜ login -->
+          <a class="btn btn-primary" href="#" id="enterCommandBtn">Enter Command</a>
           <a class="btn btn-ghost" href="/dashboard.html">View Dashboard</a>
           <a class="btn btn-ghost" href="/admin/">Join HQ</a>
         </div>
@@ -72,14 +78,17 @@
 
     <footer>Commanding the Future of Affiliate Marketing</footer>
   </main>
+
+  <script>
+    // “Enter Command” routing
+    document.getElementById('enterCommandBtn')?.addEventListener('click', (e)=>{
+      e.preventDefault();
+      if (window.EmpireAuth?.has()) {
+        location.href = "/dashboard.html";
+      } else {
+        location.href = "/login.html";
+      }
+    });
+  </script>
 </body>
 </html>
-<script src="/js/empire-auth.js"></script>
-<script>
-  function enterCommand(){
-    if (window.EmpireAuth?.has()) location.href="/dashboard.html";
-    else location.href="/login.html";
-  }
-</script>
-<!-- Button -->
-<button onclick="enterCommand()">Enter Command</button>

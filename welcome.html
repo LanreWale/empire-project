@@ -5,10 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>The Empire — Welcome</title>
   <style>
-    :root { --bg:#0b0e12; }
+    :root { --bg:#0b0e12; --gold1:#F5CF5A; --gold2:#C99611; }
     html,body{height:100%}
     body{margin:0;background:var(--bg);}
 
+    /* Hero background */
     .hero{
       position:relative;
       min-height:100vh;
@@ -17,49 +18,53 @@
       touch-action:manipulation;
     }
 
-    /* CLICKABLE HOTSPOT OVER THE GOLD BAR */
+    /* Clickable CTA that visually looks like the gold bar */
     .cta{
       position:absolute;
       left:50%;
       transform:translateX(-50%);
-      /* tuned default for phones; media queries adjust below */
-      bottom:29.5%;
-
-      /* make it unmistakably clickable on all browsers */
-      display:block;
-      z-index:5;
-      background:rgba(0,0,0,0.001);   /* virtually invisible, but receives taps */
-      color:transparent;               /* text hidden (visual is in the image) */
-      border:0;
-      text-decoration:none;
+      bottom:28.75%;                 /* tuned for the current artwork */
+      z-index:9999;                  /* ensure it sits above anything */
+      pointer-events:auto;           /* explicitly allow taps */
       user-select:none;
       -webkit-tap-highlight-color:transparent;
-      cursor:pointer;
+      text-decoration:none;
 
-      /* size to match the gold bar area */
+      display:flex; align-items:center; justify-content:center;
       width:min(78vw, 520px);
       height:56px;
-      border-radius:10px;
+      border-radius:12px;
+
+      /* gold pill look (very close to the image) */
+      background:linear-gradient(180deg, var(--gold1), var(--gold2));
+      box-shadow:
+        0 10px 18px rgba(0,0,0,.25),
+        inset 0 1px 0 rgba(255,255,255,.35);
+      border:1px solid rgba(0,0,0,.2);
+
+      color:#111; font-weight:900; letter-spacing:.02em;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      font-size: clamp(15px, 3.6vw, 22px);
     }
     .cta:active{ transform:translateX(-50%) scale(.985); }
 
-    /* Very small phones */
+    /* very small phones */
     @media (max-width:380px){
-      .cta{ width:78vw; height:48px; bottom:28.5%; }
+      .cta{ width:78vw; height:48px; bottom:28.3%; }
     }
-    /* Large phones / small tablets (portrait) */
+    /* large phones / small tablets */
     @media (min-width:600px) and (max-width:899px){
-      .cta{ width:min(66vw, 560px); height:60px; bottom:30%; }
+      .cta{ width:min(66vw,560px); height:60px; bottom:29.75%; }
     }
-    /* Tablets / small laptops */
+    /* tablets / small laptops */
     @media (min-width:900px) and (max-width:1279px){
-      .cta{ width:min(52vw, 580px); height:60px; bottom:27.5%; }
+      .cta{ width:min(52vw,580px); height:60px; bottom:27.5%; }
     }
-    /* Desktops / wide */
+    /* desktops */
     @media (min-width:1280px){
-      .cta{ width:min(42vw, 600px); height:64px; bottom:26.5%; }
+      .cta{ width:min(42vw,600px); height:64px; bottom:26.5%; }
     }
-    /* Very short viewports (mobile landscape) */
+    /* short viewports (landscape phones) */
     @media (max-height:620px){
       .cta{ bottom:22%; }
     }
@@ -67,7 +72,14 @@
 </head>
 <body>
   <main class="hero">
-    <a class="cta" href="/login.html" role="button" aria-label="Enter Command">ENTER COMMAND</a>
+    <!-- Using both href and onclick to be extra reliable on some Android builds -->
+    <a class="cta"
+       href="/login.html"
+       role="button"
+       aria-label="Enter Command"
+       onclick="location.href='/login.html'; return false;">
+      ENTER COMMAND
+    </a>
   </main>
 </body>
 </html>

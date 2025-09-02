@@ -1,26 +1,31 @@
-// Empire Navigation + Guards
+<script>
+// Shared navbar + guards (Welcome -> Login -> Dashboard)
 (function () {
   const path = (location.pathname || "/welcome").replace(/\/+$/,'') || "/welcome";
   const page = path.split("/").pop() || "welcome";
 
-  // Token check
+  // Require helper
   const hasAuth = !!(window.EmpireAuth && window.EmpireAuth.has());
 
-  // Highlight current tab
+  // Highlight active tab
   document.querySelectorAll('.emp-nav a').forEach(a => {
     const key = (a.getAttribute('data-tab')||'').toLowerCase();
     if (key === page) a.classList.add('active');
   });
 
-  // Hide items requiring auth
+  // Hide items that require auth
   document.querySelectorAll('[data-requires-auth]').forEach(el => {
     if (!hasAuth) el.style.display = 'none';
   });
 
-  // Guard: prevent direct dashboard access without login
+  // Guard: dashboard needs auth
   if (page === 'dashboard' && !hasAuth) {
     const next = encodeURIComponent('/dashboard');
     location.replace('/login?next=' + next);
     return;
   }
+
+  // NOTE: We DO NOT auto-redirect from welcome to dashboard,
+  // even if already authed—per your required sequence.
 })();
+</script>

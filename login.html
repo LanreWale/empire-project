@@ -4,6 +4,8 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>The Empire — Commander Login</title>
+  <meta name="description" content="Secure access to THE EMPIRE Command Interface." />
+  <link rel="icon" href="/assets/brand/favicon.ico" />
   <style>
     :root{--bg:#0b0e12;--panel:#121624;--text:#e8eaed;--muted:#b6b9c2;--gold:#f1c40f;--shadow:rgba(0,0,0,.5)}
     *{box-sizing:border-box;margin:0;padding:0}
@@ -19,6 +21,9 @@
     .btn{width:100%;border:none;border-radius:14px;padding:14px 22px;font-weight:800;cursor:pointer}
     .btn-primary{background:var(--gold);color:#1a1200;box-shadow:0 14px 34px -16px var(--gold)}
     .terms{margin-top:12px;text-align:center;color:var(--muted)}
+    .msg{margin-top:12px;font-size:.95rem}
+    .msg.err{color:#ffb4b4}
+    .msg.ok{color:#9affc8}
   </style>
 </head>
 <body>
@@ -37,14 +42,15 @@
         <span class="sword">⚔️</span>
       </div>
 
-      <form id="empire-login-form">
+      <form id="empire-login-form" autocomplete="on">
         <div class="field">
-          <input id="login-id" type="text" placeholder="Email or Phone" autocomplete="username">
+          <input id="login-id" type="text" placeholder="Email or Phone" autocomplete="username" required autofocus>
         </div>
         <div class="field">
-          <input id="accessKey" type="password" placeholder="Access Key" autocomplete="current-password">
+          <input id="accessKey" type="password" placeholder="Access Key" autocomplete="current-password" required>
         </div>
-        <button class="btn btn-primary" type="submit">Enter The Empire</button>
+        <button class="btn btn-primary" type="submit" id="loginBtn">Enter The Empire</button>
+        <div id="loginMsg" class="msg" role="alert" aria-live="polite"></div>
       </form>
       <p class="terms">By entering you agree to Empire terms.</p>
     </section>
@@ -56,26 +62,99 @@
   <!-- Scripts -->
   <script src="/js/empire-auth.js"></script>
   <script src="/assets/js/empire-shell.js" defer></script>
+
+  <!-- OPTIONAL: if you want to hard-wire now, fill these two and remove this comment.
   <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      const form = document.getElementById("empire-login-form");
-      const idInput = document.getElementById("login-id");
-      const keyInput = document.getElementById("accessKey");
-
-      if (window.EmpireAuth?.has()) { location.replace("/dashboard.html"); return; }
-
-      form?.addEventListener("submit", async (ev) => {
-        ev.preventDefault();
-        const id = (idInput?.value || "").trim();
-        const key = (keyInput?.value || "").trim();
-        if (!id || !key) return alert("Enter your ID and access key.");
-
-        // Placeholder logic
-        const token = `OK:${id}:${Date.now()}`;
-        EmpireAuth.set(token);
-        location.href = "/dashboard.html";
-      });
-    });
+    window.ENV = {
+      EXEC_URL: "https://script.google.com/macros/s/AKfy.../exec",
+      API_KEY:  "YOUR_GAS_API_KEY"
+    };
   </script>
+  -->
+
+  <script>
+    (function(){
+      const form   = document.getElementById("empire-login-form");
+      const idEl   = document.getElementById("login-id");
+      const keyEl  = document.getElementById("accessKey");
+      const btn    = document.getElementById("loginBtn");
+      const msgEl  = document.getElementById("loginMsg");
+
+      // Already authenticated? Bounce to dashboard.
+      if (window.EmpireAuth?.has()) {
+        location.replace("/dashboard.html");
+        return;
+      }
+
+      function paintMsg(text, ok=false){
+        if(!msgEl) return;
+        msgEl.textContent = text || "";
+        msgEl.className = "msg " + (ok ? "ok" : "err");
+      }
+
+      async function whoisLogin(id, apiKey, execUrl){
+        // Construct URL accepted by your GAS: action=whois&key=<API_KEY>&id=<email_or_phone>
+        const u = new URL(execUrl);
+        u.searchParams.set("action","whois");
+        u.searchParams.set("key", apiKey);
+        u.searchParams.set("id", id);
+        const r = await fetch(u.toString(), { headers: { "cache-control":"no-store" } });
+        if(!r.ok) throw new Error("Network "+r.status);
+        return r.json();
+      }
+
+      form?.addEventListener("submit", async (ev)=>{
+        ev.preventDefault();
+        const id  = (idEl?.value  || "").trim();
+        const key = (keyEl?.value || "").trim();
+        if(!id || !key){ paintMsg("Enter your ID and access key."); return; }
+
+        // Resolve ENV (if present). If missing, we fall back to local-only mode.
+        const EXEC_URL = (window.ENV && window.ENV.EXEC_URL) || "";
+        const API_KEY  = (window.ENV && window.ENV.API_KEY)  || "";
+
+        // Disable while processing
+        btn.disabled = true;
+        paintMsg("");
+
+        try {
+          if (EXEC_URL && API_KEY) {
+            const res = await whoisLogin(id, API_KEY, EXEC_URL);
+
+            // Accept only if ok + found and not suspended/rejected
+            if (res && res.ok && (res.found || res.email || res.phone)) {
+              const status = (res.status || res.approval || "Approved").toString().toLowerCase();
+              if (["rejected","suspended","blocked","disabled"].includes(status)) {
+                paintMsg("Access denied: "+(res.status||"SUSPENDED")+".", false);
+              } else {
+                const ident = res.email || res.phone || id;
+                const token = `OK:${ident}:${Date.now()}`;
+                window.EmpireAuth?.set(token);
+                location.href = "/dashboard.html";
+              }
+            } else {
+              paintMsg(res?.error || "Unauthorized.", false);
+            }
+          } else {
+            // No ENV provided → local acceptance (dev convenience)
+            const token = `OK:${id}:${Date.now()}`;
+            window.EmpireAuth?.set(token);
+            location.href = "/dashboard.html";
+          }
+        } catch (e){
+          paintMsg("Login failed. " + (e.message || "Network error."), false);
+        } finally {
+          btn.disabled = false;
+        }
+      });
+    })();
+  </script>
+
+  <noscript>
+    <style>main{display:none}</style>
+    <div style="padding:18px;color:#ffb4b4;text-align:center">
+      JavaScript is required to sign in.
+    </div>
+  </noscript>
 </body>
 </html>

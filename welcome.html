@@ -5,59 +5,117 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>The Empire — Welcome</title>
 
-  <!-- Use the final hero you uploaded -->
+  <!-- Preload hero to avoid flashes -->
   <link rel="preload" as="image" href="/assets/brand/empire-hero-final.jpg"/>
 
   <style>
-    :root { --bg:#0b0e12; }
-    * { box-sizing:border-box; margin:0; padding:0; }
-    html, body { height:100%; }
-    body {
-      background: var(--bg) url("/assets/brand/empire-hero-final.jpg") center top / cover no-repeat fixed;
-      min-height:100vh;
+    :root{
+      --bg:#0b0e12;
+      --text:#e8eaed;
+      --muted:#b6b9c2;
+      --gold:#f1c40f;
+      --ink:#1a1200;
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    html,body{height:100%}
+    body{
+      min-height:100%;
+      color:var(--text);
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      background:var(--bg) url("/assets/brand/empire-hero-final.jpg") center top / cover no-repeat fixed;
+      /* gentle vignette for text contrast */
+      position:relative;
+    }
+    body::after{
+      content:""; position:fixed; inset:0;
+      background: radial-gradient(ellipse at center, rgba(0,0,0,.0), rgba(0,0,0,.35) 60%, rgba(0,0,0,.6) 100%);
+      pointer-events:none;
     }
 
-    /* Clickable hotspot that sits exactly where the gold button is in the image */
-    .cta-hotspot {
-      position: fixed; /* stick to viewport so it aligns with the artwork */
-      left: 50%;
-      transform: translateX(-50%);
-      width: min(82vw, 520px);       /* responsive width, capped on desktop */
-      height: clamp(54px, 9.5vw, 84px); /* responsive height */
-      border-radius: 18px;
-      /* Placement: push it down to sit on top of the button in the image */
-      top: clamp(58vh, 61vh, 64vh);
-      /* make the area clickable but visually invisible */
-      background: rgba(255,255,255,0); 
-      display: block;
-      text-indent: -9999px; /* hide text for visual; still accessible to SRs */
-      outline: none;
+    /* Single CTA — placed exactly over the image button area */
+    .cta-wrap{
+      position:fixed; left:50%; transform:translateX(-50%);
+      /* Tune this top value to align with the printed button in the image across devices */
+      top: 63.5vh;  /* adjust +/- if needed (e.g., 62–66vh depending on device) */
+      z-index: 10;
     }
-    .cta-hotspot:focus-visible { outline: 3px solid rgba(241,196,15,.9); border-radius: 18px; }
-    
-    /* Fallback footer to avoid blank below-the-fold on very tall screens */
-    .foot {
-      position: fixed; left:0; right:0; bottom:10px;
-      text-align:center; color: rgba(255,255,255,.45);
-      font: 500 12px/1.4 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-      user-select:none;
+    .cta-hotspot{
+      display:inline-block;
+      padding:16px 28px;
+      font-weight:900;
+      letter-spacing:.02em;
+      text-decoration:none;
+      background:linear-gradient(#f6d44e,#e0b426);
+      color:#1a1200;
+      border-radius:14px;
+      box-shadow:0 18px 32px -16px rgba(0,0,0,.6), inset 0 -2px 0 rgba(0,0,0,.15);
+      border:1px solid rgba(0,0,0,.25);
+      text-transform:uppercase;
+      font-size:clamp(16px,2.8vw,22px);
+      line-height:1;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .cta-hotspot:active{
+      transform:translateX(-50%) translateY(1px);
     }
 
-    /* Small phones: nudge hotspot a bit higher */
-    @media (max-width: 420px) {
-      .cta-hotspot { top: 60vh; width: 88vw; }
+    /* Footer micro-credit (tiny, centered) */
+    .tiny{
+      position:fixed; bottom:10px; left:50%; transform:translateX(-50%);
+      font-size:11px; color:#9aa1ad; opacity:.7; z-index:1;
+      text-shadow:0 2px 8px rgba(0,0,0,.8);
     }
-    /* Large desktop: tighten placement */
-    @media (min-width: 1280px) {
-      .cta-hotspot { top: 59.5vh; width: 520px; height: 84px; }
-    }
+
+    /* Remove any accidental outlines on mobile tap */
+    a,button{outline:none}
   </style>
 </head>
 <body>
-  <!-- Invisible but accessible link over the gold button in the artwork -->
-  <a class="cta-hotspot" href="/login.html" aria-label="Enter Command">Enter Command</a>
 
-  <div class="foot">© <span id="y"></span> The Empire</div>
-  <script>document.getElementById('y').textContent = new Date().getFullYear();</script>
+  <!-- The ONLY interactive element on the page -->
+  <div class="cta-wrap">
+    <a class="cta-hotspot" id="enterCommand" href="/login.html" aria-label="Enter Command">
+      Enter Command
+    </a>
+  </div>
+
+  <div class="tiny">© 2025 The Empire</div>
+
+  <script>
+    // Hard-kill any old modal remnants and force redirect on tap.
+    (function () {
+      const killModal = () => {
+        const el = document.getElementById('loginModal');
+        if (el && el.parentNode) el.parentNode.removeChild(el);
+        // Hide generic overlay classes if any remain from legacy code
+        const overlays = document.querySelectorAll('.modal, .overlay, .login-modal');
+        overlays.forEach(n => n.remove());
+      };
+
+      const forceRedirect = (ev) => {
+        // In case any legacy listener tries to stop us:
+        ev.stopImmediatePropagation();
+        ev.preventDefault();
+        window.location.href = '/login.html';
+      };
+
+      document.addEventListener('DOMContentLoaded', () => {
+        // Remove stray modal if injected by other scripts
+        killModal();
+
+        const btn = document.getElementById('enterCommand');
+        if (btn) {
+          // Capture phase ensures we preempt other listeners that might show a popup
+          btn.addEventListener('click', forceRedirect, true);
+          // Also make the whole area behave as a link even if other scripts meddle
+          btn.addEventListener('touchend', forceRedirect, { capture:true, passive:false });
+        }
+
+        // Last line of defense: if a modal appears later, nuke it quickly.
+        const mo = new MutationObserver(killModal);
+        mo.observe(document.documentElement, { childList:true, subtree:true });
+      });
+    })();
+  </script>
 </body>
 </html>

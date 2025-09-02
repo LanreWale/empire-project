@@ -1,91 +1,33 @@
 <!DOCTYPE html>
-<html lang="en" data-version="welcome-img-1.0.1">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>The Empire — Welcome</title>
-
-  <!-- Preload the composited hero so it appears immediately -->
-  <link rel="preload" as="image" href="/assets/brand/empire-hero.jpg" />
-
   <style>
-    :root{
-      --bg:#0b0e12; --text:#e8eaed; --gold:#f1c40f;
-    }
+    :root { --gold:#f1c40f; --dark:#0b0e12; }
     *{box-sizing:border-box;margin:0;padding:0}
-    html,body{height:100%}
-    body{
-      min-height:100dvh;
-      background:var(--bg);
-      color:var(--text);
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-      display:flex;
-    }
-
-    /* Full-bleed hero is JUST the image (all headings baked in) */
+    body{background:var(--dark);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
     .hero{
-      position:relative;
-      flex:1 1 auto;
-      display:grid;
-      place-items:center;
-      background:url("/assets/brand/empire-hero.jpg") center/cover no-repeat;
-      /* subtle vignette for button readability */
-      box-shadow: inset 0 0 160px rgba(0,0,0,.55);
+      position:relative; min-height:100vh;
+      display:flex; align-items:center; justify-content:center;
+      background:url("/assets/brand/empire-hero-final.jpg") center/cover no-repeat;
     }
-
-    /* Single CTA button in the “gap” area on the artwork */
-    .cta-wrap{
-      position:relative;
-      z-index:1;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      padding:20px 16px;
-      transform: translateY(6vh);
+    /* The only interactive element on the page */
+    .cta{
+      position:absolute; bottom:15%;
+      background:var(--gold); color:#1a1200;
+      font-weight:800; font-size:1.05rem;
+      padding:14px 28px; border-radius:10px; text-decoration:none;
+      box-shadow:0 12px 30px -14px rgba(241,196,15,.65);
+      transition:transform .2s ease, filter .2s ease;
     }
-
-    .btn{
-      border:none;
-      border-radius:14px;
-      padding:12px 20px;
-      font-weight:800;
-      cursor:pointer;
-      text-decoration:none;
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      white-space:nowrap;
-    }
-    .btn-primary{
-      background:var(--gold);
-      color:#1a1200;
-      box-shadow:0 14px 34px -16px var(--gold), 0 1px 0 rgba(255,255,255,.3) inset;
-    }
-
-    @media (max-width:640px){
-      .cta-wrap{ transform: translateY(4vh); }
-    }
+    .cta:hover{ transform:scale(1.05); filter:brightness(1.05); }
   </style>
 </head>
 <body>
-  <!-- FULL-BLEED HERO (no shared header/footer on this page) -->
-  <main class="hero" role="img" aria-label="The Empire">
-    <div class="cta-wrap">
-      <button class="btn btn-primary" id="enterBtn">Enter Command</button>
-    </div>
+  <main class="hero">
+    <a class="cta" href="/login.html" aria-label="Enter Command">ENTER COMMAND</a>
   </main>
-
-  <!-- Only auth helper; DO NOT load empire-shell.js here -->
-  <script src="/js/empire-auth.js"></script>
-  <script>
-    // Route based on auth
-    function enterEmpire(){
-      try{
-        if (window.EmpireAuth?.has()) location.href = "/dashboard.html";
-        else                          location.href = "/login.html";
-      }catch{ location.href = "/login.html"; }
-    }
-    document.getElementById('enterBtn')?.addEventListener('click', enterEmpire);
-  </script>
 </body>
 </html>

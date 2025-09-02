@@ -1,33 +1,31 @@
 <!DOCTYPE html>
-<html lang="en" data-version="welcome-img-1.0.0">
+<html lang="en" data-version="welcome-img-1.0.1">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>The Empire — Welcome</title>
 
-  <!-- Preload the hero image to avoid pop-in -->
+  <!-- Preload the composited hero so it appears immediately -->
   <link rel="preload" as="image" href="/assets/brand/empire-hero.jpg" />
 
   <style>
     :root{
-      --bg:#0b0e12; --text:#e8eaed; --muted:#b6b9c2; --gold:#f1c40f;
+      --bg:#0b0e12; --text:#e8eaed; --gold:#f1c40f;
     }
     *{box-sizing:border-box;margin:0;padding:0}
+    html,body{height:100%}
     body{
+      min-height:100dvh;
       background:var(--bg);
       color:var(--text);
       font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-      min-height:100dvh;
-      display:flex; flex-direction:column;
+      display:flex;
     }
 
-    /* Header/Footer containers filled by /assets/js/empire-shell.js */
-    .emp-header, .emp-footer { isolation:isolate; }
-
-    /* Hero section is JUST the image. Text is baked into the image. */
+    /* Full-bleed hero is JUST the image (all headings baked in) */
     .hero{
       position:relative;
-      flex:1 0 auto;
+      flex:1 1 auto;
       display:grid;
       place-items:center;
       background:url("/assets/brand/empire-hero.jpg") center/cover no-repeat;
@@ -35,16 +33,14 @@
       box-shadow: inset 0 0 160px rgba(0,0,0,.55);
     }
 
-    /* Only one real control on top of the image */
+    /* Single CTA button in the “gap” area on the artwork */
     .cta-wrap{
       position:relative;
       z-index:1;
       display:flex;
-      gap:12px;
       align-items:center;
       justify-content:center;
       padding:20px 16px;
-      /* ensures button sits roughly in the “gap” area visually */
       transform: translateY(6vh);
     }
 
@@ -63,13 +59,7 @@
     .btn-primary{
       background:var(--gold);
       color:#1a1200;
-      box-shadow:0 14px 34px -16px var(--gold), 0 1px 0 rgba(255,255,255,.25) inset;
-    }
-
-    /* Footer */
-    .emp-footer__inner{
-      max-width:1100px;margin:0 auto;padding:14px 16px;
-      color:var(--muted); text-align:center;
+      box-shadow:0 14px 34px -16px var(--gold), 0 1px 0 rgba(255,255,255,.3) inset;
     }
 
     @media (max-width:640px){
@@ -78,31 +68,17 @@
   </style>
 </head>
 <body>
-  <!-- Shared header/nav (Welcome • Commander Login • Dashboard • Enter Empire) -->
-  <header id="emp-header" class="emp-header"></header>
-
-  <!-- Full-bleed hero with composited artwork -->
+  <!-- FULL-BLEED HERO (no shared header/footer on this page) -->
   <main class="hero" role="img" aria-label="The Empire">
     <div class="cta-wrap">
       <button class="btn btn-primary" id="enterBtn">Enter Command</button>
     </div>
   </main>
 
-  <!-- Shared footer -->
-  <footer id="emp-footer" class="emp-footer">
-    <div class="emp-footer__inner">
-      Commanding the Future of Affiliate Marketing<br/>© <span id="yr"></span> The Empire
-    </div>
-  </footer>
-
-  <!-- Scripts -->
+  <!-- Only auth helper; DO NOT load empire-shell.js here -->
   <script src="/js/empire-auth.js"></script>
-  <script src="/assets/js/empire-shell.js" defer></script>
   <script>
-    // Footer year
-    document.getElementById('yr').textContent = new Date().getFullYear();
-
-    // Decide where to send the user when they click Enter Command
+    // Route based on auth
     function enterEmpire(){
       try{
         if (window.EmpireAuth?.has()) location.href = "/dashboard.html";

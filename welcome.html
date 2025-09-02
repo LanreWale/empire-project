@@ -4,76 +4,26 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>The Empire — Welcome</title>
-  <meta name="robots" content="noindex">
   <style>
-    html,body{height:100%;margin:0}
-    body{background:#0b0e12}
-
-    /* Fullscreen hero image */
+    html,body{height:100%;margin:0;background:#0b0e12}
     .hero{
-      position:relative;
-      min-height:100svh;           /* good on mobile */
-      background:url("/assets/brand/empire-hero-final.jpg?v=5") center top / cover no-repeat;
-      overflow:hidden;
+      position:relative;min-height:100svh;
+      background:url("/assets/brand/empire-hero-final.jpg?v=6") center top/cover no-repeat;
     }
-
-    /* Clickable hotspot exactly where the gold button sits in the image */
-    .cta-hotspot{
-      position:absolute;
-      left:50%;
-      top:72.25%;                  /* tuned to your final art */
-      transform:translate(-50%,-50%);
-      width:min(82vw,560px);
-      height:clamp(52px,7.2vw,68px);
-      display:block;
-      cursor:pointer;
-      z-index:9999;
-      background:rgba(255,255,255,0.001); /* “there” but visually invisible */
-      border:0; outline:none;
-    }
-
-    /* If any global script injects a modal, hide it on this page */
-    .emp-login-modal,
-    #empire-login-modal,
-    [data-empire-modal]{
-      display:none !important;
-    }
+    .cta{position:absolute;left:50%;top:72.25%;transform:translate(-50%,-50%);
+      width:min(82vw,560px);height:clamp(52px,7.2vw,68px);
+      background:rgba(255,255,255,.001);border:0;cursor:pointer;z-index:1}
   </style>
-  <script>
-    /* Tell any shared scripts not to open a login modal on this page */
-    window.DISABLE_LOGIN_MODAL = true;
-  </script>
 </head>
 <body>
   <main class="hero" aria-label="The Empire hero">
-    <!-- Invisible, perfectly placed button -->
-    <button type="button" class="cta-hotspot" aria-label="Enter Command"></button>
+    <button class="cta" aria-label="Enter Command"></button>
   </main>
-
   <script>
-    // Absolute control: ignore any other click interceptors and hard-redirect.
-    (function () {
-      const btn = document.querySelector('.cta-hotspot');
-
-      // Stop other handlers on this element first.
-      btn.addEventListener('click', function onClick(e){
-        e.preventDefault();
-        e.stopPropagation();
-        e.stopImmediatePropagation();
-        location.assign('/login.html');
-      }, {capture:true});
-
-      // As a backup, if any ancestor intercepts clicks, cancel at document level
-      // when the target is our hotspot.
-      document.addEventListener('click', function(e){
-        if (e.target === btn) {
-          e.preventDefault();
-          e.stopPropagation();
-          e.stopImmediatePropagation();
-          location.assign('/login.html');
-        }
-      }, true);
-    })();
+    document.querySelector('.cta').addEventListener('click', e=>{
+      e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
+      location.assign('/login.html');
+    }, {capture:true});
   </script>
 </body>
 </html>

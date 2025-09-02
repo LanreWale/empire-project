@@ -2,70 +2,126 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>The Empire — Commander Login</title>
+  <link rel="preload" as="image" href="/assets/brand/empire-hero-final.jpg" />
   <style>
-    :root{ --bg:#0b0e12; --panel:#121826; --text:#e8eaed; --muted:#b6b9c2; --gold:#f1c40f; }
-    *{box-sizing:border-box;margin:0;padding:0}
-    body{background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;min-height:100vh;display:grid;place-items:center}
-    .card{
-      width:min(92vw,460px); background:var(--panel);
-      border:1px solid rgba(255,255,255,.06); border-radius:24px;
-      padding:28px; text-align:center; box-shadow:0 30px 60px -30px rgba(0,0,0,.5);
+    :root {
+      --gold:#f1c40f;
+      --muted:#b6b9c2;
     }
-    .logo{display:block;margin:6px auto 14px;width:220px;max-width:70vw}
-    h1{font-size:clamp(22px,3.8vw,28px);margin:6px 0 18px;font-weight:800;letter-spacing:.3px}
-    .field{margin:12px 0}
-    .field input{
-      width:100%; padding:14px 16px; border-radius:14px;
-      border:1px solid rgba(255,255,255,.08); background:#0f131d; color:var(--text);
-      font-size:1rem; outline:none;
+    *{margin:0;padding:0;box-sizing:border-box}
+    body {
+      font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      color:#fff;
     }
-    .btn{
-      width:100%; margin-top:10px; border:0; border-radius:14px;
-      background:var(--gold); color:#1a1200; font-weight:800;
-      padding:14px 22px; cursor:pointer; box-shadow:0 14px 34px -16px var(--gold);
+    .hero {
+      position:relative;
+      min-height:100vh;
+      display:grid;
+      place-items:center;
+      background:url("/assets/brand/empire-hero-final.jpg") center/cover no-repeat;
     }
-    .terms{margin-top:12px;color:var(--muted);font-size:.9rem}
+    .hero::after {
+      content:"";
+      position:absolute;
+      inset:0;
+      background:rgba(0,0,0,.55);
+      z-index:0;
+    }
+    .login-box {
+      position:relative;
+      z-index:1;
+      background:rgba(0,0,0,.65);
+      padding:28px 24px;
+      border-radius:16px;
+      box-shadow:0 14px 34px -16px rgba(0,0,0,.8);
+      text-align:center;
+      width:100%;
+      max-width:420px;
+    }
+    .login-title {
+      font-size:clamp(24px,5vw,36px);
+      font-weight:800;
+      margin-bottom:20px;
+    }
+    .field {
+      margin:12px 0;
+    }
+    .field input {
+      width:100%;
+      padding:14px 16px;
+      border:none;
+      border-radius:12px;
+      font-size:1rem;
+      background:#111;
+      color:#fff;
+    }
+    .btn {
+      margin-top:18px;
+      display:inline-block;
+      width:100%;
+      padding:14px 20px;
+      border:none;
+      border-radius:12px;
+      font-weight:800;
+      font-size:1rem;
+      background:var(--gold);
+      color:#1a1200;
+      cursor:pointer;
+      box-shadow:0 14px 34px -16px var(--gold);
+    }
+    .terms {
+      margin-top:12px;
+      font-size:.85rem;
+      color:var(--muted);
+    }
+    footer {
+      position:absolute;
+      bottom:10px;
+      left:0;
+      right:0;
+      text-align:center;
+      font-size:.85rem;
+      color:var(--muted);
+    }
   </style>
 </head>
 <body>
-  <section class="card">
-    <img class="logo" src="/assets/brand/empire-logo.png" alt="The Empire">
-    <h1>Commander Login</h1>
-
-    <form id="empire-login-form" autocomplete="on">
-      <div class="field">
-        <input id="login-id" type="text" placeholder="Email or Phone" autocomplete="username" />
-      </div>
-      <div class="field">
-        <input id="accessKey" type="password" placeholder="Access Key" autocomplete="current-password" />
-      </div>
-      <button class="btn" type="submit">Enter The Empire</button>
-    </form>
-
-    <p class="terms">By entering you agree to Empire terms.</p>
+  <section class="hero">
+    <div class="login-box">
+      <div class="login-title">⚔ Commander Login ⚔</div>
+      <form id="empire-login-form">
+        <div class="field">
+          <input id="login-id" type="text" placeholder="Email or Phone" autocomplete="username">
+        </div>
+        <div class="field">
+          <input id="accessKey" type="password" placeholder="Access Key" autocomplete="current-password">
+        </div>
+        <button class="btn" type="submit">Enter The Empire</button>
+      </form>
+      <p class="terms">By entering you agree to Empire terms.</p>
+    </div>
+    <footer>
+      © <span id="year"></span> The Empire
+    </footer>
   </section>
 
   <script src="/js/empire-auth.js"></script>
   <script>
-    // If already logged in, jump straight to dashboard
-    if (window.EmpireAuth?.has()) {
-      location.replace("/dashboard.html");
-    } else {
-      const form = document.getElementById("empire-login-form");
-      form?.addEventListener("submit", (e) => {
-        e.preventDefault();
-        const id  = (document.getElementById("login-id")?.value || "").trim();
-        const key = (document.getElementById("accessKey")?.value || "").trim();
-        if (!id || !key) { alert("Enter your ID and access key."); return; }
+    document.getElementById("year").textContent = new Date().getFullYear();
 
-        // Placeholder: accept any non-empty values and create a local token
-        const token = `OK:${id}:${Date.now()}`;
-        window.EmpireAuth.set(token);
-        location.href = "/dashboard.html";
-      });
-    }
+    document.getElementById("empire-login-form").addEventListener("submit", (e)=>{
+      e.preventDefault();
+      const id = document.getElementById("login-id").value.trim();
+      const key = document.getElementById("accessKey").value.trim();
+      if(!id || !key){ alert("Enter your ID and access key."); return; }
+
+      // Placeholder login token
+      const token = `OK:${id}:${Date.now()}`;
+      EmpireAuth.set(token);
+      location.href="/dashboard.html";
+    });
   </script>
 </body>
 </html>

@@ -5,39 +5,97 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>The Empire — Welcome</title>
   <style>
-    body {
-      margin:0; padding:0;
-      background:#0b0e12;
-    }
-    .hero {
+    /* Page reset */
+    :root { --bg:#0b0e12; }
+    html,body{height:100%}
+    body{margin:0;background:var(--bg);}
+
+    /* Fullscreen hero with your composed image */
+    .hero{
       position:relative;
       min-height:100vh;
       background:url("/assets/brand/empire-hero-final.jpg") center/cover no-repeat;
-      display:flex;
-      align-items:center;
-      justify-content:center;
+      /* keep the image steady; content is only the invisible button */
+      display:block;
+      overflow:hidden;
+      touch-action:manipulation;
     }
-    .hero a {
+
+    /* Clickable overlay exactly where the gold bar is on the image */
+    .cta{
       position:absolute;
-      bottom:22%;   /* adjust this % to match vertical alignment of the gold bar */
-      background:transparent; /* invisible background, relies on image’s gold button */
-      color:#000;
-      font-weight:800;
-      padding:16px 40px; /* size matches the gold rectangle in image */
-      border-radius:8px;
+      left:50%;
+      transform:translateX(-50%);
+      /* Default placement tuned for common phone portrait */
+      bottom: 29.5%;
+      /* Make the click area the size of the gold bar */
+      padding:16px 44px;
+      border-radius:10px;
+
+      /* Invisible, we rely on the image visuals */
+      background:transparent;
+      color:transparent;             /* hide text (visuals are in the image) */
+      text-shadow:none;
+      border:0;
       text-decoration:none;
-      font-size:1.1rem;
+      user-select:none;
+      -webkit-tap-highlight-color:transparent;
       cursor:pointer;
     }
-    .hero a:active {
-      transform:scale(0.96);
+    .cta:active{ transform:translateX(-50%) scale(.98); }
+
+    /* Improve tap size on very small phones */
+    @media (max-width: 380px){
+      .cta{
+        bottom: 28.5%;
+        padding:14px 40px;
+      }
+    }
+
+    /* Typical phones (portrait) */
+    @media (min-width: 381px) and (max-width: 599px){
+      .cta{
+        bottom: 29.5%;
+        padding:16px 44px;
+      }
+    }
+
+    /* Large phones / small tablets (portrait) */
+    @media (min-width: 600px) and (max-width: 899px){
+      .cta{
+        bottom: 30%;
+        padding:18px 50px;
+      }
+    }
+
+    /* Tablets / small laptops (landscape-ish aspect) */
+    @media (min-width: 900px) and (max-width: 1279px){
+      .cta{
+        bottom: 27.5%;
+        padding:18px 52px;
+      }
+    }
+
+    /* Desktops / wide screens */
+    @media (min-width: 1280px){
+      .cta{
+        bottom: 26.5%;
+        padding:20px 56px;
+      }
+    }
+
+    /* Very short viewports (e.g., mobile landscape with little height) */
+    @media (max-height: 620px){
+      .cta{
+        bottom: 22%;
+      }
     }
   </style>
 </head>
 <body>
   <main class="hero">
-    <!-- Clickable overlay button on top of the gold bar -->
-    <a href="/login.html">ENTER COMMAND</a>
+    <!-- Real, clickable button overlaying the gold rectangle in the image -->
+    <a class="cta" href="/login.html" aria-label="Enter Command">ENTER COMMAND</a>
   </main>
 </body>
 </html>

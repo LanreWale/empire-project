@@ -24,26 +24,18 @@
   <script src="/assets/js/empire-shell.js" defer></script>
 
   <style>
-    /* Make panels pop over the hero background nicely */
-    .emp-container{
-      max-width: 1100px; margin: 0 auto; padding: 20px;
-      backdrop-filter: none;
-    }
-    .emp-nav .emp-tab{
-      display:inline-block; padding:10px 14px; border-radius:10px;
-      background:#0c111a; color:var(--text); border:1px solid var(--border); text-decoration:none;
-      font-weight:600;
-    }
-    .emp-nav .emp-tab.active{ background:#1a2233; border-color:#2a3350 }
-    .emp-view{ background: rgba(16,21,32,.85); border:1px solid rgba(255,255,255,.06); border-radius:16px; padding:18px; }
-    .hidden{ display:none }
+    .emp-container{max-width:1100px;margin:0 auto;padding:20px}
+    .emp-nav .emp-tab{display:inline-block;padding:10px 14px;border-radius:10px;background:#0c111a;color:var(--text);border:1px solid var(--border);text-decoration:none;font-weight:600}
+    .emp-nav .emp-tab.active{background:#1a2233;border-color:#2a3350}
+    .emp-view{background:rgba(16,21,32,.85);border:1px solid rgba(255,255,255,.06);border-radius:16px;padding:18px}
+    .hidden{display:none}
   </style>
 </head>
 <body class="bg-empire-hero">
   <header id="emp-header" class="emp-header"></header>
 
   <main id="emp-dashboard" class="emp-container">
-    <nav class="emp-nav" aria-label="Empire sections" style="margin:16px 0; display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+    <nav class="emp-nav" aria-label="Empire sections" style="margin:16px 0;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
       <a href="#dashboard"  data-tab="dashboard"  class="emp-tab active">Overview</a>
       <a href="#cpa"        data-tab="cpa"        class="emp-tab">CPA Accounts</a>
       <a href="#users"      data-tab="users"      class="emp-tab">Users</a>
@@ -55,20 +47,62 @@
       <button id="emp-logout" class="cta ghost">Logout</button>
     </nav>
 
-    <section id="view-dashboard"  class="emp-view">
-      <h1>Welcome, Commander</h1>
-      <p>Commanding the Future of Affiliate Marketing.</p>
+    <!-- Overview -->
+    <section id="view-dashboard" class="emp-view">
+      <h1 style="margin:0 0 6px">⚔️ The Empire</h1>
+      <p style="margin:0;color:var(--muted,#9aa4ba)">
+        Welcome <span id="empUser" style="opacity:.9">Commander</span>. All systems nominal.
+      </p>
 
-      <div class="kpis" style="margin-top:14px;">
-        <div class="kpi"><h6>Active Campaigns</h6><div class="val">12</div></div>
-        <div class="kpi"><h6>Leads Today</h6><div class="val">348</div></div>
-        <div class="kpi"><h6>Conv. Rate</h6><div class="val">8.4%</div></div>
-        <div class="kpi"><h6>Revenue (24h)</h6><div class="val">$4,920</div></div>
+      <div class="kpis" style="margin-top:14px;display:flex;gap:12px;flex-wrap:wrap">
+        <div class="kpi" style="background:#0c111a;border:1px solid var(--border,#2a3350);border-radius:12px;padding:10px 12px">
+          <h6 style="margin:0;color:var(--muted,#9aa4ba);font-size:12px">Active Campaigns</h6>
+          <div class="val" style="font-weight:700;font-size:18px">12</div>
+        </div>
+        <div class="kpi" style="background:#0c111a;border:1px solid var(--border,#2a3350);border-radius:12px;padding:10px 12px">
+          <h6 style="margin:0;color:var(--muted,#9aa4ba);font-size:12px">Leads Today</h6>
+          <div class="val" style="font-weight:700;font-size:18px">348</div>
+        </div>
+        <div class="kpi" style="background:#0c111a;border:1px solid var(--border,#2a3350);border-radius:12px;padding:10px 12px">
+          <h6 style="margin:0;color:var(--muted,#9aa4ba);font-size:12px">Conv. Rate</h6>
+          <div class="val" style="font-weight:700;font-size:18px">8.4%</div>
+        </div>
+        <div class="kpi" style="background:#0c111a;border:1px solid var(--border,#2a3350);border-radius:12px;padding:10px 12px">
+          <h6 style="margin:0;color:var(--muted,#9aa4ba);font-size:12px">Revenue (24h)</h6>
+          <div class="val" style="font-weight:700;font-size:18px">$4,920</div>
+        </div>
       </div>
     </section>
 
-    <section id="view-cpa"        class="emp-view hidden"><h2>CPA Accounts</h2><p>Manage networks & offers here.</p></section>
-    <section id="view-users"      class="emp-view hidden"><h2>Users</h2><p>Invite and manage commanders.</p></section>
+    <!-- CPA -->
+    <section id="view-cpa" class="emp-view hidden"><h2>CPA Accounts</h2><p>Manage networks & offers here.</p></section>
+
+    <!-- Users -->
+    <section id="view-users" class="emp-view hidden">
+      <h2 style="margin-top:0">User Management</h2>
+      <p class="emp-muted">Approve, generate, and share signed invites.</p>
+
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px">
+        <input id="umPhone" type="tel" placeholder="WhatsApp (+234…)" style="background:#0c111a;color:#e6e9f0;border:1px solid var(--border,#2a3350);border-radius:12px;padding:10px 12px;min-width:240px;outline:none">
+        <input id="umEmail" type="email" placeholder="Email (optional)" style="background:#0c111a;color:#e6e9f0;border:1px solid var(--border,#2a3350);border-radius:12px;padding:10px 12px;min-width:240px;outline:none">
+        <button id="umGenInvite" class="cta" style="border-radius:12px">Generate Invite</button>
+        <button id="umSendWA" class="cta ghost" style="border-radius:12px">Send via WhatsApp</button>
+      </div>
+
+      <div style="margin-top:10px">
+        <input id="umInviteOut" type="text" readonly style="display:none;width:100%;background:#0c111a;color:#e6e9f0;border:1px solid var(--border,#2a3350);border-radius:12px;padding:10px 12px">
+        <small id="umNote" style="display:block;margin-top:6px;color:#9aa4ba"></small>
+      </div>
+
+      <hr style="border:none;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.08),transparent);margin:18px 0">
+
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button id="qaPending" class="cta ghost" style="border-radius:12px">View Pending</button>
+        <button id="qaRecent" class="cta ghost" style="border-radius:12px">Recent Approvals</button>
+      </div>
+    </section>
+
+    <!-- Other sections -->
     <section id="view-analytics"  class="emp-view hidden"><h2>Analytics</h2><p>Charts and performance insights.</p></section>
     <section id="view-wallet"     class="emp-view hidden"><h2>Wallet</h2><p>Payouts and balances.</p></section>
     <section id="view-security"   class="emp-view hidden"><h2>Security</h2><p>Keys, sessions, and access.</p></section>
@@ -85,12 +119,11 @@
       ev.preventDefault();
       document.querySelectorAll(".emp-tab").forEach(t => t.classList.remove("active"));
       a.classList.add("active");
-
       const key = a.dataset.tab || "dashboard";
       document.querySelectorAll(".emp-view").forEach(v => v.classList.add("hidden"));
       const target = document.getElementById(`view-${key}`) || document.getElementById("view-dashboard");
       target.classList.remove("hidden");
-      window.dispatchEvent(new CustomEvent("empire:tabchange", { detail: { tab: key }}));
+      window.dispatchEvent(new CustomEvent("empire:tabchange",{detail:{tab:key}}));
     });
 
     // Logout
@@ -101,10 +134,67 @@
 
     // Initial tab from hash
     window.addEventListener("DOMContentLoaded", () => {
-      const hash = (location.hash || "").replace(/^#/, "") || "dashboard";
+      const hash = (location.hash || "").replace(/^#/,"") || "dashboard";
       const starter = document.querySelector(`.emp-tab[data-tab="${hash}"]`) || document.querySelector('.emp-tab[data-tab="dashboard"]');
       starter?.click();
     });
+  </script>
+
+  <!-- User Management JS -->
+  <script>
+  const GAS_EXEC = "https://script.google.com/macros/s/AKfycbxiFK1m72rXH3pvS8VdhtQzi30kc1GXNOkjTU8dMSrH_4_KN3lnMwmgJDLOzfrqdXIU/exec";
+  const API_KEY  = "Lanreismail157@empireaffiliatemarketinghub_69";
+
+  const $ = (id)=>document.getElementById(id);
+
+  (function greet(){
+    try{
+      const qsWA = new URLSearchParams(location.hash.includes('?') ? location.hash.split('?')[1] : location.search).get("wa");
+      if(qsWA) localStorage.setItem("empire_user_wa", qsWA);
+      const wa = localStorage.getItem("empire_user_wa") || "";
+      const el = $("empUser");
+      if(el){
+        if(wa){ el.textContent = "****" + wa.replace(/\D/g,"").slice(-4); }
+        else  { el.textContent = "Commander"; }
+      }
+    }catch(e){}
+  })();
+
+  function normPhone(v){ return String(v||"").replace(/[^0-9+]/g,"").trim(); }
+  function setNote(msg, ok=true){ const n=$("umNote"); if(!n) return; n.style.color = ok ? "#22c55e" : "#ef4444"; n.textContent = msg; }
+
+  async function genInvite(){
+    const phone = normPhone($("umPhone")?.value || "");
+    const email = ($("umEmail")?.value || "").trim();
+    if(!phone && !email){ setNote("Provide phone or email.", false); return; }
+    setNote("Processing…", true);
+    const qs = new URLSearchParams({ action:"approve", key:API_KEY });
+    if(phone) qs.set("phone", phone); else qs.set("email", email);
+    try{
+      const r = await fetch(GAS_EXEC + "?" + qs.toString());
+      const j = await r.json();
+      if(!j || !j.ok){ setNote((j && j.error) ? j.error : "Failed", false); return; }
+      const link = j.invite && j.invite.url ? j.invite.url : "";
+      if(!link){ setNote("No invite URL returned.", false); return; }
+      const out = $("umInviteOut"); if(out){ out.style.display="block"; out.value = link; }
+      try{ await navigator.clipboard.writeText(link); }catch(e){}
+      setNote("Invite ready and copied ✔", true);
+    }catch(err){ setNote(String(err), false); }
+  }
+
+  function sendWA(){
+    const phone = normPhone($("umPhone")?.value || "");
+    const link  = $("umInviteOut")?.value || "";
+    if(!link){ setNote("Generate invite first.", false); return; }
+    const to  = phone ? phone.replace(/^\+/, "") : "";
+    const msg = encodeURIComponent("Your Empire invite:\n" + link);
+    window.open("https://wa.me/" + (to || "") + "?text=" + msg, "_blank");
+  }
+
+  $("umGenInvite")?.addEventListener("click", genInvite);
+  $("umSendWA")?.addEventListener("click", sendWA);
+  $("qaPending")?.addEventListener("click", ()=>location.hash="#users");
+  $("qaRecent")?.addEventListener("click", ()=>location.hash="#users");
   </script>
 </body>
 </html>

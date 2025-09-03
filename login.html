@@ -4,55 +4,78 @@
   <meta charset="utf-8" />
   <title>Commander Login — The Empire</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="theme-color" content="#0b0e12" />
+
+  <!-- Styles -->
+  <link rel="icon" href="/assets/brand/favicon.ico" />
   <link rel="stylesheet" href="/assets/css/empire-style.css" />
+
+  <!-- Auth (must load first) -->
   <script src="/js/empire-auth.js"></script>
+  <script>
+    // If already authenticated, skip to dashboard
+    if (window.EmpireAuth?.has()) {
+      window.location.replace("/dashboard.html");
+    }
+  </script>
+
+  <!-- Page-local centering (tiny helper) -->
+  <style>
+    .login-wrap{
+      min-height: 100svh; display:flex; align-items:center; justify-content:center; padding:24px;
+    }
+    .login-card h2{ margin: 0 0 12px; }
+    .login-card p.help{ color: var(--muted); font-size: .92rem; margin: 0 0 14px; }
+    .login-card .actions{ display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+    .login-card .muted-link{ color: var(--muted); text-decoration:none }
+    .login-card .muted-link:hover{ text-decoration:underline }
+  </style>
 </head>
-<body class="login-wrap">
+<body class="bg-empire-gradient">
 
-  <form class="login-card" id="empire-login" autocomplete="on">
-    <h1>Commander Login</h1>
-    <p class="desc">Enter your credentials to access Command.</p>
+  <main class="login-wrap">
+    <section class="card login-card" style="width:100%; max-width:520px; text-align:left;">
+      <div style="text-align:center; margin-bottom:6px;">
+        <img src="/assets/brand/empire-mark.svg" alt="" width="36" height="36" style="opacity:.9;">
+      </div>
+      <h2 style="text-align:center;">Commander Login</h2>
+      <p class="help" style="text-align:center;">Enter your credentials to access Command.</p>
 
-    <div class="form-row">
-      <label for="emp-email">Email or Phone</label>
-      <input id="emp-email" class="emp" type="text" name="id" inputmode="email" autocomplete="username" required />
-    </div>
-
-    <div class="form-row">
-      <label for="emp-key">Access Key</label>
-      <input id="emp-key" class="emp" type="password" name="key" autocomplete="current-password" required />
-    </div>
-
-    <div class="login-actions">
-      <button type="submit" class="btn" aria-label="Enter The Empire">Enter The Empire</button>
-      <a class="link" href="/welcome.html">Back to Welcome</a>
-    </div>
-
-    <div class="footer-note">By entering you agree to Empire terms.</div>
-  </form>
+      <form id="emp-login-form">
+        <input type="text" id="emp-user" placeholder="Email or Phone" autocomplete="username" required />
+        <input type="password" id="emp-key" placeholder="Access Key" autocomplete="current-password" required />
+        <div class="actions" style="margin-top:6px;">
+          <button type="submit" class="cta">Enter The Empire</button>
+          <a class="muted-link" href="/welcome.html">← Back to Welcome</a>
+        </div>
+        <p class="help" style="margin-top:10px;">By entering you agree to Empire terms.</p>
+      </form>
+    </section>
+  </main>
 
   <script>
-    (function(){
-      const form = document.getElementById('empire-login');
-      form.addEventListener('submit', function (e) {
-        e.preventDefault();
-        const id  = document.getElementById('emp-email').value.trim();
-        const key = document.getElementById('emp-key').value.trim();
-
-        // Optional: place your real validation here.
-        try {
-          if (window.EmpireAuth && typeof window.EmpireAuth.set === 'function') {
-            window.EmpireAuth.set({ id });
-          } else {
-            // Fallback localStorage token so /index.html route works
-            localStorage.setItem('empire_auth', JSON.stringify({ id, t: Date.now() }));
-          }
-        } catch(_) {}
-
-        window.location.replace('/dashboard.html');
-      });
+    // Prefill from query (?user=&key=)
+    (function prefill(){
+      const p = new URLSearchParams(location.search);
+      const u = p.get("user") || p.get("email") || p.get("phone");
+      const k = p.get("key")  || p.get("token");
+      if (u) document.getElementById("emp-user").value = u;
+      if (k) document.getElementById("emp-key").value  = k;
     })();
+
+    // Handle login: set a lightweight session and go to dashboard
+    document.getElementById("emp-login-form").addEventListener("submit", function(ev){
+      ev.preventDefault();
+      const user = document.getElementById("emp-user").value.trim();
+      const key  = document.getElementById("emp-key").value.trim();
+
+      // This uses your client-side session helper.
+      try {
+        window.EmpireAuth?.set({ user, key, at: Date.now() });
+      } catch(e) {
+        console.warn("EmpireAuth.set failed; continuing", e);
+      }
+      location.replace("/dashboard.html");
+    });
   </script>
 </body>
 </html>

@@ -1,97 +1,16 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Welcome to The Empire</title>
-
-  <!-- Ensure image is warm in cache -->
-  <link rel="preload" as="image" href="/assets/brand/empire-hero-clean.jpg"/>
-
-  <style>
-    :root {
-      --bg:#0a0c0f; --text:#e8eaed; --gold1:#f5d148; --gold2:#cda316;
-    }
-    * { box-sizing: border-box; }
-    html, body { height: 100%; }
-    body {
-      margin: 0; background: var(--bg); color: var(--text);
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      text-rendering: optimizeLegibility;
-    }
-
-    /* Hero background */
-    .hero {
-      position: relative;
-      min-height: 100vh;
-      display: grid;
-      place-items: center;
-      background: var(--bg) url("/assets/brand/empire-hero-clean.jpg")
-                  center top / cover no-repeat fixed;
-      overflow: hidden;
-    }
-    /* Soft vignette that never eats clicks */
-    .hero::before {
-      content: "";
-      position: absolute; inset: 0;
-      background: radial-gradient(ellipse at 50% 65%,
-                 rgba(0,0,0,0) 0%, rgba(0,0,0,.55) 60%, rgba(0,0,0,.75) 100%);
-      pointer-events: none;     /* IMPORTANT */
-    }
-
-    /* Only this island handles clicks */
-    .cta-wrap {
-      position: relative; z-index: 3; text-align: center;
-      pointer-events: auto;
-      padding: 12px 16px;
-    }
-
-    h1 {
-      margin: 0 0 14px;
-      font-weight: 900; letter-spacing: .02em;
-      font-size: clamp(26px, 6vw, 56px);
-      text-shadow: 0 2px 18px rgba(0,0,0,.6);
-    }
-
-    a.cta {
-      display: inline-block;
-      text-decoration: none;
-      color: #1b1400;
-      font-weight: 900; letter-spacing: .05em;
-      padding: 14px 22px;
-      border-radius: 14px;
-      background: linear-gradient(var(--gold1), var(--gold2));
-      box-shadow: 0 18px 38px -16px rgba(241,196,15,.75),
-                  0 1px 0 rgba(255,255,255,.18) inset;
-      position: relative;
-      z-index: 4;               /* ABOVE EVERYTHING */
-      touch-action: manipulation;
-    }
-    a.cta:active { transform: translateY(1px); }
-    /* Larger tap target without changing visuals */
-    a.cta::after { content:""; position:absolute; inset:-12px; }
-  </style>
-
-  <script>
-    // Failsafe: guarantee navigation even if some legacy listener cancels the click
-    addEventListener("DOMContentLoaded", () => {
-      const cta = document.getElementById("enterCmd");
-      cta.addEventListener("click", (ev) => {
-        ev.stopPropagation();  // ignore stray modal handlers
-        // If some code called preventDefault upstream, still go:
-        if (!cta.hasAttribute("data-nav-ok")) {
-          location.assign("/login.html");
-        }
-      }, { capture: true });
-    }, { once: true });
-  </script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>The Empire System</title>
+  <link rel="stylesheet" href="/style.css">
 </head>
 <body>
-  <main class="hero" aria-label="The Empire — Welcome">
-    <div class="cta-wrap" role="group" aria-label="Welcome actions">
-      <h1>WELCOME TO THE EMPIRE</h1>
-      <a id="enterCmd" class="cta" href="/login.html" data-nav-ok="1">ENTER COMMAND</a>
-    </div>
-  </main>
+  <div class="centered">
+    <h1>Welcome to THE EMPIRE System</h1>
+    <p>Your path to affiliate domination starts here.</p>
+    <a class="btn" href="/login.html">Enter Portal</a>
+  </div>
 </body>
 </html>

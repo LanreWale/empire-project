@@ -1,25 +1,58 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Empire Login</title>
-  <link rel="stylesheet" href="/assets/css/empire-style.css">
+  <meta charset="utf-8" />
+  <title>Commander Login — The Empire</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#0b0e12" />
+  <link rel="stylesheet" href="/assets/css/empire-style.css" />
+  <script src="/js/empire-auth.js"></script>
 </head>
-<body class="empire-bg--glow">
-  <div class="centered">
-    <h2>Login to The Empire</h2>
-    <form onsubmit="handleLogin(event)">
-      <input type="email" id="email" placeholder="Email" required><br>
-      <input type="tel" id="phone" placeholder="Phone" required><br>
-      <button type="submit">Login</button>
-    </form>
-  </div>
+<body class="login-wrap">
+
+  <form class="login-card" id="empire-login" autocomplete="on">
+    <h1>Commander Login</h1>
+    <p class="desc">Enter your credentials to access Command.</p>
+
+    <div class="form-row">
+      <label for="emp-email">Email or Phone</label>
+      <input id="emp-email" class="emp" type="text" name="id" inputmode="email" autocomplete="username" required />
+    </div>
+
+    <div class="form-row">
+      <label for="emp-key">Access Key</label>
+      <input id="emp-key" class="emp" type="password" name="key" autocomplete="current-password" required />
+    </div>
+
+    <div class="login-actions">
+      <button type="submit" class="btn" aria-label="Enter The Empire">Enter The Empire</button>
+      <a class="link" href="/welcome.html">Back to Welcome</a>
+    </div>
+
+    <div class="footer-note">By entering you agree to Empire terms.</div>
+  </form>
+
   <script>
-    function handleLogin(e) {
-      e.preventDefault();
-      window.location.href = "/terms.html";
-    }
+    (function(){
+      const form = document.getElementById('empire-login');
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        const id  = document.getElementById('emp-email').value.trim();
+        const key = document.getElementById('emp-key').value.trim();
+
+        // Optional: place your real validation here.
+        try {
+          if (window.EmpireAuth && typeof window.EmpireAuth.set === 'function') {
+            window.EmpireAuth.set({ id });
+          } else {
+            // Fallback localStorage token so /index.html route works
+            localStorage.setItem('empire_auth', JSON.stringify({ id, t: Date.now() }));
+          }
+        } catch(_) {}
+
+        window.location.replace('/dashboard.html');
+      });
+    })();
   </script>
 </body>
 </html>

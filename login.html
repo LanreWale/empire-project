@@ -4,123 +4,121 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>The Empire — Commander Login</title>
-  <link rel="preload" as="image" href="/assets/brand/empire-hero-final.jpg" />
+  <link rel="preload" as="image" href="/assets/brand/empire-hero-clean.jpg"/>
   <style>
-    :root {
-      --gold:#f1c40f;
-      --muted:#b6b9c2;
+    :root{
+      --bg:#0b0e12; --text:#e8eaed; --muted:#b6b9c2; --gold:#f4c542; --shadow:rgba(0,0,0,.5);
+      --panel:#121826; --input:#0f131d; --border:rgba(255,255,255,.10);
     }
-    *{margin:0;padding:0;box-sizing:border-box}
-    body {
-      font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-      color:#fff;
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; color:var(--text);
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      background: var(--bg) url("/assets/brand/empire-hero-clean.jpg") center/cover no-repeat fixed;
     }
-    .hero {
-      position:relative;
-      min-height:100vh;
-      display:grid;
-      place-items:center;
-      background:url("/assets/brand/empire-hero-final.jpg") center/cover no-repeat;
-    }
-    .hero::after {
-      content:"";
-      position:absolute;
-      inset:0;
-      background:rgba(0,0,0,.55);
-      z-index:0;
-    }
-    .login-box {
-      position:relative;
-      z-index:1;
-      background:rgba(0,0,0,.65);
-      padding:28px 24px;
-      border-radius:16px;
-      box-shadow:0 14px 34px -16px rgba(0,0,0,.8);
+
+    /* center stage */
+    .veil{min-height:100%; background:rgba(0,0,0,.60); display:grid; place-items:center; padding:20px}
+    .card{
+      width:min(92vw,440px);
+      background:var(--panel);
+      border:1px solid var(--border);
+      border-radius:22px; padding:28px 22px;
+      box-shadow:0 30px 60px -30px var(--shadow);
       text-align:center;
-      width:100%;
-      max-width:420px;
     }
-    .login-title {
-      font-size:clamp(24px,5vw,36px);
-      font-weight:800;
-      margin-bottom:20px;
+
+    .brand{
+      display:flex; align-items:center; justify-content:center; gap:12px; margin-bottom:8px;
+      text-decoration:none; color:var(--text);
     }
-    .field {
-      margin:12px 0;
+    .brand img{width:42px; height:42px; border-radius:10px; box-shadow:0 8px 18px -10px rgba(244,197,66,.7)}
+    .brand strong{letter-spacing:.8px}
+
+    h1{font-size:1.6rem; margin:10px 0 18px}
+    .field{margin:10px 0}
+    .input{
+      width:100%; background:var(--input); color:var(--text);
+      border:1px solid var(--border); border-radius:14px; padding:14px 14px; font-size:1rem; outline:none;
     }
-    .field input {
-      width:100%;
-      padding:14px 16px;
-      border:none;
-      border-radius:12px;
-      font-size:1rem;
-      background:#111;
-      color:#fff;
+    .input:focus{border-color:#2dd4bf; box-shadow:0 0 0 3px rgba(45,212,191,.15)}
+
+    .btn{
+      width:100%; border:none; border-radius:14px; padding:14px 22px;
+      font-weight:800; cursor:pointer; font-size:1rem;
     }
-    .btn {
-      margin-top:18px;
-      display:inline-block;
-      width:100%;
-      padding:14px 20px;
-      border:none;
-      border-radius:12px;
-      font-weight:800;
-      font-size:1rem;
-      background:var(--gold);
-      color:#1a1200;
-      cursor:pointer;
+    .btn-primary{
+      background:var(--gold); color:#1a1200;
       box-shadow:0 14px 34px -16px var(--gold);
     }
-    .terms {
-      margin-top:12px;
-      font-size:.85rem;
-      color:var(--muted);
+    .btn-primary:hover{filter:brightness(1.05)}
+    .muted{color:var(--muted); font-size:.85rem; margin-top:10px}
+    .back{
+      display:inline-block; margin-top:14px; font-size:.9rem; color:#ffdf7a; text-decoration:none;
     }
-    footer {
-      position:absolute;
-      bottom:10px;
-      left:0;
-      right:0;
-      text-align:center;
-      font-size:.85rem;
-      color:var(--muted);
-    }
+    footer{margin-top:16px; color:#9aa3b2; font-size:.8rem}
   </style>
 </head>
 <body>
-  <section class="hero">
-    <div class="login-box">
-      <div class="login-title">⚔ Commander Login ⚔</div>
-      <form id="empire-login-form">
+  <div class="veil">
+    <section class="card" role="form" aria-labelledby="login-title">
+      <a class="brand" href="/welcome.html" aria-label="Back to Welcome">
+        <img src="/assets/brand/empire-logo.png" alt="The Empire">
+        <strong>THE EMPIRE</strong>
+      </a>
+
+      <h1 id="login-title">⚔ Commander Login ⚔</h1>
+
+      <form id="empire-login-form" novalidate>
         <div class="field">
-          <input id="login-id" type="text" placeholder="Email or Phone" autocomplete="username">
+          <input id="login-id" class="input" type="text" placeholder="Email or Phone" autocomplete="username" required>
         </div>
         <div class="field">
-          <input id="accessKey" type="password" placeholder="Access Key" autocomplete="current-password">
+          <input id="accessKey" class="input" type="password" placeholder="Access Key" autocomplete="current-password" required>
         </div>
-        <button class="btn" type="submit">Enter The Empire</button>
+        <button class="btn btn-primary" type="submit">Enter The Empire</button>
+        <p class="muted">By entering you agree to Empire terms.</p>
       </form>
-      <p class="terms">By entering you agree to Empire terms.</p>
-    </div>
-    <footer>
-      © <span id="year"></span> The Empire
-    </footer>
-  </section>
 
-  <script src="/js/empire-auth.js"></script>
+      <a class="back" href="/welcome.html">← Back to Welcome</a>
+      <footer>© 2025 The Empire</footer>
+    </section>
+  </div>
+
   <script>
-    document.getElementById("year").textContent = new Date().getFullYear();
+    // Simple client-side auth holder
+    (function(){
+      const KEY = "empire.auth";
+      window.EmpireAuth = {
+        has(){ try { return !!localStorage.getItem(KEY); } catch(e){ return false; } },
+        set(v){ try { localStorage.setItem(KEY, v); } catch(e){} },
+        clear(){ try { localStorage.removeItem(KEY); } catch(e){} }
+      };
+    })();
 
-    document.getElementById("empire-login-form").addEventListener("submit", (e)=>{
-      e.preventDefault();
-      const id = document.getElementById("login-id").value.trim();
-      const key = document.getElementById("accessKey").value.trim();
-      if(!id || !key){ alert("Enter your ID and access key."); return; }
+    document.addEventListener("DOMContentLoaded", () => {
+      // Already logged in? Go to dashboard.
+      if (window.EmpireAuth?.has()) {
+        location.replace("/dashboard.html");
+        return;
+      }
 
-      // Placeholder login token
-      const token = `OK:${id}:${Date.now()}`;
-      EmpireAuth.set(token);
-      location.href="/dashboard.html";
+      const form = document.getElementById("empire-login-form");
+      const idInput = document.getElementById("login-id");
+      const keyInput = document.getElementById("accessKey");
+
+      form.addEventListener("submit", (ev) => {
+        ev.preventDefault();
+        const id  = (idInput.value || "").trim();
+        const key = (keyInput.value || "").trim();
+        if (!id || !key) { alert("Enter your ID and access key."); return; }
+
+        // TODO: replace with real auth; for now store a dummy token
+        const token = `OK:${id}:${Date.now()}`;
+        window.EmpireAuth.set(token);
+        location.href = "/dashboard.html";
+      });
     });
   </script>
 </body>

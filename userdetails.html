@@ -6,27 +6,102 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#0b0e12" />
   <link rel="stylesheet" href="/assets/css/empire-style.css" />
+  <script>
+    /* Optional public config. If you already expose ENV elsewhere, keep as-is. */
+    window.ENV = window.ENV || {
+      EXEC_URL:  (window.GAS_URL || ""),        // e.g. https://script.google.com/macros/s/AKfy.../exec
+      API_KEY:   (window.API_KEY  || ""),       // your GS_WebApp_Key / API key
+    };
+  </script>
 </head>
 <body class="login-wrap">
   <main class="login-card" style="max-width:640px;text-align:center">
     <h1>Empire Onboarding</h1>
-    <p class="desc">You are being redirected to the secure registration form…</p>
+    <p class="desc" id="desc">You are being redirected to the secure registration form…</p>
 
     <div class="login-actions" style="justify-content:center;margin-top:20px">
-      <a class="btn" href="https://docs.google.com/forms/d/e/1FAIpQLSfUpoxJv_iux7k-F7d_AG0v4Lj5p9P7Zk9dCdeN1HaNq3d0qA/viewform?usp=dialog">
-        Go Now
-      </a>
+      <a
+        id="goNow"
+        class="btn"
+        href="https://docs.google.com/forms/d/e/1FAIpQLSfUpoxJv_iux7k-F7d_AG0v4Lj5p9P7Zk9dCdeN1HaNq3d0qA/viewform?usp=dialog"
+      >Go Now</a>
     </div>
 
     <div class="footer-note">© 2025 The Empire</div>
   </main>
 
   <script>
-    // Auto-redirect after 1.5 seconds
-    setTimeout(() => {
-      window.location.href =
-        "https://docs.google.com/forms/d/e/1FAIpQLSfUpoxJv_iux7k-F7d_AG0v4Lj5p9P7Zk9dCdeN1HaNq3d0qA/viewform?usp=dialog";
-    }, 1500);
+    (function () {
+      const FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSfUpoxJv_iux7k-F7d_AG0v4Lj5p9P7Zk9dCdeN1HaNq3d0qA/viewform?usp=dialog";
+
+      /* Read optional identity passed via invite link:
+         e.g. /userdetails.html?email=test@example.com&phone=2348012345678
+      */
+      const url = new URL(location.href);
+      const email = (url.searchParams.get("email") || "").trim();
+      const phone = (url.searchParams.get("phone") || "").trim();
+      const name  = (url.searchParams.get("name")  || "").trim();
+      const ref   = (url.searchParams.get("ref")   || "").trim();  // optional referral/invite code
+
+      // Update the visible link in case user clicks "Go Now"
+      const go = document.getElementById("goNow");
+      if (go) go.href = FORM_URL;
+
+      // Build a compact payload for notifications
+      const basePayload = {
+        type: "onboarding_ack",
+        email: email || undefined,
+        phone: phone || undefined,
+        name:  name  || undefined,
+        ref:   ref   || undefined,
+        ts:    new Date().toISOString()
+      };
+
+      // ---- 1) Try Netlify function (non-blocking) ----
+      try {
+        const netlifyUrl = "/.netlify/functions/events";
+        const body = JSON.stringify(basePayload);
+        if (navigator.sendBeacon) {
+          const blob = new Blob([body], { type: "application/json" });
+          navigator.sendBeacon(netlifyUrl, blob);
+        } else {
+          fetch(netlifyUrl, { method: "POST", headers: { "Content-Type":"application/json" }, body, keepalive: true })
+            .catch(() => {});
+        }
+      } catch (_) {}
+
+      // ---- 2) Try GAS notify (non-blocking) ----
+      try {
+        const exec = (window.ENV && window.ENV.EXEC_URL) ? String(window.ENV.EXEC_URL) : "";
+        const key  = (window.ENV && window.ENV.API_KEY)   ? String(window.ENV.API_KEY)   : "";
+        if (exec && key) {
+          // We’ll call the GAS endpoint with a generic action you can handle server-side:
+          // doGet(e) / doPost(e) => action=onboardingAck
+          // Your Apps Script can then: notifyTelegram(...), queue WhatsApp, log to Sheet, etc.
+          const u = new URL(exec);
+          u.searchParams.set("action", "onboardingAck");
+          u.searchParams.set("key", key);
+          if (email) u.searchParams.set("email", email);
+          if (phone) u.searchParams.set("phone", phone);
+          if (name)  u.searchParams.set("name",  name);
+          if (ref)   u.searchParams.set("ref",   ref);
+
+          // Use a GET beacon for reliability; fallback to fetch if needed
+          if (navigator.sendBeacon) {
+            navigator.sendBeacon(u.toString());
+          } else {
+            fetch(u.toString(), { method: "GET", mode: "no-cors", keepalive: true }).catch(() => {});
+          }
+        }
+      } catch (_) {}
+
+      // Visible feedback while we wait a moment
+      const desc = document.getElementById("desc");
+      if (desc) desc.textContent = "Acknowledged. Preparing secure registration form…";
+
+      // Auto-redirect after ~1.5s
+      setTimeout(() => { window.location.href = FORM_URL; }, 1500);
+    })();
   </script>
 </body>
 </html>

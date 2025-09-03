@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>The Empire — Welcome</title>
 
-  <!-- Preload hero for instant paint -->
-  <link rel="preload" as="image" href="/assets/brand/empire-hero-final.jpg"/>
+  <!-- Preload clean hero -->
+  <link rel="preload" as="image" href="/assets/brand/empire-hero-clean.jpg"/>
 
   <style>
     :root{
@@ -18,21 +18,19 @@
     html,body{height:100%}
     body{
       font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-      background: var(--bg) url("/assets/brand/empire-hero-final.jpg")
+      background: var(--bg) url("/assets/brand/empire-hero-clean.jpg")
                   center top / cover no-repeat fixed;
       color: var(--text);
       display:flex;
       flex-direction:column;
     }
 
-    /* subtle center vignette to make the CTA read against the art */
     .vignette{
       position:fixed; inset:0; pointer-events:none;
-      background:
-        radial-gradient(ellipse at center,
-          rgba(0,0,0,.10) 0%,
-          rgba(0,0,0,.28) 45%,
-          rgba(0,0,0,.48) 100%);
+      background: radial-gradient(ellipse at center,
+        rgba(0,0,0,.1) 0%,
+        rgba(0,0,0,.3) 45%,
+        rgba(0,0,0,.5) 100%);
     }
 
     main{
@@ -42,16 +40,9 @@
     }
 
     .stack{
-      display:flex; flex-direction:column; align-items:center; gap:16px;
+      display:flex; flex-direction:column; align-items:center; gap:20px;
       text-align:center;
-      /* push CTA roughly into the gap where it belongs over the art */
-      transform: translateY(6vh);
-    }
-
-    .kicker{
-      font-size:.72rem; letter-spacing:.30em; font-weight:800;
-      color:#ffdf7a; text-shadow:0 1px 2px rgba(0,0,0,.45);
-      opacity:.95;
+      transform: translateY(5vh);
     }
 
     h1{
@@ -60,7 +51,6 @@
       text-shadow:0 2px 6px rgba(0,0,0,.55);
     }
 
-    /* real navigation button */
     .cta{
       display:inline-block;
       padding:16px 26px;
@@ -70,35 +60,27 @@
       letter-spacing:.02em;
       color:#1a1300;
       background: linear-gradient(180deg,#ffd44d,#f1c40f 70%,#d9ad00);
-      box-shadow:
-        0 14px 30px -12px rgba(241,196,15,.55),
-        0 2px 0 rgba(0,0,0,.25) inset,
-        0 10px 32px -12px rgba(0,0,0,.6);
+      box-shadow: 0 14px 30px -12px rgba(241,196,15,.55),
+                  0 2px 0 rgba(0,0,0,.25) inset,
+                  0 10px 32px -12px rgba(0,0,0,.6);
       text-decoration:none;
-      transition: transform .08s ease, box-shadow .2s ease, filter .2s ease;
+      transition: transform .08s ease, filter .2s ease;
     }
-    .cta:hover{ transform: translateY(-1px); filter: brightness(1.02); }
-    .cta:active{ transform: translateY(0); filter: brightness(.98); }
+    .cta:hover{ transform: translateY(-1px); filter: brightness(1.05); }
+    .cta:active{ transform: translateY(0); filter: brightness(.95); }
 
     footer{
       height:54px; display:grid; place-items:center;
       font-size:.8rem; color:rgba(255,255,255,.7);
       text-shadow:0 1px 2px rgba(0,0,0,.5);
-      backdrop-filter: blur(0.5px);
-    }
-
-    /* small screens: keep CTA readable & positioned */
-    @media (max-width:480px){
-      .stack{ gap:14px; transform: translateY(5vh); }
     }
   </style>
 </head>
 <body>
   <div class="vignette" aria-hidden="true"></div>
 
-  <main role="main">
-    <div class="stack" aria-label="Welcome">
-      <div class="kicker">✦ THE EMPIRE AFFILIATE SYSTEM ✦</div>
+  <main>
+    <div class="stack">
       <h1>WELCOME TO THE EMPIRE</h1>
       <a class="cta" href="/login.html" aria-label="Enter Command">ENTER COMMAND</a>
     </div>

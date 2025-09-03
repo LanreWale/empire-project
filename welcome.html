@@ -1,57 +1,109 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>The Empire — Welcome</title>
-  <link rel="preload" as="image" href="/assets/brand/empire-hero-clean.jpg"/>
+
+  <!-- Preload hero for instant paint -->
+  <link rel="preload" as="image" href="/assets/brand/empire-hero-final.jpg"/>
+
   <style>
     :root{
-      --bg:#0b0e12; --text:#e8eaed; --muted:#b6b9c2; --gold:#f4c542;
+      --bg:#0b0e12;
+      --gold:#f1c40f;
+      --text:#e8eaed;
     }
-    *{box-sizing:border-box}
+    *{box-sizing:border-box;margin:0;padding:0}
     html,body{height:100%}
     body{
-      margin:0; color:var(--text);
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-      background:var(--bg) url("/assets/brand/empire-hero-clean.jpg") center top / cover no-repeat fixed;
+      font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      background: var(--bg) url("/assets/brand/empire-hero-final.jpg")
+                  center top / cover no-repeat fixed;
+      color: var(--text);
+      display:flex;
+      flex-direction:column;
     }
-    .stage{position:relative; min-height:100vh; display:grid; place-items:center}
-    .content{
-      position:absolute; inset:0; display:grid; place-items:center;
-      padding:16px; pointer-events:none;
-      background:radial-gradient(ellipse at center, rgba(0,0,0,.10), rgba(0,0,0,.45) 70%);
+
+    /* subtle center vignette to make the CTA read against the art */
+    .vignette{
+      position:fixed; inset:0; pointer-events:none;
+      background:
+        radial-gradient(ellipse at center,
+          rgba(0,0,0,.10) 0%,
+          rgba(0,0,0,.28) 45%,
+          rgba(0,0,0,.48) 100%);
     }
-    .stack{text-align:center; max-width:900px}
+
+    main{
+      min-height:calc(100vh - 54px);
+      display:grid; place-items:center;
+      padding:18px;
+    }
+
+    .stack{
+      display:flex; flex-direction:column; align-items:center; gap:16px;
+      text-align:center;
+      /* push CTA roughly into the gap where it belongs over the art */
+      transform: translateY(6vh);
+    }
+
+    .kicker{
+      font-size:.72rem; letter-spacing:.30em; font-weight:800;
+      color:#ffdf7a; text-shadow:0 1px 2px rgba(0,0,0,.45);
+      opacity:.95;
+    }
+
     h1{
-      margin:0 0 18px;
-      font-size:clamp(28px,5.5vw,64px);
-      letter-spacing:.02em; line-height:1.06;
-      text-shadow:0 3px 14px rgba(0,0,0,.35);
+      font-size: clamp(28px, 6vw, 54px);
+      line-height:1.05;
+      text-shadow:0 2px 6px rgba(0,0,0,.55);
     }
+
+    /* real navigation button */
     .cta{
-      display:inline-block; pointer-events:auto;
-      background:var(--gold); color:#1a1200; font-weight:900;
-      padding:14px 22px; border-radius:14px; text-decoration:none; font-size:clamp(14px,2.6vw,18px);
-      box-shadow:0 16px 40px -20px rgba(244,197,66,.9), 0 1px 0 rgba(255,255,255,.25) inset;
-      transition:transform .05s ease;
+      display:inline-block;
+      padding:16px 26px;
+      border-radius:14px;
+      font-size: clamp(16px, 2.6vw, 20px);
+      font-weight:900;
+      letter-spacing:.02em;
+      color:#1a1300;
+      background: linear-gradient(180deg,#ffd44d,#f1c40f 70%,#d9ad00);
+      box-shadow:
+        0 14px 30px -12px rgba(241,196,15,.55),
+        0 2px 0 rgba(0,0,0,.25) inset,
+        0 10px 32px -12px rgba(0,0,0,.6);
+      text-decoration:none;
+      transition: transform .08s ease, box-shadow .2s ease, filter .2s ease;
     }
-    .cta:active{transform:translateY(1px)}
+    .cta:hover{ transform: translateY(-1px); filter: brightness(1.02); }
+    .cta:active{ transform: translateY(0); filter: brightness(.98); }
+
     footer{
-      position:fixed; inset:auto 0 10px; text-align:center; color:#9aa3b2; font-size:.8rem;
-      text-shadow:0 2px 6px rgba(0,0,0,.45);
+      height:54px; display:grid; place-items:center;
+      font-size:.8rem; color:rgba(255,255,255,.7);
+      text-shadow:0 1px 2px rgba(0,0,0,.5);
+      backdrop-filter: blur(0.5px);
+    }
+
+    /* small screens: keep CTA readable & positioned */
+    @media (max-width:480px){
+      .stack{ gap:14px; transform: translateY(5vh); }
     }
   </style>
 </head>
 <body>
-  <main class="stage" aria-label="The Empire — Welcome">
-    <div class="content">
-      <div class="stack">
-        <h1>WELCOME TO THE EMPIRE</h1>
-        <a class="cta" href="/login.html" aria-label="Enter Command">ENTER COMMAND</a>
-      </div>
+  <div class="vignette" aria-hidden="true"></div>
+
+  <main role="main">
+    <div class="stack" aria-label="Welcome">
+      <div class="kicker">✦ THE EMPIRE AFFILIATE SYSTEM ✦</div>
+      <h1>WELCOME TO THE EMPIRE</h1>
+      <a class="cta" href="/login.html" aria-label="Enter Command">ENTER COMMAND</a>
     </div>
   </main>
+
   <footer>© 2025 The Empire</footer>
 </body>
 </html>

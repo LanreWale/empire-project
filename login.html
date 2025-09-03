@@ -1,106 +1,25 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Login to The Empire</title>
-  <style>
-    :root{--bg:#0a0c0f;--card:#121621;--muted:#b6b9c2;--text:#e8eaed;--gold1:#f5d148;--gold2:#cda316}
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{margin:0;background:radial-gradient(ellipse at 50% 40%,#0d1117 0%,#0a0c0f 60%,#090b0e 100%);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-    .wrap{min-height:100vh;display:grid;place-items:center;padding:16px}
-    .card{width:min(480px,92vw);background:var(--card);border:1px solid rgba(255,255,255,.06);border-radius:16px;box-shadow:0 18px 44px -20px #000; padding:22px}
-    h1{font-size:clamp(22px,3.6vw,28px);margin:4px 0 14px;text-align:center}
-    label{display:block;font-size:.9rem;color:var(--muted);margin:12px 0 6px}
-    input{width:100%;height:44px;border-radius:10px;border:1px solid rgba(255,255,255,.12);background:#0f1320;color:var(--text);padding:0 12px;outline:none}
-    input:focus{border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.25)}
-    .actions{margin-top:16px;display:flex;gap:10px;justify-content:center}
-    button[type="submit"]{
-      border:0;border-radius:12px;padding:12px 18px;font-weight:900;letter-spacing:.04em;cursor:pointer;
-      background:linear-gradient(var(--gold1),var(--gold2)); color:#1b1400;
-      box-shadow:0 18px 38px -16px rgba(241,196,15,.75), 0 1px 0 rgba(255,255,255,.18) inset;
-      touch-action:manipulation
-    }
-    .err{display:none;margin-top:10px;color:#ff6b6b;text-align:center;font-size:.95rem}
-    .fine{display:block;margin-top:12px;color:var(--muted);text-align:center;font-size:.8rem}
-  </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Empire Login</title>
+  <link rel="stylesheet" href="/style.css">
 </head>
 <body>
-  <main class="wrap">
-    <form id="loginForm" class="card" novalidate>
-      <h1>Commander Login</h1>
-
-      <label for="user">Email or Phone</label>
-      <input id="user" name="user" autocomplete="username" inputmode="email" placeholder="you@example.com" required />
-
-      <label for="key">Access Key</label>
-      <input id="key" name="key" type="password" autocomplete="current-password" placeholder="••••••••" required />
-
-      <div class="actions">
-        <button type="submit" id="enterBtn">Enter The Empire</button>
-      </div>
-
-      <div id="err" class="err">Please enter a valid email/phone and access key.</div>
-      <div class="fine">By entering you agree to Empire terms.</div>
+  <div class="centered">
+    <h2>Login to The Empire</h2>
+    <form onsubmit="handleLogin(event)">
+      <input type="email" id="email" placeholder="Email" required><br>
+      <input type="tel" id="phone" placeholder="Phone" required><br>
+      <button type="submit">Login</button>
     </form>
-  </main>
-
+  </div>
   <script>
-    // Single source of truth for navigation target:
-    const NEXT_URL = "/dashboard.html";
-
-    // Guard against legacy scripts that might intercept clicks/submits
-    (function harden(){
-      // Kill any global onclick/onsubmit left on document from older code
-      document.onclick = null;
-      document.onsubmit = null;
-      // Stop capture-phase listeners from other bundles
-      addEventListener("click", e => {
-        if (e.target.closest("#enterBtn")) { e.stopImmediatePropagation(); }
-      }, true);
-      addEventListener("submit", e => {
-        if (e.target.id === "loginForm") { e.stopImmediatePropagation(); }
-      }, true);
-    })();
-
-    function looksLikeEmailOrPhone(v){
-      if(!v) return false;
-      const s = v.trim();
-      const email = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i.test(s);
-      const phone = /^[\d+\-\s().]{6,}$/.test(s);
-      return email || phone;
+    function handleLogin(e) {
+      e.preventDefault();
+      window.location.href = "/terms.html";
     }
-
-    addEventListener("DOMContentLoaded", () => {
-      const form = document.getElementById("loginForm");
-      const user = document.getElementById("user");
-      const key  = document.getElementById("key");
-      const err  = document.getElementById("err");
-
-      form.addEventListener("submit", (ev) => {
-        ev.preventDefault();           // our routing
-        ev.stopImmediatePropagation(); // ignore old handlers
-
-        const ok = looksLikeEmailOrPhone(user.value) && key.value.trim().length >= 3;
-        if (!ok) {
-          err.style.display = "block";
-          return;
-        }
-        err.style.display = "none";
-
-        // (Optional) store for the session; dashboard can read if needed
-        try {
-          sessionStorage.setItem("empire.user", user.value.trim());
-        } catch {}
-
-        // Navigate, no more prompts:
-        const target = new URL(NEXT_URL, location.origin);
-        // Pass a friendly hint (not sensitive) if you want:
-        target.searchParams.set("hi", "1");
-        location.assign(target.href);
-      }, { capture: false });
-    });
   </script>
 </body>
 </html>

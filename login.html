@@ -3,23 +3,44 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Empire Login</title>
-  <link rel="stylesheet" href="/style.css">
+  <title>Commander Login — THE EMPIRE</title>
+  <link rel="stylesheet" href="/assets/css/empire-style.css" />
+  <style>
+    .card{background:#101520;padding:22px;border-radius:16px;max-width:420px;margin:10vh auto 0;box-shadow:0 12px 36px rgba(0,0,0,.45)}
+    .card h2{margin:0 0 12px;text-align:center}
+    .card p.helper{color:#b6b9c2;text-align:center;margin:4px 0 14px}
+    .card input{width:100%;margin:10px 0;padding:12px;border-radius:10px;border:1px solid #2a3350;background:#0c111a;color:#e8eaed}
+    .emp-btn{display:block;width:100%;padding:12px 14px;border-radius:12px;border:none;cursor:pointer;font-weight:800;
+      background:#f1c40f;color:#1a1200;box-shadow:0 12px 28px -16px rgba(241,196,15,.8)}
+  </style>
+  <script src="/js/empire-auth.js"></script>
 </head>
 <body>
-  <div class="centered">
-    <h2>Login to The Empire</h2>
-    <form onsubmit="handleLogin(event)">
-      <input type="email" id="email" placeholder="Email" required><br>
-      <input type="tel" id="phone" placeholder="Phone" required><br>
-      <button type="submit">Login</button>
+  <main class="card">
+    <h2>Commander Login</h2>
+    <p class="helper">Enter your access credentials to proceed.</p>
+    <form id="loginForm">
+      <input type="email" id="email" placeholder="Email" required />
+      <input type="password" id="key" placeholder="Access Key" required />
+      <button class="emp-btn" type="submit">Enter The Empire</button>
     </form>
-  </div>
+    <p class="helper" style="margin-top:10px"><a href="/welcome.html" class="cta ghost">← Back to Welcome</a></p>
+  </main>
+
   <script>
-    function handleLogin(e) {
+    document.getElementById("loginForm").addEventListener("submit", function(e){
       e.preventDefault();
-      window.location.href = "/terms.html";
-    }
+      const email = document.getElementById("email").value.trim();
+      const key   = document.getElementById("key").value.trim();
+
+      // Minimal client-side "auth" flag so index/dashboard routing can work
+      try { window.EmpireAuth?.set({ email, ts: Date.now() }); } catch {}
+
+      // (Optional) basic non-empty check; real auth happens server-side in the future
+      if(email && key){
+        location.href = "/terms.html";
+      }
+    });
   </script>
 </body>
 </html>

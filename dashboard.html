@@ -5,11 +5,14 @@
   <title>Empire Control — Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="icon" href="/assets/brand/favicon.ico" />
+
+  <!-- Styles -->
   <link rel="stylesheet" href="/assets/css/empire-style.css" />
 
+  <!-- Charts (optional) -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
 
-  <!-- Auth must load BEFORE anything else -->
+  <!-- Auth gate -->
   <script src="/js/empire-auth.js"></script>
   <script>
     if (!window.EmpireAuth?.has()) {
@@ -17,15 +20,30 @@
     }
   </script>
 
-  <!-- Shared shell + (optionally) your dashboard logic -->
+  <!-- Shared header/footer + any dashboard boot -->
   <script src="/assets/js/empire-shell.js" defer></script>
-  <!-- <script src="/assets/js/empire-dashboard.js" defer></script> -->
+
+  <style>
+    /* Make panels pop over the hero background nicely */
+    .emp-container{
+      max-width: 1100px; margin: 0 auto; padding: 20px;
+      backdrop-filter: none;
+    }
+    .emp-nav .emp-tab{
+      display:inline-block; padding:10px 14px; border-radius:10px;
+      background:#0c111a; color:var(--text); border:1px solid var(--border); text-decoration:none;
+      font-weight:600;
+    }
+    .emp-nav .emp-tab.active{ background:#1a2233; border-color:#2a3350 }
+    .emp-view{ background: rgba(16,21,32,.85); border:1px solid rgba(255,255,255,.06); border-radius:16px; padding:18px; }
+    .hidden{ display:none }
+  </style>
 </head>
-<body>
+<body class="bg-empire-hero">
   <header id="emp-header" class="emp-header"></header>
 
   <main id="emp-dashboard" class="emp-container">
-    <nav class="emp-nav" aria-label="Empire sections" style="margin:16px 0; display:flex; gap:8px; flex-wrap:wrap;">
+    <nav class="emp-nav" aria-label="Empire sections" style="margin:16px 0; display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
       <a href="#dashboard"  data-tab="dashboard"  class="emp-tab active">Overview</a>
       <a href="#cpa"        data-tab="cpa"        class="emp-tab">CPA Accounts</a>
       <a href="#users"      data-tab="users"      class="emp-tab">Users</a>
@@ -34,27 +52,40 @@
       <a href="#security"   data-tab="security"   class="emp-tab">Security</a>
       <a href="#monitoring" data-tab="monitoring" class="emp-tab">Monitoring</a>
       <span style="flex:1"></span>
-      <button id="emp-logout" class="emp-btn small">Logout</button>
+      <button id="emp-logout" class="cta ghost">Logout</button>
     </nav>
 
-    <section id="view-dashboard"  class="emp-view"></section>
-    <section id="view-cpa"        class="emp-view hidden"></section>
-    <section id="view-users"      class="emp-view hidden"></section>
-    <section id="view-analytics"  class="emp-view hidden"></section>
-    <section id="view-wallet"     class="emp-view hidden"></section>
-    <section id="view-security"   class="emp-view hidden"></section>
-    <section id="view-monitoring" class="emp-view hidden"></section>
+    <section id="view-dashboard"  class="emp-view">
+      <h1>Welcome, Commander</h1>
+      <p>Commanding the Future of Affiliate Marketing.</p>
+
+      <div class="kpis" style="margin-top:14px;">
+        <div class="kpi"><h6>Active Campaigns</h6><div class="val">12</div></div>
+        <div class="kpi"><h6>Leads Today</h6><div class="val">348</div></div>
+        <div class="kpi"><h6>Conv. Rate</h6><div class="val">8.4%</div></div>
+        <div class="kpi"><h6>Revenue (24h)</h6><div class="val">$4,920</div></div>
+      </div>
+    </section>
+
+    <section id="view-cpa"        class="emp-view hidden"><h2>CPA Accounts</h2><p>Manage networks & offers here.</p></section>
+    <section id="view-users"      class="emp-view hidden"><h2>Users</h2><p>Invite and manage commanders.</p></section>
+    <section id="view-analytics"  class="emp-view hidden"><h2>Analytics</h2><p>Charts and performance insights.</p></section>
+    <section id="view-wallet"     class="emp-view hidden"><h2>Wallet</h2><p>Payouts and balances.</p></section>
+    <section id="view-security"   class="emp-view hidden"><h2>Security</h2><p>Keys, sessions, and access.</p></section>
+    <section id="view-monitoring" class="emp-view hidden"><h2>Monitoring</h2><p>System health and alerts.</p></section>
   </main>
 
   <footer id="emp-footer" class="emp-footer"></footer>
 
   <script>
+    // Tabs
     document.addEventListener("click", (ev) => {
       const a = ev.target.closest(".emp-tab");
       if (!a) return;
       ev.preventDefault();
       document.querySelectorAll(".emp-tab").forEach(t => t.classList.remove("active"));
       a.classList.add("active");
+
       const key = a.dataset.tab || "dashboard";
       document.querySelectorAll(".emp-view").forEach(v => v.classList.add("hidden"));
       const target = document.getElementById(`view-${key}`) || document.getElementById("view-dashboard");
@@ -62,11 +93,13 @@
       window.dispatchEvent(new CustomEvent("empire:tabchange", { detail: { tab: key }}));
     });
 
+    // Logout
     document.getElementById("emp-logout")?.addEventListener("click", () => {
       try { window.EmpireAuth?.clear(); } catch {}
       location.href = "/login.html";
     });
 
+    // Initial tab from hash
     window.addEventListener("DOMContentLoaded", () => {
       const hash = (location.hash || "").replace(/^#/, "") || "dashboard";
       const starter = document.querySelector(`.emp-tab[data-tab="${hash}"]`) || document.querySelector('.emp-tab[data-tab="dashboard"]');

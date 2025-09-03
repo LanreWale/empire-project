@@ -1,39 +1,29 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Welcome — THE EMPIRE</title>
-  <link rel="preload" as="image" href="/assets/brand/empire-hero-clean.jpg" />
+  <meta charset="utf-8" />
+  <title>The Empire — Welcome</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#0b0e12" />
+  <link rel="preload" as="image" href="/assets/brand/empire-hero-clean.jpg">
   <link rel="stylesheet" href="/assets/css/empire-style.css" />
-  <style>
-    /* Make the approved artwork the page background and place a real CTA on top */
-    .hero-cover{
-      min-height:100vh;
-      display:flex; flex-direction:column; justify-content:center; align-items:center;
-      text-align:center; position:relative; padding:64px 16px 96px;
-      background-image:
-        linear-gradient(180deg, rgba(8,11,18,0.85) 0%, rgba(8,11,18,0.55) 35%, rgba(8,11,18,0.82) 100%),
-        url("/assets/brand/empire-hero-clean.jpg");
-      background-size:cover; background-position:center top; background-repeat:no-repeat;
-    }
-    .hero-title{font-size:clamp(34px,6vw,72px);line-height:1.05;font-weight:900;letter-spacing:.01em;margin:0 0 14px}
-    .cta-primary{background:#f1c40f;color:#1a1200;font-weight:900;padding:14px 22px;border-radius:14px;
-      text-decoration:none;box-shadow:0 14px 34px -16px rgba(241,196,15,.85);transition:transform .12s ease, box-shadow .12s ease}
-    .cta-primary:hover{transform:translateY(-1px);box-shadow:0 22px 46px -22px rgba(241,196,15,.9)}
-    .hero-bottom-note{position:absolute;left:0;right:0;bottom:18px;color:#cbd5e1;opacity:.9;
-      font-size:.9rem;font-weight:700;letter-spacing:.08em}
-  </style>
 </head>
 <body>
-  <main class="hero-cover">
+
+  <section class="hero-cover" style="--hero-url: url('/assets/brand/empire-hero-clean.jpg');">
     <div class="hero-inner">
-      <h1 class="hero-title">WELCOME TO<br />THE EMPIRE</h1>
-      <div class="hero-cta" style="margin-top:8px">
+      <div class="kicker">THE EMPIRE AFFILIATE SYSTEM</div>
+      <h1 class="hero-title">WELCOME TO <span>THE EMPIRE</span></h1>
+      <p class="hero-sub">Real-Time Earnings • Global Performance Engine</p>
+      <div class="hero-cta">
         <a class="cta-primary" href="/login.html" aria-label="Enter Command">ENTER COMMAND</a>
       </div>
     </div>
-    <p class="hero-bottom-note">BUILT FOR LEGENDS. POWERED BY TRUTH. DEPLOYED FOR VICTORY.</p>
-  </main>
+
+    <div class="hero-bottom-note">
+      BUILT FOR LEGENDS. POWERED BY TRUTH. DEPLOYED FOR VICTORY.
+    </div>
+  </section>
+
 </body>
 </html>

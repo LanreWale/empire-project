@@ -6,10 +6,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <script src="/js/empire-auth.js"></script>
 
-  <!-- Optional: force canonical host (set host only if you want hard redirect) -->
+  <!-- Optional: force canonical host (set to your live host or leave blank to disable) -->
   <script>
     (function(){
-      var CANON = "empire.yourdomain.com";  // ← change this (host only) or leave as-is to disable
+      var CANON = ""; // e.g. "empireaffiliatemarketinghub.com"
       if (CANON && location.hostname && location.hostname !== CANON) {
         var target = "https://" + CANON + (location.pathname || "/") + location.search + location.hash;
         location.replace(target);

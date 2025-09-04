@@ -1,94 +1,72 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Empire – Login</title>
-<link rel="stylesheet" href="assets/css/empire-style.css">
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>THE EMPIRE — Commander Login</title>
 
-<style>
-:root{--bg:#0b1220;--card:#121a2b;--muted:#96a0b5;--txt:#e7ecf7;--accent:#4bb1ff}
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--txt);font:16px/1.5 system-ui,Segoe UI,Roboto,Helvetica,Arial}
-.wrap{max-width:720px;margin:0 auto;padding:24px}
-.card{background:var(--card);border-radius:16px;box-shadow:0 6px 40px rgba(0,0,0,.25);padding:24px;text-align:center}
-h1{margin:12px 0 8px}
-.muted{color:var(--muted)}
-.msg{padding:12px 14px;border-radius:12px;margin:12px 0;display:none}
-.msg.bad{background:#2a1414;border:1px solid #7a3431;color:#ffd7d5}
-button{background:var(--accent);border:0;color:#07111f;padding:12px 16px;border-radius:12px;font-weight:600;cursor:pointer}
-input{width:100%;padding:12px 14px;border:1px solid #1f2a42;background:#0d1525;color:#dfe8fb;border-radius:10px}
-label{display:block;margin:10px 0 6px}
-a{color:var(--accent);text-decoration:none}
-.logo-badge{margin-bottom:12px}
-</style>
+  <!-- Theme -->
+  <link rel="stylesheet" href="/assets/css/empire-style.css" />
+
+  <!-- Auth module (single source of truth) -->
+  <script src="/assets/js/empire-auth.js" defer></script>
+
+  <style>
+    /* compact page shell */
+    :root{ --card:#121a2b; --muted:#96a0b5; --txt:#e7ecf7; --accent:#ffd166; }
+    body{ margin:0; min-height:100vh; display:grid; place-items:center; }
+    .wrap{ width:min(560px,92vw); background:var(--card); border:1px solid rgba(255,255,255,.06);
+           border-radius:16px; padding:22px 18px; box-shadow:0 24px 60px -24px rgba(0,0,0,.55); }
+    h1{ margin:6px 0 8px }
+    .muted{ color:var(--muted) }
+    label{ display:block; margin:12px 0 6px }
+    input{ width:100%; padding:12px 14px; border-radius:10px; background:#0c111a; border:1px solid #2a3350; color:var(--txt); }
+    .row{ display:flex; gap:12px; margin-top:14px; align-items:center; justify-content:center; flex-wrap:wrap; }
+    .btn{ background:var(--accent); color:#1a1a1a; padding:12px 18px; border-radius:12px; border:0; font-weight:800; cursor:pointer; }
+    .link{ color:#9fd3f7; text-decoration:none }
+    .msg{ display:none; margin-top:10px; padding:10px 12px; border-radius:10px; background:#2a1414; border:1px solid #7a3431; color:#ffd7d5; }
+  </style>
 </head>
-<body>
-<div class="wrap">
-  <div class="card">
-    <div class="logo-badge">
-      <img src="/app/assets/brand/commander_badge.png" alt="Supreme Command" width="84">
+<body class="bg-empire-hero">
+
+  <main class="wrap">
+    <div style="text-align:center;margin-bottom:8px">
+      <img src="/app/assets/brand/commander_badge.png" alt="Supreme Command" width="72" height="72" loading="eager">
     </div>
 
-    <h1>Empire Login</h1>
-    <p class="muted">Enter your email or phone to begin. You must have a valid invite.</p>
+    <h1>Commander Login</h1>
+    <p class="muted">Enter your email or phone. A valid invite or clearance is required.</p>
 
-    <div id="msg" class="msg bad"></div>
+    <div id="emp-msg" class="msg"></div>
 
-    <label for="identifier">Email or phone</label>
-    <input id="identifier" autocomplete="email" placeholder="you@example.com or +234..." />
+    <label for="emp-id">Email or Phone</label>
+    <input id="emp-id" type="text" placeholder="you@example.com or +234..." autocomplete="email">
 
-    <div style="margin-top:16px;display:flex;gap:12px;align-items:center;justify-content:center">
-      <button id="nextBtn">Enter The Empire</button>
-      <a id="goRegister" href="/register">Skip to registration</a>
+    <div class="row">
+      <button id="emp-enter" class="btn">Enter The Empire</button>
+      <a class="link" href="/welcome.html">Back to Welcome</a>
     </div>
-  </div>
-</div>
 
-<!-- LOAD AUTH FIRST -->
-<script src="assets/js/empire-auth.js?v=7"></script>
+    <p class="muted" style="margin-top:10px;text-align:center">By entering you agree to Empire terms.</p>
+  </main>
 
-<script>
-(async () => {
-  // carry invite token through
-  const usp = new URLSearchParams(location.search);
-  const invite = usp.get("i");
-  if (invite) sessionStorage.setItem("empire.invite", invite);
-  const tok = sessionStorage.getItem("empire.invite") || invite || "";
-  if (tok) document.getElementById("goRegister").href = "/register?i=" + encodeURIComponent(tok);
-
-  // already authed? jump to dashboard
-  if (window.EmpireAuth && EmpireAuth.has()) {
-    location.replace("dashboard.html");
-    return;
-  }
-
-  const $input = document.getElementById("identifier");
-  const $btn   = document.getElementById("nextBtn");
-  const $msg   = document.getElementById("msg");
-
-  $btn.addEventListener("click", async (ev) => {
-    ev.preventDefault();
-    $msg.style.display = "none";
-    $msg.textContent = "";
-
-    const id = ($input.value || "").trim();
-    if (!id) {
-      $msg.textContent = "Enter email or phone.";
-      $msg.style.display = "block";
-      return;
-    }
-
-    try {
-      await EmpireAuth.login(id);            // stores API key + probes GAS
-      location.href = "dashboard.html";      // success
-    } catch (e) {
-      console.error(e);
-      $msg.textContent = "Access denied: unauthorized";
-      $msg.style.display = "block";
-    }
+  <script>
+  // Handle login after auth script loads
+  window.addEventListener("DOMContentLoaded", () => {
+    const btn = document.getElementById("emp-enter");
+    const msg = document.getElementById("emp-msg");
+    btn?.addEventListener("click", async () => {
+      msg.style.display = "none";
+      const id = (document.getElementById("emp-id")?.value || "").trim();
+      try{
+        await EmpireAuth.login(id);
+        location.href = "/dashboard.html";
+      }catch(e){
+        msg.textContent = "Access denied: unauthorized";
+        msg.style.display = "block";
+      }
+    });
   });
-})();
-</script>
+  </script>
 </body>
 </html>

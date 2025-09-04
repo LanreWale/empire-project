@@ -1,117 +1,49 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Empire Control — Dashboard</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="icon" href="/assets/brand/favicon.ico" />
 
-  <!-- Optional charts -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
+  <!-- Theme -->
+  <link rel="stylesheet" href="/assets/css/empire-style.css" />
 
-  <!-- Auth gate -->
-  <script src="/js/empire-auth.js"></script>
-  <script>
-    if (!window.EmpireAuth?.has()) {
-      window.location.replace("/login.html");
-    }
-  </script>
-
-  <!-- Shared header/footer boot (if any) -->
-  <script src="/assets/js/empire-shell.js" defer></script>
+  <!-- Auth first -->
+  <script src="/assets/js/empire-auth.js"></script>
 
   <style>
-    :root{
-      --bg:#0b0f1a; --bg-accent:#0e1426; --card:#11162a; --border:#1c2544;
-      --text:#e6e9f0; --muted:#9aa4ba;
-      --primary:#3b82f6; --ok:#22c55e; --warn:#f59e0b; --bad:#ef4444;
-      --shadow-card:0 4px 15px rgba(0,0,0,0.25);
-      --shadow-tab:0 3px 8px rgba(0,0,0,0.25);
-      --shadow-btn:0 2px 8px rgba(0,0,0,0.2);
-      --transition-fast:0.2s ease; --transition-slow:0.35s ease;
-    }
-
-    body{
-      margin:0; color:var(--text);
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial;
-      background:
-        radial-gradient(1200px 800px at 20% -10%, #1a2453 0%, transparent 60%),
-        radial-gradient(1000px 600px at 110% 20%, #1d3a5c 0%, transparent 60%),
-        linear-gradient(180deg, var(--bg) 0%, var(--bg-accent) 100%);
-    }
-
-    .emp-container{max-width:1100px;margin:0 auto;padding:20px}
-
-    /* Tabs */
-    .emp-nav .emp-tab{
-      display:inline-block;padding:10px 14px;border-radius:10px;
-      background:#0c111a;color:var(--text);
-      border:1px solid var(--border);
-      text-decoration:none;font-weight:600;
-      box-shadow:var(--shadow-tab);
-      transition:all var(--transition-fast);
-    }
-    .emp-nav .emp-tab:hover{background:#1a2233;box-shadow:0 5px 18px rgba(0,0,0,0.35);}
-    .emp-nav .emp-tab.active{background:#1a2233;border-color:#2a3350;box-shadow:0 6px 20px rgba(0,0,0,0.4);}
-
-    .emp-view{
-      background:rgba(16,21,32,.85);
-      border:1px solid rgba(255,255,255,.06);
-      border-radius:16px;padding:18px;
-      box-shadow:var(--shadow-card);
-      transition:all var(--transition-slow);
-    }
-    .emp-view:hover{box-shadow:0 10px 28px rgba(0,0,0,0.4);}
-
-    .hidden{display:none}
-
-    /* Buttons */
-    .cta{
-      background:var(--primary);
-      color:#fff;
-      border:none;
-      padding:10px 14px;
-      font-weight:600;
-      cursor:pointer;
-      border-radius:12px;
-      box-shadow:var(--shadow-btn);
-      transition:all var(--transition-fast);
-    }
-    .cta:hover{opacity:.92;transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,0.35);}
-    .cta.ghost{background:transparent;color:var(--text);border:1px solid var(--border);}
-    .cta.ghost:hover{background:rgba(59,130,246,0.1);transform:translateY(-2px);}
-
-    /* KPI Cards */
-    .kpis{margin-top:14px;display:flex;gap:12px;flex-wrap:wrap}
-    .kpi{
-      background:var(--card);
-      border:1px solid var(--border);
-      border-radius:12px;
-      padding:10px 12px;
-      flex:1 1 220px;
-      min-width:220px;
-      box-shadow:var(--shadow-card);
-      transition:all var(--transition-fast);
-    }
-    .kpi:hover{box-shadow:0 8px 20px rgba(0,0,0,0.35);transform:translateY(-2px);}
-    .kpi .label{margin:0;color:var(--muted);font-size:12px}
-    .kpi .val{font-weight:700;font-size:20px;margin-top:2px}
-
-    /* Inputs */
-    .emp-input{
-      background:var(--card);color:var(--text);
-      border:1px solid var(--border);border-radius:12px;
-      padding:10px 12px;min-width:240px;outline:none;
-      transition:border-color var(--transition-fast), box-shadow var(--transition-fast);
-    }
-    .emp-input:focus{border-color:#2a69ff; box-shadow:0 0 0 4px rgba(59,130,246,0.25);}
+    .emp-container{ max-width:1100px; margin:0 auto; padding:20px; }
+    .kpis{ display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; margin-top:14px; }
+    .kpi{ background:rgba(16,21,32,.88); border:1px solid rgba(255,255,255,.06); border-radius:14px; padding:14px; }
+    .kpi h6{ margin:0 0 6px; color:#9db2d7; font-weight:700; font-size:.9rem }
+    .kpi .val{ font-size:1.4rem; font-weight:800 }
+    .hidden{ display:none }
+    nav.emp-nav{ margin:14px 0; display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+    .emp-tab{ display:inline-block; padding:10px 14px; border-radius:10px; background:#0c111a; color:#e5efff; border:1px solid rgba(255,255,255,.06); text-decoration:none; font-weight:700 }
+    .emp-tab.active{ background:#172036; border-color:#2a3350 }
   </style>
-</head>
-<body>
-  <header id="emp-header" class="emp-header"></header>
 
-  <main id="emp-dashboard" class="emp-container">
-    <nav class="emp-nav" style="margin:16px 0;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+  <script>
+    // Auth gate as soon as possible
+    (function(){
+      if(!window.EmpireAuth || !EmpireAuth.has()){
+        location.replace("/login.html");
+      }
+    })();
+  </script>
+</head>
+<body class="bg-empire-hero">
+  <header class="emp-header">
+    <div class="emp-header__inner">
+      <strong>⚔️ The Empire</strong>
+      <span style="opacity:.7">Command Interface</span>
+      <span style="flex:1"></span>
+      <button id="emp-logout" class="cta ghost" style="padding:8px 12px;border:1px solid rgba(255,255,255,.06);background:transparent;color:#e5efff;border-radius:10px">Logout</button>
+    </div>
+  </header>
+
+  <main class="emp-container">
+    <nav class="emp-nav" aria-label="Empire sections">
       <a href="#dashboard"  data-tab="dashboard"  class="emp-tab active">Overview</a>
       <a href="#cpa"        data-tab="cpa"        class="emp-tab">CPA Accounts</a>
       <a href="#users"      data-tab="users"      class="emp-tab">Users</a>
@@ -119,104 +51,38 @@
       <a href="#wallet"     data-tab="wallet"     class="emp-tab">Wallet</a>
       <a href="#security"   data-tab="security"   class="emp-tab">Security</a>
       <a href="#monitoring" data-tab="monitoring" class="emp-tab">Monitoring</a>
-      <span style="flex:1"></span>
-      <button id="emp-logout" class="cta ghost">Logout</button>
     </nav>
 
-    <!-- Overview (KPIs fed from GAS) -->
+    <!-- OVERVIEW -->
     <section id="view-dashboard" class="emp-view">
-      <h1 style="margin:0 0 6px">⚔️ The Empire</h1>
-      <p style="margin:0;color:var(--muted)">
-        Welcome <span id="empUser" style="opacity:.9">Commander</span>. Engine room is live.
-      </p>
+      <h2>Welcome, Commander</h2>
+      <p class="emp-muted">Engine room is live. Data source: GAS list endpoints.</p>
 
-      <div class="kpis" id="kpiWrap">
-        <div class="kpi">
-          <h6 class="label">Pending Onboarding</h6>
-          <div id="kpiPending" class="val">—</div>
-        </div>
-        <div class="kpi">
-          <h6 class="label">Active Associates</h6>
-          <div id="kpiActive" class="val">—</div>
-        </div>
-        <div class="kpi">
-          <h6 class="label">Approvals Today</h6>
-          <div id="kpiApprovalsToday" class="val">—</div>
-        </div>
-        <div class="kpi">
-          <h6 class="label">Wallet Inflow (24h)</h6>
-          <div id="kpiInflow24h" class="val">—</div>
-        </div>
-      </div>
-      <small id="kpiNote" style="display:block;margin-top:8px;color:var(--muted)"></small>
-    </section>
-
-    <!-- CPA -->
-    <section id="view-cpa" class="emp-view hidden">
-      <h2 style="margin-top:0">CPA Accounts</h2>
-      <p>Manage networks &amp; offers here.</p>
-    </section>
-
-    <!-- Users (invite flow uses GAS approve + invite) -->
-    <section id="view-users" class="emp-view hidden">
-      <h2 style="margin-top:0">User Management</h2>
-      <p class="emp-muted" style="color:var(--muted)">Approve, generate, and share signed invites (backed by GAS).</p>
-
-      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px">
-        <input id="umPhone" class="emp-input" type="tel" placeholder="WhatsApp (+234…)" />
-        <input id="umEmail" class="emp-input" type="email" placeholder="Email (optional)" />
-        <button id="umGenInvite" class="cta">Generate Invite</button>
-        <button id="umSendWA" class="cta ghost">Send via WhatsApp</button>
+      <div class="kpis">
+        <div class="kpi"><h6>Pending Onboarding</h6><div class="val" id="kPending">0</div></div>
+        <div class="kpi"><h6>Active Associates</h6><div class="val" id="kAssociates">0</div></div>
+        <div class="kpi"><h6>Approvals Today</h6><div class="val" id="kApprovals">0</div></div>
+        <div class="kpi"><h6>Wallet inflow (24h)</h6><div class="val" id="kInflow">$0.00</div></div>
       </div>
 
-      <div style="margin-top:10px">
-        <input id="umInviteOut" class="emp-input" type="text" readonly style="display:none;width:100%">
-        <small id="umNote" style="display:block;margin-top:6px;color:var(--muted)"></small>
-      </div>
-
-      <hr style="border:none;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.08),transparent);margin:18px 0">
-
-      <div style="display:flex;gap:10px;flex-wrap:wrap">
-        <button id="qaPending" class="cta ghost">View Pending</button>
-        <button id="qaRecent" class="cta ghost">Recent Approvals</button>
-      </div>
+      <p class="emp-muted" style="margin-top:10px">Last updated: <span id="kUpdatedAt"></span></p>
     </section>
 
-    <!-- Analytics -->
-    <section id="view-analytics" class="emp-view hidden">
-      <h2 style="margin-top:0">Analytics</h2>
-      <p>Charts and performance insights.</p>
-    </section>
-
-    <!-- Wallet -->
-    <section id="view-wallet" class="emp-view hidden">
-      <h2 style="margin-top:0">Wallet</h2>
-      <p>Payouts and balances.</p>
-    </section>
-
-    <!-- Security -->
-    <section id="view-security" class="emp-view hidden">
-      <h2 style="margin-top:0">Security</h2>
-      <p>Keys, sessions, and access.</p>
-    </section>
-
-    <!-- Monitoring -->
-    <section id="view-monitoring" class="emp-view hidden">
-      <h2 style="margin-top:0">Monitoring</h2>
-      <p>System health and alerts.</p>
-    </section>
+    <!-- Other tabs (shell only; fill later) -->
+    <section id="view-cpa"        class="emp-view hidden"><h2>CPA Accounts</h2></section>
+    <section id="view-users"      class="emp-view hidden"><h2>Users</h2></section>
+    <section id="view-analytics"  class="emp-view hidden"><h2>Analytics</h2></section>
+    <section id="view-wallet"     class="emp-view hidden"><h2>Wallet</h2></section>
+    <section id="view-security"   class="emp-view hidden"><h2>Security</h2></section>
+    <section id="view-monitoring" class="emp-view hidden"><h2>Monitoring</h2></section>
   </main>
 
-  <footer id="emp-footer" class="emp-footer"></footer>
+  <footer class="emp-footer">
+    <div class="emp-footer__inner">© 2025 The Empire</div>
+  </footer>
 
   <script>
-    /* ===== Backend config (GAS engine room) ===== */
-    const GAS_EXEC = "https://script.google.com/macros/s/AKfycbxiFK1m72rXH3pvS8VdhtQzi30kc1GXNOkjTU8dMSrH_4_KN3lnMwmgJDLOzfrqdXIU/exec";
-    const API_KEY  = "Lanreismail157@empireaffiliatemarketinghub_69";
-
-    const $ = (id)=>document.getElementById(id);
-
-    /* Tabs */
+    // Tabs
     document.addEventListener("click", (ev) => {
       const a = ev.target.closest(".emp-tab");
       if (!a) return;
@@ -225,236 +91,55 @@
       a.classList.add("active");
       const key = a.dataset.tab || "dashboard";
       document.querySelectorAll(".emp-view").forEach(v => v.classList.add("hidden"));
-      (document.getElementById(`view-${key}`) || document.getElementById("view-dashboard")).classList.remove("hidden");
-      window.dispatchEvent(new CustomEvent("empire:tabchange",{detail:{tab:key}}));
+      document.getElementById(`view-${key}`)?.classList.remove("hidden");
     });
 
-    /* Logout */
+    // Logout
     document.getElementById("emp-logout")?.addEventListener("click", () => {
-      try { window.EmpireAuth?.clear(); } catch {}
+      try { EmpireAuth.logout(); } catch {}
       location.href = "/login.html";
     });
 
-    /* Initial tab from hash */
-    window.addEventListener("DOMContentLoaded", () => {
-      const hash = (location.hash || "").replace(/^#/,"") || "dashboard";
-      const starter = document.querySelector(`.emp-tab[data-tab="${hash}"]`) || document.querySelector('.emp-tab[data-tab="dashboard"]');
-      starter?.click();
-    });
-
-    /* ===== Utilities ===== */
-    function qs(obj){
-      const p = new URLSearchParams(obj);
-      return p.toString();
-    }
-    async function getJSON(url){
-      const r = await fetch(url, { cache:"no-store" });
-      if(!r.ok) throw new Error(r.status+" "+r.statusText);
-      return r.json();
-    }
-    function isoToDate(s){
-      // accepts iso or “yyyy-MM-dd'T'HH:mm:ss'Z'”
-      const d = new Date(s);
-      return isNaN(d.getTime()) ? null : d;
-    }
-    function isToday(d){
-      const t = new Date();
-      return d.getFullYear()===t.getFullYear() && d.getMonth()===t.getMonth() && d.getDate()===t.getDate();
-    }
-    function sinceHours(d, hours){
-      const cutoff = Date.now() - (hours*3600*1000);
-      return d.getTime() >= cutoff;
-    }
-    function asNumber(x){ const n=Number(x); return isNaN(n)?0:n; }
-
-    /* ===== Overview KPIs (all from GAS list endpoints) =====
-       - Pending Onboarding     → listOnboarding: Status == "Pending"
-       - Active Associates      → listAssociates: Status == "Confirmed"
-       - Approvals Today        → listLogs where Action == "Approved" AND Timestamp is today
-                                 (fallback: listOnboarding "Approved" today)
-       - Wallet Inflow (24h)    → listWallet: Direction == "in" AND Status == "Success" within last 24h → sum Amount
-    */
-    async function refreshKPIs(){
+    // KPI boot from GAS
+    (async function(){
       try{
-        const limit = 500; // adjust as needed
-        const base = GAS_EXEC + "?key=" + encodeURIComponent(API_KEY) + "&limit=" + limit + "&";
+        await EmpireAuth.fetch({ action:"ping" });
 
-        // Fetch all in parallel
-        const [onb, assoc, wal, logs] = await Promise.all([
-          getJSON(base + qs({ action:"listonboarding" })),
-          getJSON(base + qs({ action:"listassociates" })),
-          getJSON(base + qs({ action:"listwallet" })),
-          getJSON(base + qs({ action:"listlogs" }))
+        const [onb, assoc, wlt] = await Promise.all([
+          EmpireAuth.fetch({ action:"listonboarding", limit: 500 }),
+          EmpireAuth.fetch({ action:"listassociates", limit: 500 }),
+          EmpireAuth.fetch({ action:"listwallet",     limit: 500 })
         ]);
 
-        // Onboarding Pending
-        let pending = 0, approvedToday = 0;
-        if(onb.ok && Array.isArray(onb.rows)){
-          for(const r of onb.rows){
-            const st = String(r.status||"").toLowerCase();
-            if(st === "pending") pending++;
-          }
-        }
+        const pending = (onb.rows||[]).filter(r => String(r.status||"").toLowerCase()==="pending").length;
+        const actives = (assoc.rows||[]).filter(r => String(r.status||"").toLowerCase()==="confirmed").length;
 
-        // Active Associates (Confirmed)
-        let activeAssoc = 0;
-        if(assoc.ok && Array.isArray(assoc.rows)){
-          for(const r of assoc.rows){
-            const st = String(r.status||"").toLowerCase();
-            if(st === "confirmed") activeAssoc++;
-          }
-        }
+        const todayISO = new Date().toISOString().slice(0,10);
+        const today = (assoc.rows||[]).filter(r => 
+          String(r.ts||"").slice(0,10)===todayISO &&
+          String(r.status||"").toLowerCase()==="confirmed"
+        ).length;
 
-        // Approvals Today (prefer logs)
-        if(logs.ok && Array.isArray(logs.rows)){
-          for(const r of logs.rows){
-            const action = String(r.Action || r.action || "").toLowerCase();
-            const ts = r.Timestamp || r.ts || r.time || "";
-            const d = ts ? isoToDate(ts) : null;
-            if(action==="approved" && d && isToday(d)) approvedToday++;
-          }
-        } else if(onb.ok && Array.isArray(onb.rows)){
-          // Fallback: onboarding entries with Status="Approved" today
-          for(const r of onb.rows){
-            const st = String(r.status||"").toLowerCase();
-            const ts = r.Last_Action_At || r.ts || r.Timestamp || "";
-            const d = ts ? isoToDate(ts) : null;
-            if(st==="approved" && d && isToday(d)) approvedToday++;
-          }
-        }
+        // last 24h inflow (by timestamp)
+        const cutoff = Date.now() - 24*3600*1000;
+        const inflow = (wlt.rows||[])
+          .filter(r => String(r.dir||"")==="in")
+          .filter(r => {
+            const d = new Date(String(r.ts||r.time||r.Time||""));
+            return isFinite(d) ? d.getTime() >= cutoff : true; // fallback if sheet has no proper time
+          })
+          .reduce((s,r)=>s + Number(r.amount||0), 0);
 
-        // Wallet Inflow 24h
-        let inflow24h = 0;
-        if(wal.ok && Array.isArray(wal.rows)){
-          for(const r of wal.rows){
-            const dir = String(r.dir||r.Direction||"").toLowerCase();
-            const st  = String(r.status||r.Status||"");
-            const ts  = r.ts || r.Time || r.time || "";
-            const amt = asNumber(r.amount || r.Amount || 0);
-            const d = ts ? isoToDate(ts) : null;
-            if(!d) continue;
-            if(dir==="in" && /success/i.test(st) && sinceHours(d, 24)){
-              inflow24h += amt;
-            }
-          }
-        }
-
-        // Update DOM
-        $("kpiPending").textContent = String(pending);
-        $("kpiActive").textContent = String(activeAssoc);
-        $("kpiApprovalsToday").textContent = String(approvedToday);
-        $("kpiInflow24h").textContent = inflow24h.toLocaleString(undefined, { style:"currency", currency:"USD", maximumFractionDigits:2 });
-
-        $("kpiNote").textContent = "Data source: GAS list endpoints · Last updated: " + new Date().toLocaleString();
-
-      }catch(err){
-        $("kpiNote").textContent = "KPI load failed: " + String(err);
+        const $ = id => document.getElementById(id);
+        $("kPending").textContent    = pending;
+        $("kAssociates").textContent = actives;
+        $("kApprovals").textContent  = today;
+        $("kInflow").textContent     = inflow.toLocaleString(undefined,{style:"currency",currency:"USD"});
+        $("kUpdatedAt").textContent  = new Date().toLocaleString();
+      }catch(e){
+        console.error("Dashboard boot failed:", e);
       }
-    }
-
-    /* ===== Users tab: invite via GAS approve (returns signed link) ===== */
-    function normPhone(v){ return String(v||"").replace(/[^0-9+]/g,"").trim(); }
-    function setNote(msg, ok=true){ const n=$("umNote"); if(!n) return; n.style.color = ok ? "#22c55e" : "#ef4444"; n.textContent = msg; }
-
-    async function genInvite(){
-      const phone = normPhone($("umPhone")?.value || "");
-      const email = ($("umEmail")?.value || "").trim();
-      if(!phone && !email){ setNote("Provide phone or email.", false); return; }
-      setNote("Processing…", true);
-
-      const qs = new URLSearchParams({ action:"approve", key:API_KEY });
-      if(phone) qs.set("phone", phone); else qs.set("email", email);
-
-      try{
-        const r = await fetch(GAS_EXEC + "?" + qs.toString());
-        const j = await r.json();
-        if(!j || !j.ok){ setNote((j && j.error) ? j.error : "Failed", false); return; }
-
-        const link = j.invite && j.invite.url ? j.invite.url : "";
-        if(!link){ setNote("No invite URL returned.", false); return; }
-
-        const out = $("umInviteOut"); if(out){ out.style.display="block"; out.value = link; }
-        try{ await navigator.clipboard.writeText(link); }catch(e){}
-        setNote("Invite ready and copied ✔", true);
-      }catch(err){
-        setNote(String(err), false);
-      }
-    }
-
-    function sendWA(){
-      const phone = normPhone($("umPhone")?.value || "");
-      const link  = $("umInviteOut")?.value || "";
-      if(!link){ setNote("Generate invite first.", false); return; }
-      const to  = phone ? phone.replace(/^\+/, "") : "";
-      const msg = encodeURIComponent("Your Empire invite:\n" + link);
-      window.open("https://wa.me/" + (to || "") + "?text=" + msg, "_blank");
-    }
-
-    // Masked welcome (reads wa from URL or localStorage)
-    (function greet(){
-      try{
-        const qs = location.hash.includes('?') ? location.hash.split('?')[1] : location.search;
-        const qsWA = new URLSearchParams(qs).get("wa");
-        if(qsWA) localStorage.setItem("empire_user_wa", qsWA);
-        const wa = localStorage.getItem("empire_user_wa") || "";
-        const el = $("empUser");
-        if(el) el.textContent = wa ? ("****" + wa.replace(/\D/g,"").slice(-4)) : "Commander";
-      }catch(e){}
     })();
-
-    // Hook buttons + load KPIs
-    window.addEventListener("DOMContentLoaded", () => {
-      $("umGenInvite")?.addEventListener("click", genInvite);
-      $("umSendWA")?.addEventListener("click", sendWA);
-      $("qaPending")?.addEventListener("click", ()=>location.hash="#users");
-      $("qaRecent")?.addEventListener("click", ()=>location.hash="#users");
-      refreshKPIs();
-    });
-
-    // Optional: auto-refresh KPIs every 60s (comment out if not needed)
-    // setInterval(refreshKPIs, 60000);
   </script>
-<!-- Load auth FIRST -->
-<script src="assets/js/empire-auth.js?v=3"></script>
-
-<!-- Then your shell / navigation -->
-<script src="assets/js/empire-shell.js?v=3"></script>
-
-<!-- Then dashboard logic -->
-<script src="assets/js/empire-dashboard.js?v=3"></script>
-
-<!-- Optional inline init -->
-<script>
-  (async () => {
-    try {
-      const res = await EmpireAuth.fetch({ action:"listassociates", limit:1 });
-      console.log("Associates sample:", res);
-      // TODO: update dashboard KPIs with res.rows
-    } catch(e) {
-      console.error("Dashboard data load failed:", e);
-    }
-  })();
-</script>
-
-<script src="assets/js/empire-auth.js?v=3"></script>
-
-<!-- Then your shell / navigation -->
-<script src="assets/js/empire-shell.js?v=3"></script>
-
-<!-- Then dashboard logic -->
-<script src="assets/js/empire-dashboard.js?v=3"></script>
-
-<!-- Optional inline init -->
-<script>
-  (async () => {
-    try {
-      const res = await EmpireAuth.fetch({ action:"listassociates", limit:1 });
-      console.log("Associates sample:", res);
-      // TODO: update dashboard KPIs with res.rows
-    } catch(e) {
-      console.error("Dashboard data load failed:", e);
-    }
-  })();
-</script>
 </body>
 </html>

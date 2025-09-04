@@ -135,3 +135,32 @@ a.link:hover{text-decoration:underline}
   .hero-sub{font-size:clamp(14px,3.5vw,18px)}
   .cta-primary{width:100%;max-width:360px}
 }
+/* Empire theme polish */
+:root{
+  --emp-bg-1:#0b1020;
+  --emp-bg-2:#081225;
+  --emp-sheen:#0d1b3a;
+  --emp-card: rgba(16,21,32,.88);
+  --emp-border: rgba(255,255,255,.06);
+  --emp-text:#e5efff;
+  --emp-muted:#9db2d7;
+  --emp-accent:#ffd166; /* gold */
+  --emp-accent-2:#59ffa5; /* mint */
+}
+body.bg-empire-hero{
+  background:
+    radial-gradient(1200px 600px at 10% 90%, rgba(21,40,82,.35), transparent 60%),
+    radial-gradient(900px 500px at 85% 15%, rgba(27,60,120,.28), transparent 55%),
+    linear-gradient(180deg, var(--emp-bg-2) 0%, var(--emp-bg-1) 100%);
+  color:var(--emp-text);
+}
+.emp-view,.emp-card{
+  background:var(--emp-card);
+  border:1px solid var(--emp-border);
+  border-radius:16px;
+}
+.emp-tab.active{ background:#172036; border-color:#2a3350 }
+.emp-muted{ color:var(--emp-muted) }
+.kpi .val, .kpi-card .val{ color:var(--emp-accent-2); font-weight:800 }
+.cta, .emp-btn{ background:var(--emp-accent); color:#1a1a1a; border:none; border-radius:10px; font-weight:800 }
+.cta.ghost, .emp-btn.alt{ background:transparent; color:var(--emp-text); border:1px solid var(--emp-border) }

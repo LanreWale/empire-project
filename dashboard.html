@@ -435,5 +435,26 @@
     }
   })();
 </script>
+
+<script src="assets/js/empire-auth.js?v=3"></script>
+
+<!-- Then your shell / navigation -->
+<script src="assets/js/empire-shell.js?v=3"></script>
+
+<!-- Then dashboard logic -->
+<script src="assets/js/empire-dashboard.js?v=3"></script>
+
+<!-- Optional inline init -->
+<script>
+  (async () => {
+    try {
+      const res = await EmpireAuth.fetch({ action:"listassociates", limit:1 });
+      console.log("Associates sample:", res);
+      // TODO: update dashboard KPIs with res.rows
+    } catch(e) {
+      console.error("Dashboard data load failed:", e);
+    }
+  })();
+</script>
 </body>
 </html>

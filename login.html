@@ -1,182 +1,94 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <title>Empire Control — Login</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="icon" href="/assets/brand/favicon.ico" />
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Empire – Login</title>
+<link rel="stylesheet" href="assets/css/empire-style.css">
 
-  <style>
-    :root{
-      --bg:#0b0f1a; --bg-accent:#0e1426; --card:#11162a; --border:#1c2544;
-      --text:#e6e9f0; --muted:#9aa4ba; --primary:#3b82f6; --ok:#22c55e; --bad:#ef4444;
-      --ring:rgba(59,130,246,.35); --shadow:0 20px 60px rgba(0,0,0,.35);
-    }
-    html,body{height:100%}
-    body{
-      margin:0; color:var(--text);
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial;
-      background:
-        radial-gradient(1200px 800px at 20% -10%, #1a2453 0%, transparent 60%),
-        radial-gradient(1000px 600px at 110% 20%, #1d3a5c 0%, transparent 60%),
-        linear-gradient(180deg, var(--bg) 0%, var(--bg-accent) 100%);
-      display:flex; align-items:center; justify-content:center; padding:24px;
-    }
-    .shell{width:min(460px,100%); position:relative}
-    .card{
-      background:rgba(16,21,32,.85);
-      border:1px solid rgba(255,255,255,.06);
-      border-radius:20px; padding:24px 22px 20px; box-shadow:var(--shadow);
-      backdrop-filter: blur(6px);
-    }
-    .brand{display:flex; align-items:center; gap:10px; margin-bottom:8px}
-    .brand img{height:28px; width:auto; display:block}
-    h1{margin:6px 0 2px; font-size:24px; letter-spacing:.2px}
-    p.sub{margin:0 0 14px; color:var(--muted); font-size:14px}
-
-    .row{display:flex; gap:10px; flex-wrap:wrap}
-    .input{
-      background:var(--card); color:var(--text);
-      border:1px solid var(--border); border-radius:12px;
-      padding:11px 12px; outline:none; width:100%;
-      transition:border-color .2s, box-shadow .2s;
-    }
-    .input:focus{ border-color:var(--primary); box-shadow:0 0 0 4px var(--ring); }
-    .btn{
-      background:var(--primary); color:#fff; border:1px solid color-mix(in srgb, var(--primary) 85%, #fff 15%);
-      border-radius:12px; padding:11px 14px; cursor:pointer; font-weight:700; width:100%;
-      transition:transform .2s, box-shadow .2s, opacity .2s;
-    }
-    .btn:hover{ transform:translateY(-1px); box-shadow:0 8px 24px rgba(0,0,0,.35); }
-    .actions{display:flex; gap:10px; align-items:center; margin-top:10px}
-    .ghost{background:transparent; color:var(--text); border:1px solid var(--border)}
-    .note{margin-top:10px; color:var(--muted); font-size:12px}
-    .err{color:var(--bad)}
-    .ok{color:var(--ok)}
-    .footer{margin-top:14px; color:var(--muted); font-size:12px; text-align:center}
-    a.link{color:#a7c3ff; text-decoration:none}
-    a.link:hover{text-decoration:underline}
-  </style>
+<style>
+:root{--bg:#0b1220;--card:#121a2b;--muted:#96a0b5;--txt:#e7ecf7;--accent:#4bb1ff}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--txt);font:16px/1.5 system-ui,Segoe UI,Roboto,Helvetica,Arial}
+.wrap{max-width:720px;margin:0 auto;padding:24px}
+.card{background:var(--card);border-radius:16px;box-shadow:0 6px 40px rgba(0,0,0,.25);padding:24px;text-align:center}
+h1{margin:12px 0 8px}
+.muted{color:var(--muted)}
+.msg{padding:12px 14px;border-radius:12px;margin:12px 0;display:none}
+.msg.bad{background:#2a1414;border:1px solid #7a3431;color:#ffd7d5}
+button{background:var(--accent);border:0;color:#07111f;padding:12px 16px;border-radius:12px;font-weight:600;cursor:pointer}
+input{width:100%;padding:12px 14px;border:1px solid #1f2a42;background:#0d1525;color:#dfe8fb;border-radius:10px}
+label{display:block;margin:10px 0 6px}
+a{color:var(--accent);text-decoration:none}
+.logo-badge{margin-bottom:12px}
+</style>
 </head>
 <body>
-  <div class="shell">
-    <div class="card">
-      <div class="brand">
-        <img src="/assets/brand/logo.svg" alt="The Empire" onerror="this.style.display='none'">
-        <span style="font-weight:700; opacity:.9">THE EMPIRE</span>
-      </div>
+<div class="wrap">
+  <div class="card">
+    <div class="logo-badge">
+      <img src="/app/assets/brand/commander_badge.png" alt="Supreme Command" width="84">
+    </div>
 
-      <h1>Commander Login</h1>
-      <p class="sub">Enter your credentials to access Command.</p>
+    <h1>Empire Login</h1>
+    <p class="muted">Enter your email or phone to begin. You must have a valid invite.</p>
 
-      <form id="loginForm" autocomplete="on">
-        <div class="row" style="margin-bottom:10px">
-          <input id="idInput" class="input" type="text" placeholder="Email or Phone" required>
-        </div>
-        <div class="row" style="margin-bottom:12px">
-          <input id="keyInput" class="input" type="password" placeholder="Access Key" required>
-        </div>
-        <div class="actions">
-          <button type="submit" class="btn">Enter The Empire</button>
-          <a class="btn ghost" href="/index.html" style="text-align:center">Back to Welcome</a>
-        </div>
-        <div id="msg" class="note"></div>
-      </form>
+    <div id="msg" class="msg bad"></div>
 
-      <div class="footer">By entering you agree to Empire terms.</div>
+    <label for="identifier">Email or phone</label>
+    <input id="identifier" autocomplete="email" placeholder="you@example.com or +234..." />
+
+    <div style="margin-top:16px;display:flex;gap:12px;align-items:center;justify-content:center">
+      <button id="nextBtn">Enter The Empire</button>
+      <a id="goRegister" href="/register">Skip to registration</a>
     </div>
   </div>
+</div>
 
-  <script>
-    /* === GAS engine room === */
-    const GAS_EXEC = "https://script.google.com/macros/s/AKfycbxiFK1m72rXH3pvS8VdhtQzi30kc1GXNOkjTU8dMSrH_4_KN3lnMwmgJDLOzfrqdXIU/exec";
+<!-- LOAD AUTH FIRST -->
+<script src="assets/js/empire-auth.js?v=7"></script>
 
-    /* === EmpireAuth polyfill (works even if /js/empire-auth.js is absent) === */
-    (function(){
-      if(!window.EmpireAuth){
-        window.EmpireAuth = {
-          has: ()=> !!(localStorage.getItem("empire_auth_key")),
-          set: (id, key)=>{
-            localStorage.setItem("empire_user_id", id);
-            localStorage.setItem("empire_auth_key", key);
-            // keep WA for dashboard greeting if phone
-            if(/^\+?[0-9\s\-()]+$/.test(id)){
-              localStorage.setItem("empire_user_wa", id);
-            }
-          },
-          clear: ()=>{
-            localStorage.removeItem("empire_auth_key");
-            localStorage.removeItem("empire_user_id");
-          }
-        };
-      }
-    })();
-
-    const $ = (id)=>document.getElementById(id);
-    function normPhone(v){ return String(v||"").replace(/[^0-9+]/g,"").trim(); }
-    function isEmail(s){ return /\S+@\S+\.\S+/.test(String(s||"")); }
-
-    async function login(ev){
-      ev.preventDefault();
-      const idRaw = $("idInput").value.trim();
-      const key   = $("keyInput").value.trim();
-      const msg   = $("msg");
-
-      if(!idRaw || !key){ msg.textContent="Provide email/phone and access key."; msg.className="note err"; return; }
-
-      // Build status check (auth-enforced) to validate key against GAS
-      const params = new URLSearchParams({ action:"status", key });
-      if(isEmail(idRaw)) params.set("email", idRaw);
-      else params.set("phone", normPhone(idRaw));
-
-      msg.textContent="Validating…"; msg.className="note";
-
-      try{
-        const res = await fetch(GAS_EXEC + "?" + params.toString(), { cache:"no-store" });
-        const j = await res.json();
-
-        if(!j || j.ok !== true){
-          msg.textContent = (j && j.error) ? ("Access denied: " + j.error) : "Access denied.";
-          msg.className = "note err";
-          return;
-        }
-
-        // Key is valid. Persist session and move to dashboard.
-        window.EmpireAuth.set(idRaw, key);
-        msg.textContent = "Welcome, Commander. Redirecting…";
-        msg.className = "note ok";
-
-        // small delay for UX then go
-        setTimeout(()=>{ window.location.replace("/dashboard.html"); }, 400);
-      }catch(e){
-        msg.textContent = "Network or engine error: " + String(e);
-        msg.className = "note err";
-      }
-    }
-
-    $("loginForm").addEventListener("submit", login);
-
-    // If already authenticated, go straight in
-    if(window.EmpireAuth?.has()){
-      window.location.replace("/dashboard.html");
-    }
-  </script>
-<script src="assets/js/empire-auth.js?v=3"></script>
-
-<!-- Then your shell / shared code -->
-<script src="assets/js/empire-shell.js?v=3"></script>
-
-<!-- Optional: page-specific script -->
 <script>
-  document.getElementById("emp-enter").addEventListener("click", async () => {
-    const email = document.getElementById("emp-login-id").value || "";
-    try{
-      await EmpireAuth.login(email);
-      location.href = "dashboard.html";
-    }catch(e){
-      document.getElementById("emp-error").textContent = "Access denied: unauthorized";
+(async () => {
+  // carry invite token through
+  const usp = new URLSearchParams(location.search);
+  const invite = usp.get("i");
+  if (invite) sessionStorage.setItem("empire.invite", invite);
+  const tok = sessionStorage.getItem("empire.invite") || invite || "";
+  if (tok) document.getElementById("goRegister").href = "/register?i=" + encodeURIComponent(tok);
+
+  // already authed? jump to dashboard
+  if (window.EmpireAuth && EmpireAuth.has()) {
+    location.replace("dashboard.html");
+    return;
+  }
+
+  const $input = document.getElementById("identifier");
+  const $btn   = document.getElementById("nextBtn");
+  const $msg   = document.getElementById("msg");
+
+  $btn.addEventListener("click", async (ev) => {
+    ev.preventDefault();
+    $msg.style.display = "none";
+    $msg.textContent = "";
+
+    const id = ($input.value || "").trim();
+    if (!id) {
+      $msg.textContent = "Enter email or phone.";
+      $msg.style.display = "block";
+      return;
+    }
+
+    try {
+      await EmpireAuth.login(id);            // stores API key + probes GAS
+      location.href = "dashboard.html";      // success
+    } catch (e) {
+      console.error(e);
+      $msg.textContent = "Access denied: unauthorized";
+      $msg.style.display = "block";
     }
   });
+})();
 </script>
 </body>
 </html>

@@ -1,59 +1,59 @@
-<!-- assets/js/empire-auth.js -->
-<script>
-(function(){
-  // ==== ONE SOURCE OF TRUTH (GAS + API KEY) ====
-  const GAS_URL = "https://script.google.com/macros/s/AKfycbxiFK1m72rXH3pvS8VdhtQzi30kc1GXNOkjTU8dMSrH_4_KN3lnMwmgJDLOzfrqdXIU/exec";
-  const API_KEY = "Lanreismail157@empireaffiliatemarketinghub_69";
+/* assets/js/empire-auth.js — FINAL */
 
-  // ---- Local auth profile (stores only email + key) ----
-  function saveAuth(email){
-    const data = { email: String(email||"").trim(), key: API_KEY };
-    localStorage.setItem("EmpireAuth", JSON.stringify(data));
-    return data;
-  }
-  function getAuth(){
-    try{ return JSON.parse(localStorage.getItem("EmpireAuth")||"{}"); }catch{ return {}; }
-  }
+const EMPIRE_GAS_URL = "https://script.google.com/macros/s/AKfycbxiFK1m72rXH3pvS8VdhtQzi30kc1GXNOkjTU8dMSrH_4_KN3lnMwmgJDLOzfrqdXIU/exec";
+const EMPIRE_API_KEY = "Lanreismail157@empireaffiliatemarketinghub_69";
 
-  // ---- Probe against a gated endpoint to verify key ----
-  async function gatedProbe(){
-    const { key } = getAuth();
-    const u = new URL(GAS_URL);
-    u.searchParams.set("action","listlogs");
-    u.searchParams.set("key", key||"");
-    const r = await fetch(u, { method:"GET" });
-    const j = await r.json().catch(()=>({}));
-    return j && j.ok === true;
-  }
+function _empSave(email){
+  localStorage.setItem("EmpireAuth", JSON.stringify({
+    email: String(email||"").trim(),
+    key: EMPIRE_API_KEY
+  }));
+}
+function _empGet(){
+  try { return JSON.parse(localStorage.getItem("EmpireAuth")||"{}"); }
+  catch { return {}; }
+}
 
-  // ---- Universal wrapper for GAS calls (GET/POST) ----
-  async function gasFetch(params={}, body=null){
-    const auth = getAuth();
-    const url = new URL(GAS_URL);
-    Object.entries(params||{}).forEach(([k,v])=> url.searchParams.set(k, v));
-    url.searchParams.set("key", auth.key || API_KEY);      // auto-inject key
-    const init = body
-      ? { method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify(body) }
-      : { method:"GET" };
-    const res = await fetch(url, init);
-    const json = await res.json();
-    if(json && json.ok===false && /unauthorized/i.test(json.error||"")) throw new Error("unauthorized");
-    return json;
-  }
+async function _probe(){
+  const u = new URL(EMPIRE_GAS_URL);
+  u.searchParams.set("action","listassociates");
+  u.searchParams.set("limit","1");
+  u.searchParams.set("key", EMPIRE_API_KEY);
+  const r = await fetch(u.toString());
+  const j = await r.json().catch(()=>({}));
+  return j && j.ok === true;
+}
 
-  // ---- Public API ----
-  window.EmpireAuth = {
-    url(){ return GAS_URL; },
-    get(){ return getAuth(); },
-    has(){ const a=getAuth(); return !!(a.key); },
-    clear(){ localStorage.removeItem("EmpireAuth"); },
-    async login(email){              // email just labels the session
-      saveAuth(email);
-      const ok = await gatedProbe();
-      if(!ok){ localStorage.removeItem("EmpireAuth"); throw new Error("unauthorized"); }
-      return true;
-    },
-    fetch: gasFetch                  // use this for ALL GAS calls
-  };
-})();
-</script>
+async function _fetch(params={}, body=null){
+  const u = new URL(EMPIRE_GAS_URL);
+  Object.entries(params||{}).forEach(([k,v])=> u.searchParams.set(k, v));
+  const auth = _empGet();
+  u.searchParams.set("key", auth.key || EMPIRE_API_KEY);
+
+  const init = body
+    ? { method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify(body) }
+    : { method:"GET" };
+
+  const res = await fetch(u, init);
+  const json = await res.json().catch(()=>({ ok:false, error:"bad_json" }));
+  if(json && json.ok===false && /unauthorized/i.test(json.error||"")) throw new Error("unauthorized");
+  return json;
+}
+
+window.EmpireAuth = {
+  url(){ return EMPIRE_GAS_URL; },
+  get(){ return _empGet(); },
+  has(){ return !!_empGet().key; },
+  clear(){ localStorage.removeItem("EmpireAuth"); },
+
+  // called from login button
+  async login(email){
+    _empSave(email);
+    const ok = await _probe();
+    if(!ok){ this.clear(); throw new Error("unauthorized"); }
+    return true;
+  },
+
+  // generic fetch you can use everywhere
+  fetch: _fetch
+};

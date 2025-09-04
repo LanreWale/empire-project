@@ -114,5 +114,14 @@ a {color:var(--accent);text-decoration:none}
   if(token){ document.getElementById('goRegister').href = '/register?i='+encodeURIComponent(token); }
 })();
 </script>
+<script src="assets/js/empire-auth.js?v=5"></script>
+<script src="assets/js/empire-shell.js?v=5"></script>
+<script>
+document.getElementById("emp-enter")?.addEventListener("click", async () => {
+  const email = document.getElementById("emp-login-id")?.value || "";
+  try { await EmpireAuth.login(email); location.href = "dashboard.html"; }
+  catch { (document.getElementById("emp-error")||{}).textContent = "Access denied: unauthorized"; }
+});
+</script>
 </body>
 </html>

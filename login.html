@@ -2,80 +2,164 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Commander Login — The Empire</title>
+  <title>Empire Control — Login</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-
-  <!-- Styles -->
   <link rel="icon" href="/assets/brand/favicon.ico" />
-  <link rel="stylesheet" href="/assets/css/empire-style.css" />
 
-  <!-- Auth (must load first) -->
-  <script src="/js/empire-auth.js"></script>
-  <script>
-    // If already authenticated, skip to dashboard
-    if (window.EmpireAuth?.has()) {
-      window.location.replace("/dashboard.html");
-    }
-  </script>
-
-  <!-- Page-local centering (tiny helper) -->
   <style>
-    .login-wrap{
-      min-height: 100svh; display:flex; align-items:center; justify-content:center; padding:24px;
+    :root{
+      --bg:#0b0f1a; --bg-accent:#0e1426; --card:#11162a; --border:#1c2544;
+      --text:#e6e9f0; --muted:#9aa4ba; --primary:#3b82f6; --ok:#22c55e; --bad:#ef4444;
+      --ring:rgba(59,130,246,.35); --shadow:0 20px 60px rgba(0,0,0,.35);
     }
-    .login-card h2{ margin: 0 0 12px; }
-    .login-card p.help{ color: var(--muted); font-size: .92rem; margin: 0 0 14px; }
-    .login-card .actions{ display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
-    .login-card .muted-link{ color: var(--muted); text-decoration:none }
-    .login-card .muted-link:hover{ text-decoration:underline }
+    html,body{height:100%}
+    body{
+      margin:0; color:var(--text);
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial;
+      background:
+        radial-gradient(1200px 800px at 20% -10%, #1a2453 0%, transparent 60%),
+        radial-gradient(1000px 600px at 110% 20%, #1d3a5c 0%, transparent 60%),
+        linear-gradient(180deg, var(--bg) 0%, var(--bg-accent) 100%);
+      display:flex; align-items:center; justify-content:center; padding:24px;
+    }
+    .shell{width:min(460px,100%); position:relative}
+    .card{
+      background:rgba(16,21,32,.85);
+      border:1px solid rgba(255,255,255,.06);
+      border-radius:20px; padding:24px 22px 20px; box-shadow:var(--shadow);
+      backdrop-filter: blur(6px);
+    }
+    .brand{display:flex; align-items:center; gap:10px; margin-bottom:8px}
+    .brand img{height:28px; width:auto; display:block}
+    h1{margin:6px 0 2px; font-size:24px; letter-spacing:.2px}
+    p.sub{margin:0 0 14px; color:var(--muted); font-size:14px}
+
+    .row{display:flex; gap:10px; flex-wrap:wrap}
+    .input{
+      background:var(--card); color:var(--text);
+      border:1px solid var(--border); border-radius:12px;
+      padding:11px 12px; outline:none; width:100%;
+      transition:border-color .2s, box-shadow .2s;
+    }
+    .input:focus{ border-color:var(--primary); box-shadow:0 0 0 4px var(--ring); }
+    .btn{
+      background:var(--primary); color:#fff; border:1px solid color-mix(in srgb, var(--primary) 85%, #fff 15%);
+      border-radius:12px; padding:11px 14px; cursor:pointer; font-weight:700; width:100%;
+      transition:transform .2s, box-shadow .2s, opacity .2s;
+    }
+    .btn:hover{ transform:translateY(-1px); box-shadow:0 8px 24px rgba(0,0,0,.35); }
+    .actions{display:flex; gap:10px; align-items:center; margin-top:10px}
+    .ghost{background:transparent; color:var(--text); border:1px solid var(--border)}
+    .note{margin-top:10px; color:var(--muted); font-size:12px}
+    .err{color:var(--bad)}
+    .ok{color:var(--ok)}
+    .footer{margin-top:14px; color:var(--muted); font-size:12px; text-align:center}
+    a.link{color:#a7c3ff; text-decoration:none}
+    a.link:hover{text-decoration:underline}
   </style>
 </head>
-<body class="bg-empire-gradient">
-
-  <main class="login-wrap">
-    <section class="card login-card" style="width:100%; max-width:520px; text-align:left;">
-      <div style="text-align:center; margin-bottom:6px;">
-        <img src="/assets/brand/empire-mark.svg" alt="" width="36" height="36" style="opacity:.9;">
+<body>
+  <div class="shell">
+    <div class="card">
+      <div class="brand">
+        <img src="/assets/brand/logo.svg" alt="The Empire" onerror="this.style.display='none'">
+        <span style="font-weight:700; opacity:.9">THE EMPIRE</span>
       </div>
-      <h2 style="text-align:center;">Commander Login</h2>
-      <p class="help" style="text-align:center;">Enter your credentials to access Command.</p>
 
-      <form id="emp-login-form">
-        <input type="text" id="emp-user" placeholder="Email or Phone" autocomplete="username" required />
-        <input type="password" id="emp-key" placeholder="Access Key" autocomplete="current-password" required />
-        <div class="actions" style="margin-top:6px;">
-          <button type="submit" class="cta">Enter The Empire</button>
-          <a class="muted-link" href="/welcome.html">← Back to Welcome</a>
+      <h1>Commander Login</h1>
+      <p class="sub">Enter your credentials to access Command.</p>
+
+      <form id="loginForm" autocomplete="on">
+        <div class="row" style="margin-bottom:10px">
+          <input id="idInput" class="input" type="text" placeholder="Email or Phone" required>
         </div>
-        <p class="help" style="margin-top:10px;">By entering you agree to Empire terms.</p>
+        <div class="row" style="margin-bottom:12px">
+          <input id="keyInput" class="input" type="password" placeholder="Access Key" required>
+        </div>
+        <div class="actions">
+          <button type="submit" class="btn">Enter The Empire</button>
+          <a class="btn ghost" href="/index.html" style="text-align:center">Back to Welcome</a>
+        </div>
+        <div id="msg" class="note"></div>
       </form>
-    </section>
-  </main>
+
+      <div class="footer">By entering you agree to Empire terms.</div>
+    </div>
+  </div>
 
   <script>
-    // Prefill from query (?user=&key=)
-    (function prefill(){
-      const p = new URLSearchParams(location.search);
-      const u = p.get("user") || p.get("email") || p.get("phone");
-      const k = p.get("key")  || p.get("token");
-      if (u) document.getElementById("emp-user").value = u;
-      if (k) document.getElementById("emp-key").value  = k;
+    /* === GAS engine room === */
+    const GAS_EXEC = "https://script.google.com/macros/s/AKfycbxiFK1m72rXH3pvS8VdhtQzi30kc1GXNOkjTU8dMSrH_4_KN3lnMwmgJDLOzfrqdXIU/exec";
+
+    /* === EmpireAuth polyfill (works even if /js/empire-auth.js is absent) === */
+    (function(){
+      if(!window.EmpireAuth){
+        window.EmpireAuth = {
+          has: ()=> !!(localStorage.getItem("empire_auth_key")),
+          set: (id, key)=>{
+            localStorage.setItem("empire_user_id", id);
+            localStorage.setItem("empire_auth_key", key);
+            // keep WA for dashboard greeting if phone
+            if(/^\+?[0-9\s\-()]+$/.test(id)){
+              localStorage.setItem("empire_user_wa", id);
+            }
+          },
+          clear: ()=>{
+            localStorage.removeItem("empire_auth_key");
+            localStorage.removeItem("empire_user_id");
+          }
+        };
+      }
     })();
 
-    // Handle login: set a lightweight session and go to dashboard
-    document.getElementById("emp-login-form").addEventListener("submit", function(ev){
-      ev.preventDefault();
-      const user = document.getElementById("emp-user").value.trim();
-      const key  = document.getElementById("emp-key").value.trim();
+    const $ = (id)=>document.getElementById(id);
+    function normPhone(v){ return String(v||"").replace(/[^0-9+]/g,"").trim(); }
+    function isEmail(s){ return /\S+@\S+\.\S+/.test(String(s||"")); }
 
-      // This uses your client-side session helper.
-      try {
-        window.EmpireAuth?.set({ user, key, at: Date.now() });
-      } catch(e) {
-        console.warn("EmpireAuth.set failed; continuing", e);
+    async function login(ev){
+      ev.preventDefault();
+      const idRaw = $("idInput").value.trim();
+      const key   = $("keyInput").value.trim();
+      const msg   = $("msg");
+
+      if(!idRaw || !key){ msg.textContent="Provide email/phone and access key."; msg.className="note err"; return; }
+
+      // Build status check (auth-enforced) to validate key against GAS
+      const params = new URLSearchParams({ action:"status", key });
+      if(isEmail(idRaw)) params.set("email", idRaw);
+      else params.set("phone", normPhone(idRaw));
+
+      msg.textContent="Validating…"; msg.className="note";
+
+      try{
+        const res = await fetch(GAS_EXEC + "?" + params.toString(), { cache:"no-store" });
+        const j = await res.json();
+
+        if(!j || j.ok !== true){
+          msg.textContent = (j && j.error) ? ("Access denied: " + j.error) : "Access denied.";
+          msg.className = "note err";
+          return;
+        }
+
+        // Key is valid. Persist session and move to dashboard.
+        window.EmpireAuth.set(idRaw, key);
+        msg.textContent = "Welcome, Commander. Redirecting…";
+        msg.className = "note ok";
+
+        // small delay for UX then go
+        setTimeout(()=>{ window.location.replace("/dashboard.html"); }, 400);
+      }catch(e){
+        msg.textContent = "Network or engine error: " + String(e);
+        msg.className = "note err";
       }
-      location.replace("/dashboard.html");
-    });
+    }
+
+    $("loginForm").addEventListener("submit", login);
+
+    // If already authenticated, go straight in
+    if(window.EmpireAuth?.has()){
+      window.location.replace("/dashboard.html");
+    }
   </script>
 </body>
 </html>

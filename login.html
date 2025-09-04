@@ -161,5 +161,22 @@
       window.location.replace("/dashboard.html");
     }
   </script>
+<script src="assets/js/empire-auth.js?v=3"></script>
+
+<!-- Then your shell / shared code -->
+<script src="assets/js/empire-shell.js?v=3"></script>
+
+<!-- Optional: page-specific script -->
+<script>
+  document.getElementById("emp-enter").addEventListener("click", async () => {
+    const email = document.getElementById("emp-login-id").value || "";
+    try{
+      await EmpireAuth.login(email);
+      location.href = "dashboard.html";
+    }catch(e){
+      document.getElementById("emp-error").textContent = "Access denied: unauthorized";
+    }
+  });
+</script>
 </body>
 </html>

@@ -1,72 +1,164 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>THE EMPIRE — Commander Login</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>THE EMPIRE — Login</title>
 
-  <!-- Theme -->
-  <link rel="stylesheet" href="/assets/css/empire-style.css" />
+<!-- Minimal styles (safe with your global theme) -->
+<style>
+:root{--bg:#0b1020;--card:#121a2b;--muted:#9db2d7;--text:#e7ecf7;--gold:#ffd166;--blue:#7cc0ff;--bad:#b33a3a;}
+*{box-sizing:border-box} html,body{height:100%}
+body{margin:0;background:radial-gradient(1200px 600px at 10% 90%, rgba(21,40,82,.35), transparent 60%),
+                radial-gradient(900px 500px at 85% 15%, rgba(27,60,120,.28), transparent 55%),
+                linear-gradient(180deg, #081225 0%, #0b1020 100%); color:var(--text);
+     font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Arial}
+.wrap{max-width:960px;margin:0 auto;padding:28px}
+.grid{display:grid;gap:24px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+.card{background:linear-gradient(180deg, rgba(21,26,36,.72), rgba(17,22,32,.72));
+      border:1px solid rgba(255,255,255,.06); border-radius:18px; padding:22px; box-shadow:0 24px 60px -24px rgba(0,0,0,.55); backdrop-filter:saturate(115%) blur(6px)}
+.h{margin:6px 0 2px;font-weight:900;letter-spacing:.02em}
+.p{margin:0;color:var(--muted);font-size:.95rem}
+.input{width:100%;padding:12px 14px;margin:12px 0 10px;border-radius:12px;background:#0c111a;border:1px solid #263150;color:var(--text);outline:0}
+.row{display:flex;gap:10px;align-items:center}
+.btn{cursor:pointer;display:inline-block;border:0;border-radius:12px;padding:12px 16px;font-weight:800;letter-spacing:.02em}
+.btn.gold{background:linear-gradient(180deg, var(--gold), #e7b84e);color:#161000}
+.btn.blue{background:linear-gradient(180deg, var(--blue), #4aa3ff);color:#04101e}
+.link{color:#9fd3f7;text-decoration:none}
+.msg{margin-top:10px;padding:10px 12px;border-radius:12px;display:none}
+.msg.err{display:block;background:#301618;border:1px solid #6c2a2f;color:#ffd7d5}
+.tiny{font-size:.85rem;color:var(--muted)}
+.badge{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.badge img{width:44px;height:44px}
+.center{text-align:center}
+</style>
 
-  <!-- Auth module (single source of truth) -->
-  <script src="/assets/js/empire-auth.js" defer></script>
+<!-- Your global CSS (optional) -->
+<link rel="stylesheet" href="/assets/css/empire-style.css">
 
-  <style>
-    /* compact page shell */
-    :root{ --card:#121a2b; --muted:#96a0b5; --txt:#e7ecf7; --accent:#ffd166; }
-    body{ margin:0; min-height:100vh; display:grid; place-items:center; }
-    .wrap{ width:min(560px,92vw); background:var(--card); border:1px solid rgba(255,255,255,.06);
-           border-radius:16px; padding:22px 18px; box-shadow:0 24px 60px -24px rgba(0,0,0,.55); }
-    h1{ margin:6px 0 8px }
-    .muted{ color:var(--muted) }
-    label{ display:block; margin:12px 0 6px }
-    input{ width:100%; padding:12px 14px; border-radius:10px; background:#0c111a; border:1px solid #2a3350; color:var(--txt); }
-    .row{ display:flex; gap:12px; margin-top:14px; align-items:center; justify-content:center; flex-wrap:wrap; }
-    .btn{ background:var(--accent); color:#1a1a1a; padding:12px 18px; border-radius:12px; border:0; font-weight:800; cursor:pointer; }
-    .link{ color:#9fd3f7; text-decoration:none }
-    .msg{ display:none; margin-top:10px; padding:10px 12px; border-radius:10px; background:#2a1414; border:1px solid #7a3431; color:#ffd7d5; }
-  </style>
+<!-- Frame/Layout helpers (optional, safe to keep) -->
+<script src="/assets/js/empire-frame.js" defer></script>
+<script src="/assets/js/empire-layout.js" defer></script>
 </head>
-<body class="bg-empire-hero">
 
-  <main class="wrap">
-    <div style="text-align:center;margin-bottom:8px">
-      <img src="/app/assets/brand/commander_badge.png" alt="Supreme Command" width="72" height="72" loading="eager">
+<body>
+  <div class="wrap">
+    <div class="card" style="margin-bottom:20px">
+      <div class="badge">
+        <img src="/app/assets/brand/commander_badge.png" alt="Supreme Command">
+        <div>
+          <div class="h">THE EMPIRE</div>
+          <div class="p">Affiliate Command Intelligence • Real-Time Earnings • Global Performance Engine</div>
+        </div>
+      </div>
     </div>
 
-    <h1>Commander Login</h1>
-    <p class="muted">Enter your email or phone. A valid invite or clearance is required.</p>
+    <div class="grid">
+      <!-- Commander Access -->
+      <div class="card">
+        <div class="h" style="font-size:1.25rem">Supreme Command Access</div>
+        <p class="p">Full system control with unlimited privileges.</p>
 
-    <div id="emp-msg" class="msg"></div>
+        <label class="tiny" for="cmd-id">Email or Phone</label>
+        <input id="cmd-id" class="input" autocomplete="email" placeholder="lanre@example.com or +234..." />
 
-    <label for="emp-id">Email or Phone</label>
-    <input id="emp-id" type="text" placeholder="you@example.com or +234..." autocomplete="email">
+        <div class="row">
+          <button id="cmd-login" class="btn gold">Commander Login</button>
+          <a class="link" href="/welcome.html">Back to Welcome</a>
+        </div>
 
-    <div class="row">
-      <button id="emp-enter" class="btn">Enter The Empire</button>
-      <a class="link" href="/welcome.html">Back to Welcome</a>
+        <div id="cmd-msg" class="msg err"></div>
+      </div>
+
+      <!-- User Access -->
+      <div class="card">
+        <div class="h" style="font-size:1.25rem">User Access</div>
+        <p class="p">Personal dashboard with earnings & tracking.</p>
+
+        <label class="tiny" for="usr-id">Email or Phone</label>
+        <input id="usr-id" class="input" autocomplete="email" placeholder="you@example.com or +234..." />
+
+        <div class="row">
+          <button id="usr-login" class="btn blue">User Login</button>
+          <a id="goRegister" class="link" href="/register">Register</a>
+        </div>
+
+        <div id="usr-msg" class="msg err"></div>
+      </div>
     </div>
 
-    <p class="muted" style="margin-top:10px;text-align:center">By entering you agree to Empire terms.</p>
-  </main>
+    <p class="tiny center" style="margin-top:18px">
+      By entering, you agree to Empire terms. • <a class="link" href="/terms.html">Terms & Policies</a>
+    </p>
+  </div>
+
+  <!-- MUST load after the DOM -->
+  <script src="/assets/js/empire-auth.js?v=7"></script>
+  <script src="/assets/js/empire-shell.js?v=7"></script>
 
   <script>
-  // Handle login after auth script loads
-  window.addEventListener("DOMContentLoaded", () => {
-    const btn = document.getElementById("emp-enter");
-    const msg = document.getElementById("emp-msg");
-    btn?.addEventListener("click", async () => {
-      msg.style.display = "none";
-      const id = (document.getElementById("emp-id")?.value || "").trim();
+  // Small helpers
+  const $ = (s)=>document.querySelector(s);
+  function showErr(id, text){ const el=$(id); el.textContent=text; el.style.display='block'; }
+  function clearErr(id){ const el=$(id); el.textContent=''; el.style.display='none'; }
+
+  (async function init(){
+    // Keep invite token across pages
+    const usp = new URLSearchParams(location.search);
+    const inv = usp.get('i'); if(inv){ sessionStorage.setItem('empire.invite', inv); }
+    const token = sessionStorage.getItem('empire.invite') || '';
+
+    // Prefill last used id (if you want)
+    const last = localStorage.getItem('Empire.lastId') || '';
+    if(last){ $('#cmd-id').value = last; $('#usr-id').value = last; }
+
+    // Optional: quick health check
+    try{
+      const pong = await (window.EmpireAuth?.ping?.() ?? Promise.resolve({ok:true}));
+      console.log('GAS ping:', pong);
+    }catch(e){ console.warn('Ping failed', e); }
+
+    // Keep invite on Register link
+    if(token){ $('#goRegister').href = '/register?i='+encodeURIComponent(token); }
+
+    // Commander Login
+    $('#cmd-login').addEventListener('click', async ()=>{
+      clearErr('#cmd-msg');
+      const id = ($('#cmd-id').value || '').trim();
+      if(!id){ return showErr('#cmd-msg','Enter your email or phone to continue.'); }
+      localStorage.setItem('Empire.lastId', id);
+
       try{
-        await EmpireAuth.login(id);
-        location.href = "/dashboard.html";
-      }catch(e){
-        msg.textContent = "Access denied: unauthorized";
-        msg.style.display = "block";
+        // role hint is optional — GAS can ignore; FORCE_PASS will allow your ID.
+        const res = await EmpireAuth.login(id, { role:'commander' });
+        if(!res || res.ok !== true){ throw new Error(res && res.msg || "Access denied: unauthorized"); }
+        // flag commander
+        sessionStorage.setItem('empire.role', 'commander');
+        location.href = '/dashboard.html';
+      }catch(err){
+        console.error(err);
+        showErr('#cmd-msg', (err && err.message) || 'Access denied: unauthorized');
       }
     });
-  });
+
+    // User Login
+    $('#usr-login').addEventListener('click', async ()=>{
+      clearErr('#usr-msg');
+      const id = ($('#usr-id').value || '').trim();
+      if(!id){ return showErr('#usr-msg','Enter your email or phone to continue.'); }
+      localStorage.setItem('Empire.lastId', id);
+
+      try{
+        const res = await EmpireAuth.login(id, { role:'user' });
+        if(!res || res.ok !== true){ throw new Error(res && res.msg || "Access denied: unauthorized"); }
+        sessionStorage.setItem('empire.role', 'user');
+        location.href = '/dashboard.html';
+      }catch(err){
+        console.error(err);
+        showErr('#usr-msg', (err && err.message) || 'Access denied: unauthorized');
+      }
+    });
+  })();
   </script>
 </body>
 </html>

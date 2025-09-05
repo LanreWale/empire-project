@@ -1,163 +1,286 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>THE EMPIRE — Command Interface</title>
 
+<!-- ===== Minimal embedded style (left nav + dark theme) ===== -->
 <style>
-/* ---------- Left sidebar layout + background ---------- */
 :root{
-  --bg1:#081225; --bg2:#0b1020;
-  --card:rgba(16,21,32,.88); --border:rgba(255,255,255,.06);
-  --ink:#e5efff; --muted:#9db2d7;
+  --bg:#0b0e12;--bg2:#0a0d11;--panel:#121624;--panel2:#101520;
+  --text:#e8eaed;--muted:#b6b9c2;--gold:#f1c40f;--mint:#59ffa5;
+  --border:#1d2432;--ring:rgba(241,196,15,.25);
 }
-*{box-sizing:border-box}
-html,body{height:100%}
+*{box-sizing:border-box} html,body{height:100%}
 body{
-  margin:0; color:var(--ink);
-  background:
-    radial-gradient(1200px 600px at 10% 90%, rgba(21,40,82,.35), transparent 60%),
+  margin:0; color:var(--text); background:
+    radial-gradient(1100px 520px at 10% 90%, rgba(21,40,82,.35), transparent 60%),
     radial-gradient(900px 500px at 85% 15%, rgba(27,60,120,.28), transparent 55%),
-    linear-gradient(180deg, var(--bg1) 0%, var(--bg2) 100%);
-  font:14px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+    linear-gradient(180deg, #081225 0%, #0b1020 100%);
+  font:14px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Arial;
 }
-
-.hidden{display:none !important}
-
-.emp-shell{
-  display:grid; grid-template-columns:240px 1fr; min-height:100svh;
+.layout{display:grid;grid-template-columns:240px 1fr;min-height:100svh}
+.aside{
+  background:linear-gradient(180deg,#0f1524,#0c1220);
+  border-right:1px solid var(--border); padding:18px 14px; position:sticky; top:0; height:100svh;
 }
-.emp-sidebar{
-  background:rgba(16,21,32,.92);
-  border-right:1px solid var(--border);
-  backdrop-filter:saturate(115%) blur(6px);
-  padding:18px 12px;
+.brand{font-weight:900;letter-spacing:.08em;color:#fff;opacity:.92;margin-bottom:12px}
+.nav{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+.nav a{
+  padding:10px 12px; border:1px solid var(--border); border-radius:12px;
+  color:#dbe4ff; text-decoration:none; background:#0b1222; font-weight:700;
 }
-.emp-brand{font-weight:900;letter-spacing:.04em;margin:6px 10px 14px;font-size:18px}
-.emp-nav-vert{display:flex;flex-direction:column;gap:8px}
-.emp-tab{
-  display:block; padding:10px 12px; border-radius:10px;
-  border:1px solid var(--border); background:#0c111a;
-  color:var(--ink); text-decoration:none; font-weight:700;
+.nav a.active{background:#172036;border-color:#2a3350}
+.main{padding:20px}
+h1{margin:0 0 10px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin:12px 0 18px}
+.card{
+  background:rgba(16,21,32,.88); border:1px solid rgba(255,255,255,.06);
+  border-radius:14px; padding:14px; min-height:86px;
 }
-.emp-tab.active{ background:#172036; border-color:#2a3350 }
-
-.emp-main{ padding:20px 18px }
-h2{margin:4px 0 12px}
-
-/* ---------- Metric cards ---------- */
-.metric-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:8px}
-.metric{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px}
-.metric .k{color:var(--muted);font-weight:700;font-size:.9rem}
-.metric .v{font-weight:900;font-size:1.25rem;margin-top:4px}
-.small{font-size:.85rem;color:var(--muted);margin-top:8px}
-
-/* ---------- Footer ---------- */
-.emp-foot{margin-top:24px;color:var(--muted);font-weight:600}
-
-/* ---------- Responsive ---------- */
-@media (max-width:900px){
-  .emp-shell{grid-template-columns:1fr}
-  .metric-row{grid-template-columns:1fr 1fr}
-}
-@media (max-width:520px){
-  .metric-row{grid-template-columns:1fr}
-}
+.k{color:var(--muted);font-weight:700}
+.v{font-size:22px;font-weight:900;margin-top:6px}
+.v.mint{color:var(--mint)} .v.gold{color:var(--gold)}
+.footer{margin-top:16px;color:var(--muted);font-size:12px}
+.hidden{display:none}
+hr{border:0;border-top:1px solid var(--border);margin:16px 0}
+@media (max-width:900px){.layout{grid-template-columns: 1fr}.aside{position:static;height:auto}}
 </style>
 </head>
-<body>
 
-<div class="emp-shell">
-  <!-- Sidebar -->
-  <aside class="emp-sidebar">
-    <div class="emp-brand">THE EMPIRE</div>
-    <nav class="emp-nav-vert">
-      <a href="#" class="emp-tab active" data-view="overview">Overview</a>
-      <a href="#" class="emp-tab" data-view="cpa">CPA Accounts</a>
-      <a href="#" class="emp-tab" data-view="users">Users</a>
-      <a href="#" class="emp-tab" data-view="analytics">Analytics</a>
-      <a href="#" class="emp-tab" data-view="wallet">Wallet</a>
-      <a href="#" class="emp-tab" data-view="security">Security</a>
-      <a href="#" class="emp-tab" data-view="monitoring">Monitoring</a>
-      <a href="/login.html" class="emp-tab">Logout</a>
+<body>
+<div class="layout">
+  <!-- ===== Left Sidebar ===== -->
+  <aside class="aside">
+    <div class="brand">THE EMPIRE</div>
+    <nav class="nav" id="nav">
+      <a href="#" data-view="overview" class="active">Overview</a>
+      <a href="#" data-view="cpa">CPA Accounts</a>
+      <a href="#" data-view="users">Users</a>
+      <a href="#" data-view="analytics">Analytics</a>
+      <a href="#" data-view="wallet">Wallet</a>
+      <a href="#" data-view="security">Security</a>
+      <a href="#" data-view="monitor">Monitoring</a>
+      <a href="/login.html" style="margin-top:8px">Logout</a>
     </nav>
   </aside>
 
-  <!-- Main -->
-  <main class="emp-main">
-    <h2>Welcome, Commander</h2>
-    <div class="small">Engine room is live. Data source: GAS endpoints.</div>
+  <!-- ===== Main Panel ===== -->
+  <main class="main">
+    <h1 id="viewTitle">Welcome, Commander</h1>
+    <div id="updated" class="footer">Last updated: —</div>
 
-    <!-- Top metrics -->
-    <div class="metric-row">
-      <div class="metric"><div class="k">Pending Onboarding</div><div class="v" id="m_pending">0</div></div>
-      <div class="metric"><div class="k">Active Associates</div><div class="v" id="m_active">0</div></div>
-      <div class="metric"><div class="k">Approvals Today</div><div class="v" id="m_approvals">0</div></div>
-      <div class="metric"><div class="k">Wallet inflow (24h)</div><div class="v" id="m_w24">$0.00</div></div>
-    </div>
-    <div class="metric-row" style="margin-top:10px">
-      <div class="metric"><div class="k">Wallet inflow (7d)</div><div class="v" id="m_w7">$0.00</div></div>
-      <div class="metric"><div class="k">Net Balance</div><div class="v" id="m_wbal">$0.00</div></div>
-    </div>
+    <!-- ===== OVERVIEW ===== -->
+    <section id="view-overview">
+      <p class="k">Engine room is live. Data source: GAS endpoints.</p>
+      <div class="kpis">
+        <div class="card"><div class="k">Pending Onboarding</div><div id="ov_pending" class="v">0</div></div>
+        <div class="card"><div class="k">Active Associates</div><div id="ov_active" class="v">0</div></div>
+        <div class="card"><div class="k">Approvals Today</div><div id="ov_approvals" class="v">0</div></div>
+        <div class="card"><div class="k">Wallet inflow (24h)</div><div id="ov_inflow" class="v gold">$0.00</div></div>
+      </div>
+    </section>
 
-    <!-- Views (place your modules inside these) -->
-    <section id="view-overview" aria-label="Overview"></section>
-    <section id="view-cpa" class="hidden" aria-label="CPA Accounts"></section>
-    <section id="view-users" class="hidden" aria-label="Users"></section>
-    <section id="view-analytics" class="hidden" aria-label="Analytics"></section>
-    <section id="view-wallet" class="hidden" aria-label="Wallet"></section>
-    <section id="view-security" class="hidden" aria-label="Security"></section>
-    <section id="view-monitoring" class="hidden" aria-label="Monitoring"></section>
+    <!-- ===== CPA ACCOUNTS ===== -->
+    <section id="view-cpa" class="hidden">
+      <div class="kpis">
+        <div class="card"><div class="k">Total CPA Accounts</div><div id="cpa_total" class="v">0</div></div>
+        <div class="card"><div class="k">Active Networks</div><div id="cpa_active" class="v">0</div></div>
+        <div class="card"><div class="k">Paused</div><div id="cpa_paused" class="v">0</div></div>
+        <div class="card"><div class="k">Avg. EPC</div><div id="cpa_epc" class="v gold">$0.00</div></div>
+      </div>
+    </section>
 
-    <div class="emp-foot">© 2025 The Empire</div>
+    <!-- ===== USERS ===== -->
+    <section id="view-users" class="hidden">
+      <div class="kpis">
+        <div class="card"><div class="k">Total Users</div><div id="usr_total" class="v">0</div></div>
+        <div class="card"><div class="k">Active (24h)</div><div id="usr_active24" class="v">0</div></div>
+        <div class="card"><div class="k">New Today</div><div id="usr_new" class="v">0</div></div>
+        <div class="card"><div class="k">Suspended</div><div id="usr_susp" class="v">0</div></div>
+      </div>
+    </section>
+
+    <!-- ===== ANALYTICS ===== -->
+    <section id="view-analytics" class="hidden">
+      <div class="kpis">
+        <div class="card"><div class="k">Clicks (24h)</div><div id="an_clicks" class="v">0</div></div>
+        <div class="card"><div class="k">Leads (24h)</div><div id="an_leads" class="v">0</div></div>
+        <div class="card"><div class="k">CR (24h)</div><div id="an_cr" class="v mint">0.00%</div></div>
+        <div class="card"><div class="k">Earnings (24h)</div><div id="an_rev" class="v gold">$0.00</div></div>
+      </div>
+    </section>
+
+    <!-- ===== WALLET ===== -->
+    <section id="view-wallet" class="hidden">
+      <div class="kpis">
+        <div class="card"><div class="k">Wallet inflow (24h)</div><div id="wl_in" class="v gold">$0.00</div></div>
+        <div class="card"><div class="k">Wallet outflow (24h)</div><div id="wl_out" class="v">$0.00</div></div>
+        <div class="card"><div class="k">Net balance</div><div id="wl_net" class="v mint">$0.00</div></div>
+        <div class="card"><div class="k">Payments today</div><div id="wl_pay" class="v">0</div></div>
+      </div>
+    </section>
+
+    <!-- ===== SECURITY ===== -->
+    <section id="view-security" class="hidden">
+      <div class="kpis">
+        <div class="card"><div class="k">Failed Logins (24h)</div><div id="sec_failed" class="v">0</div></div>
+        <div class="card"><div class="k">Blocked IPs</div><div id="sec_blocked" class="v">0</div></div>
+        <div class="card"><div class="k">Alerts (24h)</div><div id="sec_alerts" class="v">0</div></div>
+        <div class="card"><div class="k">Uptime</div><div id="sec_uptime" class="v mint">100%</div></div>
+      </div>
+    </section>
+
+    <!-- ===== MONITORING ===== -->
+    <section id="view-monitor" class="hidden">
+      <div class="kpis">
+        <div class="card"><div class="k">API Latency (ms)</div><div id="mon_latency" class="v">—</div></div>
+        <div class="card"><div class="k">Queue Depth</div><div id="mon_queue" class="v">—</div></div>
+        <div class="card"><div class="k">Jobs Running</div><div id="mon_jobs" class="v">—</div></div>
+        <div class="card"><div class="k">Last Healthcheck</div><div id="mon_health" class="v">—</div></div>
+      </div>
+    </section>
+
+    <div class="footer">© 2025 The Empire</div>
   </main>
 </div>
 
+<!-- ===== Dashboard logic ===== -->
 <script>
-/* ------- Dashboard Boot (sidebar nav + live summary fetch) ------- */
-(function(){
-  // Your deployed GAS URL
-  const GAS = "https://script.google.com/macros/s/AKfycbyKk68KWt9-tlhsKjX5N5sv7Tk0Y2gsAgEFmIaalBlPoDsibnNNy5puQeulRrwL5tb9/exec";
+/* ==== CONFIG ==== */
+const GAS_URL = "https://script.google.com/macros/s/AKfycbyKk68KWt9-tlhsKjX5N5sv7Tk0Y2gsAgEFmIaalBlPoDsibnNNy5puQeulRrwL5tb9/exec";
 
-  // Sidebar navigation: show/hide sections
-  document.querySelectorAll(".emp-tab[data-view]").forEach(link=>{
-    link.addEventListener("click", ev=>{
-      ev.preventDefault();
-      const view = link.dataset.view;
-      document.querySelectorAll(".emp-tab[data-view]").forEach(a=>a.classList.toggle("active", a===link));
-      document.querySelectorAll("main section[id^='view-']").forEach(sec=>{
-        sec.classList.toggle("hidden", sec.id !== `view-${view}`);
-      });
-    });
+/* Helpers */
+const $ = (s)=>document.querySelector(s);
+const fmtMoney = n => "$" + Number(n||0).toLocaleString(undefined,{maximumFractionDigits:2});
+const setUpdated = (t)=> $("#updated").textContent = "Last updated: " + (t ? new Date(t).toLocaleString() : new Date().toLocaleString());
+async function q(action, params={}){
+  const u = new URL(GAS_URL);
+  u.searchParams.set("action", action);
+  Object.entries(params).forEach(([k,v])=>u.searchParams.set(k,v));
+  const t0 = performance.now();
+  const r = await fetch(u, {cache:"no-store"});
+  const j = await r.json().catch(()=>({ok:false}));
+  j._rt = Math.round(performance.now()-t0);
+  return j;
+}
+
+/* ===== LOADERS (each tab) ===== */
+async function loadOverview(){
+  const d = await q("overview");
+  if(!d.ok) return;
+  $("#ov_pending").textContent   = d.pendingOnboarding ?? 0;
+  $("#ov_active").textContent    = d.activeAssociates ?? 0;
+  $("#ov_approvals").textContent = d.approvalsToday ?? 0;
+  $("#ov_inflow").textContent    = fmtMoney(d.walletInflow24h);
+  setUpdated(d.time || new Date().toISOString());
+}
+
+async function loadCPA(){
+  const d = await q("cpasummary");
+  if(!d.ok) return;
+  $("#cpa_total").textContent  = d.total ?? 0;
+  $("#cpa_active").textContent = d.active ?? 0;
+  $("#cpa_paused").textContent = d.paused ?? 0;
+  $("#cpa_epc").textContent    = fmtMoney(d.avgEpc || 0);
+  setUpdated(d.time);
+}
+
+async function loadUsers(){
+  const d = await q("usersummary");
+  if(!d.ok) return;
+  $("#usr_total").textContent   = d.total ?? 0;
+  $("#usr_active24").textContent= d.active24h ?? 0;
+  $("#usr_new").textContent     = d.newToday ?? 0;
+  $("#usr_susp").textContent    = d.suspended ?? 0;
+  setUpdated(d.time);
+}
+
+async function loadAnalytics(){
+  const d = await q("analytics24h");
+  if(!d.ok) return;
+  $("#an_clicks").textContent = d.clicks ?? 0;
+  $("#an_leads").textContent  = d.leads ?? 0;
+  $("#an_cr").textContent     = ((d.cr||0)*100).toFixed(2) + "%";
+  $("#an_rev").textContent    = fmtMoney(d.revenue || 0);
+  setUpdated(d.time);
+}
+
+async function loadWallet(){
+  const d = await q("wallet24h");
+  if(!d.ok) return;
+  $("#wl_in").textContent  = fmtMoney(d.inflow || 0);
+  $("#wl_out").textContent = fmtMoney(d.outflow || 0);
+  $("#wl_net").textContent = fmtMoney((d.inflow||0)-(d.outflow||0));
+  $("#wl_pay").textContent = d.payments ?? 0;
+  setUpdated(d.time);
+}
+
+async function loadSecurity(){
+  const d = await q("security24h");
+  if(!d.ok) return;
+  $("#sec_failed").textContent  = d.failedLogins ?? 0;
+  $("#sec_blocked").textContent = d.blockedIps ?? 0;
+  $("#sec_alerts").textContent  = d.alerts ?? 0;
+  $("#sec_uptime").textContent  = ((d.uptime||1)*100).toFixed(2)+"%";
+  setUpdated(d.time);
+}
+
+async function loadMonitor(){
+  const d = await q("monitoring");
+  if(!d.ok) return;
+  $("#mon_latency").textContent = d.latencyMs ?? "—";
+  $("#mon_queue").textContent   = d.queue ?? "—";
+  $("#mon_jobs").textContent    = d.jobs ?? "—";
+  $("#mon_health").textContent  = d.time || "—";
+  setUpdated(d.time);
+}
+
+/* ===== Nav + View wiring ===== */
+const loaders = {
+  overview: loadOverview,
+  cpa: loadCPA,
+  users: loadUsers,
+  analytics: loadAnalytics,
+  wallet: loadWallet,
+  security: loadSecurity,
+  monitor: loadMonitor
+};
+
+function show(view){
+  // switch active tab
+  document.querySelectorAll(".nav a").forEach(a=>{
+    a.classList.toggle("active", a.dataset.view===view);
   });
+  // switch sections
+  document.querySelectorAll("main section").forEach(s=>{
+    s.classList.toggle("hidden", s.id !== "view-"+view);
+  });
+  // title
+  const titles = {
+    overview:"Welcome, Commander",
+    cpa:"CPA Accounts",
+    users:"Users",
+    analytics:"Analytics",
+    wallet:"Wallet",
+    security:"Security",
+    monitor:"Monitoring"
+  };
+  $("#viewTitle").textContent = titles[view] || "The Empire";
+  // load data
+  loaders[view]?.();
+}
 
-  // Helpers
-  const qs = sel => document.querySelector(sel);
-  const money = v => `$${Number(v||0).toFixed(2)}`;
+document.getElementById("nav").addEventListener("click",(e)=>{
+  const a = e.target.closest("a[data-view]");
+  if(!a) return;
+  e.preventDefault();
+  show(a.dataset.view);
+});
 
-  // Load summary metrics
-  async function loadSummary(){
-    try{
-      const r = await fetch(`${GAS}?action=summary`, {cache:"no-cache"});
-      const j = await r.json();
-      if(!j.ok) throw new Error("API error");
-
-      qs("#m_pending").textContent   = j.pendingOnboarding;
-      qs("#m_active").textContent    = j.activeAssociates;
-      qs("#m_approvals").textContent = j.approvalsToday;
-      qs("#m_w24").textContent       = money(j.wallet24h);
-      qs("#m_w7").textContent        = money(j.wallet7d);
-      qs("#m_wbal").textContent      = money(j.walletBalance);
-    }catch(err){
-      console.warn("Summary load failed:", err);
-    }
-  }
-
-  loadSummary();
-  // Optional: refresh every 60s
-  setInterval(loadSummary, 60000);
-})();
+// initial load
+show("overview");
 </script>
 </body>
 </html>

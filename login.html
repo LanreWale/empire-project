@@ -1,164 +1,214 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>THE EMPIRE — Login</title>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>THE EMPIRE — Access</title>
 
-<!-- Minimal styles (safe with your global theme) -->
-<style>
-:root{--bg:#0b1020;--card:#121a2b;--muted:#9db2d7;--text:#e7ecf7;--gold:#ffd166;--blue:#7cc0ff;--bad:#b33a3a;}
-*{box-sizing:border-box} html,body{height:100%}
-body{margin:0;background:radial-gradient(1200px 600px at 10% 90%, rgba(21,40,82,.35), transparent 60%),
-                radial-gradient(900px 500px at 85% 15%, rgba(27,60,120,.28), transparent 55%),
-                linear-gradient(180deg, #081225 0%, #0b1020 100%); color:var(--text);
-     font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Arial}
-.wrap{max-width:960px;margin:0 auto;padding:28px}
-.grid{display:grid;gap:24px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
-.card{background:linear-gradient(180deg, rgba(21,26,36,.72), rgba(17,22,32,.72));
-      border:1px solid rgba(255,255,255,.06); border-radius:18px; padding:22px; box-shadow:0 24px 60px -24px rgba(0,0,0,.55); backdrop-filter:saturate(115%) blur(6px)}
-.h{margin:6px 0 2px;font-weight:900;letter-spacing:.02em}
-.p{margin:0;color:var(--muted);font-size:.95rem}
-.input{width:100%;padding:12px 14px;margin:12px 0 10px;border-radius:12px;background:#0c111a;border:1px solid #263150;color:var(--text);outline:0}
-.row{display:flex;gap:10px;align-items:center}
-.btn{cursor:pointer;display:inline-block;border:0;border-radius:12px;padding:12px 16px;font-weight:800;letter-spacing:.02em}
-.btn.gold{background:linear-gradient(180deg, var(--gold), #e7b84e);color:#161000}
-.btn.blue{background:linear-gradient(180deg, var(--blue), #4aa3ff);color:#04101e}
-.link{color:#9fd3f7;text-decoration:none}
-.msg{margin-top:10px;padding:10px 12px;border-radius:12px;display:none}
-.msg.err{display:block;background:#301618;border:1px solid #6c2a2f;color:#ffd7d5}
-.tiny{font-size:.85rem;color:var(--muted)}
-.badge{display:flex;align-items:center;gap:8px;margin-bottom:8px}
-.badge img{width:44px;height:44px}
-.center{text-align:center}
-</style>
+  <!-- Global theme (your existing file is fine) -->
+  <link rel="stylesheet" href="/assets/css/empire-style.css">
 
-<!-- Your global CSS (optional) -->
-<link rel="stylesheet" href="/assets/css/empire-style.css">
+  <style>
+    /* ===== Two-step “tiles” layout ===== */
+    :root{
+      --bg:#0b1220; --card:#10192b; --muted:#9fb0c7; --accent:#ffd166;
+      --btn:#ffd166; --btnText:#151515; --glass:rgba(255,255,255,.06);
+    }
+    html,body{height:100%}
+    body{
+      margin:0; color:#e9f1ff; background:
+        radial-gradient(900px 480px at 75% 10%, rgba(30,55,100,.35), transparent 60%),
+        linear-gradient(180deg,#0b1020 0%,#081424 100%);
+      font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+    }
+    .wrap{min-height:100%;display:grid;place-items:center;padding:28px 16px}
+    .stage{width:min(1080px,96vw);display:grid;grid-template-columns:1fr 1fr;gap:22px;align-items:stretch}
+    .tile{
+      background:linear-gradient(180deg,rgba(24,34,58,.8),rgba(14,21,36,.82));
+      border:1px solid var(--glass); border-radius:18px; padding:22px;
+      box-shadow:0 24px 60px -24px rgba(0,0,0,.45), 0 0 0 1px rgba(255,255,255,.04) inset;
+    }
+    .tile h2{margin:6px 0 10px}
+    .tile p{margin:6px 0 16px;color:var(--muted)}
+    .actions{display:flex;gap:10px;flex-wrap:wrap}
+    .btn{
+      display:inline-block; border:0; border-radius:12px; cursor:pointer;
+      padding:12px 16px; font-weight:800; letter-spacing:.02em
+    }
+    .btn.primary{background:var(--btn); color:var(--btnText); box-shadow:0 12px 36px -18px rgba(255,209,102,.7)}
+    .btn.ghost{background:transparent;color:#d8e6ff;border:1px solid var(--glass)}
+    .muted{color:var(--muted)}
+    .brand{display:flex;align-items:center;gap:16px;margin-bottom:14px}
+    .brand img{width:88px;height:auto}
 
-<!-- Frame/Layout helpers (optional, safe to keep) -->
-<script src="/assets/js/empire-frame.js" defer></script>
-<script src="/assets/js/empire-layout.js" defer></script>
+    /* Modal */
+    .modal-backdrop{
+      position:fixed;inset:0;background:rgba(0,0,0,.45);
+      display:none;align-items:center;justify-content:center;padding:18px;z-index:40;
+    }
+    .modal{
+      width:min(460px,94vw);
+      background:linear-gradient(180deg,rgba(24,30,48,.92),rgba(16,22,36,.92));
+      border:1px solid var(--glass); border-radius:16px; padding:18px;
+      box-shadow:0 30px 80px -24px rgba(0,0,0,.6);
+    }
+    .modal h3{margin:4px 0 10px}
+    .row{margin:10px 0}
+    label{display:block;margin-bottom:6px;color:#cfe0ff;font-size:.92rem}
+    input.emp{
+      width:100%;padding:12px 12px;border-radius:10px;
+      background:#0c1424;border:1px solid #23324c;color:#eaf1ff;outline:0;
+    }
+    .bar{display:flex;gap:10px;justify-content:flex-end;margin-top:12px}
+    .msg{display:none;margin:6px 0 0;padding:9px;border-radius:10px;font-size:.92rem}
+    .msg.bad{display:block;background:#351b1b;border:1px solid #6e3835;color:#ffd7d5}
+    .close-x{position:absolute;right:14px;top:10px;opacity:.8;cursor:pointer}
+    .footnote{margin-top:12px;text-align:center;color:var(--muted);font-size:.85rem}
+    @media (max-width: 760px){ .stage{grid-template-columns:1fr} }
+  </style>
 </head>
-
 <body>
   <div class="wrap">
-    <div class="card" style="margin-bottom:20px">
-      <div class="badge">
-        <img src="/app/assets/brand/commander_badge.png" alt="Supreme Command">
-        <div>
-          <div class="h">THE EMPIRE</div>
-          <div class="p">Affiliate Command Intelligence • Real-Time Earnings • Global Performance Engine</div>
-        </div>
+    <div class="brand">
+      <img src="/app/assets/brand/empire_logo_dark.png" alt="The Empire">
+      <div>
+        <div style="letter-spacing:.18em;text-transform:uppercase;font-weight:900;color:#ffd166">THE EMPIRE</div>
+        <div class="muted">Commanding the future of affiliate marketing</div>
       </div>
     </div>
 
-    <div class="grid">
-      <!-- Commander Access -->
-      <div class="card">
-        <div class="h" style="font-size:1.25rem">Supreme Command Access</div>
-        <p class="p">Full system control with unlimited privileges.</p>
-
-        <label class="tiny" for="cmd-id">Email or Phone</label>
-        <input id="cmd-id" class="input" autocomplete="email" placeholder="lanre@example.com or +234..." />
-
-        <div class="row">
-          <button id="cmd-login" class="btn gold">Commander Login</button>
-          <a class="link" href="/welcome.html">Back to Welcome</a>
+    <div class="stage">
+      <!-- Commander tile -->
+      <section class="tile" id="tile-commander">
+        <h2>Supreme Command Access</h2>
+        <p>Full system control with unlimited privileges. Restricted to authorized commanders.</p>
+        <div class="actions">
+          <button class="btn primary" data-role="commander">Commander Login</button>
+          <a class="btn ghost" href="/terms.html">Terms</a>
         </div>
+      </section>
 
-        <div id="cmd-msg" class="msg err"></div>
-      </div>
-
-      <!-- User Access -->
-      <div class="card">
-        <div class="h" style="font-size:1.25rem">User Access</div>
-        <p class="p">Personal dashboard with earnings & tracking.</p>
-
-        <label class="tiny" for="usr-id">Email or Phone</label>
-        <input id="usr-id" class="input" autocomplete="email" placeholder="you@example.com or +234..." />
-
-        <div class="row">
-          <button id="usr-login" class="btn blue">User Login</button>
-          <a id="goRegister" class="link" href="/register">Register</a>
+      <!-- User tile -->
+      <section class="tile" id="tile-user">
+        <h2>User Access</h2>
+        <p>Personal dashboard with real-time earnings &amp; tracking.</p>
+        <div class="actions">
+          <button class="btn primary" data-role="user">User Login</button>
+          <a class="btn ghost" href="/register/">Register</a>
         </div>
-
-        <div id="usr-msg" class="msg err"></div>
-      </div>
+      </section>
     </div>
 
-    <p class="tiny center" style="margin-top:18px">
-      By entering, you agree to Empire terms. • <a class="link" href="/terms.html">Terms & Policies</a>
-    </p>
+    <div class="footnote">&copy; <span id="yr"></span> The Empire • Engine room linked to GAS endpoints</div>
   </div>
 
-  <!-- MUST load after the DOM -->
-  <script src="/assets/js/empire-auth.js?v=7"></script>
-  <script src="/assets/js/empire-shell.js?v=7"></script>
+  <!-- ========= Modal (Step 2) ========= -->
+  <div class="modal-backdrop" id="loginModal">
+    <div class="modal">
+      <div class="close-x" id="closeModal">✕</div>
+      <h3 id="modalTitle">Login</h3>
+      <p class="muted" id="modalSub">Enter your email or phone to continue.</p>
+      <div id="err" class="msg bad"></div>
+      <div class="row">
+        <label for="identifier">Email or phone</label>
+        <input id="identifier" class="emp" autocomplete="email" placeholder="you@example.com or +234..." />
+      </div>
+      <div class="bar">
+        <button class="btn ghost" id="cancelBtn">Cancel</button>
+        <button class="btn primary" id="goBtn">Enter The Empire</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======= App scripts ======= -->
+  <script src="/assets/js/empire-auth.js" defer></script>
+  <script src="/assets/js/empire-shell.js" defer></script>
 
   <script>
-  // Small helpers
-  const $ = (s)=>document.querySelector(s);
-  function showErr(id, text){ const el=$(id); el.textContent=text; el.style.display='block'; }
-  function clearErr(id){ const el=$(id); el.textContent=''; el.style.display='none'; }
+    // Only run once both EmpireAuth + DOM are ready
+    (function(){
+      const $ = (s)=>document.querySelector(s);
+      const modal = $('#loginModal');
+      const goBtn = $('#goBtn');
+      const cancelBtn = $('#cancelBtn');
+      const closeBtn = $('#closeModal');
+      const idInput = $('#identifier');
+      const err = $('#err');
+      const modalTitle = $('#modalTitle');
+      const modalSub = $('#modalSub');
 
-  (async function init(){
-    // Keep invite token across pages
-    const usp = new URLSearchParams(location.search);
-    const inv = usp.get('i'); if(inv){ sessionStorage.setItem('empire.invite', inv); }
-    const token = sessionStorage.getItem('empire.invite') || '';
+      // Pretty footer year
+      $('#yr').textContent = new Date().getFullYear();
 
-    // Prefill last used id (if you want)
-    const last = localStorage.getItem('Empire.lastId') || '';
-    if(last){ $('#cmd-id').value = last; $('#usr-id').value = last; }
+      // Carry invite token through the flow
+      const usp = new URLSearchParams(location.search);
+      const invite = usp.get('i');
+      if(invite){ sessionStorage.setItem('empire.invite', invite); }
 
-    // Optional: quick health check
-    try{
-      const pong = await (window.EmpireAuth?.ping?.() ?? Promise.resolve({ok:true}));
-      console.log('GAS ping:', pong);
-    }catch(e){ console.warn('Ping failed', e); }
+      let chosenRole = 'user';
 
-    // Keep invite on Register link
-    if(token){ $('#goRegister').href = '/register?i='+encodeURIComponent(token); }
-
-    // Commander Login
-    $('#cmd-login').addEventListener('click', async ()=>{
-      clearErr('#cmd-msg');
-      const id = ($('#cmd-id').value || '').trim();
-      if(!id){ return showErr('#cmd-msg','Enter your email or phone to continue.'); }
-      localStorage.setItem('Empire.lastId', id);
-
-      try{
-        // role hint is optional — GAS can ignore; FORCE_PASS will allow your ID.
-        const res = await EmpireAuth.login(id, { role:'commander' });
-        if(!res || res.ok !== true){ throw new Error(res && res.msg || "Access denied: unauthorized"); }
-        // flag commander
-        sessionStorage.setItem('empire.role', 'commander');
-        location.href = '/dashboard.html';
-      }catch(err){
-        console.error(err);
-        showErr('#cmd-msg', (err && err.message) || 'Access denied: unauthorized');
+      // Open modal for a role
+      function openModal(role){
+        chosenRole = role || 'user';
+        localStorage.setItem('empire.role', chosenRole);
+        modalTitle.textContent = chosenRole === 'commander' ? 'Commander Login' : 'User Login';
+        modalSub.textContent = 'Enter your email or phone to continue.';
+        err.style.display = 'none'; err.textContent = '';
+        idInput.value = '';
+        modal.style.display = 'flex';
+        // focus after frame paint
+        setTimeout(()=>idInput.focus(), 50);
       }
-    });
+      // Close modal
+      function closeModal(){ modal.style.display = 'none'; }
 
-    // User Login
-    $('#usr-login').addEventListener('click', async ()=>{
-      clearErr('#usr-msg');
-      const id = ($('#usr-id').value || '').trim();
-      if(!id){ return showErr('#usr-msg','Enter your email or phone to continue.'); }
-      localStorage.setItem('Empire.lastId', id);
+      // Tile buttons
+      document.querySelectorAll('[data-role]').forEach(btn=>{
+        btn.addEventListener('click', ()=> openModal(btn.getAttribute('data-role')));
+      });
 
-      try{
-        const res = await EmpireAuth.login(id, { role:'user' });
-        if(!res || res.ok !== true){ throw new Error(res && res.msg || "Access denied: unauthorized"); }
-        sessionStorage.setItem('empire.role', 'user');
-        location.href = '/dashboard.html';
-      }catch(err){
-        console.error(err);
-        showErr('#usr-msg', (err && err.message) || 'Access denied: unauthorized');
-      }
-    });
-  })();
+      // Close / cancel actions
+      cancelBtn.addEventListener('click', closeModal);
+      closeBtn.addEventListener('click', closeModal);
+      modal.addEventListener('click', (e)=>{ if(e.target === modal) closeModal(); });
+
+      // Submit (enter key)
+      idInput.addEventListener('keydown', (e)=>{ if(e.key === 'Enter') goBtn.click(); });
+
+      // Do login
+      goBtn.addEventListener('click', async ()=>{
+        const ident = (idInput.value||'').trim();
+        if(!ident){
+          err.textContent = 'Please enter your email or phone.'; err.style.display = 'block'; return;
+        }
+        goBtn.disabled = true; goBtn.textContent = 'Checking…';
+        try{
+          // Persist role alongside any invite; the GAS doesn’t need role, UI may
+          const meta = { role: chosenRole, invite: sessionStorage.getItem('empire.invite')||'' };
+          localStorage.setItem('empire.meta', JSON.stringify(meta));
+
+          // MAIN call
+          await EmpireAuth.login(ident);
+
+          // If it didn’t throw, success:
+          location.href = '/dashboard.html';
+        }catch(e){
+          err.textContent = 'Access denied: unauthorized';
+          err.style.display = 'block';
+          goBtn.disabled = false; goBtn.textContent = 'Enter The Empire';
+        }
+      });
+
+      // Optional: already authenticated? skip login
+      document.addEventListener('DOMContentLoaded', async ()=>{
+        try{
+          if(window.EmpireAuth && typeof EmpireAuth.whoami === 'function'){
+            const me = await EmpireAuth.whoami();
+            if(me && me.email){ location.href = '/dashboard.html'; }
+          }
+        }catch{}
+      });
+    })();
   </script>
 </body>
 </html>

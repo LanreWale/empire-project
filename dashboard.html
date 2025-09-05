@@ -2,144 +2,61 @@
 <html lang="en">
 <head>
   <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Empire Control — Dashboard</title>
-
-  <!-- Theme -->
-  <link rel="stylesheet" href="/assets/css/empire-style.css" />
-
-  <!-- Auth first -->
-  <script src="/assets/js/empire-auth.js"></script>
-
-  <style>
-    .emp-container{ max-width:1100px; margin:0 auto; padding:20px; }
-    .kpis{ display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; margin-top:14px; }
-    .kpi{ background:rgba(16,21,32,.88); border:1px solid rgba(255,255,255,.06); border-radius:14px; padding:14px; }
-    .kpi h6{ margin:0 0 6px; color:#9db2d7; font-weight:700; font-size:.9rem }
-    .kpi .val{ font-size:1.4rem; font-weight:800 }
-    .hidden{ display:none }
-    nav.emp-nav{ margin:14px 0; display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
-    .emp-tab{ display:inline-block; padding:10px 14px; border-radius:10px; background:#0c111a; color:#e5efff; border:1px solid rgba(255,255,255,.06); text-decoration:none; font-weight:700 }
-    .emp-tab.active{ background:#172036; border-color:#2a3350 }
-  </style>
-
-  <script>
-    // Auth gate as soon as possible
-    (function(){
-      if(!window.EmpireAuth || !EmpireAuth.has()){
-        location.replace("/login.html");
-      }
-    })();
-  </script>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>The Empire — Command Interface</title>
+  <link rel="stylesheet" href="/assets/css/empire-style.css">
 </head>
 <body class="bg-empire-hero">
   <header class="emp-header">
     <div class="emp-header__inner">
-      <strong>⚔️ The Empire</strong>
-      <span style="opacity:.7">Command Interface</span>
-      <span style="flex:1"></span>
-      <button id="emp-logout" class="cta ghost" style="padding:8px 12px;border:1px solid rgba(255,255,255,.06);background:transparent;color:#e5efff;border-radius:10px">Logout</button>
+      <strong>THE EMPIRE — Command Interface</strong>
+      <nav class="emp-nav" style="margin-left:auto;">
+        <a class="emp-tab active" href="#">Overview</a>
+        <a class="emp-tab" href="#cpa">CPA Accounts</a>
+        <a class="emp-tab" href="#users">Users</a>
+        <a class="emp-tab" href="#analytics">Analytics</a>
+        <a class="emp-tab" href="#wallet">Wallet</a>
+        <a class="emp-tab" href="#monitor">Monitoring</a>
+      </nav>
     </div>
   </header>
 
   <main class="emp-container">
-    <nav class="emp-nav" aria-label="Empire sections">
-      <a href="#dashboard"  data-tab="dashboard"  class="emp-tab active">Overview</a>
-      <a href="#cpa"        data-tab="cpa"        class="emp-tab">CPA Accounts</a>
-      <a href="#users"      data-tab="users"      class="emp-tab">Users</a>
-      <a href="#analytics"  data-tab="analytics"  class="emp-tab">Analytics</a>
-      <a href="#wallet"     data-tab="wallet"     class="emp-tab">Wallet</a>
-      <a href="#security"   data-tab="security"   class="emp-tab">Security</a>
-      <a href="#monitoring" data-tab="monitoring" class="emp-tab">Monitoring</a>
-    </nav>
-
-    <!-- OVERVIEW -->
-    <section id="view-dashboard" class="emp-view">
+    <section class="emp-view" id="view-overview">
       <h2>Welcome, Commander</h2>
-      <p class="emp-muted">Engine room is live. Data source: GAS list endpoints.</p>
+      <p class="emp-muted">Engine room is live. Data source: GAS endpoints.</p>
 
-      <div class="kpis">
-        <div class="kpi"><h6>Pending Onboarding</h6><div class="val" id="kPending">0</div></div>
-        <div class="kpi"><h6>Active Associates</h6><div class="val" id="kAssociates">0</div></div>
-        <div class="kpi"><h6>Approvals Today</h6><div class="val" id="kApprovals">0</div></div>
-        <div class="kpi"><h6>Wallet inflow (24h)</h6><div class="val" id="kInflow">$0.00</div></div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-top:12px;">
+        <div class="emp-card" style="padding:14px;">
+          <div class="emp-muted">Pending Onboarding</div>
+          <div id="tileOnboarding" class="kpi val" style="font-size:28px;">—</div>
+        </div>
+        <div class="emp-card" style="padding:14px;">
+          <div class="emp-muted">Active Associates</div>
+          <div id="tileAssociates" class="kpi val" style="font-size:28px;">—</div>
+        </div>
+        <div class="emp-card" style="padding:14px;">
+          <div class="emp-muted">Approvals Today</div>
+          <div id="tileApprovals" class="kpi val" style="font-size:28px;">—</div>
+        </div>
+        <div class="emp-card" style="padding:14px;">
+          <div class="emp-muted">Wallet inflow (24h)</div>
+          <div id="tileWallet" class="kpi val" style="font-size:28px;">—</div>
+        </div>
       </div>
 
-      <p class="emp-muted" style="margin-top:10px">Last updated: <span id="kUpdatedAt"></span></p>
+      <div class="emp-muted" style="margin-top:10px;">
+        Last updated: <span id="kpiUpdatedAt">—</span>
+      </div>
     </section>
-
-    <!-- Other tabs (shell only; fill later) -->
-    <section id="view-cpa"        class="emp-view hidden"><h2>CPA Accounts</h2></section>
-    <section id="view-users"      class="emp-view hidden"><h2>Users</h2></section>
-    <section id="view-analytics"  class="emp-view hidden"><h2>Analytics</h2></section>
-    <section id="view-wallet"     class="emp-view hidden"><h2>Wallet</h2></section>
-    <section id="view-security"   class="emp-view hidden"><h2>Security</h2></section>
-    <section id="view-monitoring" class="emp-view hidden"><h2>Monitoring</h2></section>
   </main>
 
   <footer class="emp-footer">
     <div class="emp-footer__inner">© 2025 The Empire</div>
   </footer>
 
-  <script>
-    // Tabs
-    document.addEventListener("click", (ev) => {
-      const a = ev.target.closest(".emp-tab");
-      if (!a) return;
-      ev.preventDefault();
-      document.querySelectorAll(".emp-tab").forEach(t => t.classList.remove("active"));
-      a.classList.add("active");
-      const key = a.dataset.tab || "dashboard";
-      document.querySelectorAll(".emp-view").forEach(v => v.classList.add("hidden"));
-      document.getElementById(`view-${key}`)?.classList.remove("hidden");
-    });
-
-    // Logout
-    document.getElementById("emp-logout")?.addEventListener("click", () => {
-      try { EmpireAuth.logout(); } catch {}
-      location.href = "/login.html";
-    });
-
-    // KPI boot from GAS
-    (async function(){
-      try{
-        await EmpireAuth.fetch({ action:"ping" });
-
-        const [onb, assoc, wlt] = await Promise.all([
-          EmpireAuth.fetch({ action:"listonboarding", limit: 500 }),
-          EmpireAuth.fetch({ action:"listassociates", limit: 500 }),
-          EmpireAuth.fetch({ action:"listwallet",     limit: 500 })
-        ]);
-
-        const pending = (onb.rows||[]).filter(r => String(r.status||"").toLowerCase()==="pending").length;
-        const actives = (assoc.rows||[]).filter(r => String(r.status||"").toLowerCase()==="confirmed").length;
-
-        const todayISO = new Date().toISOString().slice(0,10);
-        const today = (assoc.rows||[]).filter(r => 
-          String(r.ts||"").slice(0,10)===todayISO &&
-          String(r.status||"").toLowerCase()==="confirmed"
-        ).length;
-
-        // last 24h inflow (by timestamp)
-        const cutoff = Date.now() - 24*3600*1000;
-        const inflow = (wlt.rows||[])
-          .filter(r => String(r.dir||"")==="in")
-          .filter(r => {
-            const d = new Date(String(r.ts||r.time||r.Time||""));
-            return isFinite(d) ? d.getTime() >= cutoff : true; // fallback if sheet has no proper time
-          })
-          .reduce((s,r)=>s + Number(r.amount||0), 0);
-
-        const $ = id => document.getElementById(id);
-        $("kPending").textContent    = pending;
-        $("kAssociates").textContent = actives;
-        $("kApprovals").textContent  = today;
-        $("kInflow").textContent     = inflow.toLocaleString(undefined,{style:"currency",currency:"USD"});
-        $("kUpdatedAt").textContent  = new Date().toLocaleString();
-      }catch(e){
-        console.error("Dashboard boot failed:", e);
-      }
-    })();
-  </script>
+  <!-- Scripts (order matters) -->
+  <script src="/assets/js/empire-auth.js?v=6"></script>
+  <script src="/assets/js/empire-dashboard.js?v=6"></script>
 </body>
 </html>

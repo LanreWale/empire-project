@@ -1,44 +1,30 @@
-/* assets/js/empire-auth.js — FINAL */
+/* empire-auth.js — minimal, uses your GAS URL */
 
 (() => {
-  const GAS = {
-    // Your Web App URL
-    URL: "https://script.google.com/macros/s/AKfycbyKk68KWt9-tlhsKjX5N5sv7Tk0Y2gsAgEFmIaalBlPoDsibnNNy5puQeulRrwL5tb9/exec"
-  };
+  const GAS_URL = "https://script.google.com/macros/s/AKfycbyKk68KWt9-tlhsKjX5N5sv7Tk0Y2gsAgEFmIaalBlPoDsibnNNy5puQeulRrwL5tb9/exec";
 
-  function store(obj) {
-    localStorage.setItem("EmpireAuth", JSON.stringify(obj||{}));
+  function qs(o){
+    const u=new URL(GAS_URL);
+    Object.entries(o||{}).forEach(([k,v])=>u.searchParams.set(k,v));
+    return u.toString();
   }
-  function load() {
-    try { return JSON.parse(localStorage.getItem("EmpireAuth")||"{}"); }
-    catch { return {}; }
-  }
+  async function call(o){ const r=await fetch(qs(o),{cache:"no-store"}); return r.json(); }
 
-  async function call(params) {
-    const u = new URL(GAS.URL);
-    Object.entries(params||{}).forEach(([k,v]) => u.searchParams.set(k,String(v)));
-    const res = await fetch(u.toString(), { method:"GET" });
-    return await res.json();
-  }
-
-  const API = {
-    async login(identifier) {
-      if (!identifier) throw new Error("missing-identifier");
-      const j = await call({ action:"login", identifier });
-      if (!j.ok) throw new Error(j.error || "unauthorized");
-      // save small profile
-      store({ ts: Date.now(), id: identifier, role: j.role||"Guest", clearance: j.clearance||"", level: j.level||"" });
+  window.EmpireAuth = {
+    async login(identifier){
+      const j = await call({action:"login", identifier});
+      if(!j.ok) throw new Error(j.error||"unauthorized");
+      localStorage.setItem("EmpireAuth", JSON.stringify({id:identifier, role:j.role||"Associate", ts:Date.now()}));
       return j;
     },
-
-    async stats() {
-      return await call({ action:"stats" });
-    },
-
-    me() { return load(); },
-
-    logout() { localStorage.removeItem("EmpireAuth"); }
+    async summary(){ return call({action:"summary"}); },
+    async cpa(){ return call({action:"cpasummary"}); },
+    async users(){ return call({action:"usersummary"}); },
+    async analytics(){ return call({action:"analytics24h"}); },
+    async wallet(){ return call({action:"wallet24h"}); },
+    async security(){ return call({action:"security24h"}); },
+    async monitor(){ return call({action:"monitoring"}); },
+    me(){ try{return JSON.parse(localStorage.getItem("EmpireAuth")||"{}");}catch{return{}}; },
+    logout(){ localStorage.removeItem("EmpireAuth"); }
   };
-
-  window.EmpireAuth = API;
 })();

@@ -1,62 +1,163 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>The Empire — Command Interface</title>
-  <link rel="stylesheet" href="/assets/css/empire-style.css">
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>THE EMPIRE — Command Interface</title>
+
+<style>
+/* ---------- Left sidebar layout + background ---------- */
+:root{
+  --bg1:#081225; --bg2:#0b1020;
+  --card:rgba(16,21,32,.88); --border:rgba(255,255,255,.06);
+  --ink:#e5efff; --muted:#9db2d7;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0; color:var(--ink);
+  background:
+    radial-gradient(1200px 600px at 10% 90%, rgba(21,40,82,.35), transparent 60%),
+    radial-gradient(900px 500px at 85% 15%, rgba(27,60,120,.28), transparent 55%),
+    linear-gradient(180deg, var(--bg1) 0%, var(--bg2) 100%);
+  font:14px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+}
+
+.hidden{display:none !important}
+
+.emp-shell{
+  display:grid; grid-template-columns:240px 1fr; min-height:100svh;
+}
+.emp-sidebar{
+  background:rgba(16,21,32,.92);
+  border-right:1px solid var(--border);
+  backdrop-filter:saturate(115%) blur(6px);
+  padding:18px 12px;
+}
+.emp-brand{font-weight:900;letter-spacing:.04em;margin:6px 10px 14px;font-size:18px}
+.emp-nav-vert{display:flex;flex-direction:column;gap:8px}
+.emp-tab{
+  display:block; padding:10px 12px; border-radius:10px;
+  border:1px solid var(--border); background:#0c111a;
+  color:var(--ink); text-decoration:none; font-weight:700;
+}
+.emp-tab.active{ background:#172036; border-color:#2a3350 }
+
+.emp-main{ padding:20px 18px }
+h2{margin:4px 0 12px}
+
+/* ---------- Metric cards ---------- */
+.metric-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:8px}
+.metric{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px}
+.metric .k{color:var(--muted);font-weight:700;font-size:.9rem}
+.metric .v{font-weight:900;font-size:1.25rem;margin-top:4px}
+.small{font-size:.85rem;color:var(--muted);margin-top:8px}
+
+/* ---------- Footer ---------- */
+.emp-foot{margin-top:24px;color:var(--muted);font-weight:600}
+
+/* ---------- Responsive ---------- */
+@media (max-width:900px){
+  .emp-shell{grid-template-columns:1fr}
+  .metric-row{grid-template-columns:1fr 1fr}
+}
+@media (max-width:520px){
+  .metric-row{grid-template-columns:1fr}
+}
+</style>
 </head>
-<body class="bg-empire-hero">
-  <header class="emp-header">
-    <div class="emp-header__inner">
-      <strong>THE EMPIRE — Command Interface</strong>
-      <nav class="emp-nav" style="margin-left:auto;">
-        <a class="emp-tab active" href="#">Overview</a>
-        <a class="emp-tab" href="#cpa">CPA Accounts</a>
-        <a class="emp-tab" href="#users">Users</a>
-        <a class="emp-tab" href="#analytics">Analytics</a>
-        <a class="emp-tab" href="#wallet">Wallet</a>
-        <a class="emp-tab" href="#monitor">Monitoring</a>
-      </nav>
+<body>
+
+<div class="emp-shell">
+  <!-- Sidebar -->
+  <aside class="emp-sidebar">
+    <div class="emp-brand">THE EMPIRE</div>
+    <nav class="emp-nav-vert">
+      <a href="#" class="emp-tab active" data-view="overview">Overview</a>
+      <a href="#" class="emp-tab" data-view="cpa">CPA Accounts</a>
+      <a href="#" class="emp-tab" data-view="users">Users</a>
+      <a href="#" class="emp-tab" data-view="analytics">Analytics</a>
+      <a href="#" class="emp-tab" data-view="wallet">Wallet</a>
+      <a href="#" class="emp-tab" data-view="security">Security</a>
+      <a href="#" class="emp-tab" data-view="monitoring">Monitoring</a>
+      <a href="/login.html" class="emp-tab">Logout</a>
+    </nav>
+  </aside>
+
+  <!-- Main -->
+  <main class="emp-main">
+    <h2>Welcome, Commander</h2>
+    <div class="small">Engine room is live. Data source: GAS endpoints.</div>
+
+    <!-- Top metrics -->
+    <div class="metric-row">
+      <div class="metric"><div class="k">Pending Onboarding</div><div class="v" id="m_pending">0</div></div>
+      <div class="metric"><div class="k">Active Associates</div><div class="v" id="m_active">0</div></div>
+      <div class="metric"><div class="k">Approvals Today</div><div class="v" id="m_approvals">0</div></div>
+      <div class="metric"><div class="k">Wallet inflow (24h)</div><div class="v" id="m_w24">$0.00</div></div>
     </div>
-  </header>
+    <div class="metric-row" style="margin-top:10px">
+      <div class="metric"><div class="k">Wallet inflow (7d)</div><div class="v" id="m_w7">$0.00</div></div>
+      <div class="metric"><div class="k">Net Balance</div><div class="v" id="m_wbal">$0.00</div></div>
+    </div>
 
-  <main class="emp-container">
-    <section class="emp-view" id="view-overview">
-      <h2>Welcome, Commander</h2>
-      <p class="emp-muted">Engine room is live. Data source: GAS endpoints.</p>
+    <!-- Views (place your modules inside these) -->
+    <section id="view-overview" aria-label="Overview"></section>
+    <section id="view-cpa" class="hidden" aria-label="CPA Accounts"></section>
+    <section id="view-users" class="hidden" aria-label="Users"></section>
+    <section id="view-analytics" class="hidden" aria-label="Analytics"></section>
+    <section id="view-wallet" class="hidden" aria-label="Wallet"></section>
+    <section id="view-security" class="hidden" aria-label="Security"></section>
+    <section id="view-monitoring" class="hidden" aria-label="Monitoring"></section>
 
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-top:12px;">
-        <div class="emp-card" style="padding:14px;">
-          <div class="emp-muted">Pending Onboarding</div>
-          <div id="tileOnboarding" class="kpi val" style="font-size:28px;">—</div>
-        </div>
-        <div class="emp-card" style="padding:14px;">
-          <div class="emp-muted">Active Associates</div>
-          <div id="tileAssociates" class="kpi val" style="font-size:28px;">—</div>
-        </div>
-        <div class="emp-card" style="padding:14px;">
-          <div class="emp-muted">Approvals Today</div>
-          <div id="tileApprovals" class="kpi val" style="font-size:28px;">—</div>
-        </div>
-        <div class="emp-card" style="padding:14px;">
-          <div class="emp-muted">Wallet inflow (24h)</div>
-          <div id="tileWallet" class="kpi val" style="font-size:28px;">—</div>
-        </div>
-      </div>
-
-      <div class="emp-muted" style="margin-top:10px;">
-        Last updated: <span id="kpiUpdatedAt">—</span>
-      </div>
-    </section>
+    <div class="emp-foot">© 2025 The Empire</div>
   </main>
+</div>
 
-  <footer class="emp-footer">
-    <div class="emp-footer__inner">© 2025 The Empire</div>
-  </footer>
+<script>
+/* ------- Dashboard Boot (sidebar nav + live summary fetch) ------- */
+(function(){
+  // Your deployed GAS URL
+  const GAS = "https://script.google.com/macros/s/AKfycbyKk68KWt9-tlhsKjX5N5sv7Tk0Y2gsAgEFmIaalBlPoDsibnNNy5puQeulRrwL5tb9/exec";
 
-  <!-- Scripts (order matters) -->
-  <script src="/assets/js/empire-auth.js?v=6"></script>
-  <script src="/assets/js/empire-dashboard.js?v=6"></script>
+  // Sidebar navigation: show/hide sections
+  document.querySelectorAll(".emp-tab[data-view]").forEach(link=>{
+    link.addEventListener("click", ev=>{
+      ev.preventDefault();
+      const view = link.dataset.view;
+      document.querySelectorAll(".emp-tab[data-view]").forEach(a=>a.classList.toggle("active", a===link));
+      document.querySelectorAll("main section[id^='view-']").forEach(sec=>{
+        sec.classList.toggle("hidden", sec.id !== `view-${view}`);
+      });
+    });
+  });
+
+  // Helpers
+  const qs = sel => document.querySelector(sel);
+  const money = v => `$${Number(v||0).toFixed(2)}`;
+
+  // Load summary metrics
+  async function loadSummary(){
+    try{
+      const r = await fetch(`${GAS}?action=summary`, {cache:"no-cache"});
+      const j = await r.json();
+      if(!j.ok) throw new Error("API error");
+
+      qs("#m_pending").textContent   = j.pendingOnboarding;
+      qs("#m_active").textContent    = j.activeAssociates;
+      qs("#m_approvals").textContent = j.approvalsToday;
+      qs("#m_w24").textContent       = money(j.wallet24h);
+      qs("#m_w7").textContent        = money(j.wallet7d);
+      qs("#m_wbal").textContent      = money(j.walletBalance);
+    }catch(err){
+      console.warn("Summary load failed:", err);
+    }
+  }
+
+  loadSummary();
+  // Optional: refresh every 60s
+  setInterval(loadSummary, 60000);
+})();
+</script>
 </body>
 </html>

@@ -1,326 +1,456 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <title>Empire Control — Dashboard</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-
-  <!-- Theme -->
-  <link rel="stylesheet" href="/assets/css/empire-style.css" />
-
-  <style>
-    /* ===== Left-side layout ===== */
-    body.bg-empire-hero{ min-height:100vh; display:flex; }
-    .emp-aside{
-      width: 248px; min-width: 248px; height: 100vh; position: sticky; top:0;
-      background: rgba(16,21,32,.92); border-right:1px solid var(--emp-border);
-      padding:16px 12px; display:flex; flex-direction:column; gap:10px;
-    }
-    .emp-aside .brand{ font-weight:900; letter-spacing:.04em; margin-bottom:6px }
-    .emp-aside .emp-tab{
-      display:block; border:1px solid var(--emp-border); border-radius:12px;
-      padding:10px 12px; color:var(--emp-text); text-decoration:none; font-weight:700;
-      background:#0c111a;
-    }
-    .emp-aside .emp-tab.active{ background:#172036; border-color:#2a3350 }
-    .emp-main{ flex:1; padding:18px; }
-    .emp-view{ background:var(--emp-card); border:1px solid var(--emp-border); border-radius:16px; padding:16px; margin-bottom:14px }
-    .row{ display:flex; gap:12px; flex-wrap:wrap }
-    .kpi{ flex:1 1 180px; background:rgba(0,0,0,.18); border:1px solid var(--emp-border); border-radius:12px; padding:12px }
-    .kpi h6{ margin:2px 0 6px; color:var(--emp-muted) }
-    .kpi .val{ font-size:1.6rem; font-weight:900; color:var(--emp-accent-2) }
-    table{ width:100%; border-collapse:collapse; }
-    th,td{ padding:10px; border-bottom:1px solid rgba(255,255,255,.06); text-align:left; }
-    th{ color:var(--emp-muted); font-weight:800; }
-    .muted{ color:var(--emp-muted) }
-    .right{ text-align:right }
-    .hidden{ display:none }
-    .spinner{ font-size:.92rem; color:var(--emp-muted) }
-  </style>
-
-  <script src="/assets/js/empire-auth.js" defer></script>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>THE EMPIRE — Supreme Command Dashboard</title>
+<style>
+  :root{
+    --bg:#081123;--panel:#0f1a33;--card:#0c162c;--card2:#0b1428;--ring:#1f2a44;
+    --muted:#93a3bb;--text:#e8eef6;--accent:#facc15;--ok:#22c55e;--bad:#ef4444;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:radial-gradient(1200px 800px at 15% -10%,#19325f 0,#081123 55%) fixed;color:var(--text);font:14px/1.45 system-ui,-apple-system,Segoe UI,Roboto}
+  a{color:#93c5fd;text-decoration:none}
+  .app{display:flex;min-height:100dvh}
+  .sidebar{width:220px;background:linear-gradient(#0a1429,#091226);border-right:1px solid #0c1220;padding:18px;position:sticky;top:0;height:100dvh}
+  .brand{font-weight:800;letter-spacing:.06em;margin:2px 0 16px}
+  .nav{display:flex;flex-direction:column;gap:8px}
+  .nav button{all:unset;cursor:pointer;padding:10px 12px;border-radius:10px;color:#cbd5e1;border:1px solid transparent}
+  .nav button.active,.nav button:hover{background:var(--panel);border-color:#1f2a44;color:#fff}
+  .content{flex:1;min-width:0;padding:20px 22px}
+  .grid{display:grid;gap:14px}
+  .cols-4{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+  .cols-2{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+  .card{background:linear-gradient(180deg,var(--card),var(--card2));border:1px solid var(--ring);border-radius:14px;padding:14px;box-shadow:0 8px 22px rgba(0,0,0,.25)}
+  .kpi .lbl{color:var(--muted)}
+  .kpi .v{font-size:26px;font-weight:800;margin-top:2px}
+  .pill{display:inline-block;padding:.18rem .55rem;border-radius:999px;font-size:12px;border:1px solid #24314f;background:#101a31;color:#cbd5e1}
+  .pill.ok{border-color:#1f6b3a;background:#0f2a1a;color:#b7f7c1}
+  .pill.bad{border-color:#6b1f1f;background:#2a0f0f;color:#ffc3c3}
+  .muted{color:var(--muted)}
+  table{width:100%;border-collapse:collapse}
+  th,td{padding:10px;border-bottom:1px solid #1f2937;vertical-align:top}
+  th{position:sticky;top:0;background:#0f182d;text-align:left}
+  .right{margin-left:auto}
+  canvas{width:100%;height:220px;display:block}
+</style>
 </head>
-<body class="bg-empire-hero">
-  <!-- LEFT NAV -->
-  <aside class="emp-aside">
-    <div class="brand">⚔️ The Empire</div>
-    <a href="#overview"  data-tab="overview"  class="emp-tab active">Overview</a>
-    <a href="#cpa"       data-tab="cpa"       class="emp-tab">CPA Accounts</a>
-    <a href="#users"     data-tab="users"     class="emp-tab">Users</a>
-    <a href="#analytics" data-tab="analytics" class="emp-tab">Analytics</a>
-    <a href="#wallet"    data-tab="wallet"    class="emp-tab">Wallet</a>
-    <a href="#security"  data-tab="security"  class="emp-tab">Security</a>
-    <a href="#monitor"   data-tab="monitor"   class="emp-tab">Monitoring</a>
-    <span style="flex:1"></span>
-    <button id="emp-logout" class="emp-tab" style="text-align:center;">Logout</button>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">THE EMPIRE</div>
+    <div class="nav">
+      <button data-tab="dashboard" class="active">Dashboard</button>
+      <button data-tab="cpa">CPA Accounts</button>
+      <button data-tab="users">Users</button>
+      <button data-tab="analytics">Analytics</button>
+      <button data-tab="wallet">Payments/Wallet</button>
+      <button data-tab="security">Security</button>
+      <button data-tab="monitoring">Monitoring</button>
+      <button data-tab="logout">Logout</button>
+    </div>
+    <div class="muted" style="margin-top:14px;font-size:12px">© 2025 The Empire</div>
   </aside>
 
-  <!-- MAIN -->
-  <main class="emp-main">
-    <!-- OVERVIEW -->
-    <section id="view-overview" class="emp-view">
-      <h2>Welcome, Commander</h2>
-      <p class="muted">Commanding the Future of Affiliate Marketing.</p>
-      <div class="row" style="margin-top:10px">
-        <div class="kpi"><h6>Pending Onboarding</h6><div id="k_pending" class="val">—</div></div>
-        <div class="kpi"><h6>Active Associates</h6><div id="k_active" class="val">—</div></div>
-        <div class="kpi"><h6>Approvals Today</h6><div id="k_approvals" class="val">—</div></div>
-        <div class="kpi"><h6>Inflow (24h)</h6><div id="k_in24" class="val">—</div></div>
-        <div class="kpi"><h6>Earnings (7d)</h6><div id="k_earn7" class="val">—</div></div>
-        <div class="kpi"><h6>Conv. Rate</h6><div id="k_conv" class="val">—</div></div>
-        <div class="kpi"><h6>Clicks (7d)</h6><div id="k_clicks7" class="val">—</div></div>
+  <main class="content">
+    <!-- DASHBOARD (matches your first screenshot) -->
+    <section id="tab-dashboard">
+      <div class="row"><h2>Supreme Command Dashboard <span class="pill">Live</span></h2></div>
+      <div class="grid cols-4" style="margin-top:8px">
+        <div class="card kpi">
+          <div class="lbl">Total Earnings</div>
+          <div class="v" id="db-earnings">$0.00</div>
+          <small class="muted" id="db-earnings-note"></small>
+        </div>
+        <div class="card kpi">
+          <div class="lbl">Active Users</div>
+          <div class="v" id="db-active">0</div>
+          <small class="muted" id="db-active-note"></small>
+        </div>
+        <div class="card kpi">
+          <div class="lbl">Conversion Rate</div>
+          <div class="v" id="db-cr">0%</div>
+          <small class="muted">Industry leading</small>
+        </div>
+        <div class="card kpi">
+          <div class="lbl">Total Clicks</div>
+          <div class="v" id="db-clicks">0</div>
+          <small class="muted">Daily average</small>
+        </div>
       </div>
-      <div id="ovr_note" class="muted" style="margin-top:6px"></div>
+
+      <div class="grid cols-2" style="margin-top:12px">
+        <div class="card">
+          <div class="lbl muted">Daily Earnings</div>
+          <canvas id="chart-earnings"></canvas>
+        </div>
+        <div class="card">
+          <div class="lbl muted">Traffic Sources</div>
+          <canvas id="chart-traffic"></canvas>
+        </div>
+      </div>
     </section>
 
-    <!-- CPA ACCOUNTS -->
-    <section id="view-cpa" class="emp-view hidden">
-      <h3>CPA Accounts</h3>
-      <div id="cpa_loading" class="spinner">Loading…</div>
-      <div class="table-wrap">
-        <table id="cpa_tbl" class="hidden">
-          <thead>
-            <tr><th>Account</th><th>Network</th><th>ID</th><th class="right">Revenue</th><th class="right">Clicks</th><th class="right">Conv</th><th class="right">Active Offers</th><th>Status</th></tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </section>
-
-    <!-- USERS -->
-    <section id="view-users" class="emp-view hidden">
-      <h3>Users</h3>
+    <!-- CPA ACCOUNTS (cards + Add account modal trigger) -->
+    <section id="tab-cpa" hidden>
       <div class="row">
-        <div class="kpi"><h6>Total</h6><div id="u_total" class="val">—</div></div>
-        <div class="kpi"><h6>Active</h6><div id="u_active" class="val">—</div></div>
-        <div class="kpi"><h6>Total Earnings</h6><div id="u_earn" class="val">—</div></div>
+        <h2>CPA Accounts Management</h2>
+        <span id="cpa-meta" class="muted right"></span>
       </div>
-      <div id="users_loading" class="spinner" style="margin-top:10px">Loading…</div>
-      <table id="users_tbl" class="hidden" style="margin-top:8px">
-        <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Status</th><th>Level</th><th>Last Action</th></tr></thead>
-        <tbody></tbody>
-      </table>
-    </section>
-
-    <!-- ANALYTICS -->
-    <section id="view-analytics" class="emp-view hidden">
-      <h3>Analytics & Reports</h3>
-      <div id="ana_loading" class="spinner">Loading…</div>
-      <div id="ana_month" class="muted" style="margin-top:6px"></div>
-      <div id="ana_geo" class="muted" style="margin-top:6px"></div>
-      <table id="ana_latest" class="hidden" style="margin-top:8px">
-        <thead><tr><th>When</th><th>Country</th><th>Earnings</th><th>Clicks</th><th>Leads</th></tr></thead>
-        <tbody></tbody>
-      </table>
-    </section>
-
-    <!-- WALLET -->
-    <section id="view-wallet" class="emp-view hidden">
-      <h3>Payments / Wallet</h3>
-      <div class="row">
-        <div class="kpi"><h6>Inflow</h6><div id="w_in" class="val">—</div></div>
-        <div class="kpi"><h6>Outflow</h6><div id="w_out" class="val">—</div></div>
-        <div class="kpi"><h6>Net</h6><div id="w_net" class="val">—</div></div>
+      <div id="cpa-cards" class="grid cols-2" style="margin-top:8px">
+        <div class="card muted">Loading CPA accounts…</div>
       </div>
-      <div id="wallet_loading" class="spinner" style="margin-top:10px">Loading…</div>
-      <table id="wallet_tbl" class="hidden" style="margin-top:8px">
-        <thead><tr><th>Time</th><th>Method</th><th>Status</th><th>Dir</th><th class="right">Amount</th><th>Name</th><th>Email</th><th>Phone</th></tr></thead>
-        <tbody></tbody>
-      </table>
     </section>
 
-    <!-- SECURITY -->
-    <section id="view-security" class="emp-view hidden">
-      <h3>Security & Logs</h3>
-      <div id="sec_loading" class="spinner">Loading…</div>
-      <div class="row" style="margin-top:10px">
-        <div class="kpi"><h6>Error Count</h6><div id="s_err" class="val">—</div></div>
+    <!-- USERS (invite link + table) -->
+    <section id="tab-users" hidden>
+      <h2>Users Management</h2>
+      <div class="card">
+        <div class="row">
+          <div>
+            <div class="muted">Your Invite Link</div>
+            <div id="invite-link" style="word-break:break-all">—</div>
+          </div>
+          <span class="right muted" id="users-meta"></span>
+        </div>
       </div>
-      <table id="sec_tbl" class="hidden" style="margin-top:8px">
-        <thead><tr><th>Timestamp</th><th>User</th><th>Action</th><th>Email</th><th>Phone</th><th>Status</th></tr></thead>
-        <tbody></tbody>
-      </table>
+      <div class="card" style="margin-top:12px" id="users-table">
+        <div class="muted">Loading users…</div>
+      </div>
     </section>
 
-    <!-- MONITORING -->
-    <section id="view-monitor" class="emp-view hidden">
-      <h3>Monitoring Feed</h3>
-      <div id="mon_loading" class="spinner">Loading…</div>
-      <table id="mon_tbl" class="hidden" style="margin-top:8px">
-        <thead><tr><th>Time</th><th>Type</th><th>Message</th></tr></thead>
-        <tbody></tbody>
-      </table>
+    <!-- ANALYTICS (bar + pie + live table) -->
+    <section id="tab-analytics" hidden>
+      <h2>Analytics & Reports</h2>
+      <div class="grid cols-2">
+        <div class="card">
+          <div class="muted">Performance Overview (Jan–Jul 2025)</div>
+          <canvas id="chart-months"></canvas>
+        </div>
+        <div class="card">
+          <div class="muted">Geographic Distribution</div>
+          <canvas id="chart-geo"></canvas>
+        </div>
+      </div>
+      <div class="card" style="margin-top:12px">
+        <div class="muted">Live Performance Data</div>
+        <div id="an-live" style="margin-top:6px" class="muted">Loading…</div>
+      </div>
+    </section>
+
+    <!-- PAYMENTS / WALLET (balance + history) -->
+    <section id="tab-wallet" hidden>
+      <h2>Universal Withdrawal & History</h2>
+      <div class="grid cols-2">
+        <div class="card" id="wallet-balance">
+          <div class="muted">Balance Calculation</div>
+          <div class="grid cols-2" style="margin-top:8px">
+            <div><small class="muted">Available Balance</small><div id="w-av" class="v" style="font-weight:800">$0.00</div></div>
+            <div><small class="muted">Withdrawal Amount</small><div id="w-amt" class="v">$0.00</div></div>
+          </div>
+          <div style="margin-top:8px"><small class="muted">Remaining Balance</small><div id="w-rem" class="v" style="font-weight:800">$0.00</div></div>
+        </div>
+        <div class="card" id="wallet-history">
+          <div class="muted">Transaction History & Status</div>
+          <div id="wallet-table" style="margin-top:6px" class="muted">Loading…</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECURITY (overview KPIs + table) -->
+    <section id="tab-security" hidden>
+      <h2>Security Overview</h2>
+      <div class="grid cols-4" style="margin-bottom:10px">
+        <div class="card kpi"><div class="lbl">Alerts (24h)</div><div class="v" id="sec-alerts">0</div></div>
+        <div class="card kpi"><div class="lbl">Blocks</div><div class="v" id="sec-blocks">0</div></div>
+        <div class="card kpi"><div class="lbl">Failed Logins</div><div class="v" id="sec-fails">0</div></div>
+        <div class="card kpi"><div class="lbl">Status</div><div class="v" id="sec-status">OK</div></div>
+      </div>
+      <div class="card" id="sec-table"><div class="muted">Loading security events…</div></div>
+    </section>
+
+    <!-- MONITORING (live activity feed) -->
+    <section id="tab-monitoring" hidden>
+      <h2>System Monitoring</h2>
+      <div class="card" id="mon-feed"><div class="muted">Loading activity feed…</div></div>
+    </section>
+
+    <section id="tab-logout" hidden>
+      <h2>Logout</h2>
+      <div class="card muted">Close this tab to exit.</div>
     </section>
   </main>
+</div>
 
-  <script>
-    // Tabs
-    document.addEventListener("click", (ev) => {
-      const a = ev.target.closest(".emp-tab");
-      if (!a || a.id === "emp-logout") return;
-      ev.preventDefault();
-      document.querySelectorAll(".emp-tab").forEach(t => t.classList.remove("active"));
-      a.classList.add("active");
-      const key = a.dataset.tab || "overview";
-      document.querySelectorAll(".emp-view").forEach(v => v.classList.add("hidden"));
-      document.getElementById(`view-${key}`).classList.remove("hidden");
-      // lazy load on first view
-      if (!document.getElementById(`view-${key}`).dataset.loaded) {
-        document.getElementById(`view-${key}`).dataset.loaded = "1";
-        loadSection(key).catch(console.error);
-      }
-    });
+<script>
+/** CONFIG */
+const BASE="https://script.google.com/macros/s/AKfycbysJmVXlrOE1_J3uw5wMqs9cnKtj-uuoxj0Mmj8JWTj7eZMvp9XJYXrs-0leocNXI6w/exec";
+const PASS="GENERALISIMO@2025";
 
-    document.getElementById("emp-logout")?.addEventListener("click", () => {
-      try { window.EmpireAuth?.logout(); } catch {}
-      location.href = "/login.html";
-    });
+/** UTIL */
+const $=s=>document.querySelector(s);
+function fmtMoney(n){n=Number(n||0);return n.toLocaleString(undefined,{style:"currency",currency:"USD",maximumFractionDigits:2})}
+function fmtNum(n){return Number(n||0).toLocaleString()}
+function fmtTime(t){try{return new Date(t).toLocaleString()}catch(_){return t||""}}
+async function fetchJSON(action,extra={}){const u=new URL(BASE);u.searchParams.set("action",action);u.searchParams.set("pass",PASS);for(const[k,v] of Object.entries(extra))u.searchParams.set(k,v);const r=await fetch(u,{cache:"no-store"});if(!r.ok)throw new Error("HTTP "+r.status);const j=await r.json();if(j&&j.ok===false)throw new Error(j.error||"error");return j}
+async function tryActions(primary,fallback){try{return await primary()}catch(_){return await fallback()}}
 
-    function money(x){ return typeof x==='number' ? '$'+x.toLocaleString() : '$'+Number(x||0).toLocaleString(); }
+/** SIMPLE CANVAS DRAWERS (no external libs) */
+function barChart(canvas,series,labels){
+  const ctx=canvas.getContext("2d"),w=canvas.width=canvas.clientWidth,h=canvas.height=canvas.clientHeight, pad=24;
+  ctx.clearRect(0,0,w,h);
+  const N=series.length||0; if(!N) return;
+  const max=Math.max(...series,1); const bw=(w-pad*2)/N*0.7, gap=(w-pad*2)/N*0.3;
+  series.forEach((v,i)=>{
+    const x=pad+i*(bw+gap); const bh=(h-pad*2)*(v/max);
+    ctx.fillStyle="#facc15"; ctx.fillRect(x,h-pad-bh,bw,bh);
+    ctx.fillStyle="#9fb0c5"; ctx.font="12px system-ui"; ctx.fillText(labels[i]||"",x, h-6);
+  });
+}
+function donut(canvas,parts){
+  const ctx=canvas.getContext("2d"),w=canvas.width=canvas.clientWidth,h=canvas.height=canvas.clientHeight;
+  ctx.clearRect(0,0,w,h); const cx=w/2, cy=h/2, r=Math.min(w,h)/2-10, ir=r*0.55;
+  const cols=["#facc15","#60a5fa","#34d399","#fb923c","#e879f9","#f87171","#22d3ee"];
+  const sum=parts.reduce((a,b)=>a+b.v,0)||1; let a0=-Math.PI/2;
+  parts.forEach((p,i)=>{const a1=a0+2*Math.PI*(p.v/sum); ctx.beginPath(); ctx.moveTo(cx,cy); ctx.fillStyle=cols[i%cols.length]; ctx.arc(cx,cy,r,a0,a1); ctx.lineTo(cx,cy); ctx.fill(); a0=a1;});
+  // hole
+  ctx.globalCompositeOperation="destination-out"; ctx.beginPath(); ctx.arc(cx,cy,ir,0,2*Math.PI); ctx.fill(); ctx.globalCompositeOperation="source-over";
+}
 
-    async function loadOverview(){
-      const cm = await EmpireAuth.commanderMetrics();
-      document.getElementById('k_pending').textContent = cm.pendingOnboarding ?? 0;
-      document.getElementById('k_active').textContent  = cm.activeAssociates ?? 0;
-      document.getElementById('k_approvals').textContent= cm.approvalsToday ?? 0;
-      document.getElementById('k_in24').textContent    = money(cm.walletInflow24 ?? 0);
-      document.getElementById('k_earn7').textContent   = money(cm.earningsWeek ?? 0);
-      document.getElementById('k_conv').textContent    = (cm.conversionRate ?? 0).toFixed(2) + '%';
-      document.getElementById('k_clicks7').textContent = cm.totalClicksWeek ?? 0;
-      document.getElementById('ovr_note').textContent  = 'Updated ' + (cm.updatedAt || '');
+/** DASHBOARD */
+async function loadDashboard(){
+  const [summary, wallet, users, analytics] = await Promise.all([
+    fetchJSON("summary").catch(()=>({})),
+    fetchJSON("walletOverview").catch(()=>({})),
+    fetchJSON("usersOverview").catch(()=>({})),
+    fetchJSON("analyticsOverview").catch(()=>({}))
+  ]);
+
+  // KPIs
+  const totalEarn = (wallet.net ?? wallet.inflow ?? 0);
+  $("#db-earnings").textContent = fmtMoney(totalEarn);
+  $("#db-earnings-note").textContent = wallet.updatedAt?`Updated ${fmtTime(wallet.updatedAt)}`:"";
+
+  $("#db-active").textContent = fmtNum(users.active ?? 0);
+  $("#db-active-note").textContent = users.updatedAt?`+ last sync ${fmtTime(users.updatedAt)}`:"";
+
+  const cr = (analytics.conversionRate ?? 0);
+  $("#db-cr").textContent = (typeof cr==="number"?cr.toFixed(2):cr)+"%";
+
+  $("#db-clicks").textContent = fmtNum(summary.totalClicksWeek ?? 0);
+
+  // Daily Earnings (derive from last 7 days wallet recent)
+  const w = await fetchJSON("listwallet",{limit:200}).catch(()=>({recent:[]}));
+  const days = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+  const sums = [0,0,0,0,0,0,0];
+  (w.recent||[]).forEach(r=>{
+    if(r.Direction!=="in") return;
+    const d=new Date(r.Time).getDay(); // 0 Sun … 6 Sat
+    const idx=(d+6)%7; // Mon=0
+    sums[idx]+=Number(r.Amount||0);
+  });
+  barChart($("#chart-earnings"),sums,days);
+
+  // Traffic sources (derive by Method)
+  const byMethod={}; (w.recent||[]).forEach(r=>{if(r.Direction==='in'){byMethod[r.Method||"Other"]=(byMethod[r.Method||"Other"]||0)+Number(r.Amount||0)}});
+  const parts=Object.entries(byMethod).map(([k,v])=>({k,v}));
+  donut($("#chart-traffic"),parts.length?parts:[{k:"No Data",v:1}]);
+}
+
+/** CPA ACCOUNTS */
+async function loadCPA(){
+  const cards=$("#cpa-cards");
+  await tryActions(
+    async()=>{
+      const data=await fetchJSON("listCPAAccounts");
+      const items=data.items||[];
+      $("#cpa-meta").textContent = `${fmtNum(items.length)} accounts`;
+      if(!items.length){cards.innerHTML='<div class="card muted">No CPA accounts.</div>';return;}
+      cards.innerHTML=items.map(a=>`
+        <div class="card">
+          <div class="row"><strong>${a.name||"CPA"}</strong><span class="pill ${/active/i.test(a.status||"")?"ok":""} right">${a.status||"ACTIVE"}</span></div>
+          <div class="grid cols-4" style="margin-top:8px">
+            <div><small class="muted">Active Offers</small><div class="v">${fmtNum(a.activeOffers||0)}</div></div>
+            <div><small class="muted">Revenue</small><div class="v">${fmtMoney(a.revenue||0)}</div></div>
+            <div><small class="muted">Clicks</small><div class="v">${fmtNum(a.clicks||0)}</div></div>
+            <div><small class="muted">Conversion</small><div class="v">${(a.conversion||0)}%</div></div>
+          </div>
+        </div>`).join("");
+    },
+    async()=>{ // fallback from wallet by Method
+      const w=await fetchJSON("listwallet",{limit:200}).catch(()=>({recent:[]}));
+      const agg={}; (w.recent||[]).forEach(r=>{const k=r.Method||"Unknown"; agg[k]=agg[k]||{name:k,status:"ACTIVE",activeOffers:0,revenue:0,clicks:0,conversion:0}; if(r.Direction==='in') agg[k].revenue+=Number(r.Amount||0)});
+      const items=Object.values(agg);
+      $("#cpa-meta").textContent = `derived`;
+      cards.innerHTML = items.length? items.map(a=>`
+        <div class="card">
+          <div class="row"><strong>${a.name}</strong><span class="pill ok right">ACTIVE</span></div>
+          <div class="grid cols-4" style="margin-top:8px">
+            <div><small class="muted">Active Offers</small><div class="v">—</div></div>
+            <div><small class="muted">Revenue</small><div class="v">${fmtMoney(a.revenue)}</div></div>
+            <div><small class="muted">Clicks</small><div class="v">—</div></div>
+            <div><small class="muted">Conversion</small><div class="v">—</div></div>
+          </div>
+        </div>`).join("") : '<div class="card muted">No CPA sources found.</div>';
     }
+  );
+}
 
-    async function loadCPA(){
-      const data = await EmpireAuth.listCPAAccounts();
-      const tb = document.querySelector('#cpa_tbl tbody');
-      tb.innerHTML = '';
-      (data.items||[]).forEach(r=>{
-        const tr = document.createElement('tr');
-        tr.innerHTML =
-          `<td>${r.accountName||''}</td><td>${r.network||''}</td><td>${r.accountId||''}</td>`+
-          `<td class="right">${money(r.revenue||0)}</td>`+
-          `<td class="right">${(r.clicks||0).toLocaleString()}</td>`+
-          `<td class="right">${(r.conversion||0)}</td>`+
-          `<td class="right">${(r.activeOffers||0)}</td>`+
-          `<td>${r.status||''}</td>`;
-        tb.appendChild(tr);
+/** USERS */
+async function loadUsers(){
+  const [ov, list] = await Promise.all([
+    fetchJSON("usersOverview").catch(()=>({})),
+    fetchJSON("listassociates",{limit:200}).catch(()=>({items:[]}))
+  ]);
+  $("#users-meta").textContent = ov.updatedAt?`Updated ${fmtTime(ov.updatedAt)}`:"";
+  $("#invite-link").textContent = ov.inviteLink || "—";
+
+  const rows=(list.items||[]).map(x=>`
+    <tr>
+      <td>${x.Username||x.Name||"-"}</td>
+      <td>${x.Email||"-"}</td>
+      <td>${x["Phone"]||x["Phone Number"]||"-"}</td>
+      <td>${x.Authority||x.Level||x["Current Level"]||"-"}</td>
+      <td>${x.Earnings?fmtMoney(x.Earnings):"-"}</td>
+      <td><span class="pill ${/active/i.test(x.Status||"")?"ok":""}">${x.Status||"—"}</span></td>
+      <td class="muted">${x.Actions||"View • Edit"}</td>
+    </tr>`).join("") || `<tr><td colspan="7" class="muted">No users.</td></tr>`;
+  $("#users-table").innerHTML=`
+    <div style="overflow:auto;max-height:65vh">
+      <table>
+        <thead><tr>
+          <th>Username</th><th>Email</th><th>Phone</th><th>Authority</th><th>Earnings</th><th>Status</th><th>Actions</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+}
+
+/** ANALYTICS */
+async function loadAnalytics(){
+  const an = await fetchJSON("analyticsOverview").catch(()=>({}));
+  const months = an.monthly || {};
+  const labels = Object.keys(months);
+  const values = labels.map(k=>Number(months[k]||0));
+  barChart($("#chart-months"), values, labels);
+
+  const geo = an.geo || {};
+  const parts = Object.keys(geo).map(k=>({k,v:Number(geo[k]||0)}));
+  donut($("#chart-geo"), parts.length?parts:[{k:"No Data",v:1}]);
+
+  const live = an.latest || [];
+  $("#an-live").innerHTML = live.length? table(live,["Date & Time","Country","Offer Type","Device","Clicks","Leads","Earnings ($)"]) : "<span class='muted'>No live rows.</span>";
+
+  function table(rows, headers){
+    return `<div style="overflow:auto;max-height:55vh"><table><thead><tr>${headers.map(h=>`<th>${h}</th>`).join("")}</tr></thead><tbody>${
+      rows.map(r=>`<tr>${headers.map(h=>`<td>${r[h]??""}</td>`).join("")}</tr>`).join("")
+    }</tbody></table></div>`;
+  }
+}
+
+/** WALLET */
+async function loadWallet(){
+  const [ov, list] = await Promise.all([
+    fetchJSON("walletOverview").catch(()=>({inflow:0,outflow:0,net:0})),
+    fetchJSON("listwallet",{limit:100}).catch(()=>({recent:[]}))
+  ]);
+  $("#w-av").textContent  = fmtMoney(ov.net ?? 0);
+  $("#w-amt").textContent = fmtMoney(0);
+  $("#w-rem").textContent = fmtMoney(ov.net ?? 0);
+
+  const rows=(list.recent||[]).map(x=>`
+    <tr>
+      <td>${fmtTime(x.Time)}</td>
+      <td>${fmtMoney(x.Amount)}</td>
+      <td>${x.Method||"-"}</td>
+      <td>${x.Status||"-"}</td>
+      <td><span class="pill ${x.Direction==='in'?'ok':x.Direction==='out'?'bad':''}">${x.Direction||"—"}</span></td>
+      <td>${x.Name||"-"}</td>
+      <td>${x.Email||"-"}</td>
+      <td>${x.Phone||"-"}</td>
+    </tr>`).join("") || `<tr><td colspan="8" class="muted">No transactions.</td></tr>`;
+  $("#wallet-table").innerHTML=`
+    <div style="overflow:auto;max-height:65vh">
+      <table>
+        <thead><tr><th>Time</th><th>Amount</th><th>Method</th><th>Status</th><th>Dir</th><th>Name</th><th>Email</th><th>Phone</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+}
+
+/** SECURITY */
+async function loadSecurity(){
+  await tryActions(
+    async()=>{
+      const s=await fetchJSON("securityOverview");
+      $("#sec-alerts").textContent=fmtNum(s.alerts24h||0);
+      $("#sec-blocks").textContent=fmtNum(s.blocks||0);
+      $("#sec-fails").textContent =fmtNum(s.failedLogins||0);
+      $("#sec-status").textContent=s.status||"OK";
+      render(s.items||[]);
+    },
+    async()=>{
+      const m=await fetchJSON("monitoringFeed").catch(()=>({recent:[]}));
+      const items=(m.recent||[]).filter(r=>{
+        const a=(r.Action||"").toLowerCase(); return a.includes("security")||a.includes("blocked")||a.includes("failed");
       });
-      document.getElementById('cpa_loading').classList.add('hidden');
-      document.getElementById('cpa_tbl').classList.remove('hidden');
+      $("#sec-alerts").textContent=fmtNum(items.length);
+      $("#sec-blocks").textContent=fmtNum(items.filter(i=>/block/i.test(i.Action||"")).length);
+      $("#sec-fails").textContent =fmtNum(items.filter(i=>/fail/i.test(i.Action||"")).length);
+      $("#sec-status").textContent="OK";
+      render(items);
     }
+  );
+  function render(items){
+    const rows=items.map(x=>`
+      <tr>
+        <td>${fmtTime(x.Timestamp||x.t)}</td>
+        <td>${x.User||"-"}</td>
+        <td>${x.Action||x.type||"-"}</td>
+        <td>${x.Email||"-"}</td>
+        <td>${x["Phone Number"]||"-"}</td>
+        <td class="muted">${x.Status||x.msg||""}</td>
+      </tr>`).join("") || `<tr><td colspan="6" class="muted">No security events.</td></tr>`;
+    $("#sec-table").innerHTML=`<div style="overflow:auto;max-height:65vh">
+      <table><thead><tr><th>Time</th><th>User</th><th>Action</th><th>Email</th><th>Phone</th><th>Details</th></tr></thead>
+      <tbody>${rows}</tbody></table></div>`;
+  }
+}
 
-    async function loadUsers(){
-      const data = await EmpireAuth.usersOverview();
-      document.getElementById('u_total').textContent = data.total ?? 0;
-      document.getElementById('u_active').textContent= data.active ?? 0;
-      document.getElementById('u_earn').textContent  = money(data.totalEarnings ?? 0);
+/** MONITORING */
+async function loadMonitoring(){
+  const m=await fetchJSON("monitoringFeed").catch(()=>({recent:[]}));
+  const rows=(m.recent||[]).map(x=>`
+    <tr>
+      <td>${fmtTime(x.Timestamp||x.t)}</td>
+      <td>${x.User||"-"}</td>
+      <td>${x.Action||x.type||"-"}</td>
+      <td>${x.Email||"-"}</td>
+      <td>${x["Phone Number"]||"-"}</td>
+      <td class="muted">${x.Status||x.msg||""}</td>
+    </tr>`).join("") || `<tr><td colspan="6" class="muted">No activity.</td></tr>`;
+  $("#mon-feed").innerHTML=`
+    <div style="overflow:auto;max-height:70vh">
+      <table>
+        <thead><tr><th>Time</th><th>User</th><th>Action</th><th>Email</th><th>Phone</th><th>Details</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+}
 
-      const tb = document.querySelector('#users_tbl tbody');
-      tb.innerHTML = '';
-      (data.items||[]).forEach(r=>{
-        const tr = document.createElement('tr');
-        tr.innerHTML =
-          `<td>${r['Name']||''}</td><td>${r['Email']||''}</td><td>${r['Phone No']||''}</td>`+
-          `<td>${r['Status']||''}</td><td>${r['Level']||''}</td><td>${r['Last_Action_At']||''}</td>`;
-        tb.appendChild(tr);
-      });
-      document.getElementById('users_loading').classList.add('hidden');
-      document.getElementById('users_tbl').classList.remove('hidden');
-    }
-
-    async function loadAnalytics(){
-      const data = await EmpireAuth.analyticsOverview();
-      // month summary
-      const months = Object.entries(data.monthly||{}).sort((a,b)=>a[0].localeCompare(b[0]));
-      document.getElementById('ana_month').textContent =
-        months.length ? ('Monthly: ' + months.map(([k,v])=>`${k} ${money(v)}`).join(' • ')) : 'Monthly: —';
-      // geo
-      const geo = Object.entries(data.geo||{}).sort((a,b)=>b[1]-a[1]).slice(0,10);
-      document.getElementById('ana_geo').textContent =
-        geo.length ? ('Top Countries: ' + geo.map(([k,v])=>`${k} ${money(v)}`).join(' • ')) : 'Top Countries: —';
-      // latest table (if wallet fallback, columns adapt)
-      const tb = document.querySelector('#ana_latest tbody');
-      tb.innerHTML = '';
-      (data.latest||[]).forEach(r=>{
-        const when = r['Date & Time'] || r['Time'] || '';
-        const row = document.createElement('tr');
-        if (r['Date & Time']) {
-          row.innerHTML = `<td>${when}</td><td>${r['Country']||''}</td><td>${money(r['Earnings ($)']||0)}</td><td>${r['Clicks']||''}</td><td>${r['Leads']||''}</td>`;
-        } else {
-          row.innerHTML = `<td>${when}</td><td>${r['Method']||''}</td><td>${money(r['Amount']||0)}</td><td>${r['Status']||''}</td><td>${r['Direction']||''}</td>`;
-        }
-        tb.appendChild(row);
-      });
-      document.getElementById('ana_loading').classList.add('hidden');
-      document.getElementById('ana_latest').classList.remove('hidden');
-    }
-
-    async function loadWallet(){
-      const data = await EmpireAuth.walletOverview();
-      document.getElementById('w_in').textContent  = money(data.inflow||0);
-      document.getElementById('w_out').textContent = money(data.outflow||0);
-      document.getElementById('w_net').textContent = money(data.net||0);
-
-      const tb = document.querySelector('#wallet_tbl tbody');
-      tb.innerHTML = '';
-      (data.recent||[]).forEach(w=>{
-        const tr = document.createElement('tr');
-        tr.innerHTML =
-          `<td>${w['Time']||''}</td><td>${w['Method']||''}</td><td>${w['Status']||''}</td>`+
-          `<td>${w['Direction']||''}</td><td class="right">${money(w['Amount']||0)}</td>`+
-          `<td>${w['Name']||''}</td><td>${w['Email']||''}</td><td>${w['Phone']||w['Phone Number']||''}</td>`;
-        tb.appendChild(tr);
-      });
-      document.getElementById('wallet_loading').classList.add('hidden');
-      document.getElementById('wallet_tbl').classList.remove('hidden');
-    }
-
-    async function loadSecurity(){
-      const data = await EmpireAuth.securityOverview();
-      document.getElementById('s_err').textContent = data.errorCount ?? 0;
-      const tb = document.querySelector('#sec_tbl tbody');
-      tb.innerHTML = '';
-      (data.recent||[]).forEach(r=>{
-        const tr = document.createElement('tr');
-        tr.innerHTML =
-          `<td>${r['Timestamp']||r['Time']||''}</td><td>${r['User']||''}</td><td>${r['Action']||''}</td>`+
-          `<td>${r['Email']||''}</td><td>${r['Phone Number']||''}</td><td>${r['Status']||''}</td>`;
-        tb.appendChild(tr);
-      });
-      document.getElementById('sec_loading').classList.add('hidden');
-      document.getElementById('sec_tbl').classList.remove('hidden');
-    }
-
-    async function loadMonitoring(){
-      const data = await EmpireAuth.monitoringFeed();
-      const tb = document.querySelector('#mon_tbl tbody');
-      tb.innerHTML = '';
-      (data.items||[]).forEach(i=>{
-        const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${i.t||''}</td><td>${i.type||''}</td><td>${i.msg||''}</td>`;
-        tb.appendChild(tr);
-      });
-      document.getElementById('mon_loading').classList.add('hidden');
-      document.getElementById('mon_tbl').classList.remove('hidden');
-    }
-
-    async function loadSection(key){
-      switch(key){
-        case 'overview':  return loadOverview();
-        case 'cpa':       return loadCPA();
-        case 'users':     return loadUsers();
-        case 'analytics': return loadAnalytics();
-        case 'wallet':    return loadWallet();
-        case 'security':  return loadSecurity();
-        case 'monitor':   return loadMonitoring();
-      }
-    }
-
-    // Initial boot
-    window.addEventListener('DOMContentLoaded', async () => {
-      // default load overview
-      document.querySelector('.emp-tab[data-tab="overview"]').click();
-    });
-  </script>
+/** TABS */
+const TAB_FN={
+  dashboard:loadDashboard, cpa:loadCPA, users:loadUsers, analytics:loadAnalytics,
+  wallet:loadWallet, security:loadSecurity, monitoring:loadMonitoring, logout:()=>{}
+};
+function showTab(id){
+  document.querySelectorAll(".nav button").forEach(b=>b.classList.toggle("active",b.dataset.tab===id));
+  document.querySelectorAll("main > section").forEach(s=>s.hidden = s.id !== "tab-"+id);
+  TAB_FN[id]&&TAB_FN[id]();
+}
+document.querySelectorAll(".nav button").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.tab)));
+showTab("dashboard");
+</script>
 </body>
 </html>

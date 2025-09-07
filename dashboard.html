@@ -1,4 +1,4 @@
-<!-- File: dashboard.html -->
+<!-- File: dashboard.html (FINAL – wired to GAS 2025-09-07) -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,7 +6,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>THE EMPIRE — Supreme Command</title>
 
-<!-- ======= THEME (Empire colors, crest, background) ======= -->
 <style>
 :root{
   --emp-bg-1:#0b1020; --emp-bg-2:#081225; --emp-sheen:#0d1b3a;
@@ -25,8 +24,6 @@ body{
     linear-gradient(180deg, var(--emp-bg-2) 0%, var(--emp-bg-1) 100%);
   min-height:100svh;
 }
-
-/* ----- layout: left nav + content ----- */
 .layout{display:grid;grid-template-columns:260px 1fr;min-height:100svh}
 .sidebar{
   background:
@@ -34,69 +31,40 @@ body{
     linear-gradient(180deg,#0a0f1c,#0b1220 70%);
   border-right:1px solid var(--emp-border);
   padding:14px 12px 18px;
-  position:relative;
 }
-.brand{
-  display:flex;align-items:center;gap:10px;padding:8px 8px 14px;margin-bottom:8px;
-  border-bottom:1px dashed rgba(255,255,255,.08);
-}
-.brand .crest{
-  width:36px;height:36px;border-radius:10px;
-  display:grid;place-items:center;
-  background:linear-gradient(180deg,#1b2a4a,#101a31);
-  box-shadow:0 10px 28px rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.06);
-}
+.brand{display:flex;align-items:center;gap:10px;padding:8px 8px 14px;margin-bottom:8px;border-bottom:1px dashed rgba(255,255,255,.08)}
+.brand .crest{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;background:linear-gradient(180deg,#1b2a4a,#101a31);box-shadow:0 10px 28px rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.06)}
 .brand .crest svg{filter:drop-shadow(0 6px 20px rgba(89,255,165,.45))}
 .brand .title{font-weight:900;letter-spacing:.08em}
 .brand .title span{color:#a5b4fc}
-
-.nav a{
-  display:block;padding:11px 12px;margin:8px 0;border-radius:12px;text-decoration:none;
-  color:var(--text);background:var(--ink);border:1px solid var(--emp-border);
-  font-weight:700;letter-spacing:.02em;
-}
+.nav a{display:block;padding:11px 12px;margin:8px 0;border-radius:12px;text-decoration:none;color:var(--text);background:var(--ink);border:1px solid var(--emp-border);font-weight:700;letter-spacing:.02em}
 .nav a.active{background:#172036;border-color:#2a3350;box-shadow:0 0 0 2px rgba(36,108,255,.09) inset}
 .content{padding:20px}
-
-/* ----- sections, cards, tables ----- */
 .section{margin:0 0 22px}
-.section h2{
-  font-size:1.05rem;letter-spacing:.08em;text-transform:uppercase;color:#cbd5e1;
-  margin:0 0 10px;display:flex;align-items:center;gap:8px
-}
+.section h2{font-size:1.05rem;letter-spacing:.08em;text-transform:uppercase;color:#cbd5e1;margin:0 0 10px;display:flex;align-items:center;gap:8px}
 .badge{display:inline-block;padding:4px 8px;border-radius:999px;font-size:.75rem;background:#0d1526;border:1px solid var(--emp-border)}
 .right{margin-left:auto}
-
 .card{background:var(--emp-card);border:1px solid var(--emp-border);border-radius:16px;padding:16px}
 .grid{display:grid;gap:14px}
 .grid.kpi-4{grid-template-columns:repeat(4,minmax(180px,1fr))}
 .grid.two{grid-template-columns:1fr 1fr}
 .grid.three{grid-template-columns:repeat(3,1fr)}
 .split{display:grid;grid-template-columns:1fr 420px;gap:14px}
-
 .kpi{display:flex;flex-direction:column;gap:6px}
 .kpi .lbl{color:var(--muted);font-weight:800}
 .kpi .val{font-size:1.7rem;font-weight:900;color:var(--mint);text-shadow:0 10px 28px rgba(0,0,0,.35)}
-
 .table{width:100%;border-collapse:separate;border-spacing:0 8px}
 .table th{text-align:left;font-size:.86rem;color:#a3aed0;font-weight:800;padding:6px 8px}
 .table td{padding:10px 8px;background:#0c111a;border:1px solid var(--emp-border);border-left:none;border-right:none}
-
 .toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:6px 0 12px}
-.input,select,textarea{
-  background:#0c111a;color:var(--text);border:1px solid #2a3350;border-radius:10px;padding:10px 10px
-}
-.btn{
-  background:linear-gradient(180deg,var(--gold) 0%,var(--gold-2) 100%);
-  color:#161000;font-weight:900;border-radius:12px;padding:10px 14px;border:none;cursor:pointer
-}
+.input,select,textarea{background:#0c111a;color:var(--text);border:1px solid #2a3350;border-radius:10px;padding:10px 10px}
+.btn{background:linear-gradient(180deg,var(--gold) 0%,var(--gold-2) 100%);color:#161000;font-weight:900;border-radius:12px;padding:10px 14px;border:none;cursor:pointer}
 .btn.ghost{background:transparent;color:var(--text);border:1px solid var(--emp-border)}
 .muted{color:var(--muted)}
 .hidden{display:none!important}
 @media (max-width:1080px){.layout{grid-template-columns:1fr}.split{grid-template-columns:1fr}.grid.kpi-4{grid-template-columns:1fr 1fr}.grid.two,.grid.three{grid-template-columns:1fr}}
 </style>
 
-<!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
 </head>
 <body>
@@ -104,7 +72,6 @@ body{
   <aside class="sidebar">
     <div class="brand">
       <div class="crest" aria-hidden="true">
-        <!-- Empire Crest (inline SVG) -->
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
           <path d="M12 2L3 7l9 5l9-5-9-5z" fill="#59ffa5"/>
           <path d="M3 7v6l9 5 9-5V7l-9 5-9-5z" fill="#ffd166" opacity=".3"/>
@@ -124,7 +91,7 @@ body{
   </aside>
 
   <main class="content">
-    <!-- ======= OVERVIEW ======= -->
+    <!-- OVERVIEW -->
     <section class="section" id="view-overview">
       <h2>Supreme Command Dashboard <span class="badge">LIVE</span><span class="right muted" id="ov-updated"></span></h2>
       <div class="grid kpi-4">
@@ -139,12 +106,12 @@ body{
       </div>
     </section>
 
-    <!-- ======= CPA ACCOUNTS ======= -->
+    <!-- CPA -->
     <section class="section hidden" id="view-cpa">
       <h2>CPA Accounts Management <span class="badge">LIVE</span></h2>
       <div class="toolbar">
         <button class="btn" id="btn-rotate">Rotate 1300 Offers Now</button>
-        <span class="muted">Auto-throttled to 1/hour to respect GAS quotas.</span>
+        <span class="muted">Auto-throttled to 1/hour (GAS quotas).</span>
       </div>
       <div class="card">
         <table class="table" id="tbl-cpa"><thead><tr>
@@ -165,7 +132,7 @@ body{
       </div>
     </section>
 
-    <!-- ======= USERS ======= -->
+    <!-- USERS -->
     <section class="section hidden" id="view-users">
       <h2>Users Management <span class="badge">LIVE</span></h2>
       <div class="toolbar">
@@ -192,7 +159,7 @@ body{
       </div>
     </section>
 
-    <!-- ======= ANALYTICS ======= -->
+    <!-- ANALYTICS -->
     <section class="section hidden" id="view-analytics">
       <h2>Analytics & Reports <span class="badge">LIVE</span></h2>
       <div class="grid two">
@@ -207,7 +174,7 @@ body{
       </div>
     </section>
 
-    <!-- ======= WALLET ======= -->
+    <!-- WALLET -->
     <section class="section hidden" id="view-wallet">
       <h2>Universal Withdrawal & History <span class="badge">LIVE</span></h2>
       <div class="grid three">
@@ -229,11 +196,15 @@ body{
             <input class="input" id="wl-email" placeholder="Email" />
             <input class="input" id="wl-phone" placeholder="Phone" />
             <input type="number" class="input" id="wl-amount" placeholder="Amount (USD)" />
-            <select class="input" id="wl-dir"><option value="out">Withdraw (out)</option><option value="in">Deposit (in)</option></select>
-            <select class="input" id="wl-method-cat"><option value="bank">Bank</option><option value="fintech">Fintech</option><option value="crypto">Crypto</option></select>
+            <select class="input" id="wl-dir">
+              <option value="out">Withdraw (out)</option><option value="in">Deposit (in)</option>
+            </select>
+            <select class="input" id="wl-method-cat">
+              <option value="bank">Bank</option><option value="fintech">Fintech</option><option value="crypto">Crypto</option>
+            </select>
           </div>
           <select class="input" id="wl-method" style="margin-top:8px"></select>
-          <textarea class="input" id="wl-notes" placeholder="Notes (routing details, wallet address, etc.)" style="margin-top:8px;width:100%;min-height:90px"></textarea>
+          <textarea class="input" id="wl-notes" placeholder="Notes (routing / wallet address, etc.)" style="margin-top:8px;width:100%;min-height:90px"></textarea>
           <div class="toolbar" style="margin-top:10px">
             <button class="btn" id="wl-validate">Validate Holder</button>
             <button class="btn" id="wl-submit">Request</button>
@@ -243,7 +214,7 @@ body{
       </div>
     </section>
 
-    <!-- ======= SECURITY ======= -->
+    <!-- SECURITY -->
     <section class="section hidden" id="view-security">
       <h2>Security Overview <span class="badge">LIVE</span></h2>
       <div class="grid three">
@@ -257,7 +228,7 @@ body{
       </div>
     </section>
 
-    <!-- ======= MONITORING ======= -->
+    <!-- MONITORING -->
     <section class="section hidden" id="view-monitoring">
       <h2>System Monitoring <span class="badge">LIVE</span></h2>
       <div class="card">
@@ -269,17 +240,18 @@ body{
   </main>
 </div>
 
-<!-- Injected by Code.gs -->
-<script>const EMP_API = '<?= WEB_APP_URL ?>';</script>
+<!-- SET YOUR GAS URL HERE -->
+<script>
+const EMP_API = 'YOUR_WEB_APP_URL_HERE';
+</script>
 
-<!-- ======= DASH LOGIC (live calls to GAS endpoints) ======= -->
 <script>
 const $=s=>document.querySelector(s), $all=s=>Array.from(document.querySelectorAll(s));
-function qs(o){return Object.entries(o).map(([k,v])=>encodeURIComponent(k)+'='+encodeURIComponent(v)).join('&')}
-function fmtMoney(n){n=Number(n||0);return n.toLocaleString(undefined,{style:'currency',currency:'USD',maximumFractionDigits:2});}
-function fmtDate(v){try{const d=new Date(v);return d.toLocaleString()}catch(_){return String(v||'')}}
-function esc(s){return String(s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&gt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]) )}
-function num(x){const n=Number(String(x).replace(/[^0-9.\-]/g,''));return isFinite(n)?n:0}
+const qs=o=>Object.entries(o).map(([k,v])=>encodeURIComponent(k)+'='+encodeURIComponent(v)).join('&');
+const fmtMoney=n=>Number(n||0).toLocaleString(undefined,{style:'currency',currency:'USD',maximumFractionDigits:2});
+const fmtDate=v=>{try{const d=new Date(v);return d.toLocaleString()}catch(_){return String(v||'')}};
+const esc=s=>String(s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const num=x=>{const n=Number(String(x).replace(/[^0-9.\-]/g,''));return isFinite(n)?n:0};
 
 async function api(action, params=null, method='GET'){
   let url = EMP_API + '?action=' + encodeURIComponent(action);
@@ -299,7 +271,7 @@ $all('.nav a').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();setA
 
 let chartDaily,chartSources,chartMonthly,chartGeo;
 
-/* -------- Overview -------- */
+/* ---------- Overview ---------- */
 async function loadOverview(){
   const res=await api('overview');
   if(!res.ok) return;
@@ -321,7 +293,7 @@ async function loadOverview(){
   });
 }
 
-/* -------- CPA -------- */
+/* ---------- CPA ---------- */
 async function loadCPA(){
   const r=await api('cpaAccounts'); const tb=$('#tbl-cpa tbody'); tb.innerHTML='';
   if(!r.ok){tb.innerHTML='<tr><td colspan="7">Unable to load</td></tr>';return;}
@@ -335,16 +307,20 @@ async function loadCPA(){
 }
 $('#btn-rotate').addEventListener('click',async()=>{
   const b=$('#btn-rotate'); b.disabled=true; b.textContent='Rotating…';
-  try{ await api('cpaRotateNow'); await loadCPA(); } finally { b.disabled=false; b.textContent='Rotate 1300 Offers Now'; }
+  try{ await api('cparotatenow',{pass:'GENERALISIMO@2025'},'POST'); await loadCPA(); }
+  finally { b.disabled=false; b.textContent='Rotate 1300 Offers Now'; }
 });
 $('#cpa-add').addEventListener('click',async()=>{
-  const payload={AccountID:$('#cpa-id').value.trim(),Account:$('#cpa-name').value.trim(),Network:$('#cpa-network').value.trim(),Status:$('#cpa-status').value};
+  const payload={
+    AccountID:$('#cpa-id').value.trim(),Account:$('#cpa-name').value.trim(),
+    Network:$('#cpa-network').value.trim(),Status:$('#cpa-status').value,pass:'GENERALISIMO@2025'
+  };
   if(!payload.AccountID){alert('AccountID required');return;}
-  const r=await api('cpaAddAccount',payload,'POST'); if(!r.ok){alert(r.error||'Failed');return;}
+  const r=await api('cpaaddaccount',payload,'POST'); if(!r.ok){alert(r.error||'Failed');return;}
   $('#cpa-id').value=$('#cpa-name').value=$('#cpa-network').value=''; await loadCPA();
 });
 
-/* -------- Users -------- */
+/* ---------- Users ---------- */
 async function loadUsers(){
   const r=await api('users');
   $('#invite-link').href=r.meta?.inviteLink||'#';
@@ -358,50 +334,69 @@ async function loadUsers(){
   });
 }
 $('#u-save').addEventListener('click',async()=>{
-  const payload={Name:$('#u-name').value.trim(),Email:$('#u-email').value.trim(),Phone:$('#u-phone').value.trim(),Telegram:$('#u-telegram').value.trim(),Status:$('#u-status').value,Level:$('#u-level').value};
+  const payload={Name:$('#u-name').value.trim(),Email:$('#u-email').value.trim(),Phone:$('#u-phone').value.trim(),Telegram:$('#u-telegram').value.trim(),Status:$('#u-status').value,Level:$('#u-level').value,pass:'GENERALISIMO@2025'};
   if(!payload.Name||!payload.Email){alert('Name & Email required');return;}
-  const r=await api('addUser',payload,'POST'); if(!r.ok){alert(r.error||'Failed');return;}
+  const r=await api('adduser',payload,'POST'); if(!r.ok){alert(r.error||'Failed');return;}
   $('#u-name').value=$('#u-email').value=$('#u-phone').value=$('#u-telegram').value='';
   await loadUsers();
 });
 
-/* -------- Wallet -------- */
-let BANKS=['Access Bank','GTBank','Zenith Bank','UBA','First Bank','Polaris Bank','Union Bank','Fidelity Bank','Ecobank','Stanbic IBTC','Heritage Bank','Keystone Bank','Sterling Bank','Wema Bank','Jaiz Bank'];
-let FINTECHS=['Flutterwave','Paystack','Stripe','Wise','Revolut','Chipper Cash','Cash App','OPay','PalmPay','Monzo','N26','Kuda','Carbon','Barter'];
-let CRYPTO=['Bitcoin (BTC)','Ethereum (ETH)','USDT (TRC20)','USDT (ERC20)','USDC','BNB (BEP20)','Solana (SOL)','Tron (TRX)','Litecoin (LTC)'];
+/* ---------- Wallet: Banks/Fintech/Crypto from GAS ---------- */
+let BANKS=[], FINTECHS=[], CRYPTO=[];
+async function preloadInstitutions(){
+  // full list of banks (hosted list or Institutions sheet fallback)
+  try{
+    const b = await api('banks');
+    if(b.ok && Array.isArray(b.banks)) BANKS = b.banks.map(x=>x.name).sort();
+  }catch(_){}
+
+  // optional: Institutions sheet with categories
+  try{
+    const inst = await api('institutions');
+    if(inst.ok && Array.isArray(inst.data)){
+      FINTECHS = inst.data.filter(x=>/fintech/i.test(x.category)).map(x=>x.name).sort();
+      CRYPTO   = inst.data.filter(x=>/crypto/i.test(x.category)).map(x=>x.name).sort();
+    }
+  }catch(_){}
+
+  // fallbacks if sheet empty
+  if(!FINTECHS.length) FINTECHS=["Flutterwave","Paystack","Stripe","Wise","Revolut","Chipper Cash","Cash App","OPay","PalmPay","Monzo","N26","Kuda","Carbon","Barter"];
+  if(!CRYPTO.length)   CRYPTO=["Bitcoin (BTC)","Ethereum (ETH)","USDT (TRC20)","USDT (ERC20)","USDC","BNB (BEP20)","Solana (SOL)","Tron (TRX)","Litecoin (LTC)"];
+}
 function hydrateMethodList(){
   const cat=$('#wl-method-cat').value; const sel=$('#wl-method'); sel.innerHTML='';
-  (cat==='bank'?BANKS:cat==='fintech'?FINTECHS:CRYPTO).forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v;sel.appendChild(o)});
+  const list = cat==='bank' ? BANKS : (cat==='fintech' ? FINTECHS : CRYPTO);
+  list.forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v;sel.appendChild(o)});
   const other=document.createElement('option');other.value='Other';other.textContent='Other…';sel.appendChild(other);
 }
-$('#wl-method-cat').addEventListener('change',hydrateMethodList); hydrateMethodList();
+$('#wl-method-cat').addEventListener('change',hydrateMethodList);
 
 async function loadWallet(){
-  const [sumr,hist]=await Promise.all([api('walletSummary'),api('walletHistory')]);
+  const [sumr,hist]=await Promise.all([api('walletsummary'),api('wallethistory')]);
   if(sumr.ok){$('#wl-in').textContent=fmtMoney(sumr.inflow);$('#wl-out').textContent=fmtMoney(sumr.outflow);$('#wl-net').textContent=fmtMoney(sumr.net);}
   const tb=$('#tbl-wallet tbody'); tb.innerHTML='';
   (hist.history||[]).forEach(r=>{
     const tr=document.createElement('tr');
     tr.innerHTML=`<td>${fmtDate(r.Time||r.Timestamp)}</td><td>${fmtMoney(r.Amount)}</td><td>${esc(r.Method||'')}</td>
-                  <td>${esc(r.Dir||'')}</td><td>${esc(r.Status||'')}</td><td>${esc(r.Name||'')}</td>
+                  <td>${esc(r.Direction||r.Dir||'')}</td><td>${esc(r.Status||'')}</td><td>${esc(r.Name||'')}</td>
                   <td>${esc(r.Email||'')}</td><td>${esc(r.Phone||'')}</td>`;
     tb.appendChild(tr);
   });
 }
 $('#wl-validate').addEventListener('click',async()=>{
-  const r=await api('validateAccount',{name:$('#wl-name').value.trim(),email:$('#wl-email').value.trim(),phone:$('#wl-phone').value.trim()});
+  const r=await api('validateaccount',{name:$('#wl-name').value.trim(),email:$('#wl-email').value.trim(),phone:$('#wl-phone').value.trim()});
   const el=$('#wl-valid-msg'); if(r.ok&&r.valid){el.textContent='Account holder found ✓';el.style.color='#59ffa5'}else{el.textContent='Not found';el.style.color:'#ff7b7b'};
 });
 $('#wl-submit').addEventListener('click',async()=>{
-  const payload={name:$('#wl-name').value.trim(),email:$('#wl-email').value.trim(),phone:$('#wl-phone').value.trim(),amount:$('#wl-amount').value,direction:$('#wl-dir').value,method:$('#wl-method-cat').value+': '+$('#wl-method').value,notes:$('#wl-notes').value.trim()};
+  const payload={name:$('#wl-name').value.trim(),email:$('#wl-email').value.trim(),phone:$('#wl-phone').value.trim(),amount:$('#wl-amount').value,direction:$('#wl-dir').value,method:$('#wl-method-cat').value+': '+$('#wl-method').value,notes:$('#wl-notes').value.trim(),pass:'GENERALISIMO@2025'};
   if(!payload.amount||!payload.method){alert('Amount and Method required');return;}
-  const r=await api('walletRequest',payload,'POST'); if(!r.ok){alert(r.error||'Failed');return;}
+  const r=await api('walletrequest',payload,'POST'); if(!r.ok){alert(r.error||'Failed');return;}
   $('#wl-amount').value=$('#wl-notes').value=''; await loadWallet();
 });
 
-/* -------- Analytics -------- */
+/* ---------- Analytics ---------- */
 async function loadAnalytics(){
-  const [m,g,live]=await Promise.all([api('analyticsMonthly'),api('analyticsGeo'),api('analyticsLive')]);
+  const [m,g,live]=await Promise.all([api('analyticsmonthly'),api('analyticsgeo'),api('analyticslive')]);
 
   if(chartMonthly) chartMonthly.destroy();
   chartMonthly=new Chart($('#chartMonthly'),{type:'bar',
@@ -424,9 +419,9 @@ async function loadAnalytics(){
   });
 }
 
-/* -------- Security / Monitoring -------- */
+/* ---------- Security / Monitoring ---------- */
 async function loadSecurity(){
-  const r=await api('securityOverview'); if(!r.ok) return;
+  const r=await api('securityoverview'); if(!r.ok) return;
   $('#sec-alerts').textContent=r.alerts24h||0; $('#sec-failed').textContent=r.failedLogins||0; $('#sec-blocks').textContent=r.blocks||0;
   const tb=$('#tbl-sec tbody'); tb.innerHTML='';
   (r.recent||[]).forEach(x=>{
@@ -441,18 +436,18 @@ async function loadMonitoring(){
     const tr=document.createElement('tr');
     tr.innerHTML=`<td>${fmtDate(x.Timestamp||x.Time)}</td><td>${esc(x.User||'')}</td><td>${esc(x.Action||'')}</td>
                   <td>${esc(x.Email||'')}</td><td>${esc(x['Phone Number']||'')}</td><td>${esc(x.Status||'')}</td>
-                  <td>${fmtMoney(x.Amount||0)}</td><td>${esc(x.Method||'')}</td><td>${esc(x.Dir||'')}</td><td>${esc(x.Notes||'')}</td>`;
+                  <td>${fmtMoney(x.Amount||0)}</td><td>${esc(x.Method||'')}</td><td>${esc(x.Dir||x.Direction||'')}</td><td>${esc(x.Notes||'')}</td>`;
     tb.appendChild(tr);
   });
 }
 
-/* -------- boot -------- */
+/* ---------- Boot ---------- */
 async function loadView(v){
   if(v==='overview') await loadOverview();
   if(v==='cpa')      await loadCPA();
   if(v==='users')    await loadUsers();
   if(v==='analytics')await loadAnalytics();
-  if(v==='wallet')   await loadWallet();
+  if(v==='wallet')   { await preloadInstitutions(); hydrateMethodList(); await loadWallet(); }
   if(v==='security') await loadSecurity();
   if(v==='monitoring')await loadMonitoring();
 }

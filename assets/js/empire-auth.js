@@ -1,46 +1,48 @@
-/* assets/js/empire-auth.js — Auth shim (commander passphrase + user id) */
+/* THE EMPIRE — minimal client for GAS endpoints (case-insensitive) */
+(function (g) {
+  const BASE = "https://script.google.com/macros/s/AKfycbysJmVXlrOE1_J3uw5wMqs9cnKtj-uuoxj0Mmj8JWTj7eZMvp9XJYXrs-0leocNXI6w/exec";
+  const PASS = "GENERALISIMO@2025";
 
-const EMPIRE_GAS_URL = "https://script.google.com/macros/s/AKfycbyKk68KWt9-tlhsKjX5N5sv7Tk0Y2gsAgEFmIaalBlPoDsibnNNy5puQeulRrwL5tb9/exec";
+  const store = {
+    set(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch{} },
+    get(k){ try{ return JSON.parse(localStorage.getItem(k)||"null"); }catch{ return null; } },
+    del(k){ try{ localStorage.removeItem(k); }catch{} }
+  };
 
-const EmpireAuth = (()=>{
-
-  const KEY = "EmpireAuth.v2";
-
-  function save(auth){
-    localStorage.setItem(KEY, JSON.stringify(auth||{}));
-    return auth;
-  }
-
-  function get(){
-    try { return JSON.parse(localStorage.getItem(KEY)||"{}"); }
-    catch { return {}; }
-  }
-
-  async function call(params){
-    const u = new URL(EMPIRE_GAS_URL);
-    Object.entries(params||{}).forEach(([k,v])=>u.searchParams.set(k, String(v)));
-    const r = await fetch(u.toString(), { method:"GET", mode:"cors" });
-    const j = await r.json().catch(()=>({}));
-    if(!j || j.ok!==true) throw new Error("auth_failed");
+  async function call(action, params={}) {
+    const usp = new URLSearchParams({ action, pass: PASS, ...(params||{}) });
+    const url = `${BASE}?${usp.toString()}`;
+    const res = await fetch(url, { headers: { "Cache-Control":"no-cache" }});
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const j = await res.json();
+    if (j && j.ok === false) throw new Error(j.error || "api_error");
     return j;
   }
 
-  return {
-    /** cred = {mode:'commander', pass} OR {mode:'user', id}  */
-    async login(cred){
-      if(!cred || !cred.mode) throw new Error("bad_args");
+  const api = {
+    base(){ return BASE; },
+    has(){ return true; },                 // passphrase-only mode
+    logout(){ /* noop for commander */ },
 
-      if(cred.mode === "commander"){
-        const j = await call({ action:"verifyCommander", pass: cred.pass });
-        return save({ role:"commander", token:j.token||"", stamp:j.time||new Date().toISOString() });
-      }else{
-        const j = await call({ action:"verifyUser", id: cred.id });
-        return save({ role:"user", id:j.id, email:j.email||"", phone:j.phone||"", token:j.token||"", stamp:j.time||new Date().toISOString() });
-      }
-    },
+    // system
+    ping(){ return call("ping"); },
+    summary(){ return call("summary"); },
+    walletmetrics(){ return call("walletmetrics"); },
 
-    async logout(){ localStorage.removeItem(KEY); return true; },
+    // lists (legacy)
+    listOnboarding(limit=50){ return call("listonboarding", { limit }); },
+    listAssociates(limit=50){ return call("listassociates", { limit }); },
+    listWallet(limit=50){ return call("listwallet", { limit }); },
 
-    async whoami(){ return get(); }
+    // dashboard (camelCase; router accepts any case)
+    commanderMetrics(){ return call("commanderMetrics"); },
+    listCPAAccounts(){ return call("listCPAAccounts"); },
+    analyticsOverview(){ return call("analyticsOverview"); },
+    usersOverview(){ return call("usersOverview"); },
+    walletOverview(){ return call("walletOverview"); },
+    securityOverview(){ return call("securityOverview"); },
+    monitoringFeed(){ return call("monitoringFeed"); },
   };
-})();
+
+  g.EmpireAuth = api;
+})(window);

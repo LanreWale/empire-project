@@ -1,166 +1,250 @@
-/* === THE EMPIRE — Global Theme === */
+/* =========================================================
+   THE EMPIRE — MASTER THEME (v2025.09)
+   A single, consolidated stylesheet for the entire console
+   ========================================================= */
+
+/* ---------- Design Tokens ---------- */
 :root{
-  --bg:#0b0e12;
-  --bg-2:#0a0d11;
-  --panel:#121624;
-  --panel-2:#101520;
-  --text:#e8eaed;
-  --muted:#b6b9c2;
-  --gold:#f1c40f;
+  /* Brand palette */
+  --bg-0:#070b12;          /* page background base */
+  --bg-1:#0b0f18;          /* page gradient stop */
+  --bg-2:#0e1522;          /* deep accent layer */
+  --panel:#101826;         /* card background */
+  --panel-2:#0d1726;       /* alt card */
+  --panel-glass: rgba(16,24,38,.82);
+
+  --text:#ecf0f8;
+  --muted:#a9b3c7;
+  --subtle:#7e8aa3;
+
+  --gold:#f8c646;          /* primary accent */
   --gold-2:#d9a100;
-  --accent:#2dd4bf;
-  --border:#1d2432;
-  --shadow:rgba(0,0,0,.55);
-  --ring:rgba(241,196,15,.25);
+  --mint:#2dd4bf;          /* secondary accent */
+  --blue:#60a5fa;          /* info */
+  --green:#34d399;         /* success */
+  --orange:#f59e0b;        /* warning */
+  --red:#ef4444;           /* danger */
+
+  --border:rgba(255,255,255,.08);
+  --border-2:rgba(255,255,255,.06);
+  --shadow:rgba(0,0,0,.6);
+  --ring:rgba(248,198,70,.28);
+
+  /* Radii & spacing */
+  --r-sm:10px;
+  --r-md:14px;
+  --r-lg:18px;
+  --pad:16px;
+  --gap:16px;
+
+  /* Chart helpers (JS can read these) */
+  --chart-1:#f8c646;
+  --chart-2:#2dd4bf;
+  --chart-3:#60a5fa;
+  --chart-4:#34d399;
+  --chart-5:#f59e0b;
+  --chart-6:#ef4444;
 }
 
+/* ---------- Reset / Base ---------- */
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%}
 body{
-  font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
   color:var(--text);
   background:
-    radial-gradient(1200px 600px at 50% 15%, #0e1420 0%, transparent 60%),
-    radial-gradient(900px 480px at 50% 60%, #0a0f1a 0%, transparent 60%),
-    linear-gradient(180deg, #0a0d11 0%, #0b0e12 100%);
+    radial-gradient(1200px 620px at 85% 10%, rgba(31,62,122,.18), transparent 62%),
+    radial-gradient(1100px 540px at 10% 88%, rgba(18,42,88,.22), transparent 60%),
+    linear-gradient(180deg, var(--bg-1) 0%, var(--bg-0) 100%);
   min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
 }
 
-/* ---------- Shared header/footer (dashboard compatible) ---------- */
-.emp-header{background:#121624;border-bottom:1px solid rgba(255,255,255,.06);box-shadow:0 8px 20px -12px var(--shadow)}
-.emp-header .emp-header__inner{max-width:980px;margin:0 auto;padding:14px 16px;display:flex;align-items:center;gap:16px}
-.emp-footer{margin-top:24px;border-top:1px solid rgba(255,255,255,.06);background:#0f1520}
-.emp-footer .emp-footer__inner{max-width:980px;margin:0 auto;padding:16px;color:var(--muted);text-align:center}
+/* ---------- Layout Shell (sidebar + content) ---------- */
+.emp-shell{
+  display:grid;
+  grid-template-columns: 240px 1fr;
+  gap:0;
+  min-height:100svh;
+}
+@media (max-width: 980px){
+  .emp-shell{grid-template-columns: 1fr}
+}
 
-/* ---------- Dashboard shell (unchanged, kept for compatibility) ---------- */
-.emp-container{max-width:1100px;margin:0 auto;padding:24px 16px}
-.emp-nav .emp-tab{display:inline-block;background:#0c111a;color:var(--text);border:1px solid var(--border);border-radius:12px;padding:10px 14px;text-decoration:none;font-weight:600}
-.emp-nav .emp-tab.active{background:#1a2233;border-color:#2a3350}
-.emp-view.hidden{display:none}
-.emp-btn{background:var(--gold);color:#161000;border:none;border-radius:10px;padding:10px 14px;font-weight:800;cursor:pointer}
-.emp-btn.small{padding:7px 10px}
+/* Sidebar */
+.emp-sidebar{
+  background:linear-gradient(180deg, #0b1220, #0a0f1a);
+  border-right:1px solid var(--border-2);
+  padding:20px 14px;
+  position:sticky; top:0; align-self:start; height:100svh;
+}
+.emp-brand{
+  font-weight:900; letter-spacing:.14em; text-transform:uppercase;
+  color:#fff; opacity:.96; margin-bottom:18px; display:block;
+}
+.emp-nav{display:flex;flex-direction:column;gap:6px}
+.emp-tab{
+  display:flex; align-items:center; gap:10px;
+  padding:10px 12px; border-radius:var(--r-sm);
+  color:var(--muted); text-decoration:none; border:1px solid transparent;
+  transition:background .15s ease, color .15s ease, border-color .15s ease;
+}
+.emp-tab:hover{background:#0f1726; color:#e9eefb; border-color:var(--border)}
+.emp-tab.active{background:#121c30; color:#fff; border-color:#23304a}
 
-/* ---------- Buttons (global) ---------- */
-a.btn, .btn, .cta-primary{
-  display:inline-block;text-decoration:none;text-align:center;
+/* Header (optional top bar) */
+.emp-header{
+  background:#0e1422; border-bottom:1px solid var(--border-2);
+  box-shadow:0 8px 22px -14px var(--shadow);
+}
+.emp-header__inner{
+  max-width:1200px; margin:0 auto; padding:12px 18px;
+  display:flex; align-items:center; gap:12px; justify-content:space-between;
+}
+
+/* Content container */
+.emp-content{padding:22px 18px; max-width:1200px; width:100%; margin:0 auto}
+.section-title{
+  display:flex; align-items:center; gap:10px; margin:0 0 14px;
+  font-size:1.05rem; letter-spacing:.06em; text-transform:uppercase; color:#cfe0ff;
+}
+
+/* ---------- Cards / Panels ---------- */
+.emp-card, .emp-view{
+  background:var(--panel-glass);
+  border:1px solid var(--border);
+  border-radius:var(--r-lg);
+  box-shadow: 0 18px 50px -25px var(--shadow), 0 0 0 1px rgba(255,255,255,.03) inset;
+}
+.emp-card{padding:16px}
+.emp-card + .emp-card{margin-top:var(--gap)}
+.card-title{font-weight:800; color:#eaf1ff; margin-bottom:10px}
+.card-sub{color:var(--muted); font-size:.92rem; margin-bottom:8px}
+
+/* Grid helpers */
+.grid{display:grid; gap:var(--gap)}
+.grid.cols-2{grid-template-columns: repeat(2, minmax(0,1fr))}
+.grid.cols-3{grid-template-columns: repeat(3, minmax(0,1fr))}
+.grid.cols-4{grid-template-columns: repeat(4, minmax(0,1fr))}
+@media (max-width: 980px){
+  .grid.cols-4, .grid.cols-3{grid-template-columns:1fr 1fr}
+}
+@media (max-width: 640px){
+  .grid.cols-4, .grid.cols-3, .grid.cols-2{grid-template-columns:1fr}
+}
+
+/* ---------- KPI / Stat blocks ---------- */
+.kpi{display:flex; flex-direction:column; gap:4px}
+.kpi .label{color:var(--subtle); font-weight:700; letter-spacing:.06em; text-transform:uppercase; font-size:.78rem}
+.kpi .val{font-size:clamp(20px,4.6vw,30px); font-weight:900; color:var(--gold)}
+.kpi .muted{color:var(--muted); font-size:.9rem}
+
+/* Mini KPI card */
+.kpi-card{
+  background:linear-gradient(180deg, rgba(23,30,46,.8), rgba(17,24,38,.8));
+  border:1px solid var(--border);
+  border-radius:var(--r-md);
+  padding:14px 12px;
+}
+.kpi-card .val{color:#eef7ff}
+
+/* ---------- Buttons ---------- */
+.btn, .emp-btn, .cta{
+  display:inline-flex; align-items:center; justify-content:center; gap:8px;
+  text-decoration:none; cursor:pointer; border:0;
   background:linear-gradient(180deg, var(--gold) 0%, var(--gold-2) 100%);
-  color:#161000;font-weight:900;letter-spacing:.02em;
-  padding:12px 20px;border-radius:14px;border:0;cursor:pointer;
-  box-shadow:0 16px 44px -18px rgba(241,196,15,.85), inset 0 -2px 0 rgba(0,0,0,.25);
+  color:#171208; font-weight:900; letter-spacing:.01em;
+  padding:10px 14px; border-radius:var(--r-md);
+  box-shadow:0 16px 46px -20px rgba(248,198,70,.85), inset 0 -2px 0 rgba(0,0,0,.25);
   transition:transform .12s ease, box-shadow .12s ease, filter .12s ease;
 }
-a.btn:hover, .btn:hover, .cta-primary:hover{transform:translateY(-1px);filter:saturate(112%);box-shadow:0 24px 56px -24px rgba(241,196,15,.9)}
-a.btn:active, .btn:active, .cta-primary:active{transform:translateY(0) scale(.995)}
+.btn:hover{transform:translateY(-1px); filter:saturate(110%)}
+.btn:active{transform:translateY(0) scale(.995)}
+.btn.ghost{
+  background:transparent; color:#e7edfb; border:1px solid var(--border)
+}
+.btn.alt{background:linear-gradient(180deg, #2dd4bf, #0fb8a7); color:#06201c}
 
-/* ---------- HERO (Welcome) ---------- */
-.hero-cover{
-  min-height:100svh;
-  display:flex;flex-direction:column;justify-content:center;align-items:center;
-  position:relative;text-align:center;padding:72px 16px 96px;
-  isolation:isolate;
-  /* Use CSS var so HTML can choose the image path */
-  background-image:
-    radial-gradient(1200px 600px at 50% 15%, rgba(8,11,18,.75) 0%, rgba(8,11,18,.92) 80%),
-    var(--hero-url, none);
-  background-size:cover;
-  background-position:center top;
-  background-repeat:no-repeat;
+/* ---------- Tables ---------- */
+.table{
+  width:100%; border-collapse:separate; border-spacing:0; overflow:hidden;
+  border:1px solid var(--border); border-radius:var(--r-md);
+}
+.table thead th{
+  text-align:left; padding:12px; font-size:.86rem; letter-spacing:.06em;
+  text-transform:uppercase; color:#cbd7ef; background:#0f1828; position:sticky; top:0; z-index:1;
+}
+.table tbody td{padding:12px; border-top:1px solid var(--border-2); color:#e8eefb}
+.table tbody tr:hover{background:#0d1626}
+.table .num{text-align:right; font-variant-numeric:tabular-nums}
+
+/* ---------- Badges / Status ---------- */
+.badge{
+  display:inline-flex; align-items:center; gap:8px;
+  padding:6px 10px; border-radius:999px; font-weight:800; font-size:.8rem;
+  background:#0c1322; border:1px solid var(--border); color:#dbe7ff;
+}
+.badge.success{background:rgba(52,211,153,.12); color:#b8f5dc; border-color:rgba(52,211,153,.35)}
+.badge.warn{background:rgba(245,158,11,.12); color:#ffe0a8; border-color:rgba(245,158,11,.35)}
+.badge.danger{background:rgba(239,68,68,.12); color:#ffc2c2; border-color:rgba(239,68,68,.35)}
+.badge.neutral{background:rgba(96,165,250,.12); color:#cfe3ff; border-color:rgba(96,165,250,.35)}
+
+/* ---------- Forms ---------- */
+.form-row{display:flex; flex-direction:column; gap:8px; margin:10px 0}
+label{color:#cfd8ef; font-size:.92rem}
+input.emp, select.emp, textarea.emp{
+  width:100%; padding:12px; border-radius:var(--r-sm);
+  background:#0c121e; border:1px solid #2a3550; color:var(--text);
+  outline:0; transition:border-color .12s ease, box-shadow .12s ease;
+}
+input.emp:focus, select.emp:focus, textarea.emp:focus{
+  border-color:#3a4b72; box-shadow:0 0 0 3px rgba(58,75,114,.35)
 }
 
-.hero-inner{max-width:980px;margin:auto}
-.kicker{
-  font-size:.82rem;letter-spacing:.22em;text-transform:uppercase;
-  color:#ffd766;font-weight:800;opacity:.92;margin-bottom:12px
-}
-.hero-title{
-  font-size:clamp(36px,6vw,64px);
-  line-height:1.02;font-weight:900;letter-spacing:.01em;
-  text-shadow:0 10px 28px var(--shadow);
-  margin:0 0 14px;
-}
-.hero-sub{
-  color:var(--muted);
-  font-size:clamp(15px,2.6vw,20px);
-  margin:0 auto 22px;
-  max-width:720px;
-}
-.hero-cta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
-.hero-bottom-note{
-  position:absolute;left:0;right:0;bottom:18px;
-  text-align:center;color:#cbd5e1;opacity:.9;
-  font-size:.92rem;font-weight:700;letter-spacing:.08em
-}
-
-/* Ensure nothing overlays the CTA */
-.hero-cover, .hero-inner{pointer-events:auto; z-index:1}
-
-/* ---------- LOGIN Card ---------- */
-.login-wrap{
-  min-height:100svh;display:grid;place-items:center;padding:28px 16px;
-  background:
-    radial-gradient(1100px 520px at 50% 20%, rgba(28,36,54,.25) 0%, transparent 60%),
-    radial-gradient(800px 460px at 50% 70%, rgba(10,16,28,.3) 0%, transparent 65%),
-    linear-gradient(180deg, #0a0d11 0%, #0b0e12 100%);
-}
-.login-card{
-  width:min(520px,92vw);
-  background:linear-gradient(180deg, rgba(21,26,36,.72), rgba(17,22,32,.72));
-  border:1px solid rgba(255,255,255,.06);
-  border-radius:18px;padding:22px 18px 20px;
-  box-shadow:0 24px 60px -24px var(--shadow), 0 0 0 1px rgba(255,255,255,.03) inset;
-  position:relative;
+/* ---------- Cards: “glass” variants ---------- */
+.card-glass{
+  background:linear-gradient(180deg, rgba(20,28,44,.72), rgba(15,22,36,.72));
+  border:1px solid var(--border);
+  border-radius:var(--r-lg);
   backdrop-filter:saturate(115%) blur(6px);
 }
-.login-card h1{font-size:clamp(24px,3.8vw,30px);margin:2px 0 12px}
-.login-card .desc{color:var(--muted);font-size:.95rem;margin-bottom:10px}
 
-.form-row{margin:10px 0}
-label{display:block;margin:0 0 6px;color:#cfd3dc;font-size:.92rem}
-input.emp{
-  width:100%;padding:12px 12px;border-radius:10px;
-  background:#0c111a;border:1px solid #2a3350;color:var(--text);
-  outline:0;transition:border-color .12s ease, box-shadow .12s ease;
-}
-input.emp:focus{border-color:#3a4770;box-shadow:0 0 0 3px rgba(58,71,112,.35)}
-.login-actions{display:flex;gap:10px;align-items:center;margin-top:12px}
-a.link{color:#9fd3f7;text-decoration:none}
-a.link:hover{text-decoration:underline}
+/* ---------- Chart Helpers ---------- */
+.chart-legend{display:flex; flex-wrap:wrap; gap:8px; margin-top:8px}
+.legend-item{display:inline-flex; align-items:center; gap:8px; color:var(--muted); font-size:.9rem}
+.legend-swatch{width:10px; height:10px; border-radius:2px; display:inline-block}
 
-.footer-note{
-  margin-top:12px;color:var(--muted);font-size:.85rem;text-align:center
-}
+/* Provide classes to map swatch colors easily */
+.swatch-1{background:var(--chart-1)} .swatch-2{background:var(--chart-2)}
+.swatch-3{background:var(--chart-3)} .swatch-4{background:var(--chart-4)}
+.swatch-5{background:var(--chart-5)} .swatch-6{background:var(--chart-6)}
 
-/* ---------- Responsive tweaks ---------- */
-@media (max-width: 520px){
-  .hero-sub{font-size:clamp(14px,3.5vw,18px)}
-  .cta-primary{width:100%;max-width:360px}
+/* ---------- Modals ---------- */
+.modal-backdrop{
+  position:fixed; inset:0; background:rgba(2,6,14,.55); display:none; place-items:center; z-index:50;
 }
-/* Empire theme polish */
-:root{
-  --emp-bg-1:#0b1020;
-  --emp-bg-2:#081225;
-  --emp-sheen:#0d1b3a;
-  --emp-card: rgba(16,21,32,.88);
-  --emp-border: rgba(255,255,255,.06);
-  --emp-text:#e5efff;
-  --emp-muted:#9db2d7;
-  --emp-accent:#ffd166; /* gold */
-  --emp-accent-2:#59ffa5; /* mint */
+.modal{background:var(--panel); border:1px solid var(--border); border-radius:var(--r-lg); padding:18px; width:min(560px,92vw)}
+.modal.show + .modal-backdrop, .modal-backdrop.show{display:grid}
+
+/* ---------- Utility ---------- */
+.muted{color:var(--muted)}
+.center{display:grid; place-items:center}
+.right{text-align:right}
+.mt-1{margin-top:6px} .mt-2{margin-top:10px} .mt-3{margin-top:14px} .mt-4{margin-top:18px}
+.mb-1{margin-bottom:6px} .mb-2{margin-bottom:10px} .mb-3{margin-bottom:14px} .mb-4{margin-bottom:18px}
+.p-0{padding:0} .p-1{padding:6px} .p-2{padding:10px} .p-3{padding:14px} .p-4{padding:18px}
+.round{border-radius:var(--r-sm)}
+.shadow{box-shadow:0 20px 45px -28px var(--shadow)}
+
+/* ---------- Footer ---------- */
+.emp-footer{
+  border-top:1px solid var(--border-2); margin-top:24px; background:#0c1322;
 }
-body.bg-empire-hero{
-  background:
-    radial-gradient(1200px 600px at 10% 90%, rgba(21,40,82,.35), transparent 60%),
-    radial-gradient(900px 500px at 85% 15%, rgba(27,60,120,.28), transparent 55%),
-    linear-gradient(180deg, var(--emp-bg-2) 0%, var(--emp-bg-1) 100%);
-  color:var(--emp-text);
+.emp-footer__inner{max-width:1200px; margin:0 auto; padding:16px; color:var(--muted); text-align:center}
+
+/* ---------- Mobile tuning ---------- */
+@media (max-width: 980px){
+  .emp-sidebar{position:static; height:auto; border-right:none; border-bottom:1px solid var(--border-2)}
+  .emp-content{padding:18px 14px}
 }
-.emp-view,.emp-card{
-  background:var(--emp-card);
-  border:1px solid var(--emp-border);
-  border-radius:16px;
-}
-.emp-tab.active{ background:#172036; border-color:#2a3350 }
-.emp-muted{ color:var(--emp-muted) }
-.kpi .val, .kpi-card .val{ color:var(--emp-accent-2); font-weight:800 }
-.cta, .emp-btn{ background:var(--emp-accent); color:#1a1a1a; border:none; border-radius:10px; font-weight:800 }
-.cta.ghost, .emp-btn.alt{ background:transparent; color:var(--emp-text); border:1px solid var(--emp-border) }

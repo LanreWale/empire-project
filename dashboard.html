@@ -1,157 +1,186 @@
+<!-- File: dashboard.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>THE EMPIRE • Supreme Command Dashboard</title>
+<title>THE EMPIRE — Supreme Command</title>
 
-<!-- Theme (your existing stylesheet) -->
-<link rel="stylesheet" href="assets/css/empire-style.css" />
-<link rel="stylesheet" href="assets/css/app.css" />
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 24 24'%3E%3Cpath fill='%23f1c40f' d='M12 2L2 7l10 5l10-5z'/%3E%3Cpath fill='%23ffd166' d='M2 17l10 5l10-5'/%3E%3C/svg%3E" />
-
-<!-- Minimal extras -->
+<!-- ======= THEME (Empire colors, crest, background) ======= -->
 <style>
-  :root{ --card-pad:16px; --gap:14px; }
-  body{ padding:0;margin:0; }
-  .layout{ display:grid; grid-template-columns: 260px 1fr; min-height:100svh; }
-  .sidebar{ background:var(--panel-2); border-right:1px solid var(--border); padding:10px 10px 20px; }
-  .brand{ font-weight:900; letter-spacing:.08em; display:flex; align-items:center; gap:8px; padding:12px 10px; }
-  .brand span{ color:#a5b4fc; font-weight:800 }
-  .nav a{ display:block; padding:10px 12px; margin:6px 0; border-radius:10px; text-decoration:none; color:var(--text); background:#0c111a; border:1px solid var(--border); }
-  .nav a.active{ background:#172036; border-color:#2a3350; }
-  .content{ padding:20px; background: radial-gradient(1200px 600px at 50% 0%, rgba(20,26,40,.28), transparent 60%), linear-gradient(180deg, #0a0d11 0%, #0b0e12 100%); }
-  .section{ margin:0 0 22px; }
-  .section h2{ font-size:1.05rem; letter-spacing:.08em; text-transform:uppercase; color:#cbd5e1; margin:0 0 10px; display:flex; align-items:center; gap:8px; }
-  .grid{ display:grid; gap:var(--gap); }
-  .kpi-row{ grid-template-columns: repeat(4, minmax(180px, 1fr)); }
-  .grid-2{ grid-template-columns: 1fr 1fr; }
-  .grid-3{ grid-template-columns: repeat(3, 1fr); }
-  .card{ background:var(--emp-card); border:1px solid var(--emp-border); border-radius:16px; padding:var(--card-pad); }
-  .kpi{ display:flex; flex-direction:column; gap:6px; }
-  .kpi .lbl{ color:var(--emp-muted); font-weight:700; }
-  .kpi .val{ font-size:1.6rem; font-weight:900; color:var(--emp-accent-2); }
-  .muted{ color:var(--muted) }
-  .table{ width:100%; border-collapse:separate; border-spacing:0 8px; }
-  .table th{ text-align:left; font-size:.86rem; color:#a3aed0; font-weight:800; padding:6px 8px; }
-  .table td{ padding:10px 8px; background:#0c111a; border:1px solid var(--border); border-left:none; border-right:none; }
-  .toolbar{ display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-bottom:10px; }
-  .btn{ background:linear-gradient(180deg,var(--gold) 0%, var(--gold-2) 100%); color:#161000; font-weight:900; border-radius:12px; padding:10px 14px; border:none; cursor:pointer; }
-  .btn.ghost{ background:transparent; color:var(--text); border:1px solid var(--emp-border) }
-  .input, select{ background:#0c111a; color:var(--text); border:1px solid #2a3350; border-radius:10px; padding:10px 10px; }
-  .grid-form{ display:grid; gap:10px; grid-template-columns: repeat(2, minmax(160px,1fr)); }
-  .row{ display:flex; gap:10px; flex-wrap:wrap; }
-  .badge{ display:inline-block; padding:4px 8px; border-radius:999px; font-size:.75rem; background:#0d1526; border:1px solid var(--emp-border); }
-  .ok{ color:#59ffa5 } .warn{ color:#ffd166 } .err{ color:#ff7b7b }
-  canvas{ width:100% !important; height:300px !important; }
-  .foot-note{ margin-top:6px; color:#94a3b8; font-size:.85rem; }
-  .hidden{ display:none !important; }
-  .right{ margin-left:auto }
-  .split{ display:grid; grid-template-columns: 1fr 420px; gap:var(--gap); }
-  @media (max-width: 1000px){ .layout{ grid-template-columns: 1fr } .sidebar{ position:sticky; top:0; z-index:3 } .split{ grid-template-columns:1fr } .kpi-row{ grid-template-columns:1fr 1fr } .grid-2, .grid-3{ grid-template-columns:1fr } }
+:root{
+  --emp-bg-1:#0b1020; --emp-bg-2:#081225; --emp-sheen:#0d1b3a;
+  --emp-card:rgba(16,21,32,.88); --emp-border:rgba(255,255,255,.06);
+  --text:#e8eaed; --muted:#9db2d7; --gold:#f1c40f; --gold-2:#d9a100;
+  --mint:#59ffa5; --ink:#0c111a; --ring:rgba(241,196,15,.25); --border:#1d2432;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+  color:var(--text);
+  background:
+    radial-gradient(1200px 600px at 10% 90%, rgba(21,40,82,.35), transparent 60%),
+    radial-gradient(900px 500px at 85% 15%, rgba(27,60,120,.28), transparent 55%),
+    linear-gradient(180deg, var(--emp-bg-2) 0%, var(--emp-bg-1) 100%);
+  min-height:100svh;
+}
+
+/* ----- layout: left nav + content ----- */
+.layout{display:grid;grid-template-columns:260px 1fr;min-height:100svh}
+.sidebar{
+  background:
+    radial-gradient(600px 300px at 50% 0%, rgba(255,214,102,.07), transparent 60%),
+    linear-gradient(180deg,#0a0f1c,#0b1220 70%);
+  border-right:1px solid var(--emp-border);
+  padding:14px 12px 18px;
+  position:relative;
+}
+.brand{
+  display:flex;align-items:center;gap:10px;padding:8px 8px 14px;margin-bottom:8px;
+  border-bottom:1px dashed rgba(255,255,255,.08);
+}
+.brand .crest{
+  width:36px;height:36px;border-radius:10px;
+  display:grid;place-items:center;
+  background:linear-gradient(180deg,#1b2a4a,#101a31);
+  box-shadow:0 10px 28px rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.06);
+}
+.brand .crest svg{filter:drop-shadow(0 6px 20px rgba(89,255,165,.45))}
+.brand .title{font-weight:900;letter-spacing:.08em}
+.brand .title span{color:#a5b4fc}
+
+.nav a{
+  display:block;padding:11px 12px;margin:8px 0;border-radius:12px;text-decoration:none;
+  color:var(--text);background:var(--ink);border:1px solid var(--emp-border);
+  font-weight:700;letter-spacing:.02em;
+}
+.nav a.active{background:#172036;border-color:#2a3350;box-shadow:0 0 0 2px rgba(36,108,255,.09) inset}
+.content{padding:20px}
+
+/* ----- sections, cards, tables ----- */
+.section{margin:0 0 22px}
+.section h2{
+  font-size:1.05rem;letter-spacing:.08em;text-transform:uppercase;color:#cbd5e1;
+  margin:0 0 10px;display:flex;align-items:center;gap:8px
+}
+.badge{display:inline-block;padding:4px 8px;border-radius:999px;font-size:.75rem;background:#0d1526;border:1px solid var(--emp-border)}
+.right{margin-left:auto}
+
+.card{background:var(--emp-card);border:1px solid var(--emp-border);border-radius:16px;padding:16px}
+.grid{display:grid;gap:14px}
+.grid.kpi-4{grid-template-columns:repeat(4,minmax(180px,1fr))}
+.grid.two{grid-template-columns:1fr 1fr}
+.grid.three{grid-template-columns:repeat(3,1fr)}
+.split{display:grid;grid-template-columns:1fr 420px;gap:14px}
+
+.kpi{display:flex;flex-direction:column;gap:6px}
+.kpi .lbl{color:var(--muted);font-weight:800}
+.kpi .val{font-size:1.7rem;font-weight:900;color:var(--mint);text-shadow:0 10px 28px rgba(0,0,0,.35)}
+
+.table{width:100%;border-collapse:separate;border-spacing:0 8px}
+.table th{text-align:left;font-size:.86rem;color:#a3aed0;font-weight:800;padding:6px 8px}
+.table td{padding:10px 8px;background:#0c111a;border:1px solid var(--emp-border);border-left:none;border-right:none}
+
+.toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:6px 0 12px}
+.input,select,textarea{
+  background:#0c111a;color:var(--text);border:1px solid #2a3350;border-radius:10px;padding:10px 10px
+}
+.btn{
+  background:linear-gradient(180deg,var(--gold) 0%,var(--gold-2) 100%);
+  color:#161000;font-weight:900;border-radius:12px;padding:10px 14px;border:none;cursor:pointer
+}
+.btn.ghost{background:transparent;color:var(--text);border:1px solid var(--emp-border)}
+.muted{color:var(--muted)}
+.hidden{display:none!important}
+@media (max-width:1080px){.layout{grid-template-columns:1fr}.split{grid-template-columns:1fr}.grid.kpi-4{grid-template-columns:1fr 1fr}.grid.two,.grid.three{grid-template-columns:1fr}}
 </style>
 
-<!-- Charts -->
+<!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
 </head>
-<body class="bg-empire-hero">
-
+<body>
 <div class="layout">
-  <!-- Sidebar -->
   <aside class="sidebar">
     <div class="brand">
-      <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#59ffa5" d="M12 2L2 7l10 5l10-5z"/></svg>
-      <div>THE <span>EMPIRE</span></div>
+      <div class="crest" aria-hidden="true">
+        <!-- Empire Crest (inline SVG) -->
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+          <path d="M12 2L3 7l9 5l9-5-9-5z" fill="#59ffa5"/>
+          <path d="M3 7v6l9 5 9-5V7l-9 5-9-5z" fill="#ffd166" opacity=".3"/>
+        </svg>
+      </div>
+      <div class="title">THE <span>EMPIRE</span></div>
     </div>
     <nav class="nav" id="nav">
       <a data-view="overview" class="active">Dashboard</a>
       <a data-view="cpa">CPA Accounts</a>
       <a data-view="users">Users</a>
       <a data-view="analytics">Analytics</a>
-      <a data-view="wallet">Payments/Wallet</a>
+      <a data-view="wallet">Payments / Wallet</a>
       <a data-view="security">Security</a>
       <a data-view="monitoring">Monitoring</a>
-      <a href="#" id="logoutBtn">Logout</a>
     </nav>
-    <div class="foot-note">© 2025 The Empire</div>
   </aside>
 
-  <!-- Main -->
   <main class="content">
-    <!-- OVERVIEW -->
+    <!-- ======= OVERVIEW ======= -->
     <section class="section" id="view-overview">
       <h2>Supreme Command Dashboard <span class="badge">LIVE</span><span class="right muted" id="ov-updated"></span></h2>
-      <div class="grid kpi-row">
+      <div class="grid kpi-4">
         <div class="card kpi"><div class="lbl">Total Earnings</div><div class="val" id="ov-earn">$0</div></div>
         <div class="card kpi"><div class="lbl">Active Users</div><div class="val" id="ov-active">0</div></div>
-        <div class="card kpi"><div class="lbl">Conversion Rate</div><div class="val" id="ov-cr">0.00%</div><div class="muted">Industry leading</div></div>
-        <div class="card kpi"><div class="lbl">Total Clicks</div><div class="val" id="ov-clicks">0</div><div class="muted">Daily average <span id="ov-davg">0</span></div></div>
+        <div class="card kpi"><div class="lbl">Conversion Rate</div><div class="val" id="ov-cr">0.00%</div></div>
+        <div class="card kpi"><div class="lbl">Total Clicks</div><div class="val" id="ov-clicks">0</div></div>
       </div>
-
-      <div class="grid grid-2">
-        <div class="card">
-          <div class="lbl" style="margin-bottom:10px">Daily Earnings</div>
-          <canvas id="chartDaily"></canvas>
-        </div>
-        <div class="card">
-          <div class="lbl" style="margin-bottom:10px">Traffic Sources</div>
-          <canvas id="chartSources"></canvas>
-        </div>
+      <div class="grid two" style="margin-top:14px">
+        <div class="card"><div class="lbl muted" style="margin-bottom:10px">Daily Earnings</div><canvas id="chartDaily"></canvas></div>
+        <div class="card"><div class="lbl muted" style="margin-bottom:10px">Traffic Sources</div><canvas id="chartSources"></canvas></div>
       </div>
     </section>
 
-    <!-- CPA ACCOUNTS -->
+    <!-- ======= CPA ACCOUNTS ======= -->
     <section class="section hidden" id="view-cpa">
       <h2>CPA Accounts Management <span class="badge">LIVE</span></h2>
       <div class="toolbar">
         <button class="btn" id="btn-rotate">Rotate 1300 Offers Now</button>
-        <span class="muted">1320/sec ingestion per feed is throttled by GAS limits automatically.</span>
+        <span class="muted">Auto-throttled to 1/hour to respect GAS quotas.</span>
       </div>
       <div class="card">
-        <table class="table" id="tbl-cpa">
-          <thead><tr>
-            <th>Account</th><th>Network</th><th>Status</th><th>Active Offers</th><th>Revenue</th><th>Clicks</th><th>Conversions</th>
-          </tr></thead>
-          <tbody></tbody>
-        </table>
+        <table class="table" id="tbl-cpa"><thead><tr>
+          <th>Account</th><th>Network</th><th>Status</th><th>Active Offers</th><th>Revenue</th><th>Clicks</th><th>Conversions</th>
+        </tr></thead><tbody></tbody></table>
       </div>
-
       <div class="card" style="margin-top:12px">
         <h3 style="margin:0 0 10px">+ Add New Account</h3>
-        <div class="grid-form">
+        <div class="grid" style="grid-template-columns:repeat(4,1fr);gap:10px">
           <input class="input" id="cpa-id" placeholder="AccountID (unique)" />
           <input class="input" id="cpa-name" placeholder="Account Name" />
-          <input class="input" id="cpa-network" placeholder="Network (e.g., MaxBounty)" />
-          <select class="input" id="cpa-status">
-            <option>Active</option><option>Pending</option><option>Suspended</option>
-          </select>
+          <input class="input" id="cpa-network" placeholder="Network" />
+          <select class="input" id="cpa-status"><option>Active</option><option>Pending</option><option>Suspended</option></select>
         </div>
         <div class="toolbar" style="margin-top:10px">
           <button class="btn" id="cpa-add">Save Account</button>
-          <span class="muted">Use this for non-CPAGrip networks; the 5 Grip accounts are auto-wired.</span>
         </div>
       </div>
     </section>
 
-    <!-- USERS -->
+    <!-- ======= USERS ======= -->
     <section class="section hidden" id="view-users">
       <h2>Users Management <span class="badge">LIVE</span></h2>
       <div class="toolbar">
         <a class="btn" target="_blank" id="invite-link">Invite Link</a>
         <button class="btn" id="btn-add-user">+ Add New User</button>
-        <div class="muted" id="user-stats"></div>
+        <div id="user-stats" class="muted"></div>
       </div>
       <div class="card">
-        <table class="table" id="tbl-users">
-          <thead><tr><th>Username</th><th>Email</th><th>Phone</th><th>Level</th><th>Status</th><th>Earnings</th></tr></thead>
-          <tbody></tbody>
-        </table>
+        <table class="table" id="tbl-users"><thead><tr>
+          <th>Username</th><th>Email</th><th>Phone</th><th>Level</th><th>Status</th><th>Earnings</th>
+        </tr></thead><tbody></tbody></table>
       </div>
-
-      <!-- Add User Form -->
       <div class="card" style="margin-top:12px">
         <h3 style="margin:0 0 10px">+ Add New User</h3>
-        <div class="grid-form">
+        <div class="grid" style="grid-template-columns:repeat(3,1fr);gap:10px">
           <input class="input" id="u-name" placeholder="Name" />
           <input class="input" id="u-email" placeholder="Email" />
           <input class="input" id="u-phone" placeholder="Phone" />
@@ -159,429 +188,275 @@
           <select class="input" id="u-status"><option>Pending</option><option>Confirmed</option><option>Suspended</option></select>
           <select class="input" id="u-level"><option>Level 1</option><option>Level 2</option><option>Level 3</option></select>
         </div>
-        <div class="toolbar" style="margin-top:10px">
-          <button class="btn" id="u-save">Save User</button>
-        </div>
+        <div class="toolbar" style="margin-top:10px"><button class="btn" id="u-save">Save User</button></div>
       </div>
     </section>
 
-    <!-- ANALYTICS -->
+    <!-- ======= ANALYTICS ======= -->
     <section class="section hidden" id="view-analytics">
       <h2>Analytics & Reports <span class="badge">LIVE</span></h2>
-      <div class="grid grid-2">
-        <div class="card"><div class="lbl" style="margin-bottom:10px">Performance Overview (Monthly)</div><canvas id="chartMonthly"></canvas></div>
-        <div class="card"><div class="lbl" style="margin-bottom:10px">Geographic Distribution</div><canvas id="chartGeo"></canvas></div>
+      <div class="grid two">
+        <div class="card"><div class="lbl muted" style="margin-bottom:10px">Performance Overview (Monthly)</div><canvas id="chartMonthly"></canvas></div>
+        <div class="card"><div class="lbl muted" style="margin-bottom:10px">Geographic Distribution</div><canvas id="chartGeo"></canvas></div>
       </div>
       <div class="card" style="margin-top:12px">
-        <div class="lbl" style="margin-bottom:6px">Live Performance Data</div>
-        <table class="table" id="tbl-live">
-          <thead><tr>
-            <th>Date</th><th>Country</th><th>Offer Type</th><th>Device</th><th>Clicks</th><th>Leads</th><th>Earnings ($)</th>
-          </tr></thead>
-          <tbody></tbody>
-        </table>
+        <div class="lbl muted" style="margin-bottom:6px">Live Performance Data</div>
+        <table class="table" id="tbl-live"><thead><tr>
+          <th>Date</th><th>Country</th><th>Offer Type</th><th>Device</th><th>Clicks</th><th>Leads</th><th>Earnings ($)</th>
+        </tr></thead><tbody></tbody></table>
       </div>
     </section>
 
-    <!-- WALLET -->
+    <!-- ======= WALLET ======= -->
     <section class="section hidden" id="view-wallet">
-      <h2>Universal Withdrawal &amp; History <span class="badge">LIVE</span></h2>
-
-      <div class="grid grid-3">
+      <h2>Universal Withdrawal & History <span class="badge">LIVE</span></h2>
+      <div class="grid three">
         <div class="card kpi"><div class="lbl">Inflow</div><div class="val" id="wl-in">$0</div></div>
         <div class="card kpi"><div class="lbl">Outflow</div><div class="val" id="wl-out">$0</div></div>
         <div class="card kpi"><div class="lbl">Net</div><div class="val" id="wl-net">$0</div></div>
       </div>
-
       <div class="split" style="margin-top:12px">
-        <!-- History -->
         <div class="card">
-          <div class="lbl" style="margin-bottom:6px">Transaction History & Status</div>
-          <table class="table" id="tbl-wallet">
-            <thead><tr>
-              <th>Time</th><th>Amount</th><th>Method</th><th>Dir</th><th>Status</th><th>Name</th><th>Email</th><th>Phone</th>
-            </tr></thead>
-            <tbody></tbody>
-          </table>
+          <div class="lbl muted" style="margin-bottom:6px">Transaction History & Status</div>
+          <table class="table" id="tbl-wallet"><thead><tr>
+            <th>Time</th><th>Amount</th><th>Method</th><th>Dir</th><th>Status</th><th>Name</th><th>Email</th><th>Phone</th>
+          </tr></thead><tbody></tbody></table>
         </div>
-
-        <!-- Request Withdrawal / Deposit -->
         <div class="card">
-          <div class="lbl" style="margin-bottom:8px">Request Withdrawal / Record Deposit</div>
-
-          <div class="row" style="margin-bottom:6px">
-            <input class="input" id="wl-name" placeholder="Account Holder Name" style="flex:1" />
-            <button class="btn ghost" id="wl-validate">Validate Holder</button>
-            <span id="wl-valid-msg" class="muted"></span>
-          </div>
-
-          <div class="grid-form">
+          <div class="lbl muted" style="margin-bottom:8px">Request Withdrawal / Record Deposit</div>
+          <div class="grid" style="grid-template-columns:repeat(2,1fr);gap:10px">
+            <input class="input" id="wl-name" placeholder="Account Holder Name" />
             <input class="input" id="wl-email" placeholder="Email" />
             <input class="input" id="wl-phone" placeholder="Phone" />
             <input type="number" class="input" id="wl-amount" placeholder="Amount (USD)" />
-            <select class="input" id="wl-dir">
-              <option value="out">Withdraw (out)</option>
-              <option value="in">Deposit (in)</option>
-            </select>
-            <select class="input" id="wl-method-cat">
-              <option value="bank">Bank</option>
-              <option value="fintech">Fintech</option>
-              <option value="crypto">Crypto</option>
-            </select>
-            <select class="input" id="wl-method"></select>
+            <select class="input" id="wl-dir"><option value="out">Withdraw (out)</option><option value="in">Deposit (in)</option></select>
+            <select class="input" id="wl-method-cat"><option value="bank">Bank</option><option value="fintech">Fintech</option><option value="crypto">Crypto</option></select>
           </div>
-
-          <textarea class="input" id="wl-notes" placeholder="Notes (routing details, wallet address, etc.)" style="margin-top:8px; width:100%; min-height:90px"></textarea>
-
+          <select class="input" id="wl-method" style="margin-top:8px"></select>
+          <textarea class="input" id="wl-notes" placeholder="Notes (routing details, wallet address, etc.)" style="margin-top:8px;width:100%;min-height:90px"></textarea>
           <div class="toolbar" style="margin-top:10px">
+            <button class="btn" id="wl-validate">Validate Holder</button>
             <button class="btn" id="wl-submit">Request</button>
-            <span class="muted">Validator checks Onboarding & New Associates tabs.</span>
+            <span id="wl-valid-msg" class="muted" style="margin-left:8px"></span>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- SECURITY -->
+    <!-- ======= SECURITY ======= -->
     <section class="section hidden" id="view-security">
       <h2>Security Overview <span class="badge">LIVE</span></h2>
-      <div class="grid grid-3">
+      <div class="grid three">
         <div class="card kpi"><div class="lbl">Alerts (24h)</div><div class="val" id="sec-alerts">0</div></div>
         <div class="card kpi"><div class="lbl">Failed Logins</div><div class="val" id="sec-failed">0</div></div>
         <div class="card kpi"><div class="lbl">Blocks</div><div class="val" id="sec-blocks">0</div></div>
       </div>
       <div class="card" style="margin-top:12px">
-        <div class="lbl" style="margin-bottom:6px">Recent Security Activity</div>
-        <table class="table" id="tbl-sec">
-          <thead><tr><th>Time</th><th>User</th><th>Action</th><th>Status</th></tr></thead>
-          <tbody></tbody>
-        </table>
+        <div class="lbl muted" style="margin-bottom:6px">Recent Security Activity</div>
+        <table class="table" id="tbl-sec"><thead><tr><th>Time</th><th>User</th><th>Action</th><th>Status</th></tr></thead><tbody></tbody></table>
       </div>
     </section>
 
-    <!-- MONITORING -->
+    <!-- ======= MONITORING ======= -->
     <section class="section hidden" id="view-monitoring">
       <h2>System Monitoring <span class="badge">LIVE</span></h2>
       <div class="card">
-        <table class="table" id="tbl-mon">
-          <thead><tr><th>Time</th><th>User</th><th>Action</th><th>Email</th><th>Phone</th><th>Status</th><th>Amount</th><th>Method</th><th>Dir</th><th>Notes</th></tr></thead>
-        <tbody></tbody></table>
+        <table class="table" id="tbl-mon"><thead><tr>
+          <th>Time</th><th>User</th><th>Action</th><th>Email</th><th>Phone</th><th>Status</th><th>Amount</th><th>Method</th><th>Dir</th><th>Notes</th>
+        </tr></thead><tbody></tbody></table>
       </div>
     </section>
   </main>
 </div>
 
-<script>
-/* ============================
-   CONFIG
-============================ */
-const EMP_API = 'PUT_YOUR_DEPLOYED_GAS_WEBAPP_URL_HERE'; // e.g. https://script.google.com/macros/s/AKfycb.../exec
+<!-- Injected by Code.gs -->
+<script>const EMP_API = '<?= WEB_APP_URL ?>';</script>
 
-/* ============================
-   HELPERS
-============================ */
-const $ = sel => document.querySelector(sel);
-const $all = sel => Array.from(document.querySelectorAll(sel));
-function fmtMoney(n){ n = Number(n||0); return n.toLocaleString(undefined,{style:'currency',currency:'USD',maximumFractionDigits:2}); }
-function qs(obj){ return Object.entries(obj).map(([k,v])=>`${encodeURIComponent(k)}=${encodeURIComponent(v)}`).join('&'); }
+<!-- ======= DASH LOGIC (live calls to GAS endpoints) ======= -->
+<script>
+const $=s=>document.querySelector(s), $all=s=>Array.from(document.querySelectorAll(s));
+function qs(o){return Object.entries(o).map(([k,v])=>encodeURIComponent(k)+'='+encodeURIComponent(v)).join('&')}
+function fmtMoney(n){n=Number(n||0);return n.toLocaleString(undefined,{style:'currency',currency:'USD',maximumFractionDigits:2});}
+function fmtDate(v){try{const d=new Date(v);return d.toLocaleString()}catch(_){return String(v||'')}}
+function esc(s){return String(s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&gt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]) )}
+function num(x){const n=Number(String(x).replace(/[^0-9.\-]/g,''));return isFinite(n)?n:0}
+
 async function api(action, params=null, method='GET'){
   let url = EMP_API + '?action=' + encodeURIComponent(action);
-  let opt = { method };
-  if (params && method === 'GET') url += '&' + qs(params);
-  if (params && method === 'POST'){
-    opt.headers = {'Content-Type':'application/json'};
-    opt.body = JSON.stringify({ action, ...params });
-  }
-  const r = await fetch(url, opt);
-  return r.json();
+  const opt = { method };
+  if(params && method==='GET') url += '&' + qs(params);
+  if(params && method==='POST'){ opt.headers={'Content-Type':'application/json'}; opt.body=JSON.stringify({action,...params}); }
+  const r = await fetch(url,opt); return r.json();
 }
+
 function setActive(view){
-  $all('.nav a').forEach(a => a.classList.toggle('active', a.dataset.view===view));
+  $all('.nav a').forEach(a=>a.classList.toggle('active',a.dataset.view===view));
   ['overview','cpa','users','analytics','wallet','security','monitoring'].forEach(v=>{
-    const sec = $('#view-'+v); if (!sec) return;
-    sec.classList.toggle('hidden', v!==view);
+    const sec=$('#view-'+v); if(!sec) return; sec.classList.toggle('hidden', v!==view);
   });
 }
+$all('.nav a').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();setActive(a.dataset.view);loadView(a.dataset.view);}))
 
-/* ============================
-   NAV
-============================ */
-$all('.nav a').forEach(a=>{
-  a.addEventListener('click', e=>{
-    e.preventDefault();
-    setActive(a.dataset.view);
-    loadView(a.dataset.view);
-  });
-});
+let chartDaily,chartSources,chartMonthly,chartGeo;
 
-/* ============================
-   OVERVIEW
-============================ */
-let chartDaily, chartSources, chartMonthly, chartGeo;
-
+/* -------- Overview -------- */
 async function loadOverview(){
-  const res = await api('overview');
-  if (!res.ok) return;
+  const res=await api('overview');
+  if(!res.ok) return;
+  $('#ov-updated').textContent='Updated '+new Date(res.updated).toLocaleString();
+  $('#ov-earn').textContent=fmtMoney(res.data.totalEarnings);
+  $('#ov-active').textContent=res.data.activeUsers;
+  $('#ov-cr').textContent=(res.data.conversionRate*100).toFixed(2)+'%';
+  $('#ov-clicks').textContent=res.data.totalClicks;
 
-  $('#ov-updated').textContent = 'Updated ' + new Date(res.updated).toLocaleString();
-  $('#ov-earn').textContent = fmtMoney(res.data.totalEarnings);
-  $('#ov-active').textContent = res.data.activeUsers;
-  $('#ov-cr').textContent = (res.data.conversionRate*100).toFixed(2)+'%';
-  $('#ov-clicks').textContent = res.data.totalClicks;
-  $('#ov-davg').textContent = Math.round(res.data.dailyAverage);
-
-  // Daily earnings line
-  const labels = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-  if (chartDaily) chartDaily.destroy();
-  chartDaily = new Chart($('#chartDaily'), {
-    type:'line',
-    data:{ labels, datasets:[{ label:'Earnings', data: rotateToStartOnSun(res.data.dailyEarningsByDow), tension:.3, fill:false }]},
-    options:{ plugins:{ legend:{display:false}}, scales:{ y:{ beginAtZero:true } } }
+  if(chartDaily) chartDaily.destroy();
+  chartDaily=new Chart($('#chartDaily'),{type:'line',
+    data:{labels:['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],datasets:[{label:'Earnings',data:res.data.dailyEarningsByDow||[],tension:.3,fill:false}]},
+    options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}
   });
-
-  // Placeholder traffic sources donut (derive from live later if you wish)
-  if (chartSources) chartSources.destroy();
-  chartSources = new Chart($('#chartSources'), {
-    type:'doughnut',
-    data:{ labels:['Direct','Referral','Social','Organic'], datasets:[{ data:[35,25,20,20]}] },
-    options:{ plugins:{ legend:{ position:'bottom' } } }
+  if(chartSources) chartSources.destroy();
+  chartSources=new Chart($('#chartSources'),{type:'doughnut',
+    data:{labels:['Direct','Referral','Social','Organic'],datasets:[{data:[35,25,20,20]}]},
+    options:{plugins:{legend:{position:'bottom'}}}
   });
 }
-function rotateToStartOnSun(arr){
-  // arr indexed 0..6 Sunday..Saturday already; return as is
-  return arr;
-}
 
-/* ============================
-   CPA ACCOUNTS
-============================ */
+/* -------- CPA -------- */
 async function loadCPA(){
-  const res = await api('cpaAccounts');
-  const tbody = $('#tbl-cpa tbody'); tbody.innerHTML='';
-  if (!res.ok){ tbody.innerHTML = `<tr><td colspan="7">Unable to load</td></tr>`; return; }
-  res.accounts.forEach(r=>{
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td>${esc(r.name)}</td>
-      <td>${esc(r.network||'')}</td>
-      <td>${esc(r.status||'')}</td>
-      <td>${num(r.activeOffers)}</td>
-      <td>${fmtMoney(r.revenue||0)}</td>
-      <td>${num(r.clicks)}</td>
-      <td>${num(r.conversions)}</td>`;
-    tbody.appendChild(tr);
+  const r=await api('cpaAccounts'); const tb=$('#tbl-cpa tbody'); tb.innerHTML='';
+  if(!r.ok){tb.innerHTML='<tr><td colspan="7">Unable to load</td></tr>';return;}
+  (r.accounts||[]).forEach(x=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${esc(x.name||'')}</td><td>${esc(x.network||'')}</td><td>${esc(x.status||'')}</td>
+                  <td>${num(x.activeOffers)}</td><td>${fmtMoney(x.revenue||0)}</td>
+                  <td>${num(x.clicks)}</td><td>${num(x.conversions)}</td>`;
+    tb.appendChild(tr);
   });
 }
-
-$('#btn-rotate').addEventListener('click', async ()=>{
-  const btn = $('#btn-rotate'); btn.disabled = true; btn.textContent = 'Rotating…';
-  try{
-    await api('cpaRotateNow');
-    await loadCPA();
-  }finally{
-    btn.disabled = false; btn.textContent = 'Rotate 1300 Offers Now';
-  }
+$('#btn-rotate').addEventListener('click',async()=>{
+  const b=$('#btn-rotate'); b.disabled=true; b.textContent='Rotating…';
+  try{ await api('cpaRotateNow'); await loadCPA(); } finally { b.disabled=false; b.textContent='Rotate 1300 Offers Now'; }
+});
+$('#cpa-add').addEventListener('click',async()=>{
+  const payload={AccountID:$('#cpa-id').value.trim(),Account:$('#cpa-name').value.trim(),Network:$('#cpa-network').value.trim(),Status:$('#cpa-status').value};
+  if(!payload.AccountID){alert('AccountID required');return;}
+  const r=await api('cpaAddAccount',payload,'POST'); if(!r.ok){alert(r.error||'Failed');return;}
+  $('#cpa-id').value=$('#cpa-name').value=$('#cpa-network').value=''; await loadCPA();
 });
 
-$('#cpa-add').addEventListener('click', async ()=>{
-  const AccountID = $('#cpa-id').value.trim();
-  if(!AccountID){ alert('AccountID is required'); return; }
-  const payload = {
-    AccountID,
-    Account: $('#cpa-name').value.trim(),
-    Network: $('#cpa-network').value.trim(),
-    Status: $('#cpa-status').value
-  };
-  const r = await api('cpaAddAccount', payload, 'POST');
-  if(!r.ok){ alert(r.error||'Failed'); return; }
-  $('#cpa-id').value = $('#cpa-name').value = $('#cpa-network').value = '';
-  await loadCPA();
-});
-
-/* ============================
-   USERS
-============================ */
+/* -------- Users -------- */
 async function loadUsers(){
-  const res = await api('users');
-  $('#invite-link').href = res.meta?.inviteLink || '#';
-  $('#user-stats').textContent = `Total: ${res.meta?.total||0} • Approved: ${res.meta?.approved||0} • Pending: ${res.meta?.pending||0} • Suspended: ${res.meta?.suspended||0}`;
-  const tbody = $('#tbl-users tbody'); tbody.innerHTML = '';
-  (res.users||[]).forEach(u=>{
-    const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${esc(u.Username||'')}</td><td>${esc(u.Email||'')}</td><td>${esc(u.Phone||'')}</td><td>${esc(u.Level||'')}</td><td>${esc(u.Status||'')}</td><td>${fmtMoney(u.Earnings||0)}</td>`;
-    tbody.appendChild(tr);
+  const r=await api('users');
+  $('#invite-link').href=r.meta?.inviteLink||'#';
+  $('#user-stats').textContent=`Total: ${r.meta?.total||0} • Approved: ${r.meta?.approved||0} • Pending: ${r.meta?.pending||0} • Suspended: ${r.meta?.suspended||0}`;
+  const tb=$('#tbl-users tbody'); tb.innerHTML='';
+  (r.users||[]).forEach(u=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${esc(u.Username||'')}</td><td>${esc(u.Email||'')}</td><td>${esc(u.Phone||'')}</td>
+                  <td>${esc(u.Level||'')}</td><td>${esc(u.Status||'')}</td><td>${fmtMoney(u.Earnings||0)}</td>`;
+    tb.appendChild(tr);
   });
 }
-$('#btn-add-user, #u-save').forEach = function(){}; // quiet
-
-$('#u-save').addEventListener('click', async ()=>{
-  const payload = {
-    Name: $('#u-name').value.trim(),
-    Email: $('#u-email').value.trim(),
-    Phone: $('#u-phone').value.trim(),
-    Telegram: $('#u-telegram').value.trim(),
-    Status: $('#u-status').value,
-    Level: $('#u-level').value
-  };
-  if(!payload.Name || !payload.Email){ alert('Name & Email required'); return; }
-  const r = await api('addUser', payload, 'POST');
-  if(!r.ok){ alert(r.error||'Failed'); return; }
-  $('#u-name').value = $('#u-email').value = $('#u-phone').value = $('#u-telegram').value = '';
+$('#u-save').addEventListener('click',async()=>{
+  const payload={Name:$('#u-name').value.trim(),Email:$('#u-email').value.trim(),Phone:$('#u-phone').value.trim(),Telegram:$('#u-telegram').value.trim(),Status:$('#u-status').value,Level:$('#u-level').value};
+  if(!payload.Name||!payload.Email){alert('Name & Email required');return;}
+  const r=await api('addUser',payload,'POST'); if(!r.ok){alert(r.error||'Failed');return;}
+  $('#u-name').value=$('#u-email').value=$('#u-phone').value=$('#u-telegram').value='';
   await loadUsers();
 });
 
-/* ============================
-   ANALYTICS
-============================ */
-async function loadAnalytics(){
-  const [m, g, live] = await Promise.all([
-    api('analyticsMonthly'), api('analyticsGeo'), api('analyticsLive')
-  ]);
-
-  // Monthly bars
-  if (chartMonthly) chartMonthly.destroy();
-  chartMonthly = new Chart($('#chartMonthly'), {
-    type:'bar',
-    data:{ labels:(m.series||[]).map(x=>x.month), datasets:[{ label:'Revenue', data:(m.series||[]).map(x=>x.amount) }] },
-    options:{ plugins:{ legend:{display:false}}, scales:{ y:{ beginAtZero:true } } }
-  });
-
-  // Geo doughnut
-  if (chartGeo) chartGeo.destroy();
-  chartGeo = new Chart($('#chartGeo'), {
-    type:'doughnut',
-    data:{ labels:(g.series||[]).map(x=>x.country), datasets:[{ data:(g.series||[]).map(x=>x.amount) }] },
-    options:{ plugins:{ legend:{ position:'bottom' } } }
-  });
-
-  // Live table
-  const tbody = $('#tbl-live tbody'); tbody.innerHTML='';
-  (live.rows||[]).forEach(r=>{
-    const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${fmtDate(r.Datetime)}</td><td>${esc(r.Country||'')}</td><td>${esc(r.OfferType||'')}</td><td>${esc(r.Device||'')}</td><td>${num(r.Clicks)}</td><td>${num(r.Leads)}</td><td>${fmtMoney(r.Earnings)}</td>`;
-    tbody.appendChild(tr);
-  });
-}
-
-/* ============================
-   WALLET
-============================ */
-const BANKS = [
-  'Access Bank','GTBank','Zenith Bank','UBA','First Bank','Polaris Bank','Union Bank','Fidelity Bank','Ecobank','Stanbic IBTC','Heritage Bank','Keystone Bank','Sterling Bank','Wema Bank','Jaiz Bank'
-];
-const FINTECHS = [
-  'Flutterwave','Paystack','Stripe','Wise','Revolut','Chipper Cash','Cash App','OPay','PalmPay','Monzo','N26','Kuda','Carbon','Barter'
-];
-const CRYPTO = [
-  'Bitcoin (BTC)','Ethereum (ETH)','USDT (TRC20)','USDT (ERC20)','USDC','BNB (BEP20)','Solana (SOL)','Tron (TRX)','Litecoin (LTC)'
-];
+/* -------- Wallet -------- */
+let BANKS=['Access Bank','GTBank','Zenith Bank','UBA','First Bank','Polaris Bank','Union Bank','Fidelity Bank','Ecobank','Stanbic IBTC','Heritage Bank','Keystone Bank','Sterling Bank','Wema Bank','Jaiz Bank'];
+let FINTECHS=['Flutterwave','Paystack','Stripe','Wise','Revolut','Chipper Cash','Cash App','OPay','PalmPay','Monzo','N26','Kuda','Carbon','Barter'];
+let CRYPTO=['Bitcoin (BTC)','Ethereum (ETH)','USDT (TRC20)','USDT (ERC20)','USDC','BNB (BEP20)','Solana (SOL)','Tron (TRX)','Litecoin (LTC)'];
 function hydrateMethodList(){
-  const cat = $('#wl-method-cat').value;
-  const sel = $('#wl-method'); sel.innerHTML='';
-  const arr = cat==='bank' ? BANKS : cat==='fintech' ? FINTECHS : CRYPTO;
-  arr.forEach(v => { const o=document.createElement('option'); o.value=v; o.textContent=v; sel.appendChild(o); });
-  // Add "Other…" entry
-  const o = document.createElement('option'); o.value='Other'; o.textContent='Other…'; sel.appendChild(o);
+  const cat=$('#wl-method-cat').value; const sel=$('#wl-method'); sel.innerHTML='';
+  (cat==='bank'?BANKS:cat==='fintech'?FINTECHS:CRYPTO).forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v;sel.appendChild(o)});
+  const other=document.createElement('option');other.value='Other';other.textContent='Other…';sel.appendChild(other);
 }
-$('#wl-method-cat').addEventListener('change', hydrateMethodList);
-hydrateMethodList();
+$('#wl-method-cat').addEventListener('change',hydrateMethodList); hydrateMethodList();
 
 async function loadWallet(){
-  const [sumr, hist] = await Promise.all([ api('walletSummary'), api('walletHistory') ]);
-  if (sumr.ok){
-    $('#wl-in').textContent = fmtMoney(sumr.inflow);
-    $('#wl-out').textContent= fmtMoney(sumr.outflow);
-    $('#wl-net').textContent = fmtMoney(sumr.net);
-  }
-  const tbody = $('#tbl-wallet tbody'); tbody.innerHTML='';
+  const [sumr,hist]=await Promise.all([api('walletSummary'),api('walletHistory')]);
+  if(sumr.ok){$('#wl-in').textContent=fmtMoney(sumr.inflow);$('#wl-out').textContent=fmtMoney(sumr.outflow);$('#wl-net').textContent=fmtMoney(sumr.net);}
+  const tb=$('#tbl-wallet tbody'); tb.innerHTML='';
   (hist.history||[]).forEach(r=>{
-    const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${fmtDate(r.Time || r.Timestamp)}</td><td>${fmtMoney(r.Amount)}</td><td>${esc(r.Method||'')}</td><td>${esc(r.Dir||'')}</td><td>${esc(r.Status||'')}</td><td>${esc(r.Name||'')}</td><td>${esc(r.Email||'')}</td><td>${esc(r.Phone||'')}</td>`;
-    tbody.appendChild(tr);
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${fmtDate(r.Time||r.Timestamp)}</td><td>${fmtMoney(r.Amount)}</td><td>${esc(r.Method||'')}</td>
+                  <td>${esc(r.Dir||'')}</td><td>${esc(r.Status||'')}</td><td>${esc(r.Name||'')}</td>
+                  <td>${esc(r.Email||'')}</td><td>${esc(r.Phone||'')}</td>`;
+    tb.appendChild(tr);
+  });
+}
+$('#wl-validate').addEventListener('click',async()=>{
+  const r=await api('validateAccount',{name:$('#wl-name').value.trim(),email:$('#wl-email').value.trim(),phone:$('#wl-phone').value.trim()});
+  const el=$('#wl-valid-msg'); if(r.ok&&r.valid){el.textContent='Account holder found ✓';el.style.color='#59ffa5'}else{el.textContent='Not found';el.style.color:'#ff7b7b'};
+});
+$('#wl-submit').addEventListener('click',async()=>{
+  const payload={name:$('#wl-name').value.trim(),email:$('#wl-email').value.trim(),phone:$('#wl-phone').value.trim(),amount:$('#wl-amount').value,direction:$('#wl-dir').value,method:$('#wl-method-cat').value+': '+$('#wl-method').value,notes:$('#wl-notes').value.trim()};
+  if(!payload.amount||!payload.method){alert('Amount and Method required');return;}
+  const r=await api('walletRequest',payload,'POST'); if(!r.ok){alert(r.error||'Failed');return;}
+  $('#wl-amount').value=$('#wl-notes').value=''; await loadWallet();
+});
+
+/* -------- Analytics -------- */
+async function loadAnalytics(){
+  const [m,g,live]=await Promise.all([api('analyticsMonthly'),api('analyticsGeo'),api('analyticsLive')]);
+
+  if(chartMonthly) chartMonthly.destroy();
+  chartMonthly=new Chart($('#chartMonthly'),{type:'bar',
+    data:{labels:(m.series||[]).map(x=>x.month),datasets:[{label:'Revenue',data:(m.series||[]).map(x=>x.amount)}]},
+    options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}
+  });
+
+  if(chartGeo) chartGeo.destroy();
+  chartGeo=new Chart($('#chartGeo'),{type:'doughnut',
+    data:{labels:(g.series||[]).map(x=>x.country),datasets:[{data:(g.series||[]).map(x=>x.amount)}]},
+    options:{plugins:{legend:{position:'bottom'}}}
+  });
+
+  const tb=$('#tbl-live tbody'); tb.innerHTML='';
+  (live.rows||[]).forEach(r=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${fmtDate(r.Datetime)}</td><td>${esc(r.Country||'')}</td><td>${esc(r.OfferType||'')}</td>
+                  <td>${esc(r.Device||'')}</td><td>${num(r.Clicks)}</td><td>${num(r.Leads)}</td><td>${fmtMoney(r.Earnings)}</td>`;
+    tb.appendChild(tr);
   });
 }
 
-$('#wl-validate').addEventListener('click', async ()=>{
-  const name = $('#wl-name').value.trim();
-  const email= $('#wl-email').value.trim();
-  const phone= $('#wl-phone').value.trim();
-  const r = await api('validateAccount', { name, email, phone });
-  const el = $('#wl-valid-msg');
-  if (r.ok && r.valid){ el.textContent = 'Account holder found ✓'; el.className='ok'; }
-  else { el.textContent = 'Not found'; el.className='err'; }
-});
-
-$('#wl-submit').addEventListener('click', async ()=>{
-  const payload = {
-    name: $('#wl-name').value.trim(),
-    email: $('#wl-email').value.trim(),
-    phone: $('#wl-phone').value.trim(),
-    amount: $('#wl-amount').value,
-    direction: $('#wl-dir').value,
-    method: `${$('#wl-method-cat').value}: ${$('#wl-method').value}`,
-    notes: $('#wl-notes').value.trim()
-  };
-  if(!payload.amount || !payload.method){ alert('Amount and Method are required'); return; }
-  const r = await api('walletRequest', payload, 'POST');
-  if(!r.ok){ alert(r.error||'Failed'); return; }
-  $('#wl-amount').value = $('#wl-notes').value = '';
-  await loadWallet();
-});
-
-/* ============================
-   SECURITY
-============================ */
+/* -------- Security / Monitoring -------- */
 async function loadSecurity(){
-  const res = await api('securityOverview');
-  if(!res.ok) return;
-  $('#sec-alerts').textContent = res.alerts24h || 0;
-  $('#sec-failed').textContent = res.failedLogins || 0;
-  $('#sec-blocks').textContent = res.blocks || 0;
-
-  const tbody = $('#tbl-sec tbody'); tbody.innerHTML='';
-  (res.recent||[]).forEach(r=>{
-    const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${fmtDate(r.time)}</td><td>${esc(r.user||'')}</td><td>${esc(r.action||'')}</td><td>${esc(r.status||'')}</td>`;
-    tbody.appendChild(tr);
+  const r=await api('securityOverview'); if(!r.ok) return;
+  $('#sec-alerts').textContent=r.alerts24h||0; $('#sec-failed').textContent=r.failedLogins||0; $('#sec-blocks').textContent=r.blocks||0;
+  const tb=$('#tbl-sec tbody'); tb.innerHTML='';
+  (r.recent||[]).forEach(x=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${fmtDate(x.time)}</td><td>${esc(x.user||'')}</td><td>${esc(x.action||'')}</td><td>${esc(x.status||'')}</td>`;
+    tb.appendChild(tr);
   });
 }
-
-/* ============================
-   MONITORING
-============================ */
 async function loadMonitoring(){
-  const res = await api('monitoring');
-  const tbody = $('#tbl-mon tbody'); tbody.innerHTML='';
-  (res.events||[]).forEach(r=>{
-    const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${fmtDate(r.Timestamp||r.Time)}</td><td>${esc(r.User||'')}</td><td>${esc(r.Action||'')}</td><td>${esc(r.Email||'')}</td><td>${esc(r['Phone Number']||'')}</td><td>${esc(r.Status||'')}</td><td>${fmtMoney(r.Amount||0)}</td><td>${esc(r.Method||'')}</td><td>${esc(r.Dir||'')}</td><td>${esc(r.Notes||'')}</td>`;
-    tbody.appendChild(tr);
+  const r=await api('monitoring'); const tb=$('#tbl-mon tbody'); tb.innerHTML='';
+  (r.events||[]).forEach(x=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${fmtDate(x.Timestamp||x.Time)}</td><td>${esc(x.User||'')}</td><td>${esc(x.Action||'')}</td>
+                  <td>${esc(x.Email||'')}</td><td>${esc(x['Phone Number']||'')}</td><td>${esc(x.Status||'')}</td>
+                  <td>${fmtMoney(x.Amount||0)}</td><td>${esc(x.Method||'')}</td><td>${esc(x.Dir||'')}</td><td>${esc(x.Notes||'')}</td>`;
+    tb.appendChild(tr);
   });
 }
 
-/* ============================
-   VIEW LOADER
-============================ */
+/* -------- boot -------- */
 async function loadView(v){
-  if (v==='overview') await loadOverview();
-  if (v==='cpa') await loadCPA();
-  if (v==='users') await loadUsers();
-  if (v==='analytics') await loadAnalytics();
-  if (v==='wallet') await loadWallet();
-  if (v==='security') await loadSecurity();
-  if (v==='monitoring') await loadMonitoring();
+  if(v==='overview') await loadOverview();
+  if(v==='cpa')      await loadCPA();
+  if(v==='users')    await loadUsers();
+  if(v==='analytics')await loadAnalytics();
+  if(v==='wallet')   await loadWallet();
+  if(v==='security') await loadSecurity();
+  if(v==='monitoring')await loadMonitoring();
 }
-
-/* ============================
-   UTILS + INIT
-============================ */
-function esc(s){ return String(s||'').replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m])); }
-function num(x){ const n = Number(String(x).toString().replace(/[^0-9.\-]/g,'')); return isFinite(n)?n:0; }
-function fmtDate(v){ try{ const d = (v instanceof Date) ? v : new Date(v); return d.toLocaleString(); }catch(_){ return String(v||''); } }
-
-(async function init(){
-  setActive('overview');
-  await loadView('overview');
-})();
+(async function init(){ setActive('overview'); await loadView('overview'); })();
 </script>
 </body>
 </html>

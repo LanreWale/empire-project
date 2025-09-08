@@ -1,23 +1,41 @@
 import React from "react";
-const GAS="https://script.google.com/macros/s/AKfycbx5FniYFG6YWADrBbfkzVmsGBeqh4Je28x-doOePGC2yolON_C8quh42_gpSdrV9eru/exec";
-const PASS="GENERALISIMO@2025";
-const fmtMoney=(n)=>Number(n??0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
-const fmtInt=(n)=>Number(n??0).toLocaleString();
-const fmtPct=(n)=>`${Number(n??0).toFixed(2)}%`;
-async function fetchMetrics(){const u=new URL(GAS);u.searchParams.set("action","commanderMetrics");u.searchParams.set("pass",PASS);
-const r=await fetch(u,{headers:{"Cache-Control":"no-cache"}});const j=await r.json();if(!r.ok||j?.ok===false)throw new Error(j?.error||`HTTP ${r.status}`);return j.data||j;}
-export default function Dashboard(){const [data,setData]=React.useState(null),[err,setErr]=React.useState("");
-React.useEffect(()=>{fetchMetrics().then(setData).catch(e=>setErr(String(e.message||e)));},[]);
-if(err)return <div style={{color:"#ffb4a2"}}>Error: {err}</div>; if(!data)return <div style={{opacity:.7}}>Loading metrics…</div>;
-const totalEarnings=data.totalEarnings??data.total??0,activeUsers=data.activeUsers??0,convRate=data.conversionRate??0,totalClicks=data.totalClicks??0,updatedAt=data.updatedAt??"";
-const card={background:"#0b1320",border:"1px solid #15243d",borderRadius:16,padding:16,minHeight:120};
-return (<div style={{padding:16}}>
-  <h2 style={{color:"#8ab4f8",margin:"0 0 14px"}}>SUPREME COMMAND DASHBOARD — LIVE</h2>
-  <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(260px,1fr))",gap:16}}>
-    <div style={card}><div style={{opacity:.7}}>Total Earnings</div><div style={{fontSize:28,fontWeight:800,color:"#00ff95"}}>${fmtMoney(totalEarnings)}</div></div>
-    <div style={card}><div style={{opacity:.7}}>Active Users</div><div style={{fontSize:28,fontWeight:800,color:"#4cc9f0"}}>{fmtInt(activeUsers)}</div></div>
-    <div style={card}><div style={{opacity:.7}}>Conversion Rate</div><div style={{fontSize:28,fontWeight:800,color:"#7cffea"}}>{fmtPct(convRate)}</div></div>
-    <div style={card}><div style={{opacity:.7}}>Total Clicks</div><div style={{fontSize:28,fontWeight:800,color:"#c0f"}}>{fmtInt(totalClicks)}</div></div>
-  </div>
-  <div style={{marginTop:10,opacity:.6,fontSize:12}}>UPDATED {updatedAt}</div>
-</div>);}
+import { getSummary } from "../lib/gas";
+
+const fmt2 = (n) =>
+  Number(n ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+export default function Dashboard() {
+  const [data, setData] = React.useState(null);
+  const [err, setErr] = React.useState("");
+
+  React.useEffect(() => {
+    (async () => {
+      try { setData(await getSummary()); }
+      catch (e) { setErr(e.message || "Failed to fetch"); }
+    })();
+  }, []);
+
+  return (
+    <div style={{ padding: 16 }}>
+      <h2>🛡️ Dashboard</h2>
+      {err && <div style={{ color: "crimson" }}>Error: {err}</div>}
+      {!data ? <div>Loading…</div> : (
+        <div style={{ display: "grid", gap: 16, gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}>
+          <Card title="Total Earnings" value={`$${fmt2(data.totalUsd)}`} />
+          <Card title="Active Users" value={String(data.activeUsers ?? 0)} />
+          <Card title="Conversion Rate" value={`${fmt2((data.convRate ?? 0) * 100)}%`} />
+          <Card title="Total Clicks" value={Number(data.totalClicks ?? 0).toLocaleString()} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Card({ title, value }) {
+  return (
+    <div style={{ background: "#0f172a", borderRadius: 12, padding: 16 }}>
+      <div style={{ opacity: .8 }}>{title}</div>
+      <div style={{ fontSize: 28, fontWeight: 800, marginTop: 6, color: "#39ff88" }}>{value}</div>
+    </div>
+  );
+}

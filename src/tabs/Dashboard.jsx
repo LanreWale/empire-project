@@ -1,41 +1,29 @@
 import React from "react";
-import { getSummary } from "../lib/gas";
+import useFetch from "../lib/useFetch";
+import { overview, fmt } from "../lib/gas";
 
-const fmt2 = (n) =>
-  Number(n ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-
-export default function Dashboard() {
-  const [data, setData] = React.useState(null);
-  const [err, setErr] = React.useState("");
-
-  React.useEffect(() => {
-    (async () => {
-      try { setData(await getSummary()); }
-      catch (e) { setErr(e.message || "Failed to fetch"); }
-    })();
-  }, []);
-
+export default function Dashboard(){
+  const { data, error, loading } = useFetch(overview, []);
+  if (loading) return <Pad>Loading…</Pad>;
+  if (error)   return <Pad error>Error: {error}</Pad>;
+  const o = data || {};
   return (
-    <div style={{ padding: 16 }}>
-      <h2>🛡️ Dashboard</h2>
-      {err && <div style={{ color: "crimson" }}>Error: {err}</div>}
-      {!data ? <div>Loading…</div> : (
-        <div style={{ display: "grid", gap: 16, gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}>
-          <Card title="Total Earnings" value={`$${fmt2(data.totalUsd)}`} />
-          <Card title="Active Users" value={String(data.activeUsers ?? 0)} />
-          <Card title="Conversion Rate" value={`${fmt2((data.convRate ?? 0) * 100)}%`} />
-          <Card title="Total Clicks" value={Number(data.totalClicks ?? 0).toLocaleString()} />
-        </div>
-      )}
-    </div>
+    <Pad>
+      <h2>SUPREME COMMAND DASHBOARD</h2>
+      <Stat label="Total Earnings" value={fmt.money(o.totalEarnings)} />
+      <Stat label="Active Users"   value={fmt.int(o.activeUsers)} />
+      <Stat label="Conversion Rate" value={fmt.pct(o.conversionRate * 100)} />
+      <Stat label="Total Clicks"   value={fmt.int(o.clicks)} />
+    </Pad>
   );
 }
 
-function Card({ title, value }) {
+function Pad({children,error}){ return <div style={{padding:16,color:error?"#f88":"#e8f1ff"}}>{children}</div>; }
+function Stat({label,value}){
   return (
-    <div style={{ background: "#0f172a", borderRadius: 12, padding: 16 }}>
-      <div style={{ opacity: .8 }}>{title}</div>
-      <div style={{ fontSize: 28, fontWeight: 800, marginTop: 6, color: "#39ff88" }}>{value}</div>
+    <div style={{margin:"12px 0",background:"#0e1729",padding:16,borderRadius:12,border:"1px solid #1f2a44"}}>
+      <div style={{opacity:.7,fontSize:12}}>{label}</div>
+      <div style={{fontSize:28,fontWeight:800,marginTop:6}}>{value}</div>
     </div>
   );
 }

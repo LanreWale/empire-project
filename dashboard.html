@@ -11,7 +11,7 @@
   --emp-bg-1:#0b1020; --emp-bg-2:#081225; --emp-sheen:#0d1b3a;
   --emp-card:rgba(16,21,32,.88); --emp-border:rgba(255,255,255,.06);
   --text:#e8eaed; --muted:#9db2d7; --gold:#f1c40f; --gold-2:#d9a100;
-  --mint:#59ffa5; --ink:#0c111a; --border:#1d2432;
+  --mint:#59ffa5; --ink:#0c111a; --ring:rgba(241,196,15,.25); --border:#1d2432;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%}
@@ -25,67 +25,54 @@ body{
   min-height:100svh;
 }
 
-/* layout */
+/* Layout */
 .layout{display:grid;grid-template-columns:260px 1fr;min-height:100svh}
 .sidebar{
-  background:
-    radial-gradient(600px 300px at 50% 0%, rgba(255,214,102,.07), transparent 60%),
-    linear-gradient(180deg,#0a0f1c,#0b1220 70%);
-  border-right:1px solid var(--emp-border);
-  padding:14px 12px 18px;
+  background:linear-gradient(180deg,#0a0f1c,#0b1220 70%);
+  border-right:1px solid var(--emp-border);padding:14px 12px 18px;
 }
-.brand{display:flex;align-items:center;gap:10px;padding:8px 8px 14px;margin-bottom:8px;border-bottom:1px dashed rgba(255,255,255,.08)}
-.brand .crest{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;background:linear-gradient(180deg,#1b2a4a,#101a31);box-shadow:0 10px 28px rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.06)}
-.brand .crest svg{filter:drop-shadow(0 6px 20px rgba(89,255,165,.45))}
+.brand{display:flex;align-items:center;gap:10px;padding:8px 8px 14px;margin-bottom:8px;
+  border-bottom:1px dashed rgba(255,255,255,.08);}
+.brand .crest{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;
+  background:linear-gradient(180deg,#1b2a4a,#101a31);}
 .brand .title{font-weight:900;letter-spacing:.08em}
 .brand .title span{color:#a5b4fc}
-
-.nav a{
-  display:block;padding:11px 12px;margin:8px 0;border-radius:12px;text-decoration:none;
+.nav a{display:block;padding:11px 12px;margin:8px 0;border-radius:12px;text-decoration:none;
   color:var(--text);background:var(--ink);border:1px solid var(--emp-border);
-  font-weight:700;letter-spacing:.02em;cursor:pointer
-}
-.nav a.active{background:#172036;border-color:#2a3350;box-shadow:0 0 0 2px rgba(36,108,255,.09) inset}
+  font-weight:700;letter-spacing:.02em;}
+.nav a.active{background:#172036;border-color:#2a3350}
 .content{padding:20px}
 
-/* sections/cards/tables */
+/* Sections */
 .section{margin:0 0 22px}
-.section h2{font-size:1.05rem;letter-spacing:.08em;text-transform:uppercase;color:#cbd5e1;margin:0 0 10px;display:flex;align-items:center;gap:8px}
-.badge{display:inline-block;padding:4px 8px;border-radius:999px;font-size:.75rem;background:#0d1526;border:1px solid var(--emp-border)}
+.section h2{font-size:1.05rem;letter-spacing:.08em;text-transform:uppercase;color:#cbd5e1;
+  margin:0 0 10px;display:flex;align-items:center;gap:8px}
+.badge{display:inline-block;padding:4px 8px;border-radius:999px;font-size:.75rem;
+  background:#0d1526;border:1px solid var(--emp-border)}
 .right{margin-left:auto}
 .card{background:var(--emp-card);border:1px solid var(--emp-border);border-radius:16px;padding:16px}
 .grid{display:grid;gap:14px}
 .grid.kpi-4{grid-template-columns:repeat(4,minmax(180px,1fr))}
-.grid.two{grid-template-columns:1fr 1fr}
-.grid.three{grid-template-columns:repeat(3,1fr)}
-.split{display:grid;grid-template-columns:1fr 420px;gap:14px}
-.kpi{display:flex;flex-direction:column;gap:6px}
-.kpi .lbl{color:var(--muted);font-weight:800}
-.kpi .val{font-size:1.7rem;font-weight:900;color:var(--mint);text-shadow:0 10px 28px rgba(0,0,0,.35)}
-.table{width:100%;border-collapse:separate;border-spacing:0 8px}
-.table th{text-align:left;font-size:.86rem;color:#a3aed0;font-weight:800;padding:6px 8px}
-.table td{padding:10px 8px;background:#0c111a;border:1px solid var(--emp-border);border-left:none;border-right:none}
-.toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:6px 0 12px}
-.input,select,textarea{background:#0c111a;color:var(--text);border:1px solid #2a3350;border-radius:10px;padding:10px 10px}
-.btn{background:linear-gradient(180deg,#f1c40f 0%,#d9a100 100%);color:#161000;font-weight:900;border-radius:12px;padding:10px 14px;border:none;cursor:pointer}
-.btn.ghost{background:transparent;color:var(--text);border:1px solid var(--emp-border)}
-.muted{color:var(--muted)}
 .hidden{display:none!important}
-@media (max-width:1080px){.layout{grid-template-columns:1fr}.split{grid-template-columns:1fr}.grid.kpi-4{grid-template-columns:1fr 1fr}.grid.two,.grid.three{grid-template-columns:1fr}}
+.kpi .lbl{color:var(--muted);font-weight:800}
+.kpi .val{font-size:1.7rem;font-weight:900;color:var(--mint);}
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+
+<!-- Hard-coded GAS API -->
+<script>
+const EMP_API = "https://script.google.com/macros/s/AKfycbysJmVXlrOE1_J3uw5wMqs9cnKtj-uuoxj0Mmj8JWTj7eZMvp9XJYXrs-0leocNXI6w/exec";
+</script>
 </head>
 <body>
 <div class="layout">
   <aside class="sidebar">
     <div class="brand">
-      <div class="crest" aria-hidden="true">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-          <path d="M12 2L3 7l9 5l9-5-9-5z" fill="#59ffa5"/>
-          <path d="M3 7v6l9 5 9-5V7l-9 5-9-5z" fill="#ffd166" opacity=".3"/>
-        </svg>
-      </div>
+      <div class="crest"><svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+        <path d="M12 2L3 7l9 5l9-5-9-5z" fill="#59ffa5"/>
+        <path d="M3 7v6l9 5 9-5V7l-9 5-9-5z" fill="#ffd166" opacity=".3"/>
+      </svg></div>
       <div class="title">THE <span>EMPIRE</span></div>
     </div>
     <nav class="nav" id="nav">
@@ -100,358 +87,58 @@ body{
   </aside>
 
   <main class="content">
-    <!-- OVERVIEW -->
-    <section class="section" id="view-overview">
+    <section id="view-overview" class="section">
       <h2>Supreme Command Dashboard <span class="badge">LIVE</span><span class="right muted" id="ov-updated"></span></h2>
       <div class="grid kpi-4">
         <div class="card kpi"><div class="lbl">Total Earnings</div><div class="val" id="ov-earn">$0</div></div>
         <div class="card kpi"><div class="lbl">Active Users</div><div class="val" id="ov-active">0</div></div>
-        <div class="card kpi"><div class="lbl">Conversion Rate</div><div class="val" id="ov-cr">0.00%</div></div>
+        <div class="card kpi"><div class="lbl">Conversion Rate</div><div class="val" id="ov-cr">0%</div></div>
         <div class="card kpi"><div class="lbl">Total Clicks</div><div class="val" id="ov-clicks">0</div></div>
       </div>
-      <div class="grid two" style="margin-top:14px">
-        <div class="card"><div class="lbl muted" style="margin-bottom:10px">Daily Earnings</div><canvas id="chartDaily"></canvas></div>
-        <div class="card"><div class="lbl muted" style="margin-bottom:10px">Traffic Sources</div><canvas id="chartSources"></canvas></div>
-      </div>
     </section>
-
-    <!-- CPA -->
-    <section class="section hidden" id="view-cpa">
-      <h2>CPA Accounts Management <span class="badge">LIVE</span></h2>
-      <div class="toolbar">
-        <button class="btn" id="btn-rotate">Rotate 1300 Offers Now</button>
-        <span class="muted">Auto-throttled to 1/hour to respect GAS quotas.</span>
-      </div>
-      <div class="card">
-        <table class="table" id="tbl-cpa"><thead><tr>
-          <th>Account</th><th>Network</th><th>Status</th><th>Active Offers</th><th>Revenue</th><th>Clicks</th><th>Conversions</th>
-        </tr></thead><tbody></tbody></table>
-      </div>
-      <div class="card" style="margin-top:12px">
-        <h3 style="margin:0 0 10px">+ Add New Account</h3>
-        <div class="grid" style="grid-template-columns:repeat(4,1fr);gap:10px">
-          <input class="input" id="cpa-id" placeholder="AccountID (unique)" />
-          <input class="input" id="cpa-name" placeholder="Account Name" />
-          <input class="input" id="cpa-network" placeholder="Network" />
-          <select class="input" id="cpa-status"><option>Active</option><option>Pending</option><option>Suspended</option></select>
-        </div>
-        <div class="toolbar" style="margin-top:10px">
-          <button class="btn" id="cpa-add">Save Account</button>
-        </div>
-      </div>
-    </section>
-
-    <!-- USERS -->
-    <section class="section hidden" id="view-users">
-      <h2>Users Management <span class="badge">LIVE</span></h2>
-      <div class="toolbar">
-        <a class="btn" target="_blank" id="invite-link">Invite Link</a>
-        <button class="btn" id="btn-add-user">+ Add New User</button>
-        <div id="user-stats" class="muted"></div>
-      </div>
-      <div class="card">
-        <table class="table" id="tbl-users"><thead><tr>
-          <th>Username</th><th>Email</th><th>Phone</th><th>Level</th><th>Status</th><th>Earnings</th>
-        </tr></thead><tbody></tbody></table>
-      </div>
-      <div class="card" style="margin-top:12px">
-        <h3 style="margin:0 0 10px">+ Add New User</h3>
-        <div class="grid" style="grid-template-columns:repeat(3,1fr);gap:10px">
-          <input class="input" id="u-name" placeholder="Name" />
-          <input class="input" id="u-email" placeholder="Email" />
-          <input class="input" id="u-phone" placeholder="Phone" />
-          <input class="input" id="u-telegram" placeholder="Telegram" />
-          <select class="input" id="u-status"><option>Pending</option><option>Confirmed</option><option>Suspended</option></select>
-          <select class="input" id="u-level"><option>Level 1</option><option>Level 2</option><option>Level 3</option></select>
-        </div>
-        <div class="toolbar" style="margin-top:10px"><button class="btn" id="u-save">Save User</button></div>
-      </div>
-    </section>
-
-    <!-- ANALYTICS -->
-    <section class="section hidden" id="view-analytics">
-      <h2>Analytics & Reports <span class="badge">LIVE</span></h2>
-      <div class="grid two">
-        <div class="card"><div class="lbl muted" style="margin-bottom:10px">Performance Overview (Monthly)</div><canvas id="chartMonthly"></canvas></div>
-        <div class="card"><div class="lbl muted" style="margin-bottom:10px">Geographic Distribution</div><canvas id="chartGeo"></canvas></div>
-      </div>
-      <div class="card" style="margin-top:12px">
-        <div class="lbl muted" style="margin-bottom:6px">Live Performance Data</div>
-        <table class="table" id="tbl-live"><thead><tr>
-          <th>Date</th><th>Country</th><th>Offer Type</th><th>Device</th><th>Clicks</th><th>Leads</th><th>Earnings ($)</th>
-        </tr></thead><tbody></tbody></table>
-      </div>
-    </section>
-
-    <!-- WALLET -->
-    <section class="section hidden" id="view-wallet">
-      <h2>Universal Withdrawal & History <span class="badge">LIVE</span></h2>
-      <div class="grid three">
-        <div class="card kpi"><div class="lbl">Inflow</div><div class="val" id="wl-in">$0</div></div>
-        <div class="card kpi"><div class="lbl">Outflow</div><div class="val" id="wl-out">$0</div></div>
-        <div class="card kpi"><div class="lbl">Net</div><div class="val" id="wl-net">$0</div></div>
-      </div>
-      <div class="split" style="margin-top:12px">
-        <div class="card">
-          <div class="lbl muted" style="margin-bottom:6px">Transaction History & Status</div>
-          <table class="table" id="tbl-wallet"><thead><tr>
-            <th>Time</th><th>Amount</th><th>Method</th><th>Dir</th><th>Status</th><th>Name</th><th>Email</th><th>Phone</th>
-          </tr></thead><tbody></tbody></table>
-        </div>
-        <div class="card">
-          <div class="lbl muted" style="margin-bottom:8px">Request Withdrawal / Record Deposit</div>
-          <div class="grid" style="grid-template-columns:repeat(2,1fr);gap:10px">
-            <input class="input" id="wl-name" placeholder="Account Holder Name" />
-            <input class="input" id="wl-email" placeholder="Email" />
-            <input class="input" id="wl-phone" placeholder="Phone" />
-            <input type="number" class="input" id="wl-amount" placeholder="Amount (USD)" />
-            <select class="input" id="wl-dir"><option value="out">Withdraw (out)</option><option value="in">Deposit (in)</option></select>
-            <select class="input" id="wl-method-cat"><option value="bank">Bank</option><option value="fintech">Fintech</option><option value="crypto">Crypto</option></select>
-          </div>
-          <select class="input" id="wl-method" style="margin-top:8px"></select>
-          <textarea class="input" id="wl-notes" placeholder="Notes (routing details, wallet address, etc.)" style="margin-top:8px;width:100%;min-height:90px"></textarea>
-          <div class="toolbar" style="margin-top:10px">
-            <button class="btn" id="wl-validate">Validate Holder</button>
-            <button class="btn" id="wl-submit">Request</button>
-            <span id="wl-valid-msg" class="muted" style="margin-left:8px"></span>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- SECURITY -->
-    <section class="section hidden" id="view-security">
-      <h2>Security Overview <span class="badge">LIVE</span></h2>
-      <div class="grid three">
-        <div class="card kpi"><div class="lbl">Alerts (24h)</div><div class="val" id="sec-alerts">0</div></div>
-        <div class="card kpi"><div class="lbl">Failed Logins</div><div class="val" id="sec-failed">0</div></div>
-        <div class="card kpi"><div class="lbl">Blocks</div><div class="val" id="sec-blocks">0</div></div>
-      </div>
-      <div class="card" style="margin-top:12px">
-        <div class="lbl muted" style="margin-bottom:6px">Recent Security Activity</div>
-        <table class="table" id="tbl-sec"><thead><tr><th>Time</th><th>User</th><th>Action</th><th>Status</th></tr></thead><tbody></tbody></table>
-      </div>
-    </section>
-
-    <!-- MONITORING -->
-    <section class="section hidden" id="view-monitoring">
-      <h2>System Monitoring <span class="badge">LIVE</span></h2>
-      <div class="card">
-        <table class="table" id="tbl-mon"><thead><tr>
-          <th>Time</th><th>User</th><th>Action</th><th>Email</th><th>Phone</th><th>Status</th><th>Amount</th><th>Method</th><th>Dir</th><th>Notes</th>
-        </tr></thead><tbody></tbody></table>
-      </div>
-    </section>
+    <section id="view-cpa" class="section hidden"><h2>CPA Accounts</h2></section>
+    <section id="view-users" class="section hidden"><h2>Users</h2></section>
+    <section id="view-analytics" class="section hidden"><h2>Analytics</h2></section>
+    <section id="view-wallet" class="section hidden"><h2>Wallet</h2></section>
+    <section id="view-security" class="section hidden"><h2>Security</h2></section>
+    <section id="view-monitoring" class="section hidden"><h2>Monitoring</h2></section>
   </main>
 </div>
 
-<!-- HARD-CODED GAS URL (no templates on Netlify) -->
-<script>
-const EMP_API = "https://script.google.com/macros/s/AKfycbysJmVXlrOE1_J3uw5wMqs9cnKtj-uuoxj0Mmj8JWTj7eZMvp9XJYXrs-0leocNXI6w/exec";
-</script>
-
 <script>
 const $=s=>document.querySelector(s), $all=s=>Array.from(document.querySelectorAll(s));
-function qs(o){return Object.entries(o).map(([k,v])=>encodeURIComponent(k)+'='+encodeURIComponent(v)).join('&')}
-function fmtMoney(n){n=Number(n||0);return n.toLocaleString(undefined,{style:'currency',currency:'USD',maximumFractionDigits:2});}
-function fmtDate(v){try{const d=new Date(v);return d.toLocaleString()}catch(_){return String(v||'')}}
-function esc(s){return String(s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&gt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]) )}
-function num(x){const n=Number(String(x).replace(/[^0-9.\-]/g,''));return isFinite(n)?n:0}
-
-async function api(action, params=null, method='GET'){
-  if(!EMP_API){ alert('EMP_API missing'); throw new Error('EMP_API missing'); }
-  let url = EMP_API + '?action=' + encodeURIComponent(action);
-  const opt = { method };
-  if(params && method==='GET') url += '&' + qs(params);
-  if(params && method==='POST'){ opt.headers={'Content-Type':'application/json'}; opt.body=JSON.stringify({action,...params}); }
-  const r = await fetch(url,opt);
-  if(!r.ok){ throw new Error('HTTP '+r.status); }
-  return r.json();
-}
 
 function setActive(view){
   $all('.nav a').forEach(a=>a.classList.toggle('active',a.dataset.view===view));
-  ['overview','cpa','users','analytics','wallet','security','monitoring'].forEach(v=>{
-    const sec=$('#view-'+v); if(!sec) return; sec.classList.toggle('hidden', v!==view);
-  });
+  ['overview','cpa','users','analytics','wallet','security','monitoring']
+    .forEach(v=>{
+      const sec=$('#view-'+v);
+      if(sec) sec.classList.toggle('hidden', v!==view);
+    });
 }
-$all('.nav a').forEach(a=>a.addEventListener('click',e=>{
-  e.preventDefault();
-  setActive(a.dataset.view);
-  loadView(a.dataset.view).catch(console.error);
-}));
 
-let chartDaily,chartSources,chartMonthly,chartGeo;
-
-/* -------- Overview -------- */
+async function api(action){ const r=await fetch(EMP_API+"?action="+action); return r.json(); }
 async function loadOverview(){
   const res=await api('overview');
   if(!res.ok) return;
-  $('#ov-updated').textContent='Updated '+new Date(res.updated).toLocaleString();
-  $('#ov-earn').textContent=fmtMoney(res.data.totalEarnings);
-  $('#ov-active').textContent=res.data.activeUsers;
-  $('#ov-cr').textContent=(res.data.conversionRate*100).toFixed(2)+'%';
-  $('#ov-clicks').textContent=res.data.totalClicks;
-
-  if(chartDaily) chartDaily.destroy();
-  chartDaily=new Chart($('#chartDaily'),{type:'line',
-    data:{labels:['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],datasets:[{label:'Earnings',data:res.data.dailyEarningsByDow||[],tension:.3,fill:false}]},
-    options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}
-  });
-  if(chartSources) chartSources.destroy();
-  chartSources=new Chart($('#chartSources'),{type:'doughnut',
-    data:{labels:['Direct','Referral','Social','Organic'],datasets:[{data:[35,25,20,20]}]},
-    options:{plugins:{legend:{position:'bottom'}}}
-  });
+  $('#ov-updated').textContent='Updated '+new Date(res.updatedAt||Date.now()).toLocaleString();
+  $('#ov-earn').textContent='$'+(res.data?.totalEarnings||0);
+  $('#ov-active').textContent=res.data?.activeUsers||0;
+  $('#ov-cr').textContent=(res.data?.conversionRate||0)+'%';
+  $('#ov-clicks').textContent=res.data?.totalClicks||0;
 }
 
-/* -------- CPA -------- */
-async function loadCPA(){
-  const r=await api('cpaAccounts'); const tb=$('#tbl-cpa tbody'); tb.innerHTML='';
-  if(!r.ok){tb.innerHTML='<tr><td colspan="7">Unable to load</td></tr>';return;}
-  (r.accounts||[]).forEach(x=>{
-    const tr=document.createElement('tr');
-    tr.innerHTML=`<td>${esc(x.name||'')}</td><td>${esc(x.network||'')}</td><td>${esc(x.status||'')}</td>
-                  <td>${num(x.activeOffers)}</td><td>${fmtMoney(x.revenue||0)}</td>
-                  <td>${num(x.clicks)}</td><td>${num(x.conversions)}</td>`;
-    tb.appendChild(tr);
+$all('.nav a').forEach(a=>{
+  a.addEventListener('click',e=>{
+    e.preventDefault();
+    setActive(a.dataset.view);
+    if(a.dataset.view==='overview') loadOverview();
   });
-}
-$('#btn-rotate').addEventListener('click',async()=>{
-  const b=$('#btn-rotate'); b.disabled=true; b.textContent='Rotating…';
-  try{ await api('cpaRotateNow'); await loadCPA(); } finally { b.disabled=false; b.textContent='Rotate 1300 Offers Now'; }
-});
-$('#cpa-add').addEventListener('click',async()=>{
-  const payload={AccountID:$('#cpa-id').value.trim(),Account:$('#cpa-name').value.trim(),Network:$('#cpa-network').value.trim(),Status:$('#cpa-status').value};
-  if(!payload.AccountID){alert('AccountID required');return;}
-  const r=await api('cpaAddAccount',payload,'POST'); if(!r.ok){alert(r.error||'Failed');return;}
-  $('#cpa-id').value=$('#cpa-name').value=$('#cpa-network').value=''; await loadCPA();
 });
 
-/* -------- Users -------- */
-async function loadUsers(){
-  const r=await api('users');
-  $('#invite-link').href=r.meta?.inviteLink||'#';
-  $('#user-stats').textContent=`Total: ${r.meta?.total||0} • Approved: ${r.meta?.approved||0} • Pending: ${r.meta?.pending||0} • Suspended: ${r.meta?.suspended||0}`;
-  const tb=$('#tbl-users tbody'); tb.innerHTML='';
-  (r.users||[]).forEach(u=>{
-    const tr=document.createElement('tr');
-    tr.innerHTML=`<td>${esc(u.Username||'')}</td><td>${esc(u.Email||'')}</td><td>${esc(u.Phone||'')}</td>
-                  <td>${esc(u.Level||'')}</td><td>${esc(u.Status||'')}</td><td>${fmtMoney(u.Earnings||0)}</td>`;
-    tb.appendChild(tr);
-  });
-}
-$('#u-save').addEventListener('click',async()=>{
-  const payload={Name:$('#u-name').value.trim(),Email:$('#u-email').value.trim(),Phone:$('#u-phone').value.trim(),Telegram:$('#u-telegram').value.trim(),Status:$('#u-status').value,Level:$('#u-level').value};
-  if(!payload.Name||!payload.Email){alert('Name & Email required');return;}
-  const r=await api('addUser',payload,'POST'); if(!r.ok){alert(r.error||'Failed');return;}
-  $('#u-name').value=$('#u-email').value=$('#u-phone').value=$('#u-telegram').value='';
-  await loadUsers();
-});
-
-/* -------- Wallet -------- */
-let BANKS=[], FINTECHS=['Flutterwave','Paystack','Stripe','Wise','Revolut','Chipper Cash','Cash App','OPay','PalmPay','Monzo','N26','Kuda','Carbon','Barter'], CRYPTO=['Bitcoin (BTC)','Ethereum (ETH)','USDT (TRC20)','USDT (ERC20)','USDC','BNB (BEP20)','Solana (SOL)','Tron (TRX)','Litecoin (LTC)'];
-function hydrateMethodList(){
-  const cat=$('#wl-method-cat').value; const sel=$('#wl-method'); sel.innerHTML='';
-  const list = cat==='bank' ? BANKS.map(b=>b.name) : (cat==='fintech'?FINTECHS:CRYPTO);
-  list.forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v;sel.appendChild(o)});
-  const other=document.createElement('option');other.value='Other';other.textContent='Other…';sel.appendChild(other);
-}
-$('#wl-method-cat').addEventListener('change',hydrateMethodList);
-
-async function loadWallet(){
-  // pull banks from sheet via GAS
-  try{
-    const br = await api('banks');
-    BANKS = Array.isArray(br.banks) ? br.banks : [];
-  }catch(e){ BANKS = []; }
-  hydrateMethodList();
-
-  const [sumr,hist]=await Promise.all([api('walletSummary'),api('walletHistory')]);
-  if(sumr.ok){$('#wl-in').textContent=fmtMoney(sumr.inflow);$('#wl-out').textContent=fmtMoney(sumr.outflow);$('#wl-net').textContent=fmtMoney(sumr.net);}
-  const tb=$('#tbl-wallet tbody'); tb.innerHTML='';
-  (hist.history||[]).forEach(r=>{
-    const tr=document.createElement('tr');
-    tr.innerHTML=`<td>${fmtDate(r.Time||r.Timestamp)}</td><td>${fmtMoney(r.Amount)}</td><td>${esc(r.Method||'')}</td>
-                  <td>${esc((r.Direction||r.Dir||'').toString())}</td><td>${esc(r.Status||'')}</td><td>${esc(r['Direction Name']||r.Name||'')}</td>
-                  <td>${esc(r.Email||'')}</td><td>${esc(r.Phone||'')}</td>`;
-    tb.appendChild(tr);
-  });
-}
-$('#wl-validate').addEventListener('click',async()=>{
-  const r=await api('validateAccount',{name:$('#wl-name').value.trim(),email:$('#wl-email').value.trim(),phone:$('#wl-phone').value.trim()});
-  const el=$('#wl-valid-msg'); if(r.ok&&r.valid){el.textContent='Account holder found ✓';el.style.color='#59ffa5'}else{el.textContent='Not found';el.style.color:'#ff7b7b'};
-});
-$('#wl-submit').addEventListener('click',async()=>{
-  const payload={name:$('#wl-name').value.trim(),email:$('#wl-email').value.trim(),phone:$('#wl-phone').value.trim(),amount:$('#wl-amount').value,direction:$('#wl-dir').value,method:$('#wl-method-cat').value+': '+$('#wl-method').value,notes:$('#wl-notes').value.trim()};
-  if(!payload.amount||!payload.method){alert('Amount and Method required');return;}
-  const r=await api('walletRequest',payload,'POST'); if(!r.ok){alert(r.error||'Failed');return;}
-  $('#wl-amount').value=$('#wl-notes').value=''; await loadWallet();
-});
-
-/* -------- Analytics -------- */
-let chartDaily,chartSources,chartMonthly,chartGeo;
-async function loadAnalytics(){
-  const [m,g,live]=await Promise.all([api('analyticsMonthly'),api('analyticsGeo'),api('analyticsLive')]);
-
-  if(chartMonthly) chartMonthly.destroy();
-  chartMonthly=new Chart($('#chartMonthly'),{type:'bar',
-    data:{labels:(m.series||[]).map(x=>x.month),datasets:[{label:'Revenue',data:(m.series||[]).map(x=>x.amount)}]},
-    options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}
-  });
-
-  if(chartGeo) chartGeo.destroy();
-  chartGeo=new Chart($('#chartGeo'),{type:'doughnut',
-    data:{labels:(g.series||[]).map(x=>x.country),datasets:[{data:(g.series||[]).map(x=>x.amount)}]},
-    options:{plugins:{legend:{position:'bottom'}}}
-  });
-
-  const tb=$('#tbl-live tbody'); tb.innerHTML='';
-  (live.rows||[]).forEach(r=>{
-    const tr=document.createElement('tr');
-    tr.innerHTML=`<td>${fmtDate(r.Datetime)}</td><td>${esc(r.Country||'')}</td><td>${esc(r.OfferType||'')}</td>
-                  <td>${esc(r.Device||'')}</td><td>${num(r.Clicks)}</td><td>${num(r.Leads)}</td><td>${fmtMoney(r.Earnings)}</td>`;
-    tb.appendChild(tr);
-  });
-}
-
-/* -------- Security / Monitoring -------- */
-async function loadSecurity(){
-  const r=await api('securityOverview'); if(!r.ok) return;
-  $('#sec-alerts').textContent=r.alerts24h||0; $('#sec-failed').textContent=r.failedLogins||0; $('#sec-blocks').textContent=r.blocks||0;
-  const tb=$('#tbl-sec tbody'); tb.innerHTML='';
-  (r.recent||[]).forEach(x=>{
-    const tr=document.createElement('tr');
-    tr.innerHTML=`<td>${fmtDate(x.Timestamp||x.time)}</td><td>${esc(x.User||x.user||'')}</td><td>${esc(x.Action||x.action||'')}</td><td>${esc(x.Status||x.status||'')}</td>`;
-    tb.appendChild(tr);
-  });
-}
-async function loadMonitoring(){
-  const r=await api('monitoring'); const tb=$('#tbl-mon tbody'); tb.innerHTML='';
-  (r.events||[]).forEach(x=>{
-    const tr=document.createElement('tr');
-    tr.innerHTML=`<td>${fmtDate(x.Timestamp||x.Time)}</td><td>${esc(x.User||'')}</td><td>${esc(x.Action||'')}</td>
-                  <td>${esc(x.Email||'')}</td><td>${esc(x['Phone Number']||x.Phone||'')}</td><td>${esc(x.Status||'')}</td>
-                  <td>${fmtMoney(x.Amount||0)}</td><td>${esc(x.Method||'')}</td><td>${esc(x.Dir||x.Direction||'')}</td><td>${esc(x.Notes||'')}</td>`;
-    tb.appendChild(tr);
-  });
-}
-
-/* -------- boot -------- */
-async function loadView(v){
-  if(v==='overview') await loadOverview();
-  if(v==='cpa')      await loadCPA();
-  if(v==='users')    await loadUsers();
-  if(v==='analytics')await loadAnalytics();
-  if(v==='wallet')   await loadWallet();
-  if(v==='security') await loadSecurity();
-  if(v==='monitoring')await loadMonitoring();
-}
 (async function init(){
-  // Attach listeners first so a failing call doesn’t kill clicks
-  $all('.nav a'); // listeners already attached above
   setActive('overview');
-  try{ await loadView('overview'); }catch(e){ console.error(e); }
+  await loadOverview();
 })();
 </script>
 </body>

@@ -1,5 +1,13 @@
-/               /index.html     200
-/welcome        /index.html#welcome     200
-/login          /index.html#login       200
-/dashboard      /index.html#dashboard   200
-/*   /index.html   200
+/welcome.html  /welcome.html  200
+
+/login        /index.html  200
+/dashboard    /index.html  200
+/cpa          /index.html  200
+/users        /index.html  200
+/analytics    /index.html  200
+/wallet       /index.html  200
+/security     /index.html  200
+/monitoring   /index.html  200
+
+/legacy/*     /legacy/:splat  200
+/*            /index.html     200

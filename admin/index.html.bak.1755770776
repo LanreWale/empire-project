@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Empire — Admin Console</title>
+  <style>
+    :root{
+      --bg:#0b1220; --panel:#121b2e; --muted:#9db1d9; --text:#eaf1ff;
+      --accent:#3b82f6; --ok:#22c55e; --warn:#f59e0b; --err:#ef4444;
+      --card:#0f172a; --ring:#1d4ed8;
+    }
+    *{box-sizing:border-box;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial}
+    body{margin:0;background:var(--bg);color:var(--text)}
+    .wrap{max-width:880px;margin:24px auto;padding:12px}
+    .h1{font-size:22px;font-weight:800;margin:8px 0 16px;display:flex;gap:8px;align-items:center}
+    .grid{display:grid;gap:14px}
+    @media (min-width:720px){.grid{grid-template-columns:1fr 1fr}}
+    .card{background:var(--panel);border:1px solid #1f2b46;border-radius:16px;padding:16px;box-shadow:0 6px 18px rgba(0,0,0,.25)}
+    .card h3{margin:0 0 10px;font-size:16px}
+    label{display:block;font-size:12px;color:var(--muted);margin:10px 0 6px}
+    input,select,button,textarea{
+      width:100%;padding:12px 12px;border-radius:12px;border:1px solid #263557;background:#0d1526;color:var(--text);
+      outline:none
+    }
+    input:focus,select:focus,textarea:focus{border-color:var(--ring);box-shadow:0 0 0 3px rgba(29,78,216,.25)}
+    .row{display:flex;gap:10px}
+    .row > *{flex:1}
+    .btn{background:var(--accent);border:0;font-weight:700;cursor:pointer}
+    .btn.ok{background:var(--ok)}
+    .btn.warn{background:var(--warn)}
+    .btn.err{background:var(--err)}
+    .muted{color:var(--muted);font-size:12px}
+    .bar{height:38px;border-radius:10px;background:#0c1426;border:1px solid #263557;padding:8px 12px;display:flex;align-items:center;overflow:auto}
+    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:12px}
+    .pill{display:inline-flex;align-items:center;gap:6px;background:#0f1a33;border:1px solid #223258;border-radius:999px;padding:8px 10px}
+    .lvl-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+    .sep{height:1px;background:#1a2642;margin:6px 0 12px}
+    .tiny{font-size:11px}
+  </style>
+<script>
+  // No secrets here: build short invite URLs from current origin
+  window.makeInviteShort = (token) => `${location.origin}/i/${encodeURIComponent(token)}`;
+</script>
+</head>
+<body>
+  <div class="wrap">
+    <div class="h1">✅ Empire — Admin Console</div>
+
+    <div class="grid">
+
+      <!-- Approvals -->
+      <section class="card">
+        <h3>One-tap Approval</h3>
+        <div class="muted tiny">Sends WhatsApp + Telegram immediately.</div>
+        <label>Full name</label>
+        <input id="name" placeholder="Jane Doe" autocomplete="name" />
+        <label>Email</label>
+        <input id="email" type="email" placeholder="jane@example.com" autocomplete="email" />
+        <label>Phone (WhatsApp)</label>
+        <input id="phone" type="tel" placeholder="+234..." inputmode="tel" />
+        <div class="row" style="margin-top:10px">
+          <button class="btn ok" id="btn-approve">Send Approval</button>
+          <button class="btn warn" id="btn-clear">Clear</button>
+        </div>
+        <div id="out-approve" class="bar mono" style="margin-top:12px"></div>
+      </section>
+
+      <!-- Level control -->
+      <section class="card">
+        <h3>User Level (1x–5x) / Commander 10x</h3>
+        <div class="muted tiny">New users default to <b>1x</b>. Commander is <b>10x</b>.</div>
+        <label>Target phone (WhatsApp)</label>
+        <input id="lvl-phone" type="tel" placeholder="+234..." inputmode="tel" />
+        <label>Set level</label>
+        <div class="lvl-grid" style="margin-bottom:8px">
+          <button class="btn" data-lvl="1">1x</button>
+          <button class="btn" data-lvl="2">2x</button>
+          <button class="btn" data-lvl="3">3x</button>
+          <button class="btn" data-lvl="4">4x</button>
+          <button class="btn" data-lvl="5">5x</button>
+          <button class="btn warn" data-lvl="10">10x</button>
+        </div>
+        <div class="row">
+          <button class="btn ok" id="btn-promote">Promote +1</button>
+          <button class="btn err" id="btn-demote">Demote −1</button>
+        </div>
+        <div id="lvl-out" class="bar mono" style="margin-top:12px"></div>
+      </section>
+
+      <!-- Sheet / tooling -->
+      <section class="card">
+        <h3>Google Sheet / Ops</h3>
+        <div class="row">
+          <button class="btn" id="btn-sync">Log to Sheet</button>
+          <button class="btn" id="btn-ping">Test Telegram</button>
+        </div>
+        <div class="sep"></div>
+        <div class="muted tiny">Status</div>
+        <div id="ops-out" class="bar mono"></div>
+      </section>
+
+      <!-- Quick links -->
+      <section class="card">
+        <h3>Short Invite Links</h3>
+        <div class="muted tiny">Open login with a token: <span id="host" class="mono pill"></span></div>
+        <div class="row" style="margin-top:10px">
+          <input id="tok" placeholder="paste token (eyJ...)" />
+          <button class="btn" id="go">Open</button>
+        </div>
+        <div class="muted tiny" style="margin-top:10px">
+          Or test redirect: <span class="mono">/i/TESTTOKEN</span>
+        </div>
+      </section>
+
+    </div>
+
+    <div style="margin-top:16px" class="muted tiny">
+      Tip: this console is designed for phone/tablet use. All actions give instant feedback below each card.
+    </div>
+  </div>
+
+  <script>
+    const SITE = location.origin;
+    const $ = (id) => document.getElementById(id);
+    const out = (id, msg, ok=true) => {
+      const el = $(id);
+      el.textContent = msg;
+      el.style.color = ok ? "#c7ffe0" : "#ffd2d2";
+    };
+
+    // ---------- Approvals ----------
+    $("btn-approve").onclick = async () => {
+      const name = $("name").value.trim();
+      const email = $("email").value.trim();
+      const phone = $("phone").value.trim();
+      if (!name || (!email && !phone)) {
+        out("out-approve", "Enter at least name + (email or phone).", false);
+        return;
+      }
+      out("out-approve", "Working...");
+      try {
+        const r = await fetch(SITE + "/.netlify/functions/approve-user", {
+          method: "POST",
+          headers: {"content-type": "application/json"},
+          body: JSON.stringify({ name, email, phone, approve: true })
+        });
+        const j = await r.json();
+        if (j.ok === false && j.error) {
+          out("out-approve", "Error: " + j.error, false);
+        } else {
+          out("out-approve", "Approved ✅ WhatsApp/Telegram sent.");
+        }
+      } catch (e) {
+        out("out-approve", "Network error: " + e.message, false);
+      }
+    };
+    $("btn-clear").onclick = () => { ["name","email","phone"].forEach(id => $(id).value=""); out("out-approve","Cleared."); };
+
+    // ---------- Level set helpers ----------
+    async function setLevel(phone, level) {
+      if (!phone) return out("lvl-out", "Enter target phone.", false);
+      out("lvl-out","Setting level...");
+      try {
+        const r = await fetch(SITE + "/.netlify/functions/user-level-set", {
+          method: "POST",
+          headers: {"content-type":"application/json"},
+          body: JSON.stringify({ phone, level })
+        });
+        const j = await r.json().catch(()=>({}));
+        if (j && j.ok) {
+          out("lvl-out", `Level set to ${level}x ✅`);
+        } else {
+          // Graceful fallback if function not deployed yet
+          out("lvl-out", (j && j.error) ? ("Error: " + j.error) :
+              "Endpoint not available yet. No-op.", false);
+        }
+      } catch (e) {
+        out("lvl-out","Network error: " + e.message, false);
+      }
+    }
+    document.querySelectorAll("[data-lvl]").forEach(btn=>{
+      btn.addEventListener("click", ()=> setLevel($("lvl-phone").value.trim(), Number(btn.dataset.lvl)));
+    });
+    $("btn-promote").onclick = ()=> nudgeLevel(+1);
+    $("btn-demote").onclick = ()=> nudgeLevel(-1);
+    async function nudgeLevel(delta){
+      const phone = $("lvl-phone").value.trim();
+      if (!phone) return out("lvl-out","Enter target phone.", false);
+      out("lvl-out","Fetching current level...");
+      try {
+        const r = await fetch(SITE + "/.netlify/functions/user-level-set?phone="+encodeURIComponent(phone));
+        const j = await r.json();
+        let cur = (j && j.level)|0; if (!cur) cur = 1;
+        let next = Math.max(1, Math.min(10, cur + delta));
+        await setLevel(phone, next);
+      } catch(e){ out("lvl-out","Could not read current level: "+e.message,false); }
+    }
+
+    // ---------- Ops / Sheet ----------
+    $("btn-sync").onclick = async ()=>{
+      out("ops-out","Appending test log to Sheet…");
+      try{
+        const ts = new Date().toISOString();
+        const r = await fetch(SITE + "/.netlify/functions/gs-bridge", {
+          method:"POST",
+          headers:{ "content-type":"application/json" },
+          body: JSON.stringify({ action:"append", sheet:"Event_Log", values:[ts,"Commander","Admin console ping ✅"] })
+        });
+        const j = await r.json();
+        out("ops-out", j && j.ok ? "Sheet OK ✅" : "Sheet error ❌", !!(j&&j.ok));
+      }catch(e){ out("ops-out","Network error: "+e.message,false); }
+    };
+
+    $("btn-ping").onclick = async ()=>{
+      out("ops-out","Pinging Telegram…");
+      try{
+        const r = await fetch(SITE + "/.netlify/functions/test-telegram?text="+encodeURIComponent("Admin console ping ✅"));
+        const j = await r.json();
+        out("ops-out", (j && j.ok) ? "Telegram OK ✅" : "Telegram error ❌", !!(j&&j.ok));
+      }catch(e){ out("ops-out","Network error: "+e.message,false); }
+    };
+
+    // ---------- Short invite helper ----------
+    $("host").textContent = location.origin;
+    $("go").onclick = ()=>{
+      const t = $("tok").value.trim();
+      if (!t) return;
+      u.pathname = "/login"; u.searchParams.set("i", t);
+      window.location.assign(u.toString());
+    };
+  </script>
+</body>
+<script>(function(){  function makeInviteShortFromUrl(inviteUrl){    try{      var u=new URL(inviteUrl, window.location.origin);      var tok=u.searchParams.get("i");      if(!tok){        /* Allow also paths like /login/<token> if ever used */        var m=(u.pathname||"").match(/\/login\/?([^/?#]+)/);        if(m && m[1]) tok=decodeURIComponent(m[1]);      }      if(!tok) return inviteUrl;      return (window.location.origin.replace(/\/$/,"")+"/i/"+encodeURIComponent(tok));    }catch(e){ return inviteUrl; }  }  function rewriteCandidate(el){    try{      var href=el.getAttribute && el.getAttribute("href");      var text=(el.textContent||"").trim();      var source=href || text;      if(!source) return;      if(!/[?&]i=/.test(source) && !/\/login\//.test(source)) return;      var short=makeInviteShortFromUrl(source);      if(href) el.setAttribute("href", short);      if(text && text.indexOf(source) !== -1){ el.textContent = short; }    }catch(e){}  }  function scan(){    document.querySelectorAll("a, .invite-url, .js-invite-url").forEach(rewriteCandidate);  }  document.addEventListener("DOMContentLoaded", scan);  new MutationObserver(scan).observe(document.documentElement, { childList:true, subtree:true });  window.makeInviteShortFromUrl = makeInviteShortFromUrl; /* optional global */})();</script>
+</html>

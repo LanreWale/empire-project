@@ -1,37 +1,12 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <title>The Empire — Entry</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <script src="/js/empire-auth.js"></script>
-
-  <!-- Optional: force canonical host (set to your live host or leave blank to disable) -->
-  <script>
-    (function(){
-      var CANON = ""; // e.g. "empireaffiliatemarketinghub.com"
-      if (CANON && location.hostname && location.hostname !== CANON) {
-        var target = "https://" + CANON + (location.pathname || "/") + location.search + location.hash;
-        location.replace(target);
-      }
-    })();
-  </script>
-
-  <!-- Route by auth -->
-  <script>
-    (function () {
-      try {
-        if (window.EmpireAuth && window.EmpireAuth.has && window.EmpireAuth.has()) {
-          location.replace("/dashboard.html");
-        } else {
-          location.replace("/welcome.html");
-        }
-      } catch {
-        location.replace("/welcome.html");
-      }
-    })();
-  </script>
-  <noscript><meta http-equiv="refresh" content="0; url=/welcome.html"></noscript>
-</head>
-<body></body>
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>The Empire</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
 </html>

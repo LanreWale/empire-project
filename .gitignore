@@ -1,12 +1,4 @@
-
-# editor backups
-*.bak
-
-# editor backups
-*.bak*
-*.bak.*
-*.bak.*
-/scripts/
-
-# Local Netlify folder
-.netlify
+node_modules/
+dist/
+.DS_Store
+.env

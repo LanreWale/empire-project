@@ -1,25 +1,35 @@
 // src/lib/gas.js
-export const GAS = "https://script.google.com/macros/s/AKfycbysJmVXlrOE1_J3uw5wMqs9cnKtj-uuoxj0Mmj8JWTj7eZMvp9XJYXrs-0leocNXI6w/exec"; // your live URL
-const KEY = ""; // if your GAS needs ?key=, put it here; else leave ""
+export const GAS = import.meta.env.VITE_GAS_URL || "<YOUR_WEB_APP_URL>/exec";
+const KEY = import.meta.env.VITE_COMMANDER_KEY || "THE_GENERALISIMO";
 
-async function getJSON(params = {}) {
+function toJSON(ok, data){ return ok ? data : Promise.reject(new Error(data?.error || "Failed to fetch")); }
+
+export async function api(action, params={}) {
   const u = new URL(GAS);
-  Object.entries(params).forEach(([k, v]) => u.searchParams.set(k, v));
-  if (KEY) u.searchParams.set("key", KEY);
-  const res = await fetch(u.toString(), { headers: { "Cache-Control": "no-cache" } });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  const j = await res.json().catch(() => ({}));
-  if (j && j.ok === false) throw new Error(j.error || "api_error");
-  return j;
+  u.searchParams.set("action", action);
+  u.searchParams.set("key", KEY);   // matches GAS router
+  Object.entries(params || {}).forEach(([k,v])=> u.searchParams.set(k, v));
+  const r = await fetch(u.toString(), { cache:"no-store" });
+  const j = await r.json().catch(()=>({ ok:false, error:"bad_json" }));
+  return toJSON(j.ok, j);
 }
 
-// already used by Monitoring
-export const ping        = () => getJSON({ action: "ping" });
-export const forceSync   = () => getJSON({ action: "forcesync" });
+// small helpers
+export const fmt = {
+  int:(n)=> (Number(n)||0).toLocaleString(),
+  money:(n,cur="$")=> `${cur}${(Number(n)||0).toFixed(2)}`,
+  pct:(n)=> `${(Number(n)||0).toFixed(2)}%`,
+};
 
-// used by tabs below
-export const getSummary       = () => getJSON({ action: "summary" });
-export const listCPAAccounts  = () => getJSON({ action: "cpa" });
-export const listUsers        = () => getJSON({ action: "users" });
-export const getAnalytics     = () => getJSON({ action: "analytics" });
-export const getWallet        = () => getJSON({ action: "wallet" });
+export const GAS_OK = () => api("ping");
+export const overview      = () => api("overview");
+export const cpaAccounts   = () => api("cpaaccounts");
+export const usersList     = () => api("users");
+export const walletSummary = () => api("walletoverview");
+export const walletHistory = () => api("wallethistory");
+export const analyticsOv   = () => api("analyticsoverview");
+export const analyticsMon  = () => api("analyticsmonthly");
+export const analyticsGeo  = () => api("analyticsgeo");
+export const securityOv    = () => api("securityoverview");
+export const forceSync     = () => api("forcesync");
+export const getSummary    = () => api("summary");

@@ -2,3 +2,9 @@ node_modules/
 dist/
 .DS_Store
 .env
+# ignore local/build/backup clutter
+node_modules/
+dist/
+.netlify/
+scripts/
+*.bak

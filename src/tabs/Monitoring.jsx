@@ -1,112 +1,85 @@
-import { useEffect, useState } from "react";
-
-function Badge({ label, value }) {
-  const color = (v) => {
-    if (v === "ONLINE" || v === "OPERATIONAL" || v === "CONNECTED") return "bg-green-600";
-    if (v === "DEGRADED") return "bg-amber-600";
-    return "bg-red-600"; // DOWN or unknown
-  };
-  return (
-    <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-zinc-800 shadow">
-      <span className="text-zinc-300 text-sm">{label}</span>
-      <span className={`text-white text-xs px-2 py-1 rounded ${color(value)}`}>{String(value)}</span>
-    </div>
-  );
-}
+// src/tabs/Monitoring.jsx
+import React, { useEffect, useState } from "react";
+import { ping, forceSync, getSummary, GAS } from "../lib/gas";
 
 export default function Monitoring() {
   const [health, setHealth] = useState(null);
-  const [events, setEvents] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [summary, setSummary] = useState(null);
+  const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    let stop = false;
-
-    async function tick() {
-      try {
-        const hRes = await fetch("/.netlify/functions/monitor-health");
-        const h = await hRes.json();
-        if (!stop) setHealth(h);
-      } catch (e) {
-        if (!stop) setError("Health fetch failed");
+  async function run(label, fn) {
+    setBusy(label);
+    setError("");
+    try {
+      const data = await fn();
+      if (label === "Test APIs") setHealth(data);
+      if (label === "Force Sync") {
+        // refresh summary after sync
+        try { setSummary(await getSummary()); } catch {}
       }
-      try {
-        const eRes = await fetch("/.netlify/functions/monitor-feed");
-        const ej = await eRes.json();
-        const list = ej.events || ej || [];
-        if (!stop) setEvents(Array.isArray(list) ? list : []);
-      } catch (e) {
-        if (!stop) setError("Feed fetch failed");
-      }
-      if (!stop) setLoading(false);
+      alert(`${label}: OK`);
+    } catch (e) {
+      console.error(e);
+      setError(`${label} failed: ${e.message}`);
+      alert(`${label}: FAILED`);
+    } finally {
+      setBusy(false);
     }
+  }
 
-    tick();
-    const id = setInterval(tick, 15000);
-    return () => { stop = true; clearInterval(id); };
+  useEffect(() => {
+    // auto health + summary on load
+    (async () => {
+      try { setHealth(await ping()); } catch (e) { setError(`Health check: ${e.message}`); }
+      try { setSummary(await getSummary()); } catch {}
+    })();
   }, []);
 
   return (
-    <div className="p-4 space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold text-zinc-100">System Monitoring</h1>
+    <div style={{ padding: "16px" }}>
+      <h2>⚔️ Monitoring</h2>
+      <p style={{ margin: "6px 0" }}>
+        GAS Endpoint: <code>{GAS}</code>
+      </p>
+
+      <div style={{ display: "flex", gap: 12, margin: "12px 0" }}>
         <button
-          onClick={() => window.location.reload()}
-          className="px-3 py-2 rounded-lg bg-zinc-700 text-zinc-200 hover:bg-zinc-600"
+          id="btnTestApis"
+          disabled={!!busy}
+          onClick={() => run("Test APIs", ping)}
         >
-          Refresh
+          {busy === "Test APIs" ? "Testing…" : "Test APIs"}
+        </button>
+
+        <button
+          id="btnForceSync"
+          disabled={!!busy}
+          onClick={() => run("Force Sync", forceSync)}
+        >
+          {busy === "Force Sync" ? "Syncing…" : "Force Sync"}
         </button>
       </div>
 
-      {loading && <p className="text-zinc-400">Loading…</p>}
-      {error && <p className="text-amber-400">{error}</p>}
-
-      {health && (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-          <Badge label="Server" value={health.server} />
-          <Badge label="Database" value={health.db} />
-          <Badge label="Sheets" value={health.sheets} />
-          <Badge label="AI" value={health.ai} />
-          <Badge label="Sync" value={health.sync} />
+      {error && (
+        <div style={{ color: "crimson", marginTop: 8 }}>
+          {error}
         </div>
       )}
 
-      <div className="bg-zinc-900 rounded-2xl p-4 shadow">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-lg text-zinc-100">Event Feed</h2>
-          <span className="text-xs text-zinc-400">{events.length} events</span>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="min-w-full text-sm">
-            <thead>
-              <tr className="text-zinc-400 text-left">
-                <th className="py-2 pr-4">Time</th>
-                <th className="py-2 pr-4">Type</th>
-                <th className="py-2 pr-4">Message</th>
-                <th className="py-2 pr-4">Ref</th>
-                <th className="py-2 pr-4">Actor</th>
-              </tr>
-            </thead>
-            <tbody>
-              {events.map((e, idx) => (
-                <tr key={idx} className="border-t border-zinc-800 text-zinc-200">
-                  <td className="py-2 pr-4 whitespace-nowrap">{e.time || e.ts || e[0] || ""}</td>
-                  <td className="py-2 pr-4">{e.type || e[1] || ""}</td>
-                  <td className="py-2 pr-4 max-w-xl truncate">{e.msg || e.message || e[2] || ""}</td>
-                  <td className="py-2 pr-4">{e.ref || e[3] || ""}</td>
-                  <td className="py-2 pr-4">{e.actor || e[4] || ""}</td>
-                </tr>
-              ))}
-              {events.length === 0 && (
-                <tr>
-                  <td colSpan={5} className="py-6 text-zinc-500 text-center">No events yet</td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <section style={{ marginTop: 16 }}>
+        <h3>Health</h3>
+        <pre style={{ background: "#111", color: "#0f0", padding: 12, borderRadius: 8, overflow: "auto" }}>
+{JSON.stringify(health, null, 2)}
+        </pre>
+      </section>
+
+      <section style={{ marginTop: 16 }}>
+        <h3>Summary</h3>
+        <pre style={{ background: "#111", color: "#0f0", padding: 12, borderRadius: 8, overflow: "auto" }}>
+{JSON.stringify(summary, null, 2)}
+        </pre>
+      </section>
     </div>
   );
 }

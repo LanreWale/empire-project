@@ -1,4 +1,4 @@
-<!-- File: dashboard.html (FINAL – wired to GAS 2025-09-07) -->
+<!-- File: dashboard.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -11,7 +11,7 @@
   --emp-bg-1:#0b1020; --emp-bg-2:#081225; --emp-sheen:#0d1b3a;
   --emp-card:rgba(16,21,32,.88); --emp-border:rgba(255,255,255,.06);
   --text:#e8eaed; --muted:#9db2d7; --gold:#f1c40f; --gold-2:#d9a100;
-  --mint:#59ffa5; --ink:#0c111a; --ring:rgba(241,196,15,.25); --border:#1d2432;
+  --mint:#59ffa5; --ink:#0c111a; --border:#1d2432;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%}
@@ -24,6 +24,8 @@ body{
     linear-gradient(180deg, var(--emp-bg-2) 0%, var(--emp-bg-1) 100%);
   min-height:100svh;
 }
+
+/* layout */
 .layout{display:grid;grid-template-columns:260px 1fr;min-height:100svh}
 .sidebar{
   background:
@@ -37,9 +39,16 @@ body{
 .brand .crest svg{filter:drop-shadow(0 6px 20px rgba(89,255,165,.45))}
 .brand .title{font-weight:900;letter-spacing:.08em}
 .brand .title span{color:#a5b4fc}
-.nav a{display:block;padding:11px 12px;margin:8px 0;border-radius:12px;text-decoration:none;color:var(--text);background:var(--ink);border:1px solid var(--emp-border);font-weight:700;letter-spacing:.02em}
+
+.nav a{
+  display:block;padding:11px 12px;margin:8px 0;border-radius:12px;text-decoration:none;
+  color:var(--text);background:var(--ink);border:1px solid var(--emp-border);
+  font-weight:700;letter-spacing:.02em;cursor:pointer
+}
 .nav a.active{background:#172036;border-color:#2a3350;box-shadow:0 0 0 2px rgba(36,108,255,.09) inset}
 .content{padding:20px}
+
+/* sections/cards/tables */
 .section{margin:0 0 22px}
 .section h2{font-size:1.05rem;letter-spacing:.08em;text-transform:uppercase;color:#cbd5e1;margin:0 0 10px;display:flex;align-items:center;gap:8px}
 .badge{display:inline-block;padding:4px 8px;border-radius:999px;font-size:.75rem;background:#0d1526;border:1px solid var(--emp-border)}
@@ -58,7 +67,7 @@ body{
 .table td{padding:10px 8px;background:#0c111a;border:1px solid var(--emp-border);border-left:none;border-right:none}
 .toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:6px 0 12px}
 .input,select,textarea{background:#0c111a;color:var(--text);border:1px solid #2a3350;border-radius:10px;padding:10px 10px}
-.btn{background:linear-gradient(180deg,var(--gold) 0%,var(--gold-2) 100%);color:#161000;font-weight:900;border-radius:12px;padding:10px 14px;border:none;cursor:pointer}
+.btn{background:linear-gradient(180deg,#f1c40f 0%,#d9a100 100%);color:#161000;font-weight:900;border-radius:12px;padding:10px 14px;border:none;cursor:pointer}
 .btn.ghost{background:transparent;color:var(--text);border:1px solid var(--emp-border)}
 .muted{color:var(--muted)}
 .hidden{display:none!important}
@@ -111,7 +120,7 @@ body{
       <h2>CPA Accounts Management <span class="badge">LIVE</span></h2>
       <div class="toolbar">
         <button class="btn" id="btn-rotate">Rotate 1300 Offers Now</button>
-        <span class="muted">Auto-throttled to 1/hour (GAS quotas).</span>
+        <span class="muted">Auto-throttled to 1/hour to respect GAS quotas.</span>
       </div>
       <div class="card">
         <table class="table" id="tbl-cpa"><thead><tr>
@@ -196,15 +205,11 @@ body{
             <input class="input" id="wl-email" placeholder="Email" />
             <input class="input" id="wl-phone" placeholder="Phone" />
             <input type="number" class="input" id="wl-amount" placeholder="Amount (USD)" />
-            <select class="input" id="wl-dir">
-              <option value="out">Withdraw (out)</option><option value="in">Deposit (in)</option>
-            </select>
-            <select class="input" id="wl-method-cat">
-              <option value="bank">Bank</option><option value="fintech">Fintech</option><option value="crypto">Crypto</option>
-            </select>
+            <select class="input" id="wl-dir"><option value="out">Withdraw (out)</option><option value="in">Deposit (in)</option></select>
+            <select class="input" id="wl-method-cat"><option value="bank">Bank</option><option value="fintech">Fintech</option><option value="crypto">Crypto</option></select>
           </div>
           <select class="input" id="wl-method" style="margin-top:8px"></select>
-          <textarea class="input" id="wl-notes" placeholder="Notes (routing / wallet address, etc.)" style="margin-top:8px;width:100%;min-height:90px"></textarea>
+          <textarea class="input" id="wl-notes" placeholder="Notes (routing details, wallet address, etc.)" style="margin-top:8px;width:100%;min-height:90px"></textarea>
           <div class="toolbar" style="margin-top:10px">
             <button class="btn" id="wl-validate">Validate Holder</button>
             <button class="btn" id="wl-submit">Request</button>
@@ -240,25 +245,28 @@ body{
   </main>
 </div>
 
-<!-- SET YOUR GAS URL HERE -->
+<!-- HARD-CODED GAS URL (no templates on Netlify) -->
 <script>
-const EMP_API = 'YOUR_WEB_APP_URL_HERE';
+const EMP_API = "https://script.google.com/macros/s/AKfycbysJmVXlrOE1_J3uw5wMqs9cnKtj-uuoxj0Mmj8JWTj7eZMvp9XJYXrs-0leocNXI6w/exec";
 </script>
 
 <script>
 const $=s=>document.querySelector(s), $all=s=>Array.from(document.querySelectorAll(s));
-const qs=o=>Object.entries(o).map(([k,v])=>encodeURIComponent(k)+'='+encodeURIComponent(v)).join('&');
-const fmtMoney=n=>Number(n||0).toLocaleString(undefined,{style:'currency',currency:'USD',maximumFractionDigits:2});
-const fmtDate=v=>{try{const d=new Date(v);return d.toLocaleString()}catch(_){return String(v||'')}};
-const esc=s=>String(s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-const num=x=>{const n=Number(String(x).replace(/[^0-9.\-]/g,''));return isFinite(n)?n:0};
+function qs(o){return Object.entries(o).map(([k,v])=>encodeURIComponent(k)+'='+encodeURIComponent(v)).join('&')}
+function fmtMoney(n){n=Number(n||0);return n.toLocaleString(undefined,{style:'currency',currency:'USD',maximumFractionDigits:2});}
+function fmtDate(v){try{const d=new Date(v);return d.toLocaleString()}catch(_){return String(v||'')}}
+function esc(s){return String(s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&gt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]) )}
+function num(x){const n=Number(String(x).replace(/[^0-9.\-]/g,''));return isFinite(n)?n:0}
 
 async function api(action, params=null, method='GET'){
+  if(!EMP_API){ alert('EMP_API missing'); throw new Error('EMP_API missing'); }
   let url = EMP_API + '?action=' + encodeURIComponent(action);
   const opt = { method };
   if(params && method==='GET') url += '&' + qs(params);
   if(params && method==='POST'){ opt.headers={'Content-Type':'application/json'}; opt.body=JSON.stringify({action,...params}); }
-  const r = await fetch(url,opt); return r.json();
+  const r = await fetch(url,opt);
+  if(!r.ok){ throw new Error('HTTP '+r.status); }
+  return r.json();
 }
 
 function setActive(view){
@@ -267,11 +275,15 @@ function setActive(view){
     const sec=$('#view-'+v); if(!sec) return; sec.classList.toggle('hidden', v!==view);
   });
 }
-$all('.nav a').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();setActive(a.dataset.view);loadView(a.dataset.view);}))
+$all('.nav a').forEach(a=>a.addEventListener('click',e=>{
+  e.preventDefault();
+  setActive(a.dataset.view);
+  loadView(a.dataset.view).catch(console.error);
+}));
 
 let chartDaily,chartSources,chartMonthly,chartGeo;
 
-/* ---------- Overview ---------- */
+/* -------- Overview -------- */
 async function loadOverview(){
   const res=await api('overview');
   if(!res.ok) return;
@@ -293,7 +305,7 @@ async function loadOverview(){
   });
 }
 
-/* ---------- CPA ---------- */
+/* -------- CPA -------- */
 async function loadCPA(){
   const r=await api('cpaAccounts'); const tb=$('#tbl-cpa tbody'); tb.innerHTML='';
   if(!r.ok){tb.innerHTML='<tr><td colspan="7">Unable to load</td></tr>';return;}
@@ -307,20 +319,16 @@ async function loadCPA(){
 }
 $('#btn-rotate').addEventListener('click',async()=>{
   const b=$('#btn-rotate'); b.disabled=true; b.textContent='Rotating…';
-  try{ await api('cparotatenow',{pass:'GENERALISIMO@2025'},'POST'); await loadCPA(); }
-  finally { b.disabled=false; b.textContent='Rotate 1300 Offers Now'; }
+  try{ await api('cpaRotateNow'); await loadCPA(); } finally { b.disabled=false; b.textContent='Rotate 1300 Offers Now'; }
 });
 $('#cpa-add').addEventListener('click',async()=>{
-  const payload={
-    AccountID:$('#cpa-id').value.trim(),Account:$('#cpa-name').value.trim(),
-    Network:$('#cpa-network').value.trim(),Status:$('#cpa-status').value,pass:'GENERALISIMO@2025'
-  };
+  const payload={AccountID:$('#cpa-id').value.trim(),Account:$('#cpa-name').value.trim(),Network:$('#cpa-network').value.trim(),Status:$('#cpa-status').value};
   if(!payload.AccountID){alert('AccountID required');return;}
-  const r=await api('cpaaddaccount',payload,'POST'); if(!r.ok){alert(r.error||'Failed');return;}
+  const r=await api('cpaAddAccount',payload,'POST'); if(!r.ok){alert(r.error||'Failed');return;}
   $('#cpa-id').value=$('#cpa-name').value=$('#cpa-network').value=''; await loadCPA();
 });
 
-/* ---------- Users ---------- */
+/* -------- Users -------- */
 async function loadUsers(){
   const r=await api('users');
   $('#invite-link').href=r.meta?.inviteLink||'#';
@@ -334,69 +342,57 @@ async function loadUsers(){
   });
 }
 $('#u-save').addEventListener('click',async()=>{
-  const payload={Name:$('#u-name').value.trim(),Email:$('#u-email').value.trim(),Phone:$('#u-phone').value.trim(),Telegram:$('#u-telegram').value.trim(),Status:$('#u-status').value,Level:$('#u-level').value,pass:'GENERALISIMO@2025'};
+  const payload={Name:$('#u-name').value.trim(),Email:$('#u-email').value.trim(),Phone:$('#u-phone').value.trim(),Telegram:$('#u-telegram').value.trim(),Status:$('#u-status').value,Level:$('#u-level').value};
   if(!payload.Name||!payload.Email){alert('Name & Email required');return;}
-  const r=await api('adduser',payload,'POST'); if(!r.ok){alert(r.error||'Failed');return;}
+  const r=await api('addUser',payload,'POST'); if(!r.ok){alert(r.error||'Failed');return;}
   $('#u-name').value=$('#u-email').value=$('#u-phone').value=$('#u-telegram').value='';
   await loadUsers();
 });
 
-/* ---------- Wallet: Banks/Fintech/Crypto from GAS ---------- */
-let BANKS=[], FINTECHS=[], CRYPTO=[];
-async function preloadInstitutions(){
-  // full list of banks (hosted list or Institutions sheet fallback)
-  try{
-    const b = await api('banks');
-    if(b.ok && Array.isArray(b.banks)) BANKS = b.banks.map(x=>x.name).sort();
-  }catch(_){}
-
-  // optional: Institutions sheet with categories
-  try{
-    const inst = await api('institutions');
-    if(inst.ok && Array.isArray(inst.data)){
-      FINTECHS = inst.data.filter(x=>/fintech/i.test(x.category)).map(x=>x.name).sort();
-      CRYPTO   = inst.data.filter(x=>/crypto/i.test(x.category)).map(x=>x.name).sort();
-    }
-  }catch(_){}
-
-  // fallbacks if sheet empty
-  if(!FINTECHS.length) FINTECHS=["Flutterwave","Paystack","Stripe","Wise","Revolut","Chipper Cash","Cash App","OPay","PalmPay","Monzo","N26","Kuda","Carbon","Barter"];
-  if(!CRYPTO.length)   CRYPTO=["Bitcoin (BTC)","Ethereum (ETH)","USDT (TRC20)","USDT (ERC20)","USDC","BNB (BEP20)","Solana (SOL)","Tron (TRX)","Litecoin (LTC)"];
-}
+/* -------- Wallet -------- */
+let BANKS=[], FINTECHS=['Flutterwave','Paystack','Stripe','Wise','Revolut','Chipper Cash','Cash App','OPay','PalmPay','Monzo','N26','Kuda','Carbon','Barter'], CRYPTO=['Bitcoin (BTC)','Ethereum (ETH)','USDT (TRC20)','USDT (ERC20)','USDC','BNB (BEP20)','Solana (SOL)','Tron (TRX)','Litecoin (LTC)'];
 function hydrateMethodList(){
   const cat=$('#wl-method-cat').value; const sel=$('#wl-method'); sel.innerHTML='';
-  const list = cat==='bank' ? BANKS : (cat==='fintech' ? FINTECHS : CRYPTO);
+  const list = cat==='bank' ? BANKS.map(b=>b.name) : (cat==='fintech'?FINTECHS:CRYPTO);
   list.forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v;sel.appendChild(o)});
   const other=document.createElement('option');other.value='Other';other.textContent='Other…';sel.appendChild(other);
 }
 $('#wl-method-cat').addEventListener('change',hydrateMethodList);
 
 async function loadWallet(){
-  const [sumr,hist]=await Promise.all([api('walletsummary'),api('wallethistory')]);
+  // pull banks from sheet via GAS
+  try{
+    const br = await api('banks');
+    BANKS = Array.isArray(br.banks) ? br.banks : [];
+  }catch(e){ BANKS = []; }
+  hydrateMethodList();
+
+  const [sumr,hist]=await Promise.all([api('walletSummary'),api('walletHistory')]);
   if(sumr.ok){$('#wl-in').textContent=fmtMoney(sumr.inflow);$('#wl-out').textContent=fmtMoney(sumr.outflow);$('#wl-net').textContent=fmtMoney(sumr.net);}
   const tb=$('#tbl-wallet tbody'); tb.innerHTML='';
   (hist.history||[]).forEach(r=>{
     const tr=document.createElement('tr');
     tr.innerHTML=`<td>${fmtDate(r.Time||r.Timestamp)}</td><td>${fmtMoney(r.Amount)}</td><td>${esc(r.Method||'')}</td>
-                  <td>${esc(r.Direction||r.Dir||'')}</td><td>${esc(r.Status||'')}</td><td>${esc(r.Name||'')}</td>
+                  <td>${esc((r.Direction||r.Dir||'').toString())}</td><td>${esc(r.Status||'')}</td><td>${esc(r['Direction Name']||r.Name||'')}</td>
                   <td>${esc(r.Email||'')}</td><td>${esc(r.Phone||'')}</td>`;
     tb.appendChild(tr);
   });
 }
 $('#wl-validate').addEventListener('click',async()=>{
-  const r=await api('validateaccount',{name:$('#wl-name').value.trim(),email:$('#wl-email').value.trim(),phone:$('#wl-phone').value.trim()});
+  const r=await api('validateAccount',{name:$('#wl-name').value.trim(),email:$('#wl-email').value.trim(),phone:$('#wl-phone').value.trim()});
   const el=$('#wl-valid-msg'); if(r.ok&&r.valid){el.textContent='Account holder found ✓';el.style.color='#59ffa5'}else{el.textContent='Not found';el.style.color:'#ff7b7b'};
 });
 $('#wl-submit').addEventListener('click',async()=>{
-  const payload={name:$('#wl-name').value.trim(),email:$('#wl-email').value.trim(),phone:$('#wl-phone').value.trim(),amount:$('#wl-amount').value,direction:$('#wl-dir').value,method:$('#wl-method-cat').value+': '+$('#wl-method').value,notes:$('#wl-notes').value.trim(),pass:'GENERALISIMO@2025'};
+  const payload={name:$('#wl-name').value.trim(),email:$('#wl-email').value.trim(),phone:$('#wl-phone').value.trim(),amount:$('#wl-amount').value,direction:$('#wl-dir').value,method:$('#wl-method-cat').value+': '+$('#wl-method').value,notes:$('#wl-notes').value.trim()};
   if(!payload.amount||!payload.method){alert('Amount and Method required');return;}
-  const r=await api('walletrequest',payload,'POST'); if(!r.ok){alert(r.error||'Failed');return;}
+  const r=await api('walletRequest',payload,'POST'); if(!r.ok){alert(r.error||'Failed');return;}
   $('#wl-amount').value=$('#wl-notes').value=''; await loadWallet();
 });
 
-/* ---------- Analytics ---------- */
+/* -------- Analytics -------- */
+let chartDaily,chartSources,chartMonthly,chartGeo;
 async function loadAnalytics(){
-  const [m,g,live]=await Promise.all([api('analyticsmonthly'),api('analyticsgeo'),api('analyticslive')]);
+  const [m,g,live]=await Promise.all([api('analyticsMonthly'),api('analyticsGeo'),api('analyticsLive')]);
 
   if(chartMonthly) chartMonthly.destroy();
   chartMonthly=new Chart($('#chartMonthly'),{type:'bar',
@@ -419,14 +415,14 @@ async function loadAnalytics(){
   });
 }
 
-/* ---------- Security / Monitoring ---------- */
+/* -------- Security / Monitoring -------- */
 async function loadSecurity(){
-  const r=await api('securityoverview'); if(!r.ok) return;
+  const r=await api('securityOverview'); if(!r.ok) return;
   $('#sec-alerts').textContent=r.alerts24h||0; $('#sec-failed').textContent=r.failedLogins||0; $('#sec-blocks').textContent=r.blocks||0;
   const tb=$('#tbl-sec tbody'); tb.innerHTML='';
   (r.recent||[]).forEach(x=>{
     const tr=document.createElement('tr');
-    tr.innerHTML=`<td>${fmtDate(x.time)}</td><td>${esc(x.user||'')}</td><td>${esc(x.action||'')}</td><td>${esc(x.status||'')}</td>`;
+    tr.innerHTML=`<td>${fmtDate(x.Timestamp||x.time)}</td><td>${esc(x.User||x.user||'')}</td><td>${esc(x.Action||x.action||'')}</td><td>${esc(x.Status||x.status||'')}</td>`;
     tb.appendChild(tr);
   });
 }
@@ -435,23 +431,28 @@ async function loadMonitoring(){
   (r.events||[]).forEach(x=>{
     const tr=document.createElement('tr');
     tr.innerHTML=`<td>${fmtDate(x.Timestamp||x.Time)}</td><td>${esc(x.User||'')}</td><td>${esc(x.Action||'')}</td>
-                  <td>${esc(x.Email||'')}</td><td>${esc(x['Phone Number']||'')}</td><td>${esc(x.Status||'')}</td>
+                  <td>${esc(x.Email||'')}</td><td>${esc(x['Phone Number']||x.Phone||'')}</td><td>${esc(x.Status||'')}</td>
                   <td>${fmtMoney(x.Amount||0)}</td><td>${esc(x.Method||'')}</td><td>${esc(x.Dir||x.Direction||'')}</td><td>${esc(x.Notes||'')}</td>`;
     tb.appendChild(tr);
   });
 }
 
-/* ---------- Boot ---------- */
+/* -------- boot -------- */
 async function loadView(v){
   if(v==='overview') await loadOverview();
   if(v==='cpa')      await loadCPA();
   if(v==='users')    await loadUsers();
   if(v==='analytics')await loadAnalytics();
-  if(v==='wallet')   { await preloadInstitutions(); hydrateMethodList(); await loadWallet(); }
+  if(v==='wallet')   await loadWallet();
   if(v==='security') await loadSecurity();
   if(v==='monitoring')await loadMonitoring();
 }
-(async function init(){ setActive('overview'); await loadView('overview'); })();
+(async function init(){
+  // Attach listeners first so a failing call doesn’t kill clicks
+  $all('.nav a'); // listeners already attached above
+  setActive('overview');
+  try{ await loadView('overview'); }catch(e){ console.error(e); }
+})();
 </script>
 </body>
 </html>

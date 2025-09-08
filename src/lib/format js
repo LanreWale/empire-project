@@ -1,0 +1,8 @@
+export const fmtMoney = (n) =>
+  Number(n ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+export const fmtInt = (n) =>
+  Number(n ?? 0).toLocaleString();
+
+export const fmtPct = (n) =>
+  `${Number(n ?? 0).toFixed(2)}%`;

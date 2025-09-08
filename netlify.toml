@@ -1,18 +1,16 @@
 [build]
-  publish = "."
+  command = "npm run build"
+  publish = "dist"
 
 [build.environment]
+  NODE_VERSION = "20"
   SECRETS_SCAN_ENABLED = "false"
 
 [functions]
   directory = "netlify/functions"
   node_bundler = "esbuild"
 
-# ── IMPORTANT: disable Edge Functions (no Deno needed)
-# (We replace the edge mapping with a standard redirect to the Node function below)
-
-# Route /i/* to the Node function netlify/functions/shortner.js
-# NOTE: your repo shows "shortner.js" (no second 'e'); keep that spelling.
+# Function redirect (stays here)
 [[redirects]]
   from = "/i/*"
   to = "/.netlify/functions/shortner?path=:splat"

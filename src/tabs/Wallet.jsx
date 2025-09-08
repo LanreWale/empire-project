@@ -1,5 +1,4 @@
 import React from "react";
-
 const GAS = "https://script.google.com/macros/s/AKfycbx5FniYFG6YWADrBbfkzVmsGBeqh4Je28x-doOePGC2yolON_C8quh42_gpSdrV9eru/exec";
 const PASS = "GENERALISIMO@2025";
 

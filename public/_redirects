@@ -1,5 +1,4 @@
 /welcome.html  /welcome.html  200
-
 /login        /index.html  200
 /dashboard    /index.html  200
 /cpa          /index.html  200
@@ -8,6 +7,5 @@
 /wallet       /index.html  200
 /security     /index.html  200
 /monitoring   /index.html  200
-
 /legacy/*     /legacy/:splat  200
 /*            /index.html     200

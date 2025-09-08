@@ -1,15 +1,21 @@
 import React from "react";
-const GAS="https://script.google.com/macros/s/AKfycbx5FniYFG6YWADrBbfkzVmsGBeqh4Je28x-doOePGC2yolON_C8quh42_gpSdrV9eru/exec";
-const PASS="GENERALISIMO@2025";
-async function securityOverview(){const u=new URL(GAS);u.searchParams.set("action","securityOverview");u.searchParams.set("pass",PASS);
-const r=await fetch(u);const j=await r.json();if(!r.ok||j?.ok===false)throw new Error(j?.error||`HTTP ${r.status}`);return j.data||j;}
-export default function Security(){const [data,setData]=React.useState(null),[err,setErr]=React.useState("");
-React.useEffect(()=>{securityOverview().then(setData).catch(e=>setErr(String(e.message||e)));},[]);
-return (<div style={{padding:16}}>
-  <h2>Security</h2>
-  {err&&<div style={{color:"crimson"}}>{err}</div>}
-  {!data&&!err&&<div>Loading…</div>}
-  {data&&(<pre style={{background:"#0b1320",border:"1px solid #15243d",borderRadius:12,padding:14,overflow:"auto"}}>
-{JSON.stringify(data,null,2)}
-</pre>)}
-</div>);}
+import useFetch from "../lib/useFetch";
+import { securityOv } from "../lib/gas";
+
+export default function Security(){
+  const { data, error, loading } = useFetch(securityOv, []);
+  if (loading) return <Wrap>Loading…</Wrap>;
+  if (error)   return <Wrap error>Error: {error}</Wrap>;
+  const s = data || {};
+  return (
+    <Wrap>
+      <h2>SECURITY</h2>
+      <ul>
+        <li>Alerts (24h): <b>{s.alerts24h}</b></li>
+        <li>Failed Logins: <b>{s.failedLogins}</b></li>
+        <li>Blocks: <b>{s.blocks}</b></li>
+      </ul>
+    </Wrap>
+  );
+}
+function Wrap({children,error}){ return <div style={{padding:16,color:error?"#f88":"#e8f1ff"}}>{children}</div>; }

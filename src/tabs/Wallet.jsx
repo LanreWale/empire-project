@@ -11,11 +11,11 @@ export default function Wallet(){
       <h2>Payments / Wallet</h2>
       {loading && <p>Loading…</p>}
       {error && <p style={{color:"crimson"}}>Error: {error}</p>}
-      {data?.summary && (
+      {data?.overview && (
         <div style={{display:"grid",gridTemplateColumns:"repeat(3,minmax(0,1fr))",gap:12,marginBottom:12}}>
-          <Card title="Available Balance" value={`$ ${fmt2(data.summary.available)}`} />
-          <Card title="Pending Withdrawals" value={`$ ${fmt2(data.summary.pending)}`} />
-          <Card title="Total Withdrawn" value={`$ ${fmt2(data.summary.totalWithdrawn)}`} />
+          <Card title="Available Balance" value={`$ ${fmt2(data.overview.available)}`} />
+          <Card title="Pending Withdrawals" value={`$ ${fmt2(data.overview.pending)}`} />
+          <Card title="Total Withdrawn" value={`$ ${fmt2(data.overview.totalWithdrawn)}`} />
         </div>
       )}
       {Array.isArray(data?.rows) && data.rows.length > 0 ? (

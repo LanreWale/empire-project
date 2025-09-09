@@ -4,7 +4,7 @@ import { ping, forceSync, getSummary, GAS } from "../lib/gas";
 
 export default function Monitoring() {
   const [health, setHealth] = useState(null);
-  const [summary, setSummary] = useState(null);
+  const [overview, setSummary] = useState(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
@@ -15,7 +15,7 @@ export default function Monitoring() {
       const data = await fn();
       if (label === "Test APIs") setHealth(data);
       if (label === "Force Sync") {
-        // refresh summary after sync
+        // refresh overview after sync
         try { setSummary(await getSummary()); } catch {}
       }
       alert(`${label}: OK`);
@@ -29,7 +29,7 @@ export default function Monitoring() {
   }
 
   useEffect(() => {
-    // auto health + summary on load
+    // auto health + overview on load
     (async () => {
       try { setHealth(await ping()); } catch (e) { setError(`Health check: ${e.message}`); }
       try { setSummary(await getSummary()); } catch {}
@@ -77,7 +77,7 @@ export default function Monitoring() {
       <section style={{ marginTop: 16 }}>
         <h3>Summary</h3>
         <pre style={{ background: "#111", color: "#0f0", padding: 12, borderRadius: 8, overflow: "auto" }}>
-{JSON.stringify(summary, null, 2)}
+{JSON.stringify(overview, null, 2)}
         </pre>
       </section>
     </div>

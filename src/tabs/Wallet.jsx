@@ -1,115 +1,47 @@
-// src/tabs/Wallet.jsx
-import React, { useEffect, useMemo, useState } from "react";
-import { listBanks } from "../lib/gas";
+import React from "react";
+import useFetch from "../lib/useFetch";
+import { getWalletReport } from "../lib/gas";
 
 export default function Wallet(){
-  const [banks, setBanks] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [q, setQ] = useState("");
-  const [sel, setSel] = useState({ bankCode:"", amount:"", method:"bank" });
-  const [error, setError] = useState("");
-
-  useEffect(() => {
-    let on = true;
-    (async () => {
-      try{
-        setLoading(true); setError("");
-        const data = await listBanks(q);
-        if (on) setBanks(data);
-      }catch(e){
-        if(on) setError(e.message||String(e));
-      }finally{
-        if(on) setLoading(false);
-      }
-    })();
-    return ()=>{ on=false; };
-  }, [q]);
-
-  const groups = useMemo(() => {
-    const byType = banks.reduce((acc, b) => {
-      const t = (b.type||"other").toLowerCase();
-      (acc[t] ||= []).push(b);
-      return acc;
-    }, {});
-    // nice ordering
-    const order = ["nuban","microfinance","wallet","mortgage","other"];
-    return order.filter(k => byType[k]?.length).map(k => [k, byType[k]]);
-  }, [banks]);
-
-  function submit(e){
-    e.preventDefault();
-    if (!sel.bankCode) return alert("Choose a bank or wallet.");
-    if (!sel.amount || Number(sel.amount) < 50) return alert("Minimum withdrawal is $50.");
-    // TODO: call your existing payout request GAS action here
-    alert(`Withdrawal submitted:\nBank code: ${sel.bankCode}\nAmount: $${Number(sel.amount).toFixed(2)}`);
-  }
+  const { data, error, loading } = useFetch(() => getWalletReport(300), []);
+  const fmt2 = (n) => (Number(n||0)).toFixed(2);
 
   return (
     <div style={{padding:16}}>
       <h2>Payments / Wallet</h2>
-
-      <div style={{margin:"12px 0"}}>
-        <input
-          value={q}
-          onChange={e=>setQ(e.target.value)}
-          placeholder="Search institutions (name/code/type)…"
-          style={{padding:"8px 10px", borderRadius:8, border:"1px solid #223", background:"#0b1320", color:"#e6f1ff", width:360}}
-        />
-      </div>
-
-      {error && <div style={{color:"crimson", margin:"6px 0"}}>{error}</div>}
-      {loading && <div>Loading institutions…</div>}
-
-      {!loading && (
-        <form onSubmit={submit} style={{maxWidth:560, background:"#0f172a", padding:16, borderRadius:12}}>
-          <div style={{display:"grid", gridTemplateColumns:"1fr 1fr", gap:12}}>
-            <div>
-              <label style={{display:"block", color:"#9fb3c8", marginBottom:6}}>Amount ($)</label>
-              <input type="number" min="50" step="0.01"
-                value={sel.amount}
-                onChange={e=>setSel(s=>({...s, amount:e.target.value}))}
-                style={{width:"100%", padding:"10px 12px", borderRadius:10, border:"1px solid #1f2a44", background:"#0b1320", color:"#e6f1ff"}}
-              />
-            </div>
-
-            <div>
-              <label style={{display:"block", color:"#9fb3c8", marginBottom:6}}>Financial Institution</label>
-              <select
-                value={sel.bankCode}
-                onChange={e=>setSel(s=>({...s, bankCode:e.target.value}))}
-                style={{width:"100%", padding:"10px 12px", borderRadius:10, border:"1px solid #1f2a44", background:"#0b1320", color:"#e6f1ff"}}
-              >
-                <option value="">Choose Institution</option>
-                {groups.map(([type, list]) => (
-                  <optgroup key={type} label={labelFor(type)}>
-                    {list.map(b => (
-                      <option key={`${b.code}:${b.name}`} value={b.code}>
-                        {b.name} — {b.code}
-                      </option>
-                    ))}
-                  </optgroup>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <button
-            style={{marginTop:12, padding:"10px 12px", borderRadius:10, border:"none", fontWeight:700, background:"#4cc9f0", color:"#001219"}}
-          >
-            Request Withdrawal
-          </button>
-        </form>
+      {loading && <p>Loading…</p>}
+      {error && <p style={{color:"crimson"}}>Error: {error}</p>}
+      {data?.summary && (
+        <div style={{display:"grid",gridTemplateColumns:"repeat(3,minmax(0,1fr))",gap:12,marginBottom:12}}>
+          <Card title="Available Balance" value={`$ ${fmt2(data.summary.available)}`} />
+          <Card title="Pending Withdrawals" value={`$ ${fmt2(data.summary.pending)}`} />
+          <Card title="Total Withdrawn" value={`$ ${fmt2(data.summary.totalWithdrawn)}`} />
+        </div>
       )}
+      {Array.isArray(data?.rows) && data.rows.length > 0 ? (
+        <table style={tbl}><thead><tr>
+          <Th>Date</Th><Th>Type</Th><Th>Amount ($)</Th><Th>Status</Th><Th>Reference</Th>
+        </tr></thead><tbody>
+          {data.rows.map((r,i)=>(
+            <tr key={i}>
+              <Td>{r.date||""}</Td>
+              <Td>{r.type||""}</Td>
+              <Td>{fmt2(r.amount)}</Td>
+              <Td>{r.status||""}</Td>
+              <Td>{r.ref||r.reference||""}</Td>
+            </tr>
+          ))}
+        </tbody></table>
+      ) : <p>No wallet records.</p>}
     </div>
   );
 }
-
-function labelFor(type){
-  switch(String(type).toLowerCase()){
-    case "nuban": return "Banks (NUBAN)";
-    case "microfinance": return "Microfinance Banks";
-    case "wallet": return "Wallets & Fintech";
-    case "mortgage": return "Mortgage Banks";
-    default: return "Other Institutions";
-  }
+function Card({title,value}) {
+  return <div style={{background:"#0f172a",border:"1px solid #1f2a44",borderRadius:12,padding:16}}>
+    <div style={{color:"#9fb3c8",fontSize:12,marginBottom:6}}>{title}</div>
+    <div style={{fontWeight:800,fontSize:22}}>{value}</div>
+  </div>;
 }
+const tbl = { width:"100%", borderCollapse:"collapse", background:"#0b1320", borderRadius:12, overflow:"hidden" };
+const Th = ({children}) => <th style={{textAlign:"left",padding:"10px 12px",borderBottom:"1px solid #1f2a44",color:"#8fb0ff"}}>{children}</th>;
+const Td = ({children}) => <td style={{padding:"10px 12px",borderBottom:"1px solid #16233d"}}>{children}</td>;

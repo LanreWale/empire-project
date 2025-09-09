@@ -1,51 +1,29 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
+import useFetch from "../lib/useFetch";
+import { getSummary } from "../lib/gas";
 
-function Dashboard() {
-  const [banks, setBanks] = useState([]);
-  const [selectedBank, setSelectedBank] = useState("");
-
-  // Load banks JSON once when component mounts
-  useEffect(() => {
-    fetch("/all_banks.json")
-      .then((res) => res.json())
-      .then((data) => {
-        // Normalize data if it comes as array of objects
-        const bankList = data.map((b) => ({
-          name: b.name || b.bank || b.BankName,
-          code: b.code || b.BankCode || b.id,
-        }));
-        setBanks(bankList);
-      })
-      .catch((err) => console.error("Bank load error:", err));
-  }, []);
+export default function Dashboard(){
+  const { data, error, loading } = useFetch(getSummary, []);
+  const fmt2 = (n) => (Number(n||0)).toFixed(2);
 
   return (
-    <div className="dashboard">
-      <h1>⚔️ The Empire Dashboard ⚔️</h1>
-
-      <div className="form-group">
-        <label htmlFor="bank">Choose Bank:</label>
-        <select
-          id="bank"
-          value={selectedBank}
-          onChange={(e) => setSelectedBank(e.target.value)}
-        >
-          <option value="">-- Select Bank --</option>
-          {banks.map((bank, idx) => (
-            <option key={idx} value={bank.code}>
-              {bank.name} ({bank.code})
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {selectedBank && (
-        <p className="selected-bank">
-          ✅ You selected: <strong>{selectedBank}</strong>
-        </p>
+    <div style={{padding:16}}>
+      <h2>Dashboard Overview</h2>
+      {loading && <p>Loading…</p>}
+      {error && <p style={{color:"crimson"}}>Error: {error}</p>}
+      {data && (
+        <div style={{display:"grid",gridTemplateColumns:"repeat(3,minmax(0,1fr))",gap:12}}>
+          <Card title="Total Earnings"  value={`$ ${fmt2(data.totalEarnings)}`} />
+          <Card title="Active Users"    value={data.activeUsers||0} />
+          <Card title="Approval Rate"   value={`${(Number(data.approvalRate)||0).toFixed(2)}%`} />
+        </div>
       )}
     </div>
   );
 }
-
-export default Dashboard;
+function Card({title,value}) {
+  return <div style={{background:"#0f172a",border:"1px solid #1f2a44",borderRadius:12,padding:16}}>
+    <div style={{color:"#9fb3c8",fontSize:12,marginBottom:6}}>{title}</div>
+    <div style={{fontWeight:800,fontSize:22}}>{value}</div>
+  </div>;
+}

@@ -8,3 +8,10 @@ dist/
 .netlify/
 scripts/
 *.bak
+# Local bank data / scripts
+all_banks*.csv
+all_banks*.json
+mfb_append.csv
+empire_sync_banks.py
+upload_banks_to_sheet.py
+service_account.json

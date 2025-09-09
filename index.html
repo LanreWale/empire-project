@@ -1,10 +1,130 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <title>The Empire</title>
-    <meta http-equiv="refresh" content="0; url=/app/index.html" />
-    <link rel="canonical" href="/app/index.html" />
-  </head>
-  <body></body>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>⚔️ The Empire Dashboard ⚔️</title>
+  <style>
+    body { margin: 0; font-family: Arial, sans-serif; background: #0b1424; color: #e6f1ff; }
+    .layout { display: flex; height: 100vh; }
+    nav { width: 240px; background: #0f172a; padding: 20px; box-sizing: border-box; }
+    nav h2 { color: #4cc9f0; margin-bottom: 20px; }
+    nav a { display: block; padding: 10px; margin: 5px 0; color: #e6f1ff; text-decoration: none; border-radius: 6px; }
+    nav a:hover { background: #1f2a44; }
+    main { flex: 1; padding: 20px; overflow-y: auto; }
+    .card { background: #111; border-radius: 12px; padding: 16px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.4); }
+    .card h3 { margin-top: 0; color: #4cc9f0; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { padding: 8px 10px; border: 1px solid #1f2a44; }
+    th { background: #1f2a44; }
+    input, select, button {
+      padding: 10px 12px; margin-top: 8px; border-radius: 8px; border: 1px solid #1f2a44;
+      background: #0b1320; color: #e6f1ff;
+    }
+    button { background: #4cc9f0; color: #001219; border: none; font-weight: 600; cursor: pointer; }
+    button:hover { background: #3ab6d9; }
+  </style>
+  <script>
+    const GAS_URL = "https://script.google.com/macros/s/YOUR_GAS_URL_HERE/exec";
+    const CMD_KEY = "THE_GENERALISIMO";
+
+    function login(e) {
+      e.preventDefault();
+      const key = document.getElementById("commanderKey").value.trim();
+      if (key === CMD_KEY) {
+        localStorage.setItem("empire.auth","commander_ok");
+        document.getElementById("login").style.display = "none";
+        document.getElementById("app").style.display = "flex";
+        loadDashboard();
+      } else {
+        alert("Invalid access key.");
+      }
+    }
+
+    async function callAPI(action, params={}) {
+      const u = new URL(GAS_URL);
+      u.searchParams.set("action", action);
+      Object.entries(params).forEach(([k,v])=> u.searchParams.set(k,v));
+      const res = await fetch(u);
+      return res.json();
+    }
+
+    async function loadDashboard() {
+      try {
+        const summary = await callAPI("summary");
+        document.getElementById("metrics").innerText = JSON.stringify(summary,null,2);
+
+        const users = await callAPI("listassociates");
+        const tbody = document.getElementById("usersBody");
+        tbody.innerHTML = "";
+        (users.rows||[]).forEach(r=>{
+          const tr = document.createElement("tr");
+          tr.innerHTML = `<td>${r.name||""}</td><td>${r.email||""}</td><td>${r.phone||""}</td>`;
+          tbody.appendChild(tr);
+        });
+
+        const banks = await callAPI("listbanks");
+        const select = document.getElementById("bankSelect");
+        select.innerHTML = "";
+        (banks.rows||[]).forEach(r=>{
+          const opt = document.createElement("option");
+          opt.value = r.code;
+          opt.textContent = `${r.name} (${r.code})`;
+          select.appendChild(opt);
+        });
+      } catch (e) {
+        console.error(e);
+        alert("Failed to load dashboard: " + e.message);
+      }
+    }
+  </script>
+</head>
+<body>
+  <!-- Login Screen -->
+  <div id="login" style="min-height:100vh;display:grid;place-items:center;background:#0b1424;">
+    <form onsubmit="login(event)" style="background:#0f172a;padding:24px;border-radius:16px;width:360px;">
+      <h2>⚔️ The Empire Login ⚔️</h2>
+      <input id="commanderKey" type="password" placeholder="Commander key" style="width:100%;"/>
+      <button style="width:100%;margin-top:12px;">Enter</button>
+    </form>
+  </div>
+
+  <!-- Dashboard -->
+  <div id="app" class="layout" style="display:none;">
+    <nav>
+      <h2>⚔️ Empire</h2>
+      <a href="#dashboard">Dashboard</a>
+      <a href="#cpa">CPA Accounts</a>
+      <a href="#users">Users</a>
+      <a href="#analytics">Analytics</a>
+      <a href="#wallet">Wallet</a>
+      <a href="#security">Security</a>
+      <a href="#monitoring">Monitoring</a>
+    </nav>
+    <main>
+      <div id="dashboard" class="card">
+        <h3>Dashboard Metrics</h3>
+        <pre id="metrics">{}</pre>
+      </div>
+
+      <div id="users" class="card">
+        <h3>Users</h3>
+        <table>
+          <thead><tr><th>Name</th><th>Email</th><th>Phone</th></tr></thead>
+          <tbody id="usersBody"></tbody>
+        </table>
+      </div>
+
+      <div id="wallet" class="card">
+        <h3>Withdrawal</h3>
+        <form>
+          <input type="text" placeholder="Account Number" /><br/>
+          <select id="bankSelect"><option>Loading banks...</option></select><br/>
+          <input type="number" placeholder="Amount (USD)" /><br/>
+          <button type="button">Withdraw</button>
+        </form>
+      </div>
+    </main>
+  </div>
+</body>
 </html>

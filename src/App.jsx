@@ -18,7 +18,7 @@ function Guard({ children }) {
 
 function Login() {
   const [key, setKey] = React.useState("");
-  const EXPECTED = import.meta.env.VITE_COMMANDER_KEY || "THE_GENERALISIMO";
+  const EXPECTED = import.meta.env.VITE_COMMANDER_KEY || "GENERALISIMO@15769";
 
   function submit(e) {
     e.preventDefault();

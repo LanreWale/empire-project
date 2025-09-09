@@ -41,3 +41,23 @@ export const api = {
   ping:        () => call("ping"),
   forceSync:   () => call("forcesync"),
 };
+
+// src/lib/gas.js
+export const GAS = import.meta.env.VITE_GAS_BASE || "YOUR_GAS_EXEC_URL"; // you already have this set
+
+async function getJSON(u) {
+  const r = await fetch(u, { headers:{ "Cache-Control":"no-cache" } });
+  const j = await r.json();
+  if (!j.ok) throw new Error(j.error || "api_error");
+  return j;
+}
+
+export async function listBanks(q="") {
+  const u = new URL(GAS);
+  u.searchParams.set("action", "banks");
+  if (q) u.searchParams.set("q", q);
+  const j = await getJSON(u.toString());
+  return j.banks || [];
+}
+
+// (keep your other exported functions: ping, summary, walletmetrics, etc.)

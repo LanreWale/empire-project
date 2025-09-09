@@ -1,3 +1,4 @@
-/      /welcome.html  200
-/welcome  /welcome.html  200
-/terms  /terms.html  200
+/            /app/index.html        200
+/admin       /admin/index.html      200
+/login       /login/index.html      200
+/register    /register/index.html   200

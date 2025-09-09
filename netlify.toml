@@ -25,3 +25,8 @@
   from = "/app"
   to = "/app/"
   status = 301
+# Root goes straight to the dashboard
+[[redirects]]
+  from = "/"
+  to = "/app/index.html"
+  status = 200

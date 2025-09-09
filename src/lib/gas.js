@@ -6,8 +6,9 @@ const KEY = "GENERALISIMO@15769";
 async function call(action, params = {}) {
   const u = new URL(GAS);
   u.searchParams.set("action", action);
-  u.searchParams.set("key", KEY); // URLSearchParams handles encoding
+  u.searchParams.set("key", KEY);
   Object.entries(params || {}).forEach(([k, v]) => u.searchParams.set(k, String(v)));
+
   const r = await fetch(u.toString(), { cache: "no-store" });
   const j = await r.json().catch(() => ({ ok: false, error: "bad_json" }));
   if (!j.ok) {
@@ -20,27 +21,28 @@ async function call(action, params = {}) {
 // exported API used by tabs
 export const api = {
   // Dashboard
-  overview:      () => call("overview"),
+  overview: () => call("overview"),
 
   // CPA
-  cpaAccounts:   () => call("cpaaccounts"),
+  cpaAccounts: () => call("cpaaccounts"),
 
   // Users
-  users:         () => call("users"),
+  users: () => call("users"),
 
   // Analytics
   analyticsOverview: () => call("analyticsoverview"),
   analyticsMonthly:  () => call("analyticsmonthly"),
   analyticsGeo:      () => call("analyticsgeo"),
 
-  // Wallet
-  walletOverview: () => call("walletoverview"),
-  walletHistory:  () => call("wallethistory"),
+  // Wallet  (your GAS action is "wallet", not "walletoverview")
+  walletOverview: () => call("wallet"),
+  walletHistory:  () => call("wallethistory"), // keep if you later add it
 
-  // Security
+  // Banks (needed for the Withdrawal selector)
+  banks: (q = "") => call("banks", q ? { q } : {}),
+
+  // Security / Monitoring
   securityOverview: () => call("securityoverview"),
-
-  // Monitoring
-  ping:        () => call("ping"),
-  forceSync:   () => call("forcesync"),
+  ping:             () => call("ping"),
+  forceSync:        () => call("forcesync"),
 };

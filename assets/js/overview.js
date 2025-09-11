@@ -1,50 +1,102 @@
-// asset/js/overview.js
-document.addEventListener("DOMContentLoaded", () => loadOverview());
+// assets/js/overview.js
+// ----- Overview loader & renderer (2-dp rounding) -----
 
-async function loadOverview() {
-  try {
-    const url = `${window.EMPIRE_API.BASE_URL}?action=overview`;
-    const res = await fetch(url, { cache: "no-store" });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-    const t = data.totals || data.total || data || {};
+(function () {
+  const $ = (id) => document.getElementById(id);
 
-    set("#ov-earnings", money(t.earnings ?? t.revenue ?? 0));
-    set("#ov-leads",    fixed2(t.leads ?? 0));
-    set("#ov-clicks",   fixed2(t.clicks ?? 0));
-    set("#ov-convrate", fixed2(t.convRate ?? t.convrate ?? t.conversionRate ?? 0) + "%");
-    set("#ov-epc",      money(t.epc ?? 0));
-    set("#ov-cpa",      money(t.cpa ?? 0));
-    set("#ov-rpm",      money(t.rpm ?? 0));
+  const fmt2 = (n, with$ = false) => {
+    if (n == null || isNaN(n)) n = 0;
+    const s = Number(n).toLocaleString(undefined, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+    return with$ ? `$${s}` : s;
+  };
 
-    const b = data.breakdowns || data.by || {};
-    fill("#tbl-geo",       objToTable(b.byGeo       || data.byGeo,       "Country"));
-    fill("#tbl-device",    objToTable(b.byDevice    || data.byDevice,    "Device"));
-    fill("#tbl-offerType", objToTable(b.byOfferType || data.byOfferType, "Offer"));
-    fill("#tbl-byDay",     dayTable(b.byDay || data.byDay || []));
-  } catch (e) {
-    console.error(e);
-    alert("Overview failed: " + (e.message || e));
+  const pct2 = (n) =>
+    (n == null || isNaN(n) ? 0 : n).toLocaleString(undefined, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }) + "%";
+
+  function tableFromObject(obj, keyHeader, valHeader, money = false) {
+    if (!obj || typeof obj !== "object") return "<div class=\"muted\">No data</div>";
+    const rows = Object.entries(obj)
+      .sort((a, b) => Number(b[1]) - Number(a[1]))
+      .map(
+        ([k, v]) =>
+          `<tr><td>${k}</td><td class="num">${money ? fmt2(v, true) : fmt2(v)}</td></tr>`
+      )
+      .join("");
+    return `
+      <table>
+        <thead><tr><th>${keyHeader}</th><th>${valHeader}</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>`;
   }
-}
 
-// helpers
-const $ = (s)=>document.querySelector(s);
-const set=(s,v)=>{ const el=$(s); if(el) el.textContent=v; };
-const fixed2=(n)=>Number(n||0).toFixed(2);
-const money =(n)=>"$"+fixed2(n);
+  function tableFromArray(obj, keyHeader, valHeader, money = false) {
+    if (!obj || typeof obj !== "object") return "<div class=\"muted\">No data</div>";
+    const rows = Object.keys(obj)
+      .sort() // dates asc
+      .map(
+        (k) =>
+          `<tr><td>${k}</td><td class="num">${money ? fmt2(obj[k], true) : fmt2(obj[k])}</td></tr>`
+      )
+      .join("");
+    return `
+      <table>
+        <thead><tr><th>${keyHeader}</th><th>${valHeader}</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>`;
+  }
 
-function objToTable(obj, keyHdr){
-  if (!obj || typeof obj!=="object") return "";
-  const rows = Object.entries(obj).map(([k,v])=>`<tr><td>${k}</td><td class="num">${money(v)}</td></tr>`).join("") || `<tr><td colspan="2" class="muted">No data</td></tr>`;
-  return `<table><thead><tr><th>${keyHdr}</th><th class="num">Earnings ($)</th></tr></thead><tbody>${rows}</tbody></table>`;
-}
-function dayTable(arr){
-  if (!Array.isArray(arr) || !arr.length) return "";
-  const rows = arr.map(r=>{
-    const d = r.date || r.day || "";
-    const v = r.earnings ?? r.revenue ?? 0;
-    return `<tr><td>${d}</td><td class="num">${money(v)}</td></tr>`;
-  }).join("");
-  return `<table><thead><tr><th>Date</th><th class="num">Earnings ($)</th></tr></thead><tbody>${rows}</tbody></table>`;
-}
+  // ---- RENDER ----
+  window.renderOverview = function renderOverview(d) {
+    if (!d) return;
+
+    // Support both shapes: {ok:true, totals:{...}} OR flat keys
+    const t = d.totals || d;
+
+    $("ov-earnings").textContent   = fmt2(t.earnings, true);
+    $("ov-leads").textContent      = fmt2(t.leads);
+    $("ov-clicks").textContent     = fmt2(t.clicks);
+    $("ov-convrate").textContent   = pct2(t.conversionRate);
+    $("ov-epc").textContent        = fmt2(t.epc, true);
+    $("ov-cpa").textContent        = fmt2(t.cpa, true);
+    $("ov-rpm").textContent        = fmt2(t.rpm, true);
+
+    // Breakdowns
+    $("tbl-geo").innerHTML        = tableFromObject(d.geo,        "Country", "Earnings ($)", true);
+    $("tbl-device").innerHTML     = tableFromObject(d.devices,    "Device",  "Earnings ($)", true);
+    $("tbl-offerType").innerHTML  = tableFromObject(d.offerTypes, "Offer",   "Earnings ($)", true);
+    $("tbl-byDay").innerHTML      = tableFromArray (d.byDay,      "Date",    "Earnings ($)", true);
+  };
+
+  // ---- LOAD ----
+  window.loadOverview = async function loadOverview() {
+    const base = (window.EMPIRE_API && window.EMPIRE_API.BASE_URL) || "";
+    // cache-buster because mobile caches hard
+    const bust = `_=${Date.now()}`;
+
+    try {
+      // 1) Try raw endpoint (matches your working URL)
+      let res = await fetch(`${base}?${bust}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      let d = await res.json();
+
+      // Some deployments expect ?action=overview; if totals are missing, try again
+      if (!d || (!d.totals && d.ok === false)) {
+        const res2 = await fetch(`${base}?action=overview&${bust}`);
+        if (!res2.ok) throw new Error(`HTTP ${res2.status}`);
+        d = await res2.json();
+      }
+
+      window.renderOverview(d);
+    } catch (e) {
+      console.error("Overview load failed:", e);
+      // Show something instead of zeros if fetch fails
+      $("tbl-geo").innerHTML = `<div class="muted">Failed to load overview (${e.message})</div>`;
+    }
+  };
+})();

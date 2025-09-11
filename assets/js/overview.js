@@ -1,99 +1,50 @@
-/* ===== Self-contained Overview (fetch + render + on-screen diagnostics) ===== */
-(function () {
-  const $ = id => document.getElementById(id);
-  const money = v => "$" + Number(v || 0).toFixed(2);
-  const num2  = v => Number(v || 0).toFixed(2);
-  const pct2  = v => Number(v || 0).toFixed(2) + "%";
+// asset/js/overview.js
+document.addEventListener("DOMContentLoaded", () => loadOverview());
 
-  // Small status/debug badge in the corner
-  function status(msg, isErr){
-    let el = document.getElementById("empire-status");
-    if (!el){
-      el = document.createElement("div");
-      el.id="empire-status";
-      el.style.cssText="position:fixed;right:8px;bottom:8px;z-index:9999;background:#0b1320;color:#e6f1ff;border:1px solid #2d416f;padding:8px 10px;border-radius:8px;max-width:80vw;font:12px system-ui,Arial";
-      document.body.appendChild(el);
-    }
-    el.style.borderColor = isErr ? "#ff5c5c" : "#2d416f";
-    el.style.color = isErr ? "#ffb3b3" : "#e6f1ff";
-    el.textContent = msg;
+async function loadOverview() {
+  try {
+    const url = `${window.EMPIRE_API.BASE_URL}?action=overview`;
+    const res = await fetch(url, { cache: "no-store" });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    const t = data.totals || data.total || data || {};
+
+    set("#ov-earnings", money(t.earnings ?? t.revenue ?? 0));
+    set("#ov-leads",    fixed2(t.leads ?? 0));
+    set("#ov-clicks",   fixed2(t.clicks ?? 0));
+    set("#ov-convrate", fixed2(t.convRate ?? t.convrate ?? t.conversionRate ?? 0) + "%");
+    set("#ov-epc",      money(t.epc ?? 0));
+    set("#ov-cpa",      money(t.cpa ?? 0));
+    set("#ov-rpm",      money(t.rpm ?? 0));
+
+    const b = data.breakdowns || data.by || {};
+    fill("#tbl-geo",       objToTable(b.byGeo       || data.byGeo,       "Country"));
+    fill("#tbl-device",    objToTable(b.byDevice    || data.byDevice,    "Device"));
+    fill("#tbl-offerType", objToTable(b.byOfferType || data.byOfferType, "Offer"));
+    fill("#tbl-byDay",     dayTable(b.byDay || data.byDay || []));
+  } catch (e) {
+    console.error(e);
+    alert("Overview failed: " + (e.message || e));
   }
+}
 
-  function tableFromPairs(pairs, keyHeader){
-    if (!pairs || !pairs.length) return "";
-    const rows = pairs.map(r => `<tr><td>${r[0]}</td><td class="num">${money(r[1])}</td></tr>`).join("");
-    return `<table><thead><tr><th>${keyHeader}</th><th class="num">Earnings ($)</th></tr></thead><tbody>${rows}</tbody></table>`;
-  }
+// helpers
+const $ = (s)=>document.querySelector(s);
+const set=(s,v)=>{ const el=$(s); if(el) el.textContent=v; };
+const fixed2=(n)=>Number(n||0).toFixed(2);
+const money =(n)=>"$"+fixed2(n);
 
-  function renderOverview(data){
-    try{
-      // Accept { totals:{}, breakdowns:{} } or flat
-      const totals = (data && (data.totals || data.total || data)) || {};
-      const b      = (data && (data.breakdowns || data.by || {})) || {};
-
-      const earnings = totals.earnings ?? totals.revenue ?? 0;
-      const leads    = totals.leads ?? 0;
-      const clicks   = totals.clicks ?? 0;
-      const conv     = (totals.convRate ?? totals.convrate ?? totals.conversionRate ?? 0);
-      const epc      = totals.epc ?? totals.EPC ?? 0;
-      const cpa      = totals.cpa ?? totals.CPA ?? 0;
-      const rpm      = totals.rpm ?? totals.RPM ?? 0;
-
-      $("ov-earnings").textContent = money(earnings);
-      $("ov-leads").textContent    = num2(leads);
-      $("ov-clicks").textContent   = num2(clicks);
-      $("ov-convrate").textContent = pct2(conv);
-      $("ov-epc").textContent      = money(epc);
-      $("ov-cpa").textContent      = money(cpa);
-      $("ov-rpm").textContent      = money(rpm);
-
-      const byGeo    = data.byGeo    || b.byGeo    || b.geo    || {};
-      const byDevice = data.byDevice || b.byDevice || b.device || {};
-      const byOffer  = data.byOfferType || b.byOfferType || b.byOffer || {};
-      const byDay    = data.byDay    || b.byDay    || [];
-
-      $("tbl-geo").innerHTML       = tableFromPairs(Object.keys(byGeo   ).map(k=>[k, byGeo[k]]), "Country");
-      $("tbl-device").innerHTML    = tableFromPairs(Object.keys(byDevice).map(k=>[k, byDevice[k]]), "Device");
-      $("tbl-offerType").innerHTML = tableFromPairs(Object.keys(byOffer ).map(k=>[k, byOffer[k]]), "Offer");
-
-      if (Array.isArray(byDay) && byDay.length){
-        const rows = byDay.map(r=>{
-          const d = r.date || r.day || "";
-          const v = (r.earnings ?? r.revenue ?? 0);
-          return `<tr><td>${d}</td><td class="num">${money(v)}</td></tr>`;
-        }).join("");
-        $("tbl-byDay").innerHTML =
-          `<table><thead><tr><th>Date</th><th class="num">Earnings ($)</th></tr></thead><tbody>${rows}</tbody></table>`;
-      } else {
-        $("tbl-byDay").innerHTML = "";
-      }
-
-      // Show top-level keys for quick verification
-      status("Overview OK • keys: " + Object.keys(data || {}).join(", "));
-    }catch(e){
-      console.error("renderOverview error", e, data);
-      status("Render error: " + e.message, true);
-    }
-  }
-
-  async function fetchOverview(){
-    try{
-      const base = (window.EMPIRE_API && window.EMPIRE_API.BASE_URL) || "";
-      if (!base) { status("BASE_URL missing", true); return; }
-      const url = base + "?" + new URLSearchParams({ action: "overview" });
-      status("Fetching overview…");
-      const res = await fetch(url);
-      if (!res.ok) throw new Error("HTTP " + res.status);
-      const json = await res.json();
-      if (json && json.ok === false) status("API ok:false", true);
-      renderOverview(json);
-    }catch(e){
-      console.error("fetchOverview error", e);
-      status("Fetch error: " + (e.message || e), true);
-    }
-  }
-
-  // expose (router can call it), and also run once now
-  window.loadOverview = fetchOverview;
-  document.addEventListener("DOMContentLoaded", fetchOverview);
-})();
+function objToTable(obj, keyHdr){
+  if (!obj || typeof obj!=="object") return "";
+  const rows = Object.entries(obj).map(([k,v])=>`<tr><td>${k}</td><td class="num">${money(v)}</td></tr>`).join("") || `<tr><td colspan="2" class="muted">No data</td></tr>`;
+  return `<table><thead><tr><th>${keyHdr}</th><th class="num">Earnings ($)</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+function dayTable(arr){
+  if (!Array.isArray(arr) || !arr.length) return "";
+  const rows = arr.map(r=>{
+    const d = r.date || r.day || "";
+    const v = r.earnings ?? r.revenue ?? 0;
+    return `<tr><td>${d}</td><td class="num">${money(v)}</td></tr>`;
+  }).join("");
+  return `<table><thead><tr><th>Date</th><th class="num">Earnings ($)</th></tr></thead><tbody>${rows}</tbody></table>`;
+}

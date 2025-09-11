@@ -1,4 +1,3 @@
-<script>
 /* expects window.EMPIRE_API.BASE_URL from config.js  */
 
 async function loadOverview() {
@@ -14,10 +13,10 @@ async function loadOverview() {
     setText("#ov-earnings",   money(data.totals?.earnings));
     setText("#ov-leads",      int(data.totals?.leads));
     setText("#ov-clicks",     int(data.totals?.clicks));
-    setText("#ov-convrate",   pct(data.totals?.convrate));   // e.g. 62.62%
-    setText("#ov-epc",        money(data.totals?.epc));      // $ per click
-    setText("#ov-cpa",        money(data.totals?.cpa));      // cost per acquisition
-    setText("#ov-rpm",        money(data.totals?.rpm));      // revenue per mille
+    setText("#ov-convrate",   pct(data.totals?.convrate));
+    setText("#ov-epc",        money(data.totals?.epc));
+    setText("#ov-cpa",        money(data.totals?.cpa));
+    setText("#ov-rpm",        money(data.totals?.rpm));
 
     // ===== tables =====
     fillTable("#tbl-geo",       data.breakdowns?.byGeo,       ["key","value"], ["Country","Earnings ($)"]);
@@ -60,7 +59,6 @@ function fillTable(wrapperSel, objOrArr, keys, headers){
 }
 function escapeHtml(s){ return String(s).replace(/[&<>"']/g,m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m])); }
 
-/* optional mini toast */
 function toast(msg){
   let t = document.createElement("div");
   t.className = "toast";
@@ -71,7 +69,5 @@ function toast(msg){
 
 /* auto-run when Overview tab becomes visible or on first load */
 document.addEventListener("DOMContentLoaded", ()=>{
-  // if Overview is the default tab, load immediately
   loadOverview();
 });
-</script>

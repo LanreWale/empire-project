@@ -176,5 +176,49 @@
       show(initial);
     })();
   </script>
+<script>
+(async function(){
+  const API = "https://script.google.com/macros/s/AKfycbz-jj7Cr_KzqCku4SQPQ14MEIuCPdq5OEgiiqjo_O2A0FItBrHlmfkoJHViDxuX4P6z/exec";
+
+  const $ = (id) => document.getElementById(id);
+  const money = n => "$" + Number(n||0).toFixed(2);
+  const pct   = n => Number(n||0).toFixed(2) + "%";
+
+  function tableFromObject(obj, h1, h2){
+    if (!obj || !Object.keys(obj).length) return "<p class='muted'>No data</p>";
+    let html = `<table><thead><tr><th>${h1}</th><th>${h2}</th></tr></thead><tbody>`;
+    for (const [k,v] of Object.entries(obj)) {
+      html += `<tr><td>${k}</td><td class="num">${money(v)}</td></tr>`;
+    }
+    html += "</tbody></table>";
+    return html;
+  }
+
+  try {
+    const res = await fetch(API + "?_=" + Date.now(), {headers:{"Accept":"application/json"}});
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    const data = await res.json();
+    console.log("DATA:", data);
+    window.AppState = data;
+
+    const t = data.totals || {};
+    $("ov-earnings").textContent = money(t.earnings);
+    $("ov-leads").textContent    = Number(t.leads||0).toFixed(0);
+    $("ov-clicks").textContent   = Number(t.clicks||0).toFixed(0);
+    $("ov-convrate").textContent = pct(t.conversionRate);
+    $("ov-epc").textContent      = money(t.epc);
+    $("ov-cpa").textContent      = money(t.cpa);
+    $("ov-rpm").textContent      = money(t.rpm);
+
+    $("tbl-geo").innerHTML        = tableFromObject(data.geo,        "Country",   "Earnings ($)");
+    $("tbl-device").innerHTML     = tableFromObject(data.devices,    "Device",    "Earnings ($)");
+    $("tbl-offerType").innerHTML  = tableFromObject(data.offerTypes, "Offer Type","Earnings ($)");
+    $("tbl-byDay").innerHTML      = tableFromObject(data.byDay,      "Date",      "Earnings ($)");
+  } catch (e) {
+    console.error(e);
+    alert("Overview load failed: " + e.message);
+  }
+})();
+</script>
 </body>
 </html>

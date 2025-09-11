@@ -2,285 +2,570 @@
 <html lang="en">
 <head>
   <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>⚔️ The Empire Dashboard ⚔️</title>
-
-  <link rel="stylesheet" href="/css/empire.css"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>⚔️ The Empire</title>
 
   <style>
-    body { margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif; background:#0b1424; color:#e6f1ff; }
-    .layout { display:flex; min-height:100vh; }
-    nav { width:240px; background:#0f172a; padding:20px; }
-    nav h2 { color:#4cc9f0; margin:0 0 16px; }
-    nav a { display:block; padding:10px; margin:6px 0; color:#e6f1ff; text-decoration:none; border-radius:6px; }
-    nav a:hover, nav a.active { background:#1f2a44; }
-    main { flex:1; padding:20px; }
-    .grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); gap:12px; }
-    .card { background:#111; border-radius:12px; padding:14px; margin:0 0 16px; box-shadow:0 2px 5px rgba(0,0,0,.35); }
-    .card h3 { margin:0 0 10px; color:#4cc9f0; font-size:1.05rem; }
-    .kpi { background:#0f172a; padding:12px; border-radius:10px; }
-    .kpi .label { color:#9fb8d6; font-size:.85rem; }
-    .kpi .val { font-weight:800; font-size:1.3rem; color:#59ffa5; }
-    table { width:100%; border-collapse:collapse; }
-    th, td { padding:8px 10px; border:1px solid #1f2a44; }
-    th { background:#1f2a44; text-align:left; }
-    .muted { color:#9fb8d6; font-size:.9rem; }
-    .hidden { display:none !important; }
-    .btn { background:#4cc9f0; color:#001219; border:0; border-radius:10px; padding:10px 14px; font-weight:700; cursor:pointer; }
-    .btn.ghost { background:transparent; color:#e6f1ff; border:1px solid #1f2a44; }
-    .pad { padding:10px 0; }
-    .stack > * { margin:6px 0; }
-    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; white-space:pre-wrap; word-break:break-word; }
+    :root{
+      --bg:#0b1424; --panel:#0f172a; --card:#111826; --text:#e6f1ff; --muted:#8aa0c6;
+      --line:#1f2a44; --accent:#4cc9f0; --ok:#22c55e; --warn:#f59e0b; --bad:#ef4444;
+    }
+    *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,system-ui}
+    .layout{display:flex;min-height:100vh}
+    nav{width:240px;background:var(--panel);padding:20px}
+    nav h2{margin:0 0 16px;color:var(--accent)}
+    nav a{display:block;padding:10px;border-radius:6px;color:var(--text);text-decoration:none;margin:6px 0}
+    nav a:hover{background:#15213a} nav a.active{background:#1d2a4a}
+    main{flex:1;padding:20px;overflow:auto}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin:0 0 14px}
+    .card h3{margin:0 0 10px;color:var(--accent)}
+    .row{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+    .kpi{padding:10px;border:1px solid var(--line);border-radius:10px}
+    .kpi .label{color:var(--muted);font-size:12px}
+    .kpi .val{font-weight:800;font-size:22px;color:#86efac}
+    .tbl{width:100%;border-collapse:collapse}
+    .tbl th,.tbl td{border:1px solid var(--line);padding:8px 10px;text-align:left}
+    .tbl th{background:#15213a}
+    .num{text-align:right}
+    .muted{color:var(--muted)} .mono{font-family:ui-monospace,Menlo,Consolas,monospace}
+    form.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px}
+    input,select,button{padding:10px;border-radius:8px;border:1px solid var(--line);background:#0b1320;color:var(--text)}
+    button{background:var(--accent);border:none;color:#001219;font-weight:700;cursor:pointer}
+    button.ghost{background:transparent;border:1px solid var(--line);color:var(--text)}
+    .pad{margin-top:8px}
+    .badge{display:inline-block;padding:4px 8px;border-radius:8px;font-weight:700}
+    .ok{color:#0b1f12;background:#123e24;border:1px solid #1f6d3b}
+    .paused{color:#2a1a00;background:#3a2808;border:1px solid #6b4e0d}
+    /* modal */
+    .modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:40}
+    .modal.show{display:flex}
+    .modal .box{width:min(520px,92vw);background:#101522;border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:16px}
+    .box input,.box select{width:100%;margin-bottom:10px}
   </style>
 
+  <!-- GAS URL provider -->
+  <script src="/assets/js/config.js"></script>
+
   <script>
-    /* =========================
-       CONFIG — set once
-    ========================== */
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbz-jj7Cr_KzqCku4SQPQ14MEIuCPdq5OEgiiqjo_O2A0FItBrHlmfkoJHViDxuX4P6z/exec"; // LIVE
+    // ===== Core client (keep structure unchanged) =====
+    const API = window.EMPIRE_API?.BASE_URL || "";
     const CMD_KEY = "GENERALISIMO@15769";
 
-    /* =========================
-       CORE FETCH HELPER
-    ========================== */
-    async function callAPI(action, params = {}) {
-      const u = new URL(GAS_URL);
-      u.searchParams.set("action", action);
-      for (const [k,v] of Object.entries(params)) u.searchParams.set(k, v);
-      const res = await fetch(u.toString(), { method: "GET" });
-      if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
-      return res.json();
+    const $  = s => document.querySelector(s);
+    const $$ = s => document.querySelectorAll(s);
+    const setTxt = (id,v)=>{ const el=document.getElementById(id); if (el) el.textContent=v; };
+    const money  = n => `$${Number(n||0).toFixed(2)}`;
+
+    function apiGET(action, params={}){
+      const u = new URL(API);
+      u.searchParams.set('action', action);
+      Object.entries(params).forEach(([k,v])=>u.searchParams.set(k,v));
+      return fetch(u).then(r=>r.json());
+    }
+    function apiPOST(action, body={}){
+      const u = new URL(API);
+      u.searchParams.set('action', action);
+      return fetch(u, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) }).then(r=>r.json());
     }
 
-    /* =========================
-       AUTH
-    ========================== */
-    function login(e) {
+    // ===== NAV (no change to layout) =====
+    function show(view){
+      $$("[data-view]").forEach(v=>v.style.display="none");
+      const el = document.querySelector(`[data-view="${view}"]`); if(el) el.style.display="block";
+      $$("nav a").forEach(a=>a.classList.remove("active"));
+      const link = document.querySelector(`nav a[data-link="${view}"]`); if(link) link.classList.add("active");
+    }
+
+    // ===== AUTH unchanged =====
+    function login(e){
       e.preventDefault();
-      const key = document.getElementById("commanderKey").value.trim();
-      if (key === CMD_KEY) {
-        localStorage.setItem("empire.auth","commander_ok");
-        document.getElementById("login").classList.add("hidden");
-        document.getElementById("app").classList.remove("hidden");
-        loadDashboard();
+      const key = $("#commanderKey").value.trim();
+      if (key === CMD_KEY){
+        localStorage.setItem("empire.auth","ok");
+        $("#login").style.display="none"; $("#app").style.display="flex";
+        boot();
+      } else alert("Invalid access key.");
+    }
+
+    // ===== OVERVIEW =====
+    function fillTable(tbodyId, obj, moneyMode=true){
+      const tb = document.getElementById(tbodyId); if(!tb) return; tb.innerHTML="";
+      Object.entries(obj||{}).sort((a,b)=>(b[1]??0)-(a[1]??0)).forEach(([k,v])=>{
+        const tr=document.createElement("tr");
+        tr.innerHTML=`<td>${k}</td><td class="num">${moneyMode?money(v):v}</td>`;
+        tb.appendChild(tr);
+      });
+    }
+    async function loadOverview(){
+      const j = await apiGET("summary");
+      const t = j.totals||{};
+      setTxt("kEarn",  money(t.earnings));
+      setTxt("kLeads", t.leads||0);
+      setTxt("kClicks",t.clicks||0);
+      setTxt("kCR",    `${Number(j.conversionRate||0).toFixed(2)}%`);
+      setTxt("kEPC",   money(j.epc));
+      setTxt("kCPA",   money(j.cpa));
+      setTxt("kRPM",   money(j.rpm));
+      fillTable("geoBody", j.geo);
+      fillTable("devBody", j.devices);
+      fillTable("offBody", j.offerTypes);
+      fillTable("dayBody", j.byDay);
+    }
+
+    // ===== CPA ACCOUNTS (CPA GRIP cards) =====
+    let CPA = [];
+    function cpaCard(acc, i){
+      const status = acc.status==='Paused' ? `<span class="badge paused">PAUSED</span>` : `<span class="badge ok">ACTIVE</span>`;
+      return `
+        <div class="card" style="position:relative;">
+          <div style="position:absolute;top:10px;right:10px">${status}</div>
+          <h4 style="margin:0 0 4px">${acc.name}</h4>
+          <div class="muted">CPA GRIP • ${acc.accountId}</div>
+          <div style="margin:10px 0">
+            <div><b>Revenue:</b> ${money(acc.revenue)}</div>
+            <div><b>Clicks:</b> ${acc.clicks||0}</div>
+            <div><b>Conversion:</b> ${Number(acc.conv||0).toFixed(1)}%</div>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="ghost" onclick="cpaView(${i})">View Details</button>
+            <button class="ghost" onclick="cpaPauseResume(${i})">${acc.status==='Paused'?'Resume':'Pause'}</button>
+            <button class="ghost" onclick="cpaDelete(${i})" style="color:#ff9aa2;border-color:#ff9aa2">Delete</button>
+          </div>
+        </div>`;
+    }
+    function renderCPA(){
+      const grid = $("#cpaGrid");
+      grid.innerHTML = CPA.map((a,i)=>cpaCard(a,i)).join("") || `<div class="muted">No CPA GRIP accounts yet.</div>`;
+    }
+    async function loadCPA(){
+      try{
+        const r = await apiGET("cpalist"); // expect {ok:true, accounts:[{name,accountId,status}]}
+        CPA = (r.accounts||r.rows||[]).map(x=>({
+          name:x.name, accountId:x.accountId||x.id, status:x.status||'ACTIVE',
+          revenue:Number(x.revenue||0), clicks:Number(x.clicks||0), conv:Number(x.conv||0),
+          api:"" // not displayed
+        }));
+      }catch{ CPA = JSON.parse(localStorage.getItem("CPA_ACCOUNTS")||"[]"); }
+      renderCPA();
+      // async stats refresh
+      CPA.forEach(async (acc, i)=>{
+        try{
+          const s = await apiGET("cpastats", { accountId: acc.accountId });
+          CPA[i].revenue = Number(s.revenue||0);
+          CPA[i].clicks  = Number(s.clicks||0);
+          CPA[i].conv    = Number(s.conv||0);
+          localStorage.setItem("CPA_ACCOUNTS", JSON.stringify(CPA));
+          renderCPA();
+        }catch{}
+      });
+    }
+    function cpaView(i){
+      const a = CPA[i];
+      alert(`Account: ${a.name}\nID: ${a.accountId}\nRevenue: ${money(a.revenue)}\nClicks: ${a.clicks}\nConv: ${a.conv.toFixed(1)}%`);
+    }
+    async function cpaPauseResume(i){
+      const a = CPA[i];
+      const next = a.status==='Paused' ? 'ACTIVE' : 'Paused';
+      try{ await apiPOST("cpa.toggle", { id:a.accountId, status:next }); }catch{}
+      a.status = next; localStorage.setItem("CPA_ACCOUNTS", JSON.stringify(CPA)); renderCPA();
+    }
+    async function cpaDelete(i){
+      const a = CPA[i]; if(!confirm(`Delete ${a.name}?`)) return;
+      try{ await apiPOST("cpa.delete", { id:a.accountId }); }catch{}
+      CPA.splice(i,1); localStorage.setItem("CPA_ACCOUNTS", JSON.stringify(CPA)); renderCPA();
+    }
+    function showCpaModal(){ $("#cpaModal").classList.add("show"); }
+    function hideCpaModal(){ $("#cpaModal").classList.remove("show"); $("#cpaForm").reset(); }
+    async function saveCpaAccount(){
+      const name=$("#cpa_name").value.trim(), accountId=$("#cpa_accid").value.trim(), api=$("#cpa_api").value.trim();
+      if(!name||!accountId||!api) return alert("All fields are required.");
+      const rec = { name, accountId, network:"CPA GRIP", api, status:"ACTIVE" };
+      try{ await apiPOST("cpaadd", rec); }catch{
+        const list = JSON.parse(localStorage.getItem("CPA_ACCOUNTS")||"[]"); list.push({...rec,revenue:0,clicks:0,conv:0});
+        localStorage.setItem("CPA_ACCOUNTS", JSON.stringify(list));
+      }
+      hideCpaModal(); loadCPA();
+    }
+
+    // ===== USERS (with WhatsApp) =====
+    async function loadUsers(){
+      const j = await apiGET("listassociates");
+      const tb = $("#usersBody"); tb.innerHTML="";
+      (j.users||j.rows||[]).forEach(r=>{
+        const tr=document.createElement("tr");
+        tr.innerHTML = `
+          <td>${r.name||''}</td>
+          <td>${r.email||''}</td>
+          <td>${r.phone||''}</td>
+          <td>${r.whatsapp||r.wa||''}</td>
+          <td>${r.role||''}</td>
+          <td>${r.level||''}</td>
+          <td>${r.status||''}</td>
+          <td>${r.notes||''}</td>`;
+        tb.appendChild(tr);
+      });
+    }
+    async function addUser(e){
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      const payload = Object.fromEntries(fd.entries());
+      await apiGET("addassociate", payload); // your GAS supports GET add
+      e.target.reset(); loadUsers(); alert("User added.");
+    }
+
+    // ===== WALLET (with validator + methods) =====
+    function wireWalletToggles(){
+      const radios = $$('input[name="w_method"]');
+      const sets = $$('fieldset[data-w]');
+      const reqMap = { Bank:['bankName','bankCode','accountNumber','swift','country','currency'], Payoneer:['payoneerEmail','currency'], Crypto:['asset','network','walletAddress'] };
+      function apply(){
+        const sel = document.querySelector('input[name="w_method"]:checked').value;
+        sets.forEach(fs=>{
+          const on = (fs.getAttribute('data-w')===sel);
+          fs.style.display = on ? '' : 'none';
+          fs.querySelectorAll('input,select').forEach(el=>el.required=false);
+          (reqMap[sel]||[]).forEach(n=>{
+            const el = fs.querySelector(`[name="${n}"]`); if(el) el.required = true;
+          });
+        });
+        $("#btnWithdraw").disabled = true; // force re-validate on switch
+      }
+      radios.forEach(r=>r.addEventListener('change', apply)); apply();
+    }
+    async function loadWallet(){
+      const j = await apiGET("wallet");
+      setTxt('walletTotals', `In: ${money(j.totalIn)} • Out: ${money(j.totalOut)} • Balance: ${money(j.balance)}`);
+      const tb=$("#walletBody"); tb.innerHTML="";
+      (j.history||[]).forEach(r=>{
+        const tr=document.createElement("tr");
+        tr.innerHTML=`
+          <td>${r.time||''}</td><td class="num">${money(r.amount||0)}</td>
+          <td>${r.method||''}</td><td>${r.status||''}</td><td>${r.direction||''}</td>
+          <td>${r.name||''}</td><td>${r.email||''}</td><td>${r.phone||''}</td>`;
+        tb.appendChild(tr);
+      });
+      const banks = await apiGET("listbanks");
+      const sel=$("#bankSelect"); if(sel){
+        sel.innerHTML = '<option value="">Select bank…</option>';
+        (banks.rows||banks.banks||[]).forEach(b=>{
+          const opt=document.createElement("option");
+          opt.value=b.code||b[1]; opt.textContent=(b.name||b[0]) ? `${b.name||b[0]} (${b.code||b[1]})` : (b.code||b[1]);
+          sel.appendChild(opt);
+        });
+      }
+      wireWalletToggles();
+    }
+    async function validatePayout(){
+      const method = document.querySelector('input[name="w_method"]:checked').value;
+      const p = new URLSearchParams({ action:'validatePayout', method });
+      if (method==='Bank'){
+        const bankCode=$("#bankSelect").value.trim(), acct=$("#accountNumber").value.trim();
+        if(!bankCode||!acct) return alert("Enter bank & account number.");
+        p.set('bankCode',bankCode); p.set('accountNumber',acct);
+      } else if (method==='Payoneer'){
+        const em=$("#payoneerEmail").value.trim(); if(!em) return alert("Enter Payoneer email."); p.set('email',em);
       } else {
-        alert("Invalid access key.");
+        const nw=$("#network").value.trim(), addr=$("#walletAddress").value.trim();
+        if(!nw||!addr) return alert("Enter network and wallet address."); p.set('network',nw); p.set('address',addr);
       }
+      const res = await fetch(`${API}?${p.toString()}`); const j = await res.json();
+      if(!j.ok) { $("#btnWithdraw").disabled=true; return alert(j.error||"Validation failed"); }
+      if (j.type==='bank' && j.accountName){ $("#accountName").value = j.accountName; }
+      $("#btnWithdraw").disabled=false; alert(j.message||"Validated");
     }
-
-    function autoload() {
-      const ok = localStorage.getItem("empire.auth") === "commander_ok";
-      document.getElementById("login").classList.toggle("hidden", ok);
-      document.getElementById("app").classList.toggle("hidden", !ok);
-      if (ok) loadDashboard();
-    }
-
-    /* =========================
-       RENDERERS
-    ========================== */
-    function renderOverview(d) {
-      const t = d?.totals || {};
-      const $ = (id, val) => document.getElementById(id).textContent = val;
-
-      $("kpiEarnings", `$${Number(t.earnings || 0).toFixed(2)}`);
-      $("kpiLeads", `${t.leads || 0}`);
-      $("kpiClicks", `${t.clicks || 0}`);
-      $("kpiCR", `${Number(t.conversionRate || 0).toFixed(2)}%`);
-      $("kpiEPC", `$${Number(t.epc || 0).toFixed(2)}`);
-      $("kpiCPA", `$${Number(t.cpa || 0).toFixed(2)}`);
-      $("kpiRPM", `$${Number(t.rpm || 0).toFixed(2)}`);
-
-      document.getElementById("geoDump").textContent =
-        JSON.stringify(d?.geo || {}, null, 2);
-      document.getElementById("deviceDump").textContent =
-        JSON.stringify(d?.devices || {}, null, 2);
-      document.getElementById("offerDump").textContent =
-        JSON.stringify(d?.offerTypes || {}, null, 2);
-      document.getElementById("byDayDump").textContent =
-        JSON.stringify(d?.byDay || {}, null, 2);
-    }
-
-    function renderUsers(users) {
-      const tbody = document.getElementById("usersBody");
-      tbody.innerHTML = "";
-      (users || []).forEach(u => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${u.name || ""}</td>
-          <td>${u.email || ""}</td>
-          <td>${u.role || ""}</td>
-          <td>${u.level ?? ""}</td>
-          <td>${u.status || ""}</td>
-          <td>${u.last_action_at || ""}</td>
-        `;
-        tbody.appendChild(tr);
-      });
-    }
-
-    function renderWallet(d) {
-      const totIn  = Number(d?.totalIn || 0).toFixed(2);
-      const totOut = Number(d?.totalOut || 0).toFixed(2);
-      const bal    = Number(d?.balance || 0).toFixed(2);
-      document.getElementById("walletTotals").textContent =
-        `In: $${totIn}   Out: $${totOut}   Balance: $${bal}`;
-
-      const tbody = document.getElementById("walletBody");
-      tbody.innerHTML = "";
-      (d?.history || []).forEach(h => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${h.time || ""}</td>
-          <td>$${Number(h.amount || 0).toFixed(2)}</td>
-          <td>${h.method || ""}</td>
-          <td>${h.status || ""}</td>
-          <td>${h.direction || ""}</td>
-          <td>${h.name || ""}</td>
-          <td>${h.email || ""}</td>
-          <td>${h.phone || ""}</td>
-        `;
-        tbody.appendChild(tr);
-      });
-    }
-
-    function renderSystemSettings(settings) {
-      const ul = document.getElementById("sysList");
-      ul.innerHTML = "";
-      const entries = Object.entries(settings || {});
-      if (!entries.length) {
-        ul.innerHTML = `<li class="muted">No system settings yet.</li>`;
-        return;
+    async function requestWithdraw(e){
+      e.preventDefault();
+      if ($("#btnWithdraw").disabled) return alert("Validate first.");
+      const balMatch = ($("#walletTotals").textContent||'').match(/Balance:\s*\$([\d.]+)/);
+      const balance = balMatch ? Number(balMatch[1]) : 0;
+      const fd = new FormData(e.target);
+      const amount = Number(fd.get('amount')||0);
+      if (amount<=0) return alert('Enter a valid amount.');
+      if (amount>balance) return alert('Amount exceeds current balance.');
+      const method = document.querySelector('input[name="w_method"]:checked').value;
+      const base = Object.fromEntries(fd.entries()); base.method = method; base.action='withdraw';
+      try{
+        const r = await fetch(API, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(base) });
+        const j = await r.json();
+        if (!j.ok) throw new Error(j.error||'withdraw failed');
+      }catch{
+        await apiGET('setsetting', { key:`withdraw_${Date.now()}`, value: JSON.stringify(base), description:`withdrawal ${method}` });
       }
-      entries.forEach(([k, v]) => {
-        const li = document.createElement("li");
-        const value = v?.value ?? "";
-        const desc  = v?.description ?? "";
-        const upd   = v?.updated_at ?? "";
-        li.innerHTML = `<strong>${k}</strong>: <span class="mono">${value}</span><br/><span class="muted">${desc} • ${upd}</span>`;
+      e.target.reset(); wireWalletToggles(); await loadWallet(); alert('Withdrawal submitted.');
+    }
+
+    // ===== ANALYTICS (re-uses summary) =====
+    async function loadAnalytics(e){ if(e) e.preventDefault();
+      const j = await apiGET("summary");
+      setTxt("anEarn", money(j?.totals?.earnings)); setTxt("anLeads", j?.totals?.leads||0); setTxt("anClicks", j?.totals?.clicks||0);
+      fillTable("anGeo", j.geo); fillTable("anOffer", j.offerTypes);
+    }
+
+    // ===== MONITORING =====
+    async function ping(){ const t=performance.now(); try{ await apiGET("summary"); setTxt("monStatus", `OK • ${(performance.now()-t).toFixed(0)} ms`);}catch(e){ setTxt("monStatus", `ERR • ${e.message}`); } }
+
+    // ===== SETTINGS =====
+    async function loadSettings(){
+      const j = await apiGET("settings");
+      const ul = $("#settingsList"); ul.innerHTML="";
+      Object.entries(j.settings||{}).forEach(([k,v])=>{
+        const li=document.createElement("li");
+        li.innerHTML=`• <b>${k}</b>: <span class="mono">${v?.value??""}</span> <span class="muted">— ${v?.description??""}</span>`;
         ul.appendChild(li);
       });
     }
-
-    function renderBanks(banks) {
-      const select = document.getElementById("bankSelect");
-      if (!select) return; // optional section
-      select.innerHTML = "";
-      (banks || []).forEach(b => {
-        const code = b.code ?? (Array.isArray(b) ? b[1] : "");
-        const name = b.name ?? (Array.isArray(b) ? b[0] : "");
-        if (!name && !code) return;
-        const opt = document.createElement("option");
-        opt.value = code || name;
-        opt.textContent = code ? `${name} (${code})` : name;
-        select.appendChild(opt);
-      });
-      if (!select.children.length) {
-        const opt = document.createElement("option");
-        opt.textContent = "No banks configured";
-        select.appendChild(opt);
-      }
+    async function addSetting(e){
+      e.preventDefault();
+      const fd=new FormData(e.target);
+      await apiGET("setsetting", Object.fromEntries(fd.entries()));
+      e.target.reset(); loadSettings(); alert("Saved.");
     }
 
-    /* =========================
-       LOADERS — match GAS actions
-    ========================== */
-    async function loadDashboard() {
-      try {
-        const [overview, users, wallet, system, banks] = await Promise.all([
-          callAPI("overview"),
-          callAPI("users"),
-          callAPI("walletoverview"), // "wallet" also supported by your GAS
-          callAPI("system_get"),
-          callAPI("banks").catch(()=>({ ok:false })) // optional
-        ]);
-
-        if (!overview.ok) throw new Error("overview not ok");
-        renderOverview(overview);
-
-        if (users.ok)  renderUsers(users.users || []);
-        if (wallet.ok) renderWallet(wallet);
-        if (system.ok) renderSystemSettings(system.settings || {});
-        if (banks.ok)  renderBanks(banks.banks || banks.rows || []);
-
-      } catch (e) {
-        console.error(e);
-        alert("Failed to load dashboard: " + (e.message || e));
-      }
+    // ===== BOOT (no layout change) =====
+    function boot(){
+      show("overview");
+      loadOverview(); loadCPA(); loadUsers(); loadWallet(); loadAnalytics(); loadSettings(); ping();
     }
+    document.addEventListener("DOMContentLoaded", ()=>{
+      // nav
+      $$("nav a[data-link]").forEach(a=>a.addEventListener("click", e=>{e.preventDefault(); show(a.dataset.link);}));
+      if(localStorage.getItem("empire.auth")==="ok"){ $("#login").style.display="none"; $("#app").style.display="flex"; boot(); }
+    });
   </script>
 </head>
+<body>
 
-<body onload="autoload()">
-  <!-- Login -->
+  <!-- LOGIN -->
   <div id="login" style="min-height:100vh;display:grid;place-items:center;background:#0b1424;">
-    <form onsubmit="login(event)" style="background:#0f172a;padding:24px;border-radius:16px;width:min(420px,92vw);">
-      <h2 style="margin:0 0 8px;">⚔️ The Empire Login ⚔️</h2>
-      <p class="muted" style="margin:0 0 14px;">Commander access required.</p>
-      <input id="commanderKey" type="password" placeholder="Commander key" style="width:100%;padding:12px;border-radius:10px;border:1px solid #1f2a44;background:#0b1320;color:#e6f1ff;"/>
-      <button class="btn" style="width:100%;margin-top:12px;">Enter</button>
+    <form onsubmit="login(event)" class="card" style="width:min(420px,92vw)">
+      <h3>Commander Login</h3>
+      <div class="muted pad">Enter access key to continue.</div>
+      <input id="commanderKey" class="mono" type="password" placeholder="Commander key" style="width:100%"/>
+      <div class="pad"><button style="width:100%">Enter</button></div>
     </form>
   </div>
 
-  <!-- App -->
-  <div id="app" class="layout hidden">
+  <!-- APP -->
+  <div id="app" class="layout" style="display:none">
     <nav>
       <h2>⚔️ Empire</h2>
-      <a href="#dashboard" class="active">Dashboard</a>
-      <a href="#users">Users</a>
-      <a href="#wallet">Wallet</a>
-      <a href="#settings">System Settings</a>
+      <a href="#" data-link="overview" class="active">Overview</a>
+      <a href="#" data-link="cpa">CPA Accounts</a>
+      <a href="#" data-link="users">Users</a>
+      <a href="#" data-link="analytics">Analytics</a>
+      <a href="#" data-link="wallet">Wallet</a>
+      <a href="#" data-link="monitoring">Monitoring</a>
+      <a href="#" data-link="settings">Settings</a>
     </nav>
 
     <main>
-      <!-- DASHBOARD -->
-      <section id="dashboard" class="card">
-        <h3>Dashboard Metrics</h3>
-        <div class="grid">
-          <div class="kpi"><div class="label">Earnings</div><div id="kpiEarnings" class="val">$0.00</div></div>
-          <div class="kpi"><div class="label">Leads</div><div id="kpiLeads" class="val">0</div></div>
-          <div class="kpi"><div class="label">Clicks</div><div id="kpiClicks" class="val">0</div></div>
-          <div class="kpi"><div class="label">Conv. Rate</div><div id="kpiCR" class="val">0.00%</div></div>
-          <div class="kpi"><div class="label">EPC</div><div id="kpiEPC" class="val">$0.00</div></div>
-          <div class="kpi"><div class="label">CPA</div><div id="kpiCPA" class="val">$0.00</div></div>
-          <div class="kpi"><div class="label">RPM</div><div id="kpiRPM" class="val">$0.00</div></div>
+      <!-- OVERVIEW -->
+      <section data-view="overview">
+        <div class="row pad">
+          <div class="kpi"><div class="label">Earnings</div><div id="kEarn" class="val">$0.00</div></div>
+          <div class="kpi"><div class="label">Leads</div><div id="kLeads" class="val">0</div></div>
+          <div class="kpi"><div class="label">Clicks</div><div id="kClicks" class="val">0</div></div>
+          <div class="kpi"><div class="label">Conv. Rate</div><div id="kCR" class="val">0.00%</div></div>
+          <div class="kpi"><div class="label">EPC</div><div id="kEPC" class="val">$0.00</div></div>
+          <div class="kpi"><div class="label">CPA</div><div id="kCPA" class="val">$0.00</div></div>
+          <div class="kpi"><div class="label">RPM</div><div id="kRPM" class="val">$0.00</div></div>
         </div>
-        <div class="grid" style="margin-top:12px;">
-          <div class="card"><h3>By Geo</h3><pre id="geoDump" class="mono">{}</pre></div>
-          <div class="card"><h3>By Device</h3><pre id="deviceDump" class="mono">{}</pre></div>
-          <div class="card"><h3>By Offer</h3><pre id="offerDump" class="mono">{}</pre></div>
-          <div class="card"><h3>By Day</h3><pre id="byDayDump" class="mono">{}</pre></div>
+        <div class="row">
+          <div class="card"><h3>By Geo</h3>
+            <table class="tbl"><thead><tr><th>Country</th><th class="num">Earnings ($)</th></tr></thead><tbody id="geoBody"></tbody></table>
+          </div>
+          <div class="card"><h3>By Device</h3>
+            <table class="tbl"><thead><tr><th>Device</th><th class="num">Earnings ($)</th></tr></thead><tbody id="devBody"></tbody></table>
+          </div>
+          <div class="card"><h3>By Offer</h3>
+            <table class="tbl"><thead><tr><th>Offer</th><th class="num">Earnings ($)</th></tr></thead><tbody id="offBody"></tbody></table>
+          </div>
+          <div class="card"><h3>By Day</h3>
+            <table class="tbl"><thead><tr><th>Date</th><th class="num">Earnings ($)</th></tr></thead><tbody id="dayBody"></tbody></table>
+          </div>
+        </div>
+      </section>
+
+      <!-- CPA ACCOUNTS (CPA GRIP) -->
+      <section data-view="cpa">
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <h3>CPA Accounts Management</h3>
+            <button class="ghost" onclick="showCpaModal()">+ Add New Account</button>
+          </div>
+          <div id="cpaGrid" class="row pad"></div>
         </div>
       </section>
 
       <!-- USERS -->
-      <section id="users" class="card">
-        <h3>Users (Authority)</h3>
-        <table>
-          <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Level</th><th>Status</th><th>Last Action</th></tr></thead>
-          <tbody id="usersBody"></tbody>
-        </table>
+      <section data-view="users" style="display:none">
+        <div class="card"><h3>Users Management</h3>
+          <form onsubmit="addUser(event)" class="grid">
+            <input name="name" placeholder="Name" required/>
+            <input name="email" type="email" placeholder="Email" required/>
+            <input name="phone" placeholder="Phone"/>
+            <input name="whatsapp" placeholder="WhatsApp number"/>
+            <input name="role" placeholder="Role"/>
+            <input name="level" placeholder="Level"/>
+            <select name="status"><option>Active</option><option>Suspended</option></select>
+            <input name="notes" placeholder="Notes"/>
+            <button>Add User</button>
+            <button type="button" class="ghost" onclick="loadUsers()">Refresh</button>
+          </form>
+        </div>
+        <div class="card">
+          <table class="tbl">
+            <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>WhatsApp</th><th>Role</th><th>Level</th><th>Status</th><th>Notes</th></tr></thead>
+            <tbody id="usersBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ANALYTICS -->
+      <section data-view="analytics" style="display:none">
+        <div class="card"><h3>Analytics</h3>
+          <form onsubmit="loadAnalytics(event)" class="grid">
+            <input name="from" type="date" placeholder="From"/>
+            <input name="to" type="date" placeholder="To"/>
+            <button>Refresh</button>
+          </form>
+        </div>
+        <div class="row pad">
+          <div class="kpi"><div class="label">Total Earnings</div><div id="anEarn" class="val">$0.00</div></div>
+          <div class="kpi"><div class="label">Leads</div><div id="anLeads" class="val">0</div></div>
+          <div class="kpi"><div class="label">Clicks</div><div id="anClicks" class="val">0</div></div>
+        </div>
+        <div class="row">
+          <div class="card"><h3>Geo (Top)</h3>
+            <table class="tbl"><thead><tr><th>Country</th><th class="num">$</th></tr></thead><tbody id="anGeo"></tbody></table>
+          </div>
+          <div class="card"><h3>Offer Types (Top)</h3>
+            <table class="tbl"><thead><tr><th>Offer</th><th class="num">$</th></tr></thead><tbody id="anOffer"></tbody></table>
+          </div>
+        </div>
       </section>
 
       <!-- WALLET -->
-      <section id="wallet" class="card">
-        <h3>Wallet Overview</h3>
-        <div class="pad"><strong id="walletTotals" class="mono">$0.00</strong></div>
-        <table>
-          <thead>
-            <tr>
-              <th>Time</th><th>Amount</th><th>Method</th><th>Status</th><th>Direction</th>
-              <th>Name</th><th>Email</th><th>Phone</th>
-            </tr>
-          </thead>
-          <tbody id="walletBody"></tbody>
-        </table>
+      <section data-view="wallet" style="display:none">
+        <div class="card"><h3>Wallet • Request Withdrawal</h3>
+          <div class="muted pad" id="walletTotals">In: $0.00 • Out: $0.00 • Balance: $0.00</div>
+
+          <div class="pad">
+            <label class="muted">Payout Method</label><br>
+            <label><input type="radio" name="w_method" value="Bank" checked> Bank</label>
+            <label style="margin-left:14px"><input type="radio" name="w_method" value="Payoneer"> Payoneer</label>
+            <label style="margin-left:14px"><input type="radio" name="w_method" value="Crypto"> Crypto</label>
+            <button class="ghost" type="button" style="margin-left:10px" onclick="validatePayout()">Validate</button>
+          </div>
+
+          <form id="withdrawForm" onsubmit="requestWithdraw(event)" class="grid">
+            <!-- Common -->
+            <input name="fullName" id="accountName" placeholder="Recipient / Account Name *" required>
+            <input name="amount" type="number" step="0.01" placeholder="Amount (USD) *" required>
+            <input name="email" type="email" placeholder="Email (optional)">
+            <input name="phone" placeholder="Phone (optional)">
+
+            <!-- BANK -->
+            <fieldset data-w="Bank" class="grid">
+              <legend>Bank Transfer</legend>
+              <input name="bankName" placeholder="Bank Name *">
+              <select id="bankSelect" name="bankCode"><option value="">Loading banks…</option></select>
+              <input name="accountNumber" id="accountNumber" placeholder="Account Number *">
+              <input name="accountType" placeholder="Account Type (Checking/Savings)">
+              <input name="swift" placeholder="SWIFT / BIC *">
+              <input name="routing" placeholder="Routing / ABA (US)">
+              <input name="iban" placeholder="IBAN (EU/UK)">
+              <input name="country" placeholder="Country *">
+              <input name="city" placeholder="City / Branch">
+              <input name="currency" placeholder="Currency *" value="USD">
+            </fieldset>
+
+            <!-- PAYONEER -->
+            <fieldset data-w="Payoneer" class="grid" style="display:none">
+              <legend>Payoneer</legend>
+              <input name="payoneerEmail" id="payoneerEmail" type="email" placeholder="Payoneer Email *">
+              <input name="payoneerId" placeholder="Payoneer Customer ID (optional)">
+              <input name="country" placeholder="Country">
+              <input name="currency" placeholder="Currency *" value="USD">
+            </fieldset>
+
+            <!-- CRYPTO -->
+            <fieldset data-w="Crypto" class="grid" style="display:none">
+              <legend>Crypto</legend>
+              <input name="asset" placeholder="Asset *" value="USDT">
+              <input name="network" id="network" placeholder="Network * (TRC20 / ERC20 / BEP20)">
+              <input name="walletAddress" id="walletAddress" class="mono" placeholder="Wallet Address *">
+              <input name="tag" placeholder="Destination Tag / Memo (optional)">
+            </fieldset>
+
+            <div style="grid-column:1/-1">
+              <input name="note" placeholder="Note to finance (optional)">
+            </div>
+
+            <div class="pad" style="grid-column:1/-1">
+              <button id="btnWithdraw" disabled>Submit Request</button>
+              <button type="button" class="ghost" onclick="loadWallet()">Refresh</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="card">
+          <h3>Transaction History</h3>
+          <table class="tbl">
+            <thead>
+              <tr>
+                <th>Time</th><th class="num">Amount</th><th>Method</th><th>Status</th><th>Direction</th>
+                <th>Name</th><th>Email</th><th>Phone</th>
+              </tr>
+            </thead>
+            <tbody id="walletBody"></tbody>
+          </table>
+        </div>
       </section>
 
-      <!-- SYSTEM SETTINGS -->
-      <section id="settings" class="card">
-        <h3>System Settings</h3>
-        <ul id="sysList" class="stack"></ul>
+      <!-- MONITORING -->
+      <section data-view="monitoring" style="display:none">
+        <div class="card"><h3>Monitoring</h3>
+          <button onclick="ping()">Ping API</button>
+          <span class="pad muted">Status: <b id="monStatus">—</b></span>
+        </div>
+      </section>
+
+      <!-- SETTINGS -->
+      <section data-view="settings" style="display:none">
+        <div class="card"><h3>System Settings</h3>
+          <form onsubmit="addSetting(event)" class="grid">
+            <input name="key" placeholder="Key" required/>
+            <input name="value" placeholder="Value" required/>
+            <input name="description" placeholder="Description"/>
+            <button>Save</button>
+          </form>
+        </div>
+        <div class="card">
+          <h3>All Settings</h3>
+          <ul id="settingsList" class="pad"></ul>
+        </div>
       </section>
     </main>
   </div>
+
+  <!-- CPA Modal -->
+  <div id="cpaModal" class="modal"><div class="box">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <h3 style="margin:0">Add New CPA GRIP Account</h3>
+      <button class="ghost" onclick="hideCpaModal()">✖</button>
+    </div>
+    <form id="cpaForm" onsubmit="return false;">
+      <label>Account Name</label>
+      <input id="cpa_name" placeholder="Enter account name" />
+      <label>Network</label>
+      <input id="cpa_network" value="CPA GRIP" disabled />
+      <label>Account ID</label>
+      <input id="cpa_accid" placeholder="e.g. SUPREME_COMMANDER" />
+      <label>API Key</label>
+      <input id="cpa_api" type="password" placeholder="••••••••" />
+      <button type="button" onclick="saveCpaAccount()">+ Add Account</button>
+    </form>
+  </div></div>
 </body>
 </html>

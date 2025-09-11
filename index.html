@@ -1,129 +1,285 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>⚔️ The Empire Dashboard ⚔️</title>
+
+  <link rel="stylesheet" href="/css/empire.css"/>
+
   <style>
-    body { margin: 0; font-family: Arial, sans-serif; background: #0b1424; color: #e6f1ff; }
-    .layout { display: flex; height: 100vh; }
-    nav { width: 240px; background: #0f172a; padding: 20px; box-sizing: border-box; }
-    nav h2 { color: #4cc9f0; margin-bottom: 20px; }
-    nav a { display: block; padding: 10px; margin: 5px 0; color: #e6f1ff; text-decoration: none; border-radius: 6px; }
-    nav a:hover { background: #1f2a44; }
-    main { flex: 1; padding: 20px; overflow-y: auto; }
-    .card { background: #111; border-radius: 12px; padding: 16px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.4); }
-    .card h3 { margin-top: 0; color: #4cc9f0; }
-    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-    th, td { padding: 8px 10px; border: 1px solid #1f2a44; }
-    th { background: #1f2a44; }
-    input, select, button {
-      padding: 10px 12px; margin-top: 8px; border-radius: 8px; border: 1px solid #1f2a44;
-      background: #0b1320; color: #e6f1ff;
-    }
-    button { background: #4cc9f0; color: #001219; border: none; font-weight: 600; cursor: pointer; }
-    button:hover { background: #3ab6d9; }
+    body { margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif; background:#0b1424; color:#e6f1ff; }
+    .layout { display:flex; min-height:100vh; }
+    nav { width:240px; background:#0f172a; padding:20px; }
+    nav h2 { color:#4cc9f0; margin:0 0 16px; }
+    nav a { display:block; padding:10px; margin:6px 0; color:#e6f1ff; text-decoration:none; border-radius:6px; }
+    nav a:hover, nav a.active { background:#1f2a44; }
+    main { flex:1; padding:20px; }
+    .grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); gap:12px; }
+    .card { background:#111; border-radius:12px; padding:14px; margin:0 0 16px; box-shadow:0 2px 5px rgba(0,0,0,.35); }
+    .card h3 { margin:0 0 10px; color:#4cc9f0; font-size:1.05rem; }
+    .kpi { background:#0f172a; padding:12px; border-radius:10px; }
+    .kpi .label { color:#9fb8d6; font-size:.85rem; }
+    .kpi .val { font-weight:800; font-size:1.3rem; color:#59ffa5; }
+    table { width:100%; border-collapse:collapse; }
+    th, td { padding:8px 10px; border:1px solid #1f2a44; }
+    th { background:#1f2a44; text-align:left; }
+    .muted { color:#9fb8d6; font-size:.9rem; }
+    .hidden { display:none !important; }
+    .btn { background:#4cc9f0; color:#001219; border:0; border-radius:10px; padding:10px 14px; font-weight:700; cursor:pointer; }
+    .btn.ghost { background:transparent; color:#e6f1ff; border:1px solid #1f2a44; }
+    .pad { padding:10px 0; }
+    .stack > * { margin:6px 0; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; white-space:pre-wrap; word-break:break-word; }
   </style>
+
   <script>
-    const GAS_URL = "https://script.google.com/macros/s/YOUR_GAS_URL_HERE/exec";
+    /* =========================
+       CONFIG — set once
+    ========================== */
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbz-jj7Cr_KzqCku4SQPQ14MEIuCPdq5OEgiiqjo_O2A0FItBrHlmfkoJHViDxuX4P6z/exec"; // LIVE
     const CMD_KEY = "GENERALISIMO@15769";
 
+    /* =========================
+       CORE FETCH HELPER
+    ========================== */
+    async function callAPI(action, params = {}) {
+      const u = new URL(GAS_URL);
+      u.searchParams.set("action", action);
+      for (const [k,v] of Object.entries(params)) u.searchParams.set(k, v);
+      const res = await fetch(u.toString(), { method: "GET" });
+      if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
+      return res.json();
+    }
+
+    /* =========================
+       AUTH
+    ========================== */
     function login(e) {
       e.preventDefault();
       const key = document.getElementById("commanderKey").value.trim();
       if (key === CMD_KEY) {
         localStorage.setItem("empire.auth","commander_ok");
-        document.getElementById("login").style.display = "none";
-        document.getElementById("app").style.display = "flex";
+        document.getElementById("login").classList.add("hidden");
+        document.getElementById("app").classList.remove("hidden");
         loadDashboard();
       } else {
         alert("Invalid access key.");
       }
     }
 
-    async function callAPI(action, params={}) {
-      const u = new URL(GAS_URL);
-      u.searchParams.set("action", action);
-      Object.entries(params).forEach(([k,v])=> u.searchParams.set(k,v));
-      const res = await fetch(u);
-      return res.json();
+    function autoload() {
+      const ok = localStorage.getItem("empire.auth") === "commander_ok";
+      document.getElementById("login").classList.toggle("hidden", ok);
+      document.getElementById("app").classList.toggle("hidden", !ok);
+      if (ok) loadDashboard();
     }
 
+    /* =========================
+       RENDERERS
+    ========================== */
+    function renderOverview(d) {
+      const t = d?.totals || {};
+      const $ = (id, val) => document.getElementById(id).textContent = val;
+
+      $("kpiEarnings", `$${Number(t.earnings || 0).toFixed(2)}`);
+      $("kpiLeads", `${t.leads || 0}`);
+      $("kpiClicks", `${t.clicks || 0}`);
+      $("kpiCR", `${Number(t.conversionRate || 0).toFixed(2)}%`);
+      $("kpiEPC", `$${Number(t.epc || 0).toFixed(2)}`);
+      $("kpiCPA", `$${Number(t.cpa || 0).toFixed(2)}`);
+      $("kpiRPM", `$${Number(t.rpm || 0).toFixed(2)}`);
+
+      document.getElementById("geoDump").textContent =
+        JSON.stringify(d?.geo || {}, null, 2);
+      document.getElementById("deviceDump").textContent =
+        JSON.stringify(d?.devices || {}, null, 2);
+      document.getElementById("offerDump").textContent =
+        JSON.stringify(d?.offerTypes || {}, null, 2);
+      document.getElementById("byDayDump").textContent =
+        JSON.stringify(d?.byDay || {}, null, 2);
+    }
+
+    function renderUsers(users) {
+      const tbody = document.getElementById("usersBody");
+      tbody.innerHTML = "";
+      (users || []).forEach(u => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${u.name || ""}</td>
+          <td>${u.email || ""}</td>
+          <td>${u.role || ""}</td>
+          <td>${u.level ?? ""}</td>
+          <td>${u.status || ""}</td>
+          <td>${u.last_action_at || ""}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function renderWallet(d) {
+      const totIn  = Number(d?.totalIn || 0).toFixed(2);
+      const totOut = Number(d?.totalOut || 0).toFixed(2);
+      const bal    = Number(d?.balance || 0).toFixed(2);
+      document.getElementById("walletTotals").textContent =
+        `In: $${totIn}   Out: $${totOut}   Balance: $${bal}`;
+
+      const tbody = document.getElementById("walletBody");
+      tbody.innerHTML = "";
+      (d?.history || []).forEach(h => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${h.time || ""}</td>
+          <td>$${Number(h.amount || 0).toFixed(2)}</td>
+          <td>${h.method || ""}</td>
+          <td>${h.status || ""}</td>
+          <td>${h.direction || ""}</td>
+          <td>${h.name || ""}</td>
+          <td>${h.email || ""}</td>
+          <td>${h.phone || ""}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function renderSystemSettings(settings) {
+      const ul = document.getElementById("sysList");
+      ul.innerHTML = "";
+      const entries = Object.entries(settings || {});
+      if (!entries.length) {
+        ul.innerHTML = `<li class="muted">No system settings yet.</li>`;
+        return;
+      }
+      entries.forEach(([k, v]) => {
+        const li = document.createElement("li");
+        const value = v?.value ?? "";
+        const desc  = v?.description ?? "";
+        const upd   = v?.updated_at ?? "";
+        li.innerHTML = `<strong>${k}</strong>: <span class="mono">${value}</span><br/><span class="muted">${desc} • ${upd}</span>`;
+        ul.appendChild(li);
+      });
+    }
+
+    function renderBanks(banks) {
+      const select = document.getElementById("bankSelect");
+      if (!select) return; // optional section
+      select.innerHTML = "";
+      (banks || []).forEach(b => {
+        const code = b.code ?? (Array.isArray(b) ? b[1] : "");
+        const name = b.name ?? (Array.isArray(b) ? b[0] : "");
+        if (!name && !code) return;
+        const opt = document.createElement("option");
+        opt.value = code || name;
+        opt.textContent = code ? `${name} (${code})` : name;
+        select.appendChild(opt);
+      });
+      if (!select.children.length) {
+        const opt = document.createElement("option");
+        opt.textContent = "No banks configured";
+        select.appendChild(opt);
+      }
+    }
+
+    /* =========================
+       LOADERS — match GAS actions
+    ========================== */
     async function loadDashboard() {
       try {
-        const summary = await callAPI("summary");
-        document.getElementById("metrics").innerText = JSON.stringify(summary,null,2);
+        const [overview, users, wallet, system, banks] = await Promise.all([
+          callAPI("overview"),
+          callAPI("users"),
+          callAPI("walletoverview"), // "wallet" also supported by your GAS
+          callAPI("system_get"),
+          callAPI("banks").catch(()=>({ ok:false })) // optional
+        ]);
 
-        const users = await callAPI("listassociates");
-        const tbody = document.getElementById("usersBody");
-        tbody.innerHTML = "";
-        (users.rows||[]).forEach(r=>{
-          const tr = document.createElement("tr");
-          tr.innerHTML = `<td>${r.name||""}</td><td>${r.email||""}</td><td>${r.phone||""}</td>`;
-          tbody.appendChild(tr);
-        });
+        if (!overview.ok) throw new Error("overview not ok");
+        renderOverview(overview);
 
-        const banks = await callAPI("listbanks");
-        const select = document.getElementById("bankSelect");
-        select.innerHTML = "";
-        (banks.rows||[]).forEach(r=>{
-          const opt = document.createElement("option");
-          opt.value = r.code;
-          opt.textContent = `${r.name} (${r.code})`;
-          select.appendChild(opt);
-        });
+        if (users.ok)  renderUsers(users.users || []);
+        if (wallet.ok) renderWallet(wallet);
+        if (system.ok) renderSystemSettings(system.settings || {});
+        if (banks.ok)  renderBanks(banks.banks || banks.rows || []);
+
       } catch (e) {
         console.error(e);
-        alert("Failed to load dashboard: " + e.message);
+        alert("Failed to load dashboard: " + (e.message || e));
       }
     }
   </script>
 </head>
-<body>
-  <!-- Login Screen -->
+
+<body onload="autoload()">
+  <!-- Login -->
   <div id="login" style="min-height:100vh;display:grid;place-items:center;background:#0b1424;">
-    <form onsubmit="login(event)" style="background:#0f172a;padding:24px;border-radius:16px;width:360px;">
-      <h2>⚔️ The Empire Login ⚔️</h2>
-      <input id="commanderKey" type="password" placeholder="Commander key" style="width:100%;"/>
-      <button style="width:100%;margin-top:12px;">Enter</button>
+    <form onsubmit="login(event)" style="background:#0f172a;padding:24px;border-radius:16px;width:min(420px,92vw);">
+      <h2 style="margin:0 0 8px;">⚔️ The Empire Login ⚔️</h2>
+      <p class="muted" style="margin:0 0 14px;">Commander access required.</p>
+      <input id="commanderKey" type="password" placeholder="Commander key" style="width:100%;padding:12px;border-radius:10px;border:1px solid #1f2a44;background:#0b1320;color:#e6f1ff;"/>
+      <button class="btn" style="width:100%;margin-top:12px;">Enter</button>
     </form>
   </div>
 
-  <!-- Dashboard -->
-  <div id="app" class="layout" style="display:none;">
+  <!-- App -->
+  <div id="app" class="layout hidden">
     <nav>
       <h2>⚔️ Empire</h2>
-      <a href="#dashboard">Dashboard</a>
-      <a href="#cpa">CPA Accounts</a>
+      <a href="#dashboard" class="active">Dashboard</a>
       <a href="#users">Users</a>
-      <a href="#analytics">Analytics</a>
       <a href="#wallet">Wallet</a>
-      <a href="#security">Security</a>
-      <a href="#monitoring">Monitoring</a>
+      <a href="#settings">System Settings</a>
     </nav>
-    <main>
-      <div id="dashboard" class="card">
-        <h3>Dashboard Metrics</h3>
-        <pre id="metrics">{}</pre>
-      </div>
 
-      <div id="users" class="card">
-        <h3>Users</h3>
+    <main>
+      <!-- DASHBOARD -->
+      <section id="dashboard" class="card">
+        <h3>Dashboard Metrics</h3>
+        <div class="grid">
+          <div class="kpi"><div class="label">Earnings</div><div id="kpiEarnings" class="val">$0.00</div></div>
+          <div class="kpi"><div class="label">Leads</div><div id="kpiLeads" class="val">0</div></div>
+          <div class="kpi"><div class="label">Clicks</div><div id="kpiClicks" class="val">0</div></div>
+          <div class="kpi"><div class="label">Conv. Rate</div><div id="kpiCR" class="val">0.00%</div></div>
+          <div class="kpi"><div class="label">EPC</div><div id="kpiEPC" class="val">$0.00</div></div>
+          <div class="kpi"><div class="label">CPA</div><div id="kpiCPA" class="val">$0.00</div></div>
+          <div class="kpi"><div class="label">RPM</div><div id="kpiRPM" class="val">$0.00</div></div>
+        </div>
+        <div class="grid" style="margin-top:12px;">
+          <div class="card"><h3>By Geo</h3><pre id="geoDump" class="mono">{}</pre></div>
+          <div class="card"><h3>By Device</h3><pre id="deviceDump" class="mono">{}</pre></div>
+          <div class="card"><h3>By Offer</h3><pre id="offerDump" class="mono">{}</pre></div>
+          <div class="card"><h3>By Day</h3><pre id="byDayDump" class="mono">{}</pre></div>
+        </div>
+      </section>
+
+      <!-- USERS -->
+      <section id="users" class="card">
+        <h3>Users (Authority)</h3>
         <table>
-          <thead><tr><th>Name</th><th>Email</th><th>Phone</th></tr></thead>
+          <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Level</th><th>Status</th><th>Last Action</th></tr></thead>
           <tbody id="usersBody"></tbody>
         </table>
-      </div>
+      </section>
 
-      <div id="wallet" class="card">
-        <h3>Withdrawal</h3>
-        <form>
-          <input type="text" placeholder="Account Number" /><br/>
-          <select id="bankSelect"><option>Loading banks...</option></select><br/>
-          <input type="number" placeholder="Amount (USD)" /><br/>
-          <button type="button">Withdraw</button>
-        </form>
-      </div>
+      <!-- WALLET -->
+      <section id="wallet" class="card">
+        <h3>Wallet Overview</h3>
+        <div class="pad"><strong id="walletTotals" class="mono">$0.00</strong></div>
+        <table>
+          <thead>
+            <tr>
+              <th>Time</th><th>Amount</th><th>Method</th><th>Status</th><th>Direction</th>
+              <th>Name</th><th>Email</th><th>Phone</th>
+            </tr>
+          </thead>
+          <tbody id="walletBody"></tbody>
+        </table>
+      </section>
+
+      <!-- SYSTEM SETTINGS -->
+      <section id="settings" class="card">
+        <h3>System Settings</h3>
+        <ul id="sysList" class="stack"></ul>
+      </section>
     </main>
   </div>
 </body>

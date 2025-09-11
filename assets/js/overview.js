@@ -1,41 +1,63 @@
+// assets/js/overview.js
 async function loadOverview() {
   try {
-    const res = await fetch(window.EMPIRE_API.BASE_URL);
+    if (!window.EMPIRE_API || !window.EMPIRE_API.BASE_URL) {
+      console.error("BASE_URL missing. Check assets/js/config.js");
+      return;
+    }
+
+    // Cache-bust the request so you always get fresh JSON
+    const url = `${window.EMPIRE_API.BASE_URL}?_=${Date.now()}`;
+    console.log("Fetching overview from:", url);
+
+    const res = await fetch(url, { headers: { "Accept": "application/json" } });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
-    if (!data.ok) throw new Error("API error");
+    console.log("Overview data:", data);
+
+    if (!data.ok || !data.totals) throw new Error("API returned unexpected payload");
 
     const t = data.totals;
 
-    // Main totals
-    document.getElementById("ov-earnings").textContent    = `$${t.earnings.toFixed(2)}`;
-    document.getElementById("ov-leads").textContent       = t.leads.toFixed(0);
-    document.getElementById("ov-clicks").textContent      = t.clicks.toFixed(0);
-    document.getElementById("ov-convrate").textContent    = `${t.conversionRate.toFixed(2)}%`;
-    document.getElementById("ov-epc").textContent         = `$${t.epc.toFixed(2)}`;
-    document.getElementById("ov-cpa").textContent         = `$${t.cpa.toFixed(2)}`;
-    document.getElementById("ov-rpm").textContent         = `$${t.rpm.toFixed(2)}`;
+    // Totals
+    const $ = (id) => document.getElementById(id);
+    $("ov-earnings").textContent  = `$${Number(t.earnings).toFixed(2)}`;
+    $("ov-leads").textContent     = Number(t.leads).toFixed(0);
+    $("ov-clicks").textContent    = Number(t.clicks).toFixed(0);
+    $("ov-convrate").textContent  = `${Number(t.conversionRate).toFixed(2)}%`;
+    $("ov-epc").textContent       = `$${Number(t.epc).toFixed(2)}`;
+    $("ov-cpa").textContent       = `$${Number(t.cpa).toFixed(2)}`;
+    $("ov-rpm").textContent       = `$${Number(t.rpm).toFixed(2)}`;
 
-    // Helpers for rendering tables
+    // Table helper
     const renderTable = (obj, headers) => {
-      if (!obj) return "<p class='muted'>No data</p>";
+      if (!obj || !Object.keys(obj).length) return "<p class='muted'>No data</p>";
       let html = "<table><thead><tr>";
       headers.forEach(h => html += `<th>${h}</th>`);
       html += "</tr></thead><tbody>";
-      for (const [k,v] of Object.entries(obj)) {
-        html += `<tr><td>${k}</td><td class="num">$${v.toFixed(2)}</td></tr>`;
-      }
+      Object.entries(obj).forEach(([k,v])=>{
+        const isMoney = typeof v === "number";
+        html += `<tr><td>${k}</td><td class="num">${isMoney ? "$"+v.toFixed(2) : v}</td></tr>`;
+      });
       html += "</tbody></table>";
       return html;
     };
 
-    // Render each breakdown
-    document.getElementById("tbl-geo").innerHTML        = renderTable(data.geo, ["Country", "Earnings ($)"]);
-    document.getElementById("tbl-device").innerHTML     = renderTable(data.devices, ["Device", "Earnings ($)"]);
-    document.getElementById("tbl-offerType").innerHTML  = renderTable(data.offerTypes, ["Offer Type", "Earnings ($)"]);
-    document.getElementById("tbl-byDay").innerHTML      = renderTable(data.byDay, ["Date", "Earnings ($)"]);
+    // Breakdowns
+    $("tbl-geo").innerHTML        = renderTable(data.geo, ["Country","Earnings ($)"]);
+    $("tbl-device").innerHTML     = renderTable(data.devices, ["Device","Earnings ($)"]);
+    $("tbl-offerType").innerHTML  = renderTable(data.offerTypes, ["Offer Type","Earnings ($)"]);
+    $("tbl-byDay").innerHTML      = renderTable(data.byDay, ["Date","Earnings ($)"]);
 
   } catch (err) {
-    console.error("Overview load failed:", err);
-    alert("Failed to load overview");
+    console.error("loadOverview error:", err);
+    // Show a small inline error so you know it fired
+    const el = document.getElementById("ov-earnings");
+    if (el) el.textContent = "Error";
   }
 }
+
+// Fire once on DOM ready as a safety (in case the tab router doesn’t)
+document.addEventListener("DOMContentLoaded", () => {
+  try { loadOverview(); } catch(e){ console.error(e); }
+});

@@ -1,23 +1,33 @@
-// asset/js/settings.js
-document.addEventListener("DOMContentLoaded", () => loadSettings());
+// assets/js/settings.js
+(function(){
+  const $ = (id)=>document.getElementById(id);
 
-async function loadSettings(){
-  try{
-    const url=`${window.EMPIRE_API.BASE_URL}?action=settings_all`;
-    const res=await fetch(url);
-    const data=await res.json();
-    if(!data.ok) throw new Error(data.error||"Bad settings payload");
+  async function api(){
+    const base = window.EMPIRE?.API_URL;
+    const res  = await fetch(`${base}?view=settings`,{headers:{"Accept":"application/json"}});
+    const txt  = await res.text();
+    let data; try{ data = JSON.parse(txt); }catch(e){ throw new Error("Settings view returned non-JSON"); }
+    if (!data || data.ok !== true) throw new Error(data?.error || "Settings view not implemented");
+    return data;
+  }
 
-    const tbody=document.querySelector("#settingsBody");
-    if(!tbody) return;
-    tbody.innerHTML="";
-    (data.rows||[]).forEach(r=>{
-      const tr=document.createElement("tr");
-      tr.innerHTML=`<td>${escapeHtml(r.key)}</td>
-                    <td>${escapeHtml(r.value)}</td>
-                    <td>${escapeHtml(r.description||"")}</td>
-                    <td>${escapeHtml(r.updatedAt||"")}</td>`;
-      tbody.appendChild(tr);
-    });
-  }catch(e){ console.error(e); }
-}
+  window.loadSettings = async function(){
+    const body = $("settingsBody");
+    body.innerHTML = "";
+    try{
+      const { settings = [] } = await api();
+      if (!settings.length){
+        body.innerHTML = `<tr><td colspan="4" class="muted">No settings</td></tr>`;
+        return;
+      }
+      body.innerHTML = settings.map(s=>{
+        const dt = s.updated ? new Date(s.updated) : null;
+        const when = dt && !isNaN(dt) ? dt.toLocaleString() : (s.updated||"");
+        return `<tr><td>${s.key||""}</td><td>${s.value||""}</td><td>${s.desc||s.description||""}</td><td>${when}</td></tr>`;
+      }).join("");
+    }catch(err){
+      console.error("[Settings] ", err);
+      body.innerHTML = `<tr><td colspan="4" class="muted">No data (API view not implemented)</td></tr>`;
+    }
+  };
+})();

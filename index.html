@@ -3,359 +3,147 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>⚔️ THE EMPIRE – Command Dashboard</title>
+<title>⚔️ The Empire Dashboard ⚔️</title>
 <style>
-  :root{
-    --bg:#0b1424; --panel:#0f172a; --card:#0e1322; --accent:#ffd166; --ink:#e6f1ff;
-    --muted:#9fb3c8; --line:#1f2a44; --good:#22c55e; --bad:#ef4444;
-  }
-  *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.4 system-ui,Segoe UI,Roboto,Arial}
-  .layout{display:grid;grid-template-columns:240px 1fr;min-height:100vh}
-  nav{background:var(--panel);padding:20px;position:sticky;top:0;height:100vh}
-  nav h2{margin:0 0 18px;color:var(--accent)}
-  .navlink{display:block;padding:10px 12px;margin:6px 0;border-radius:10px;color:var(--ink);text-decoration:none}
-  .navlink:hover{background:#182345}
-  .navlink.active{background:#223157;box-shadow:inset 0 0 0 1px #2d416f}
-  main{padding:22px}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin:0 0 18px;box-shadow:0 8px 24px rgba(0,0,0,.25)}
-  .card h3{margin:0 0 12px;color:var(--accent)}
-  .grid{display:grid;gap:14px}
-  .grid.two{grid-template-columns:1fr 1fr}
-  .grid.three{grid-template-columns:repeat(3,1fr)}
-  .muted{color:var(--muted)}
-  .num{text-align:right}
-  table{width:100%;border-collapse:collapse}
-  th,td{padding:8px 10px;border:1px solid var(--line)}
-  th{background:#1c2747;color:var(--ink);text-align:left}
-  .stat{display:flex;justify-content:space-between;padding:8px 10px;border:1px dashed var(--line);border-radius:10px}
-  .view{display:none}
-  .view.active{display:block}
-  input,select,button{padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:#0b1320;color:var(--ink)}
-  button{background:var(--accent);color:#111;font-weight:700;border:none;cursor:pointer}
+  :root{--bg:#0b1424;--panel:#0f172a;--card:#101826;--accent:#ffd166;--muted:#9fb3c8;--line:#1f2a44;}
+  *{box-sizing:border-box} body{margin:0;font-family:system-ui,Arial,sans-serif;background:var(--bg);color:#e6f1ff}
+  .layout{display:flex;min-height:100vh}
+  nav{width:240px;background:var(--panel);padding:20px}
+  nav h2{margin:0 0 16px;color:var(--accent)}
+  .navlink{display:block;padding:10px 12px;margin:6px 0;border-radius:8px;color:#e6f1ff;text-decoration:none}
+  .navlink:hover{background:#1b2742}.navlink.active{background:#223157;box-shadow:inset 0 0 0 1px #2d416f}
+  main{flex:1;padding:20px;overflow:auto}
+  .card{background:var(--card);border-radius:12px;padding:16px;margin-bottom:20px;box-shadow:0 2px 5px rgba(0,0,0,.4)}
+  .card h3{margin:0 0 10px;color:var(--accent)}
+  h4{margin:14px 0 6px}
+  table{width:100%;border-collapse:collapse;margin-top:8px}
+  th,td{padding:8px 10px;border:1px solid var(--line)} th{background:#1f2a44}
+  .num{text-align:right} .muted{color:var(--muted)} .row{display:flex;gap:16px;flex-wrap:wrap}
+  .kpi{flex:1 1 200px;background:#0d1525;border:1px solid #14213d;border-radius:10px;padding:12px}
+  .kpi .label{font-size:.9rem;color:var(--muted)} .kpi .val{font-size:1.4rem;font-weight:700;margin-top:4px}
+  .view{display:none}.view.active{display:block}
+  .toolbar{display:flex;gap:8px;align-items:center}
+  button{padding:8px 12px;border-radius:8px;border:none;background:var(--accent);color:#000;font-weight:700;cursor:pointer}
   button:hover{filter:brightness(.95)}
-  .pill{display:inline-block;padding:2px 8px;border-radius:999px;border:1px solid var(--line);font-size:12px}
-  .ok{color:var(--good)}
-  .fail{color:var(--bad)}
-  #toast{position:fixed;right:16px;bottom:16px;background:#101826;border:1px solid var(--line);padding:10px 12px;border-radius:10px;display:none}
-  .right{float:right}
-  .small{font-size:12px}
+  .log{white-space:pre-wrap;font-family:ui-monospace,Consolas,monospace;background:#0a1120;border:1px dashed #2a3b66;border-radius:10px;padding:10px;margin-top:10px;color:#a9c1ff}
 </style>
 </head>
 <body>
-  <div class="layout">
-    <!-- Sidebar -->
-    <nav>
-      <h2>⚔️ THE EMPIRE</h2>
-      <a class="navlink active" data-target="overview"   href="#overview">Dashboard</a>
-      <a class="navlink"        data-target="cpa"        href="#cpa">CPA Accounts</a>
-      <a class="navlink"        data-target="users"      href="#users">Users</a>
-      <a class="navlink"        data-target="analytics"  href="#analytics">Analytics</a>
-      <a class="navlink"        data-target="wallet"     href="#wallet">Wallet</a>
-      <a class="navlink"        data-target="monitoring" href="#monitoring">Monitoring</a>
-      <a class="navlink"        data-target="settings"   href="#settings">Settings</a>
-    </nav>
+<div class="layout">
+  <nav>
+    <h2>⚔️ Empire</h2>
+    <a class="navlink active" href="#overview" data-target="overview">Overview</a>
+  </nav>
+  <main>
+    <section id="overview" class="view active card">
+      <div class="toolbar">
+        <h3 style="margin-right:auto">Overview</h3>
+        <button id="btnRefresh">Refresh</button>
+        <span class="muted" id="stamp">—</span>
+      </div>
 
-    <!-- Main -->
-    <main>
-      <!-- OVERVIEW -->
-      <section id="overview" class="view active">
-        <div class="grid three">
-          <div class="card">
-            <h3>Totals</h3>
-            <div class="stat"><span>Earnings</span><strong id="ov-earnings">$0.00</strong></div>
-            <div class="stat"><span>Leads</span><strong id="ov-leads">0</strong></div>
-            <div class="stat"><span>Clicks</span><strong id="ov-clicks">0</strong></div>
-            <div class="stat"><span>Conversion</span><strong id="ov-conv">0.00%</strong></div>
-            <div class="stat"><span>EPC</span><strong id="ov-epc">$0.00</strong></div>
-            <div class="stat"><span>CPA</span><strong id="ov-cpa">$0.00</strong></div>
-            <div class="stat"><span>RPM</span><strong id="ov-rpm">$0.00</strong></div>
-            <div class="small muted" id="ov-time"></div>
-          </div>
+      <div class="row" id="kpis">
+        <div class="kpi"><div class="label">Earnings</div><div class="val" id="ov-earnings">$0.00</div></div>
+        <div class="kpi"><div class="label">Leads</div><div class="val" id="ov-leads">0</div></div>
+        <div class="kpi"><div class="label">Clicks</div><div class="val" id="ov-clicks">0</div></div>
+        <div class="kpi"><div class="label">Conversion Rate</div><div class="val" id="ov-convrate">0.00%</div></div>
+        <div class="kpi"><div class="label">EPC</div><div class="val" id="ov-epc">$0.00</div></div>
+        <div class="kpi"><div class="label">CPA</div><div class="val" id="ov-cpa">$0.00</div></div>
+        <div class="kpi"><div class="label">RPM</div><div class="val" id="ov-rpm">$0.00</div></div>
+      </div>
 
-          <div class="card">
-            <h3>By Geo</h3>
-            <table><thead><tr><th>Country</th><th class="num">Earnings ($)</th></tr></thead>
-              <tbody id="tbl-geo"></tbody></table>
-          </div>
+      <h4>By Geo</h4>
+      <table><thead><tr><th>Country</th><th class="num">Earnings ($)</th></tr></thead><tbody id="tbl-geo"></tbody></table>
 
-          <div class="card">
-            <h3>By Device</h3>
-            <table><thead><tr><th>Device</th><th class="num">Earnings ($)</th></tr></thead>
-              <tbody id="tbl-device"></tbody></table>
-          </div>
-        </div>
+      <h4>By Device</h4>
+      <table><thead><tr><th>Device</th><th class="num">Earnings ($)</th></tr></thead><tbody id="tbl-device"></tbody></table>
 
-        <div class="grid two">
-          <div class="card">
-            <h3>By Offer Type</h3>
-            <table><thead><tr><th>Offer Type</th><th class="num">Earnings ($)</th></tr></thead>
-              <tbody id="tbl-offer"></tbody></table>
-          </div>
+      <h4>By Offer Type</h4>
+      <table><thead><tr><th>Offer Type</th><th class="num">Earnings ($)</th></tr></thead><tbody id="tbl-offerType"></tbody></table>
 
-          <div class="card">
-            <h3>By Day</h3>
-            <table><thead><tr><th>Date</th><th class="num">Earnings ($)</th></tr></thead>
-              <tbody id="tbl-day"></tbody></table>
-          </div>
-        </div>
-      </section>
+      <h4>By Day</h4>
+      <table><thead><tr><th>Date</th><th class="num">Earnings ($)</th></tr></thead><tbody id="tbl-byDay"></tbody></table>
 
-      <!-- CPA ACCOUNTS -->
-      <section id="cpa" class="view">
-        <div class="card">
-          <h3>CPA Accounts Management</h3>
-          <table>
-            <thead><tr><th>Network</th><th>Account</th><th>Status</th><th class="num">Revenue</th><th class="num">Clicks</th><th class="num">Conversion %</th></tr></thead>
-            <tbody id="cpa-body"><tr><td colspan="6" class="muted">Loading…</td></tr></tbody>
-          </table>
-        </div>
-      </section>
-
-      <!-- USERS -->
-      <section id="users" class="view">
-        <div class="card">
-          <h3>Users</h3>
-          <table>
-            <thead><tr><th>Name</th><th>Email</th><th>Phone</th></tr></thead>
-            <tbody id="users-body"><tr><td colspan="3" class="muted">Loading…</td></tr></tbody>
-          </table>
-          <div class="stat" style="margin-top:12px">
-            <span>Invite Link</span>
-            <span id="inviteLink" class="small muted"></span>
-          </div>
-          <div class="stat">
-            <span>Invite Ref</span>
-            <span id="inviteRef" class="small muted"></span>
-          </div>
-        </div>
-      </section>
-
-      <!-- ANALYTICS -->
-      <section id="analytics" class="view">
-        <div class="card">
-          <h3>Analytics & Reports</h3>
-          <table>
-            <thead><tr><th>Date</th><th class="num">Clicks</th><th class="num">Leads</th><th class="num">Earnings ($)</th></tr></thead>
-            <tbody id="an-body"><tr><td colspan="4" class="muted">Loading…</td></tr></tbody>
-          </table>
-        </div>
-      </section>
-
-      <!-- WALLET -->
-      <section id="wallet" class="view">
-        <div class="grid two">
-          <div class="card">
-            <h3>Wallet & Balance</h3>
-            <div class="stat"><span>Total In</span><strong id="w-in">$0.00</strong></div>
-            <div class="stat"><span>Total Out</span><strong id="w-out">$0.00</strong></div>
-            <div class="stat"><span>Balance</span><strong id="w-bal">$0.00</strong></div>
-          </div>
-
-          <div class="card">
-            <h3>Withdraw</h3>
-            <div class="small muted">Minimum withdrawal is <b>$50</b>. A reference is written to <i>Wallet_Ledger</i>.</div>
-            <div style="margin-top:10px">
-              <label>Amount (USD)<br/><input id="wd-amt" type="number" min="50" placeholder="e.g. 2350" /></label><br/><br/>
-              <label>Bank Code<br/><input id="wd-bank" placeholder="e.g. 076" /></label><br/><br/>
-              <label>Account Number<br/><input id="wd-acct" placeholder="e.g. 0123456789" /></label><br/><br/>
-              <label>Account Name<br/><input id="wd-name" placeholder="e.g. John Doe" /></label><br/><br/>
-              <button id="wd-btn">Request Withdrawal</button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- MONITORING -->
-      <section id="monitoring" class="view">
-        <div class="card">
-          <h3>Monitoring</h3>
-          <div class="stat"><span>Overall Health</span><strong id="mon-health" class="pill">0.00%</strong></div>
-          <h4 style="margin-top:12px">Recent Events</h4>
-          <ul id="mon-feed" class="small muted" style="padding-left:16px;margin:8px 0 0"></ul>
-        </div>
-      </section>
-
-      <!-- SETTINGS -->
-      <section id="settings" class="view">
-        <div class="card">
-          <h3>System & Authority Settings</h3>
-          <table>
-            <thead><tr><th>Key</th><th>Value</th><th>Description</th><th>Updated</th></tr></thead>
-            <tbody id="set-body"><tr><td colspan="4" class="muted">Loading…</td></tr></tbody>
-          </table>
-        </div>
-      </section>
-    </main>
-  </div>
-
-  <div id="toast"></div>
+      <div class="log" id="debug"></div>
+    </section>
+  </main>
+</div>
 
 <script>
-/* ===== CONFIG – put your GAS Web App URL here ===== */
-const API_URL = "YOUR_GAS_WEB_APP_URL_HERE"; // e.g. https://script.google.com/macros/s/AKfycb.../exec
+/*** 1) CONFIG — replace with your working Apps Script Web App URL ***/
+const API_URL = https://script.google.com/macros/s/AKfycbz-jj7Cr_KzqCku4SQPQ14MEIuCPdq5OEgiiqjo_O2A0FItBrHlmfkoJHViDxuX4P6z/exec
 
-/* ===== Utilities ===== */
-const $ = s => document.querySelector(s);
-const fmtMoney = n => '$' + (Number(n||0)).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
-const fmtPct   = n => (Number(n||0)).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}) + '%';
-const toast = (msg, ok=true) => {
-  const t = $('#toast'); t.textContent = msg; t.style.borderColor = ok ? 'var(--good)' : 'var(--bad)';
-  t.style.display = 'block'; setTimeout(()=> t.style.display='none', 3000);
-};
-async function api(action, params={}) {
-  const u = new URL(API_URL);
-  u.searchParams.set('action', action);
-  Object.entries(params).forEach(([k,v])=> u.searchParams.set(k, v));
-  const res = await fetch(u.toString(), {mode:'cors'});
-  const json = await res.json();
-  if (!json.ok) throw new Error(json.error || 'API error');
-  return json;
+/*** 2) HELPERS ***/
+const $$ = s => document.querySelector(s);
+const fmtMoney = n => "$" + Number(n||0).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2});
+const fmtPct    = n => Number(n||0).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2}) + "%";
+function setStamp(){ $$("#stamp").textContent = new Date().toLocaleString(); }
+function log(obj){ $$("#debug").textContent = typeof obj==="string" ? obj : JSON.stringify(obj,null,2); }
+function fillTable(tbodySel, obj, labelHeader){
+  const tb = $$(tbodySel); tb.innerHTML = "";
+  if(!obj || typeof obj!=="object"){ tb.innerHTML = `<tr><td colspan="2" class="muted">No data</td></tr>`; return; }
+  // sort descending by value
+  const rows = Object.entries(obj).sort((a,b)=>Number(b[1])-Number(a[1]));
+  for(const [k,v] of rows){
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td>${k}</td><td class="num">${fmtMoney(v)}</td>`;
+    tb.appendChild(tr);
+  }
 }
 
-/* ===== Views ===== */
+/*** 3) CORE: load overview matching your payload shape ***/
 async function loadOverview(){
   try{
-    const d = await api('overview');
-    const t = d.totals || d.totals || {};
-    $('#ov-earnings').textContent = fmtMoney(t.earnings||0);
-    $('#ov-leads').textContent    = (t.leads||0).toLocaleString();
-    $('#ov-clicks').textContent   = (t.clicks||0).toLocaleString();
-    $('#ov-conv').textContent     = fmtPct(t.convRate||0);
-    $('#ov-epc').textContent      = fmtMoney(t.epc||0);
-    $('#ov-cpa').textContent      = fmtMoney(t.cpa||0);
-    $('#ov-rpm').textContent      = fmtMoney(t.rpm||0);
-    $('#ov-time').textContent     = 'Server time: ' + new Date(d.serverTime || Date.now()).toLocaleString();
+    const url = API_URL; // endpoint already returns totals + breakdowns
+    const res = await fetch(url, {cache:"no-store"});
+    if(!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
 
-    // tables
-    const geo = d.breakdowns?.byGeo || {};
-    $('#tbl-geo').innerHTML = Object.keys(geo).length
-      ? Object.entries(geo).map(([k,v])=>`<tr><td>${k}</td><td class="num">${fmtMoney(v)}</td></tr>`).join('')
-      : `<tr><td colspan="2" class="muted">No data</td></tr>`;
+    // keep a compact copy in the log for troubleshooting
+    log(data);
 
-    const dev = d.breakdowns?.byDevice || {};
-    $('#tbl-device').innerHTML = Object.keys(dev).length
-      ? Object.entries(dev).map(([k,v])=>`<tr><td>${k}</td><td class="num">${fmtMoney(v)}</td></tr>`).join('')
-      : `<tr><td colspan="2" class="muted">No data</td></tr>`;
+    // --- totals: your payload uses "totals" with convRate, epc, cpa, rpm ---
+    const t = data.totals || {};
+    $$("#ov-earnings").textContent = fmtMoney(t.earnings);
+    $$("#ov-leads").textContent    = Number(t.leads||0).toLocaleString();
+    $$("#ov-clicks").textContent   = Number(t.clicks||0).toLocaleString();
+    $$("#ov-convrate").textContent = fmtPct(t.convRate ?? t.conversionRate);
+    $$("#ov-epc").textContent      = fmtMoney(t.epc);
+    $$("#ov-cpa").textContent      = fmtMoney(t.cpa);
+    $$("#ov-rpm").textContent      = fmtMoney(t.rpm);
 
-    const off = d.breakdowns?.byOfferType || {};
-    $('#tbl-offer').innerHTML = Object.keys(off).length
-      ? Object.entries(off).map(([k,v])=>`<tr><td>${k}</td><td class="num">${fmtMoney(v)}</td></tr>`).join('')
-      : `<tr><td colspan="2" class="muted">No data</td></tr>`;
+    // --- breakdowns: byGeo, byDevice, byOfferType, byDay ---
+    const b = data.breakdowns || data; // support either structure
+    fillTable("#tbl-geo",       b.byGeo);
+    fillTable("#tbl-device",    b.byDevice);
+    fillTable("#tbl-offerType", b.byOfferType);
 
-    const day = d.breakdowns?.byDay || {};
-    $('#tbl-day').innerHTML = Object.keys(day).length
-      ? Object.entries(day).sort(([a],[b])=> a.localeCompare(b))
-        .map(([k,v])=>`<tr><td>${k}</td><td class="num">${fmtMoney(v)}</td></tr>`).join('')
-      : `<tr><td colspan="2" class="muted">No data</td></tr>`;
-  }catch(e){ console.error(e); toast('Overview failed: '+e.message, false); }
+    // byDay may be an object with date-string keys; sort by date desc
+    const byDay = b.byDay || {};
+    const dayRows = Object.entries(byDay)
+      .map(([k,v]) => [new Date(k), v])
+      .sort((a,b)=>b[0]-a[0]);
+
+    const tbDay = $$("#tbl-byDay"); tbDay.innerHTML = "";
+    if(dayRows.length===0){
+      tbDay.innerHTML = `<tr><td colspan="2" class="muted">No data</td></tr>`;
+    } else {
+      for(const [d,amt] of dayRows){
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td>${d.toDateString()}</td><td class="num">${fmtMoney(amt)}</td>`;
+        tbDay.appendChild(tr);
+      }
+    }
+
+    setStamp();
+  }catch(err){
+    log("Error: " + (err?.message || err));
+  }
 }
 
-async function loadCPA(){
-  try{
-    const d = await api('cpaAccounts');
-    const rows = d.rows||[];
-    $('#cpa-body').innerHTML = rows.length ? rows.map(r=>`
-      <tr>
-        <td>${r.Network||''}</td>
-        <td>${r.Account||''}</td>
-        <td>${r.Status||''}</td>
-        <td class="num">${fmtMoney(r.Revenue||0)}</td>
-        <td class="num">${(r.Clicks||0).toLocaleString()}</td>
-        <td class="num">${fmtPct(r.Conversion||0)}</td>
-      </tr>`).join('') : `<tr><td colspan="6" class="muted">No CPA accounts</td></tr>`;
-  }catch(e){ console.error(e); toast('CPA load failed: '+e.message, false); }
-}
-
-async function loadUsers(){
-  try{
-    const d = await api('users');
-    const rows = d.rows||[];
-    $('#users-body').innerHTML = rows.length ? rows.map(r=>`
-      <tr><td>${r.Name||''}</td><td>${r.Email||''}</td><td>${r.Phone||''}</td></tr>`).join('')
-      : `<tr><td colspan="3" class="muted">No users</td></tr>`;
-    $('#inviteLink').textContent = d.inviteLink || '';
-    $('#inviteRef').textContent  = d.inviteRef  || '';
-  }catch(e){ console.error(e); toast('Users load failed: '+e.message, false); }
-}
-
-async function loadAnalytics(){
-  try{
-    const d = await api('analytics');
-    const rows = d.rows||[];
-    $('#an-body').innerHTML = rows.length ? rows.map(r=>`
-      <tr>
-        <td>${r.date||''}</td>
-        <td class="num">${(r.clicks||0).toLocaleString()}</td>
-        <td class="num">${(r.leads||0).toLocaleString()}</td>
-        <td class="num">${fmtMoney(r.earnings||0)}</td>
-      </tr>`).join('') : `<tr><td colspan="4" class="muted">No analytics</td></tr>`;
-  }catch(e){ console.error(e); toast('Analytics failed: '+e.message, false); }
-}
-
-async function loadWallet(){
-  try{
-    const d = await api('wallet');
-    $('#w-in').textContent  = fmtMoney(d.totalIn||0);
-    $('#w-out').textContent = fmtMoney(d.totalOut||0);
-    $('#w-bal').textContent = fmtMoney(d.balance||0);
-  }catch(e){ console.error(e); toast('Wallet failed: '+e.message, false); }
-}
-
-async function loadMonitoring(){
-  try{
-    const d = await api('monitoring');
-    const h = Number(d.health||0);
-    $('#mon-health').textContent = h.toFixed(2)+'%';
-    $('#mon-health').style.borderColor = h>80 ? 'var(--good)' : 'var(--bad)';
-    const feed = d.feed||[];
-    $('#mon-feed').innerHTML = feed.length ? feed.map(x=>`<li>${x.timestamp} — ${x.message}</li>`).join('')
-      : '<li class="muted">No recent events</li>';
-  }catch(e){ console.error(e); toast('Monitoring failed: '+e.message, false); }
-}
-
-async function loadSettings(){
-  try{
-    const d = await api('settings');
-    const rows = d.rows||[];
-    $('#set-body').innerHTML = rows.length ? rows.map(r=>`
-      <tr><td>${r.Key||''}</td><td>${r.Value||''}</td><td>${r.Description||''}</td><td>${r.Updated||''}</td></tr>
-    `).join('') : `<tr><td colspan="4" class="muted">No settings</td></tr>`;
-  }catch(e){ console.error(e); toast('Settings failed: '+e.message, false); }
-}
-
-/* ===== Withdraw handler ===== */
-$('#wd-btn').addEventListener('click', async ()=>{
-  const amount = Number($('#wd-amt').value||0);
-  const bank   = $('#wd-bank').value.trim();
-  const acct   = $('#wd-acct').value.trim();
-  const name   = $('#wd-name').value.trim();
-  if (!amount || amount < 50) return toast('Enter an amount ≥ $50', false);
-  try{
-    const r = await api('withdraw', {amount, bank, acct, acctName:name, user:'Commander'});
-    toast('Withdraw submitted. Ref: '+r.ref, true);
-    await loadWallet();
-  }catch(e){ console.error(e); toast('Withdraw failed: '+e.message, false); }
-});
-
-/* ===== Tiny Router ===== */
-const links = Array.from(document.querySelectorAll('.navlink'));
-const views = Array.from(document.querySelectorAll('.view'));
-function show(id){
-  links.forEach(a=>a.classList.toggle('active', a.dataset.target===id));
-  views.forEach(v=>v.classList.toggle('active', v.id===id));
-  if(id==='overview')   loadOverview();
-  if(id==='cpa')        loadCPA();
-  if(id==='users')      loadUsers();
-  if(id==='analytics')  loadAnalytics();
-  if(id==='wallet')     loadWallet();
-  if(id==='monitoring') loadMonitoring();
-  if(id==='settings')   loadSettings();
-}
-links.forEach(a=>a.addEventListener('click', e=>{
-  e.preventDefault(); const id=a.dataset.target; history.replaceState(null,'','#'+id); show(id);
-}));
-show((location.hash||'#overview').replace('#',''));
+/*** 4) BOOT ***/
+document.getElementById("btnRefresh").addEventListener("click", loadOverview);
+loadOverview();
 </script>
 </body>
 </html>

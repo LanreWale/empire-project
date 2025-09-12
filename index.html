@@ -1,254 +1,198 @@
-<script>
-/* ========= tiny on-screen console (helps on mobile) ========= */
-(function(){
-  const box=document.createElement('div');
-  box.id='empireDebug'; box.style.cssText='position:fixed;right:10px;bottom:10px;max-width:60vw;max-height:40vh;overflow:auto;background:#0b1320;border:1px solid #2a3a66;border-radius:10px;padding:8px 10px;font:12px/1.4 system-ui,Segoe UI,Arial;color:#cde;z-index:99999;display:none';
-  document.body.appendChild(box);
-  window.empireLog=(...a)=>{ box.style.display='block'; const d=document.createElement('div'); d.textContent=a.map(x=>typeof x==='string'?x:JSON.stringify(x)).join(' '); box.appendChild(d); };
-})();
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>THE EMPIRE — Command Dashboard</title>
+  <link rel="icon" href="assets/brand/favicon.png" />
+  <link rel="preload" as="image" href="assets/brand/empire-hero-final.jpg" />
+  <style>
+    /* minimal styles so you can paste and run */
+    :root { --bg:#0e1622; --panel:#121d2c; --ink:#e8edf5; --muted:#8fa3bf; --accent:#f4c045; --line:#213147; }
+    html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font:14px/1.45 system-ui,Segoe UI,Roboto,Arial}
+    .shell{display:flex;min-height:100vh}
+    aside{width:220px;background:linear-gradient(180deg,#0f1a2b,#0b1421);border-right:1px solid var(--line);padding:14px 12px}
+    .brand{display:flex;align-items:center;gap:8px;margin-bottom:16px}
+    .brand img{width:28px;height:28px}
+    .brand h1{font-size:14px;letter-spacing:.12em;margin:0;font-weight:800}
+    .nav{display:flex;flex-direction:column;gap:6px}
+    .nav button{background:transparent;border:1px solid transparent;color:var(--ink);text-align:left;padding:10px;border-radius:10px;cursor:pointer}
+    .nav button:hover{background:#0d1a2b;border-color:#1f2d46}
+    .nav button.active{background:#15243a;border-color:#274268}
+    main{flex:1;padding:18px}
+    .row{display:flex;gap:14px;flex-wrap:wrap}
+    .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;box-shadow:0 1px 0 rgba(0,0,0,.2)}
+    .kpis{display:grid;grid-template-columns:repeat(6,minmax(120px,1fr));gap:12px}
+    .kpi .v{font-size:22px;font-weight:800}
+    .muted{color:var(--muted)}
+    table{width:100%;border-collapse:collapse}
+    th,td{padding:10px;border-bottom:1px solid var(--line)}
+    th{background:#0f2036;color:#b9c6db;text-align:left}
+    td:last-child{text-align:right}
+    .hidden{display:none!important}
+    .note.err{color:#ff8a8a}
+    header .title{font-size:18px;font-weight:800;letter-spacing:.08em}
+    .hero{background:url(assets/brand/empire-hero-final.jpg) center/cover no-repeat;border-radius:14px;height:120px;margin-bottom:14px;border:1px solid var(--line)}
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <aside>
+      <div class="brand">
+        <img src="assets/brand/empire-logo.png" alt="Empire" />
+        <h1>THE&nbsp;EMPIRE</h1>
+      </div>
+      <div class="nav">
+        <button class="active" data-tab="overview">Overview</button>
+        <button data-tab="cpa">CPA Accounts</button>
+        <button data-tab="users">Users</button>
+        <button data-tab="analytics">Analytics</button>
+        <button data-tab="wallet">Wallet</button>
+        <button data-tab="monitoring">Monitoring</button>
+        <button data-tab="settings">Settings</button>
+      </div>
+    </aside>
 
-/* ====================== CONFIG ====================== */
-const EMPIRE = {
-  API_URL: "https://script.google.com/macros/s/AKfycbz-jj7Cr_KzqCku4SQPQ14MEIuCPdq5OEgiiqjo_O2A0FItBrHlmfkoJHViDxuX4P6z/exec",
-  KEY: "GENERALISIMO@15769"
-};
+    <main>
+      <header class="row" style="align-items:center;justify-content:space-between">
+        <div class="title">Command Dashboard</div>
+      </header>
 
-/* ====================== UTILS ======================= */
-const $=id=>document.getElementById(id);
-const qa=(s,r=document)=>Array.from(r.querySelectorAll(s));
-const fmtUSD=n=> (Number(n||0)).toLocaleString('en-US',{style:'currency',currency:'USD',minimumFractionDigits:2});
-const num=n=> (Number(n||0)).toLocaleString('en-US');
-const pct=n=> (Number(n||0)).toFixed(2)+'%';
-const esc=s=> String(s??'').replace(/[&<>"']/g,m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
-const escapeHTML = (s) => String(s).replace(/[&<>]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[ch]));
+      <div class="hero"></div>
 
-/* =================== API HELPERS ==================== */
-function withKey(u){ if(EMPIRE.KEY) u.searchParams.set('key',EMPIRE.KEY); return u; }
-async function apiGet(action, params={}){
-  const u = withKey(new URL(EMPIRE.API_URL));
-  u.searchParams.set('action', action);
-  Object.entries(params).forEach(([k,v])=>u.searchParams.set(k,String(v)));
-  empireLog('GET', u.toString());
-  const r = await fetch(u.toString(), {method:'GET'});
-  const j = await r.json().catch(()=>({ok:false,error:'Invalid JSON from GAS'}));
-  empireLog('→', j);
-  return j;
-}
-async function apiPost(action, body={}){
-  const u = withKey(new URL(EMPIRE.API_URL));
-  u.searchParams.set('action', action);
-  empireLog('POST', u.toString(), body);
-  const r = await fetch(u.toString(), {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)});
-  const j = await r.json().catch(()=>({ok:false,error:'Invalid JSON from GAS'}));
-  empireLog('→', j);
-  return j;
-}
+      <!-- ===== OVERVIEW ===== -->
+      <section id="view-dashboard">
+        <div class="card kpis">
+          <div class="kpi"><div class="muted">Earnings</div><div id="kpi-earn" class="v">$0.00</div></div>
+          <div class="kpi"><div class="muted">Leads</div><div id="kpi-leads" class="v">0</div></div>
+          <div class="kpi"><div class="muted">Clicks</div><div id="kpi-clicks" class="v">0</div></div>
+          <div class="kpi"><div class="muted">EPC</div><div id="kpi-epc" class="v">$0.00</div></div>
+          <div class="kpi"><div class="muted">CPA</div><div id="kpi-cpa" class="v">$0.00</div></div>
+          <div class="kpi"><div class="muted">RPM</div><div id="kpi-rpm" class="v">$0.00</div></div>
+        </div>
 
-/* ====================== NAV ========================= */
-function showTab(tabId){
-  qa('.navlink').forEach(a=>a.classList.toggle('active', a.dataset.target===tabId));
-  qa('.view').forEach(v=>v.classList.toggle('active', v.id===tabId));
-  $('#routeInfo').textContent = 'Route: #'+tabId;
-  // lazy-load per tab
-  if (tabId==='overview')   loadOverview().catch(e=>empireLog('overview err',e));
-  if (tabId==='cpa')        loadCPA().catch(e=>empireLog('cpa err',e));
-  if (tabId==='users')      loadUsers().catch(e=>empireLog('users err',e));
-  if (tabId==='analytics')  loadAnalytics().catch(e=>empireLog('analytics err',e));
-  if (tabId==='wallet')     loadWallet().catch(e=>empireLog('wallet err',e));
-  if (tabId==='monitoring') loadMonitoring().catch(e=>empireLog('monitoring err',e));
-  if (tabId==='settings')   loadSettings().catch(e=>empireLog('settings err',e));
-}
-function initTabs(){
-  qa('.navlink').forEach(a=>{
-    a.addEventListener('click',e=>{
-      e.preventDefault();
-      const id=a.dataset.target;
-      history.replaceState(null,'','#'+id);
-      showTab(id);
-    });
-  });
-  window.addEventListener('hashchange', ()=>{
-    const id=(location.hash||'#overview').replace('#','');
-    showTab(id);
-  });
-  const start=(location.hash||'#overview').replace('#','');
-  showTab(start);
-}
+        <div class="row" style="margin-top:14px">
+          <div class="card" style="flex:1;min-width:320px">
+            <div class="muted" style="margin-bottom:8px">By Geo</div>
+            <table>
+              <thead><tr><th>Country</th><th>Earnings ($)</th></tr></thead>
+              <tbody id="geoBody"><tr><td>—</td><td>—</td></tr></tbody>
+            </table>
+          </div>
+          <div class="card" style="flex:1;min-width:320px">
+            <div class="muted" style="margin-bottom:8px">By Device</div>
+            <table>
+              <thead><tr><th>Device</th><th>Earnings ($)</th></tr></thead>
+              <tbody id="devBody"><tr><td>—</td><td>—</td></tr></tbody>
+            </table>
+          </div>
+        </div>
 
-/* ================ OVERVIEW LOADER =================== */
-async function loadOverview(){
-  const d = await apiGet('overview');
-  const t   = d.totals || d || {};
-  const geo = d.geo || (d.breakdowns&&d.breakdowns.byGeo) || {};
-  const dev = d.devices || (d.breakdowns&&d.breakdowns.byDevice) || {};
-  const typ = d.offerTypes || (d.breakdowns&&d.breakdowns.byOfferType) || {};
-  const byD = d.byDay || (d.breakdowns&&d.breakdowns.byDay) || {};
+        <div class="row" style="margin-top:14px">
+          <div class="card" style="flex:1;min-width:320px">
+            <div class="muted" style="margin-bottom:8px">By Offer Type</div>
+            <table>
+              <thead><tr><th>Offer Type</th><th>Earnings ($)</th></tr></thead>
+              <tbody id="offerBody"><tr><td>—</td><td>—</td></tr></tbody>
+            </table>
+          </div>
+          <div class="card" style="flex:1;min-width:320px">
+            <div class="muted" style="margin-bottom:8px">By Day</div>
+            <table>
+              <thead><tr><th>Date</th><th>Earnings ($)</th></tr></thead>
+              <tbody id="dayBody"><tr><td>—</td><td>—</td></tr></tbody>
+            </table>
+          </div>
+        </div>
 
-  $('#ov-earnings').textContent = fmtUSD(t.earnings || t.totalEarnings || 0);
-  $('#ov-leads').textContent    = num(t.leads || t.activeUsers || 0);
-  $('#ov-clicks').textContent   = num(t.clicks || 0);
-  $('#ov-convrate').textContent = (t.convRate!=null? pct(t.convRate) : (t.conversionRate!=null? pct(t.conversionRate):'0.00%'));
-  $('#ov-epc').textContent      = fmtUSD(t.epc || 0);
-  $('#ov-cpa').textContent      = fmtUSD(t.cpa || 0);
-  $('#ov-rpm').textContent      = fmtUSD(t.rpm || 0);
+        <div id="overviewError" class="note err" style="margin-top:10px"></div>
+      </section>
 
-  const paint = (id, obj)=>{
-    const tb=$(id); tb.innerHTML='';
-    Object.keys(obj||{}).forEach(k=>{
-      const tr=document.createElement('tr');
-      tr.innerHTML = `<td>${esc(k)}</td><td class="num">${fmtUSD(obj[k])}</td>`;
+      <!-- ===== PLACEHOLDERS FOR OTHER TABS (wired to nav) ===== -->
+      <section id="view-cpa" class="hidden"><div class="card">CPA Accounts view</div></section>
+      <section id="view-users" class="hidden"><div class="card">Users view</div></section>
+      <section id="view-analytics" class="hidden"><div class="card">Analytics view</div></section>
+      <section id="view-wallet" class="hidden"><div class="card">Wallet view</div></section>
+      <section id="view-monitoring" class="hidden"><div class="card">Monitoring view</div></section>
+      <section id="view-settings" class="hidden"><div class="card">Settings view</div></section>
+    </main>
+  </div>
+
+  <!-- ========= LIVE GAS + TAB CODE (wired to your JSON) ========= -->
+  <script>
+  /* ===== USE YOUR LIVE GAS ENDPOINT ===== */
+  const GAS_URL = "https://script.google.com/macros/s/AKfycbz-jj7Cr_KzqCku4SQPQ14MEIuCPdq5OEgiiqjo_O2A0FItBrHlmfkoJHViDxuX4P6z/exec";
+  const KEY     = "GENERALISIMO@15769";
+
+  /* ---- helpers ---- */
+  const $ = (id)=>document.getElementById(id);
+  const esc = (s)=>String(s??'').replace(/[&<>"']/g,m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
+  const fmtUSD = (n)=> new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(+n||0);
+  const num    = (n)=> (+n||0).toLocaleString();
+
+  /* draw a 2-col table body from {label:value} or array of {label,value} */
+  function paintTable(tbodyId, rows) {
+    const tb = $(tbodyId);
+    if (!tb) return;
+    tb.innerHTML = '';
+    rows.forEach(r=>{
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${esc(r.label)}</td><td style="text-align:right">${fmtUSD(r.value)}</td>`;
       tb.appendChild(tr);
     });
-    if(!tb.children.length) tb.innerHTML=`<tr><td colspan="2" class="muted">No data</td></tr>`;
-  };
-  paint('tbl-geo',geo); paint('tbl-device',dev); paint('tbl-offerType',typ);
+  }
 
-  const byBody=$('#tbl-byDay'); byBody.innerHTML='';
-  const rows = Array.isArray(byD) ? byD : Object.entries(byD||{}).map(([date,val])=>({date,val}));
-  rows.forEach(x=>{
-    const tr=document.createElement('tr');
-    const dt=x.date||x[0]||''; const v=x.val||x.value||x.amount||x[1]||0;
-    tr.innerHTML=`<td>${esc(dt)}</td><td class="num">${fmtUSD(v)}</td>`;
-    byBody.appendChild(tr);
-  });
-  if(!byBody.children.length) byBody.innerHTML=`<tr><td colspan="2" class="muted">No data</td></tr>`;
-}
+  /* ===== OVERVIEW wired to your JSON shape ===== */
+  async function loadOverview(){
+    try {
+      const url = `${GAS_URL}?action=overview&key=${encodeURIComponent(KEY)}`;
+      const r   = await fetch(url, { method:'GET', headers:{'cache-control':'no-store'} });
+      const j   = await r.json();
 
-/* ================ CPA ACCOUNTS ====================== */
-async function loadCPA(){
-  const grid=$('#cpaGrid'); grid.innerHTML='';
-  const r = await apiGet('cpaaccounts');
-  (r.items || r.accounts || r.rows || []).forEach(acc=>{
-    const name=acc.name||acc.id||'CPA';
-    const offers=acc.offers||acc.activeOffers||0;
-    const revenue=acc.revenue||0; const clicks=acc.clicks||0;
-    const cr = acc.conversionRate!=null ? (typeof acc.conversionRate==='string'?acc.conversionRate:pct(acc.conversionRate)) : '—';
-    const el=document.createElement('div'); el.className='card';
-    el.innerHTML = `
-      <div class="muted" style="margin-bottom:6px">${esc(name)}</div>
-      <div class="row">
-        <div class="col"><div class="muted">Active Offers</div><div class="kpi">${num(offers)}</div></div>
-        <div class="col"><div class="muted">Revenue</div><div class="kpi">${fmtUSD(revenue)}</div></div>
-        <div class="col"><div class="muted">Clicks</div><div class="kpi">${num(clicks)}</div></div>
-        <div class="col"><div class="muted">Conversion</div><div class="kpi">${cr}</div></div>
-      </div>`;
-    grid.appendChild(el);
-  });
-  if(!grid.children.length) grid.innerHTML=`<div class="note">No CPA Grip accounts found in GAS output.</div>`;
-}
+      const t = j.totals || {};
+      if ($('kpi-earn'))  $('kpi-earn').textContent  = fmtUSD(t.earnings||0);
+      if ($('kpi-leads')) $('kpi-leads').textContent = num(t.leads||0);
+      if ($('kpi-clicks'))$('kpi-clicks').textContent= num(t.clicks||0);
+      if ($('kpi-epc'))   $('kpi-epc').textContent   = fmtUSD(t.epc||0);
+      if ($('kpi-cpa'))   $('kpi-cpa').textContent   = fmtUSD(t.cpa||0);
+      if ($('kpi-rpm'))   $('kpi-rpm').textContent   = fmtUSD(t.rpm||0);
 
-/* ==================== USERS ======================== */
-async function loadUsers(){
-  // Pending
-  try{
-    const p = await apiGet('users',{state:'pending'});
-    const body=$('#pendingBody'); body.innerHTML='';
-    (p.items||p.users||[]).forEach(u=>{
-      const tr=document.createElement('tr');
-      tr.innerHTML=`<td>${esc(u.name||'')}</td><td>${esc(u.email||'')}</td><td>${esc(u.phone||'')}</td>
-                    <td><button class="btnApproveRow">Approve</button></td>`;
-      tr.querySelector('.btnApproveRow').onclick=async()=>{
-        const res=await apiPost('approve-user',{email:u.email,approve:true});
-        alert(res.ok?'Approved':('Failed: '+(res.error||''))); loadUsers();
-      };
-      body.appendChild(tr);
-    });
-    if(!body.children.length) body.innerHTML=`<tr><td colspan="4" class="muted">No pending users</td></tr>`;
-  }catch(e){ $('#pendingBody').innerHTML=`<tr><td colspan="4">Failed: ${esc(e.message)}</td></tr>`; }
+      const geoRows   = Object.entries(j.geo||{}).map(([k,v])=>({label:k, value:+v||0}));
+      const devRows   = Object.entries(j.devices||{}).map(([k,v])=>({label:k, value:+v||0}));
+      const offerRows = Object.entries(j.offerTypes||{}).map(([k,v])=>({label:k, value:+v||0}));
+      const dayRows   = Object.entries(j.byDay||{}).sort((a,b)=> a[0]<b[0]?1:-1).map(([k,v])=>({label:k, value:+v||0}));
 
-  // Approved
-  try{
-    const a = await apiGet('users',{state:'approved'});
-    const body=$('#usersBody'); body.innerHTML='';
-    (a.items||a.users||[]).forEach(u=>{
-      const tr=document.createElement('tr');
-      tr.innerHTML=`<td>${esc(u.name||'')}</td><td>${esc(u.email||'')}</td><td>${esc(u.whatsapp||u.phone||'')}</td>
-                    <td>${esc(u.bank||'')}</td><td>${esc(u.account||'')}</td>
-                    <td>${esc(u.authority||'User')}</td><td><span class="status">${esc(u.status||'ACTIVE')}</span></td>`;
-      body.appendChild(tr);
-    });
-    if(!body.children.length) body.innerHTML=`<tr><td colspan="7" class="muted">No approved users</td></tr>`;
-  }catch(e){ $('#usersBody').innerHTML=`<tr><td colspan="7">Failed: ${esc(e.message)}</td></tr>`; }
-}
+      paintTable('geoBody', geoRows);
+      paintTable('devBody', devRows);
+      paintTable('offerBody', offerRows);
+      paintTable('dayBody', dayRows);
+    } catch (e) {
+      console.error('overview error:', e);
+      const el = $('overviewError'); if (el) el.textContent = 'Failed to load overview.';
+    }
+  }
 
-/* =================== ANALYTICS ===================== */
-async function loadAnalytics(){
-  const r = await apiGet('analytics');
-  const body=$('#analyticsBody'); body.innerHTML='';
-  const rows = r.rows || r.items || r.byDay || r.daily || [];
-  const arr  = Array.isArray(rows) ? rows
-               : Object.entries(rows).map(([date,v])=>({date,clicks:v.clicks||0,leads:v.leads||0,earnings:v.earnings||v||0}));
-  arr.forEach(x=>{
-    const tr=document.createElement('tr');
-    tr.innerHTML=`<td>${esc(x.date||'')}</td><td class="num">${num(x.clicks||0)}</td>
-                  <td class="num">${num(x.leads||0)}</td><td class="num">${fmtUSD(x.earnings||0)}</td>`;
-    body.appendChild(tr);
-  });
-  if(!body.children.length) body.innerHTML=`<tr><td colspan="4" class="muted">No analytics data</td></tr>`;
-}
-
-/* ===================== WALLET ====================== */
-async function loadWallet(){
-  try{
-    const w = await apiGet('walletoverview');
-    $('#wallet-totalIn').textContent  = fmtUSD(w.totalIn  ?? 0);
-    $('#wallet-totalOut').textContent = fmtUSD(w.totalOut ?? 0);
-    $('#wallet-balance').textContent  = fmtUSD(w.balance  ?? ((w.totalIn||0)-(w.totalOut||0)));
-    // banks
-    try{
-      const b = await apiGet('banks');
-      const sel=$('#bankSelect'); sel.innerHTML='';
-      (b.banks||b.rows||[]).forEach(x=>{
-        const opt=document.createElement('option');
-        opt.value=x.code||x.id||''; opt.textContent=`${x.name||'Bank'} (${x.code||''})`;
-        sel.appendChild(opt);
-      });
-    }catch(_){}
-  }catch(e){ empireLog('wallet err',e); }
-
-  $('#btnWithdraw').onclick=async()=>{
-    const acct=$('#acctNumber').value.trim(), bank=$('#bankSelect').value, amt=Number($('#withdrawAmt').value||0);
-    if(!acct||!bank||!amt) return alert('Enter account, bank and amount.');
-    if(amt<50) return alert('Minimum withdrawal is $50.');
-    const res = await apiPost('withdraw-request',{account:acct,bank,amount:amt});
-    alert(res.ok?'Withdrawal requested':('Failed: '+(res.error||''))); loadWallet();
-  };
-}
-
-/* =================== MONITORING ==================== */
-function setBadge(el, ok){ el.textContent=ok?'ONLINE':'OFFLINE'; el.className='badge '+(ok?'ok':'down'); }
-async function loadMonitoring(){
-  const st = await apiGet('monitoring');
-  setBadge($('#serverBadge'), st.server!==false);
-  setBadge($('#dbBadge'),     st.db!==false);
-  setBadge($('#sheetsBadge'), st.sheets!==false);
-  setBadge($('#aiBadge'),     st.ai!==false);
-  const body=$('#evBody'); body.innerHTML='';
-  (st.events||st.feed||[]).forEach(e=>{
-    const tr=document.createElement('tr');
-    tr.innerHTML=`<td>${esc(e.time||'')}</td><td>${esc(e.type||'')}</td><td>${esc(e.msg||'')}</td><td>${esc(e.ref||'')}</td><td>${esc(e.actor||'')}</td>`;
-    body.appendChild(tr);
-  });
-  if(!body.children.length) body.innerHTML=`<tr><td colspan="5" class="muted">No events</td></tr>`;
-}
-
-/* ===================== SETTINGS ==================== */
-async function loadSettings(){
-  const r = await apiGet('systemsettings');
-  const rows=r.settings||r.rows||[];
-  const body=$('#settingsBody'); body.innerHTML='';
-  (rows||[]).forEach(x=>{
-    const tr=document.createElement('tr');
-    tr.innerHTML=`<td>${esc(x.key||x.k||'')}</td><td>${esc(x.value||x.v||'')}</td>
-                  <td>${esc(x.desc||x.description||'')}</td><td>${esc(x.updated||'')}</td>`;
-    body.appendChild(tr);
-  });
-  if(!body.children.length) body.innerHTML=`<tr><td colspan="4" class="muted">No settings</td></tr>`;
-}
-
-/* ====================== INIT ======================= */
-window.addEventListener('DOMContentLoaded', ()=>{
-  initTabs();            // hash+click router
-  showTab((location.hash||'#overview').replace('#','')); // initial load
-});
-</script>
+  /* ===== Tabs hook ===== */
+  (function initTabs(){
+    const views = {
+      overview:  $('view-dashboard'),
+      cpa:       $('view-cpa'),
+      users:     $('view-users'),
+      analytics: $('view-analytics'),
+      wallet:    $('view-wallet'),
+      monitoring:$('view-monitoring'),
+      settings:  $('view-settings')
+    };
+    const buttons = document.querySelectorAll('.nav [data-tab]');
+    function show(tab){
+      Object.values(views).forEach(v=>v && v.classList.add('hidden'));
+      (views[tab]||views.overview)?.classList.remove('hidden');
+      if (tab==='overview') loadOverview();
+    }
+    buttons.forEach(b=>b.onclick=()=>{ buttons.forEach(x=>x.classList.remove('active')); b.classList.add('active'); show(b.dataset.tab); });
+    window.addEventListener('hashchange', ()=> show((location.hash||'#overview').slice(1)));
+    show((location.hash||'#overview').slice(1)); // initial
+  })();
+  </script>
+</body>
+</html>

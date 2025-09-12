@@ -1,198 +1,132 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>THE EMPIRE — Command Dashboard</title>
-  <link rel="icon" href="assets/brand/favicon.png" />
-  <link rel="preload" as="image" href="assets/brand/empire-hero-final.jpg" />
-  <style>
-    /* minimal styles so you can paste and run */
-    :root { --bg:#0e1622; --panel:#121d2c; --ink:#e8edf5; --muted:#8fa3bf; --accent:#f4c045; --line:#213147; }
-    html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font:14px/1.45 system-ui,Segoe UI,Roboto,Arial}
-    .shell{display:flex;min-height:100vh}
-    aside{width:220px;background:linear-gradient(180deg,#0f1a2b,#0b1421);border-right:1px solid var(--line);padding:14px 12px}
-    .brand{display:flex;align-items:center;gap:8px;margin-bottom:16px}
-    .brand img{width:28px;height:28px}
-    .brand h1{font-size:14px;letter-spacing:.12em;margin:0;font-weight:800}
-    .nav{display:flex;flex-direction:column;gap:6px}
-    .nav button{background:transparent;border:1px solid transparent;color:var(--ink);text-align:left;padding:10px;border-radius:10px;cursor:pointer}
-    .nav button:hover{background:#0d1a2b;border-color:#1f2d46}
-    .nav button.active{background:#15243a;border-color:#274268}
-    main{flex:1;padding:18px}
-    .row{display:flex;gap:14px;flex-wrap:wrap}
-    .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;box-shadow:0 1px 0 rgba(0,0,0,.2)}
-    .kpis{display:grid;grid-template-columns:repeat(6,minmax(120px,1fr));gap:12px}
-    .kpi .v{font-size:22px;font-weight:800}
-    .muted{color:var(--muted)}
-    table{width:100%;border-collapse:collapse}
-    th,td{padding:10px;border-bottom:1px solid var(--line)}
-    th{background:#0f2036;color:#b9c6db;text-align:left}
-    td:last-child{text-align:right}
-    .hidden{display:none!important}
-    .note.err{color:#ff8a8a}
-    header .title{font-size:18px;font-weight:800;letter-spacing:.08em}
-    .hero{background:url(assets/brand/empire-hero-final.jpg) center/cover no-repeat;border-radius:14px;height:120px;margin-bottom:14px;border:1px solid var(--line)}
-  </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>The Empire Command Dashboard</title>
+  <link rel="stylesheet" href="styles.css"/>
 </head>
 <body>
-  <div class="shell">
-    <aside>
-      <div class="brand">
-        <img src="assets/brand/empire-logo.png" alt="Empire" />
-        <h1>THE&nbsp;EMPIRE</h1>
+  <aside class="sidebar">
+    <div class="brand">
+      <img src="assets/logo.png" alt="Empire Logo" style="height:40px"/>
+      <span>THE EMPIRE</span>
+    </div>
+    <nav class="nav">
+      <button data-tab="overview" class="active">Overview</button>
+      <button data-tab="cpa">CPA Accounts</button>
+      <button data-tab="users">Users</button>
+      <button data-tab="analytics">Analytics</button>
+      <button data-tab="wallet">Wallet</button>
+      <button data-tab="monitoring">Monitoring</button>
+      <button data-tab="settings">Settings</button>
+    </nav>
+  </aside>
+
+  <main>
+    <!-- OVERVIEW -->
+    <section id="view-overview" class="view">
+      <h1>WELCOME TO THE EMPIRE</h1>
+      <div class="kpis">
+        <div>Earnings: <span id="kpi-earn">$0.00</span></div>
+        <div>Leads: <span id="kpi-leads">0</span></div>
+        <div>Clicks: <span id="kpi-clicks">0</span></div>
+        <div>EPC: <span id="kpi-epc">$0.00</span></div>
+        <div>CPA: <span id="kpi-cpa">$0.00</span></div>
+        <div>RPM: <span id="kpi-rpm">$0.00</span></div>
       </div>
-      <div class="nav">
-        <button class="active" data-tab="overview">Overview</button>
-        <button data-tab="cpa">CPA Accounts</button>
-        <button data-tab="users">Users</button>
-        <button data-tab="analytics">Analytics</button>
-        <button data-tab="wallet">Wallet</button>
-        <button data-tab="monitoring">Monitoring</button>
-        <button data-tab="settings">Settings</button>
+
+      <div class="grids">
+        <div>
+          <h3>By Geo</h3>
+          <table><tbody id="geoBody"></tbody></table>
+        </div>
+        <div>
+          <h3>By Device</h3>
+          <table><tbody id="devBody"></tbody></table>
+        </div>
+        <div>
+          <h3>By Offer Type</h3>
+          <table><tbody id="offerBody"></tbody></table>
+        </div>
+        <div>
+          <h3>By Day</h3>
+          <table><tbody id="dayBody"></tbody></table>
+        </div>
       </div>
-    </aside>
+      <div id="errMsg" class="note err"></div>
+    </section>
 
-    <main>
-      <header class="row" style="align-items:center;justify-content:space-between">
-        <div class="title">Command Dashboard</div>
-      </header>
+    <!-- Other sections -->
+    <section id="view-cpa" class="view hidden">CPA Accounts here</section>
+    <section id="view-users" class="view hidden">Users here</section>
+    <section id="view-analytics" class="view hidden">Analytics here</section>
+    <section id="view-wallet" class="view hidden">Wallet here</section>
+    <section id="view-monitoring" class="view hidden">Monitoring here</section>
+    <section id="view-settings" class="view hidden">Settings here</section>
+  </main>
 
-      <div class="hero"></div>
-
-      <!-- ===== OVERVIEW ===== -->
-      <section id="view-dashboard">
-        <div class="card kpis">
-          <div class="kpi"><div class="muted">Earnings</div><div id="kpi-earn" class="v">$0.00</div></div>
-          <div class="kpi"><div class="muted">Leads</div><div id="kpi-leads" class="v">0</div></div>
-          <div class="kpi"><div class="muted">Clicks</div><div id="kpi-clicks" class="v">0</div></div>
-          <div class="kpi"><div class="muted">EPC</div><div id="kpi-epc" class="v">$0.00</div></div>
-          <div class="kpi"><div class="muted">CPA</div><div id="kpi-cpa" class="v">$0.00</div></div>
-          <div class="kpi"><div class="muted">RPM</div><div id="kpi-rpm" class="v">$0.00</div></div>
-        </div>
-
-        <div class="row" style="margin-top:14px">
-          <div class="card" style="flex:1;min-width:320px">
-            <div class="muted" style="margin-bottom:8px">By Geo</div>
-            <table>
-              <thead><tr><th>Country</th><th>Earnings ($)</th></tr></thead>
-              <tbody id="geoBody"><tr><td>—</td><td>—</td></tr></tbody>
-            </table>
-          </div>
-          <div class="card" style="flex:1;min-width:320px">
-            <div class="muted" style="margin-bottom:8px">By Device</div>
-            <table>
-              <thead><tr><th>Device</th><th>Earnings ($)</th></tr></thead>
-              <tbody id="devBody"><tr><td>—</td><td>—</td></tr></tbody>
-            </table>
-          </div>
-        </div>
-
-        <div class="row" style="margin-top:14px">
-          <div class="card" style="flex:1;min-width:320px">
-            <div class="muted" style="margin-bottom:8px">By Offer Type</div>
-            <table>
-              <thead><tr><th>Offer Type</th><th>Earnings ($)</th></tr></thead>
-              <tbody id="offerBody"><tr><td>—</td><td>—</td></tr></tbody>
-            </table>
-          </div>
-          <div class="card" style="flex:1;min-width:320px">
-            <div class="muted" style="margin-bottom:8px">By Day</div>
-            <table>
-              <thead><tr><th>Date</th><th>Earnings ($)</th></tr></thead>
-              <tbody id="dayBody"><tr><td>—</td><td>—</td></tr></tbody>
-            </table>
-          </div>
-        </div>
-
-        <div id="overviewError" class="note err" style="margin-top:10px"></div>
-      </section>
-
-      <!-- ===== PLACEHOLDERS FOR OTHER TABS (wired to nav) ===== -->
-      <section id="view-cpa" class="hidden"><div class="card">CPA Accounts view</div></section>
-      <section id="view-users" class="hidden"><div class="card">Users view</div></section>
-      <section id="view-analytics" class="hidden"><div class="card">Analytics view</div></section>
-      <section id="view-wallet" class="hidden"><div class="card">Wallet view</div></section>
-      <section id="view-monitoring" class="hidden"><div class="card">Monitoring view</div></section>
-      <section id="view-settings" class="hidden"><div class="card">Settings view</div></section>
-    </main>
-  </div>
-
-  <!-- ========= LIVE GAS + TAB CODE (wired to your JSON) ========= -->
   <script>
-  /* ===== USE YOUR LIVE GAS ENDPOINT ===== */
-  const GAS_URL = "https://script.google.com/macros/s/AKfycbz-jj7Cr_KzqCku4SQPQ14MEIuCPdq5OEgiiqjo_O2A0FItBrHlmfkoJHViDxuX4P6z/exec";
-  const KEY     = "GENERALISIMO@15769";
+    /* ===== GAS wiring ===== */
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbz-jj7Cr_KzqCku4SQPQ14MEIuCPdq5OEgiiqjo_O2A0FItBrHlmfkoJHViDxuX4P6z/exec";
 
-  /* ---- helpers ---- */
-  const $ = (id)=>document.getElementById(id);
-  const esc = (s)=>String(s??'').replace(/[&<>"']/g,m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
-  const fmtUSD = (n)=> new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(+n||0);
-  const num    = (n)=> (+n||0).toLocaleString();
+    const $ = id => document.getElementById(id);
+    const esc = s => String(s??"").replace(/[&<>"']/g,m=>({ "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;" }[m]));
+    const fmtUSD = n => new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(+n||0);
+    const num = n => (+n||0).toLocaleString();
 
-  /* draw a 2-col table body from {label:value} or array of {label,value} */
-  function paintTable(tbodyId, rows) {
-    const tb = $(tbodyId);
-    if (!tb) return;
-    tb.innerHTML = '';
-    rows.forEach(r=>{
-      const tr = document.createElement('tr');
-      tr.innerHTML = `<td>${esc(r.label)}</td><td style="text-align:right">${fmtUSD(r.value)}</td>`;
-      tb.appendChild(tr);
-    });
-  }
-
-  /* ===== OVERVIEW wired to your JSON shape ===== */
-  async function loadOverview(){
-    try {
-      const url = `${GAS_URL}?action=overview&key=${encodeURIComponent(KEY)}`;
-      const r   = await fetch(url, { method:'GET', headers:{'cache-control':'no-store'} });
-      const j   = await r.json();
-
-      const t = j.totals || {};
-      if ($('kpi-earn'))  $('kpi-earn').textContent  = fmtUSD(t.earnings||0);
-      if ($('kpi-leads')) $('kpi-leads').textContent = num(t.leads||0);
-      if ($('kpi-clicks'))$('kpi-clicks').textContent= num(t.clicks||0);
-      if ($('kpi-epc'))   $('kpi-epc').textContent   = fmtUSD(t.epc||0);
-      if ($('kpi-cpa'))   $('kpi-cpa').textContent   = fmtUSD(t.cpa||0);
-      if ($('kpi-rpm'))   $('kpi-rpm').textContent   = fmtUSD(t.rpm||0);
-
-      const geoRows   = Object.entries(j.geo||{}).map(([k,v])=>({label:k, value:+v||0}));
-      const devRows   = Object.entries(j.devices||{}).map(([k,v])=>({label:k, value:+v||0}));
-      const offerRows = Object.entries(j.offerTypes||{}).map(([k,v])=>({label:k, value:+v||0}));
-      const dayRows   = Object.entries(j.byDay||{}).sort((a,b)=> a[0]<b[0]?1:-1).map(([k,v])=>({label:k, value:+v||0}));
-
-      paintTable('geoBody', geoRows);
-      paintTable('devBody', devRows);
-      paintTable('offerBody', offerRows);
-      paintTable('dayBody', dayRows);
-    } catch (e) {
-      console.error('overview error:', e);
-      const el = $('overviewError'); if (el) el.textContent = 'Failed to load overview.';
-    }
-  }
-
-  /* ===== Tabs hook ===== */
-  (function initTabs(){
+    /* ===== NAV ===== */
     const views = {
-      overview:  $('view-dashboard'),
-      cpa:       $('view-cpa'),
-      users:     $('view-users'),
+      overview: $('view-overview'),
+      cpa: $('view-cpa'),
+      users: $('view-users'),
       analytics: $('view-analytics'),
-      wallet:    $('view-wallet'),
-      monitoring:$('view-monitoring'),
-      settings:  $('view-settings')
+      wallet: $('view-wallet'),
+      monitoring: $('view-monitoring'),
+      settings: $('view-settings')
     };
-    const buttons = document.querySelectorAll('.nav [data-tab]');
-    function show(tab){
-      Object.values(views).forEach(v=>v && v.classList.add('hidden'));
-      (views[tab]||views.overview)?.classList.remove('hidden');
-      if (tab==='overview') loadOverview();
+    document.querySelectorAll('.nav button').forEach(b=>{
+      b.addEventListener('click', ()=>{
+        document.querySelectorAll('.nav button').forEach(x=>x.classList.remove('active'));
+        b.classList.add('active');
+        Object.values(views).forEach(v=>v.classList.add('hidden'));
+        (views[b.dataset.tab]||views.overview).classList.remove('hidden');
+        if(b.dataset.tab==="overview") loadOverview();
+      });
+    });
+
+    /* ===== LOAD OVERVIEW ===== */
+    async function loadOverview(){
+      try{
+        const r = await fetch(GAS_URL,{method:'GET',headers:{'cache-control':'no-store'}});
+        const data = await r.json();
+
+        if(!data.ok) throw new Error("Invalid response");
+
+        const t = data.totals || {};
+        $('kpi-earn').textContent  = fmtUSD(t.earnings||0);
+        $('kpi-leads').textContent = num(t.leads||0);
+        $('kpi-clicks').textContent= num(t.clicks||0);
+        $('kpi-epc').textContent   = fmtUSD(t.epc||0);
+        $('kpi-cpa').textContent   = fmtUSD(t.cpa||0);
+        $('kpi-rpm').textContent   = fmtUSD(t.rpm||0);
+
+        const geo = data.geo||{};
+        const dev = data.devices||{};
+        const off = data.offerTypes||{};
+        const day = data.byDay||{};
+
+        $('geoBody').innerHTML = Object.entries(geo).map(([k,v])=>`<tr><td>${esc(k)}</td><td>${fmtUSD(v)}</td></tr>`).join('');
+        $('devBody').innerHTML = Object.entries(dev).map(([k,v])=>`<tr><td>${esc(k)}</td><td>${fmtUSD(v)}</td></tr>`).join('');
+        $('offerBody').innerHTML = Object.entries(off).map(([k,v])=>`<tr><td>${esc(k)}</td><td>${fmtUSD(v)}</td></tr>`).join('');
+        $('dayBody').innerHTML = Object.entries(day).map(([k,v])=>`<tr><td>${esc(k)}</td><td>${fmtUSD(v)}</td></tr>`).join('');
+        $('errMsg').textContent="";
+      }catch(e){
+        $('errMsg').textContent="Failed to load overview: "+e.message;
+      }
     }
-    buttons.forEach(b=>b.onclick=()=>{ buttons.forEach(x=>x.classList.remove('active')); b.classList.add('active'); show(b.dataset.tab); });
-    window.addEventListener('hashchange', ()=> show((location.hash||'#overview').slice(1)));
-    show((location.hash||'#overview').slice(1)); // initial
-  })();
+
+    window.addEventListener("DOMContentLoaded",()=>{ loadOverview(); });
   </script>
 </body>
 </html>

@@ -2,148 +2,194 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>⚔️ The Empire Dashboard ⚔️</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>⚔️ THE EMPIRE • Command Dashboard</title>
 <style>
-  :root{--bg:#0b1424;--panel:#0f172a;--card:#101826;--accent:#ffd166;--muted:#9fb3c8;--line:#1f2a44;}
-  *{box-sizing:border-box} body{margin:0;font-family:system-ui,Arial,sans-serif;background:var(--bg);color:#e6f1ff}
+  :root{--bg:#0b1424;--panel:#0f172a;--card:#11131a;--line:#22314f;--text:#e6f1ff;--muted:#9fb3c8;--accent:#ffd166}
+  *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,Segoe UI,Arial}
   .layout{display:flex;min-height:100vh}
-  nav{width:240px;background:var(--panel);padding:20px}
-  nav h2{margin:0 0 16px;color:var(--accent)}
-  .navlink{display:block;padding:10px 12px;margin:6px 0;border-radius:8px;color:#e6f1ff;text-decoration:none}
-  .navlink:hover{background:#1b2742}.navlink.active{background:#223157;box-shadow:inset 0 0 0 1px #2d416f}
-  main{flex:1;padding:20px;overflow:auto}
-  .card{background:var(--card);border-radius:12px;padding:16px;margin-bottom:20px;box-shadow:0 2px 5px rgba(0,0,0,.4)}
-  .card h3{margin:0 0 10px;color:var(--accent)}
-  h4{margin:14px 0 6px}
-  table{width:100%;border-collapse:collapse;margin-top:8px}
-  th,td{padding:8px 10px;border:1px solid var(--line)} th{background:#1f2a44}
-  .num{text-align:right} .muted{color:var(--muted)} .row{display:flex;gap:16px;flex-wrap:wrap}
-  .kpi{flex:1 1 200px;background:#0d1525;border:1px solid #14213d;border-radius:10px;padding:12px}
-  .kpi .label{font-size:.9rem;color:var(--muted)} .kpi .val{font-size:1.4rem;font-weight:700;margin-top:4px}
-  .view{display:none}.view.active{display:block}
-  .toolbar{display:flex;gap:8px;align-items:center}
-  button{padding:8px 12px;border-radius:8px;border:none;background:var(--accent);color:#000;font-weight:700;cursor:pointer}
-  button:hover{filter:brightness(.95)}
-  .log{white-space:pre-wrap;font-family:ui-monospace,Consolas,monospace;background:#0a1120;border:1px dashed #2a3b66;border-radius:10px;padding:10px;margin-top:10px;color:#a9c1ff}
+  aside{width:240px;background:var(--panel);padding:18px}
+  aside h1{margin:0 0 12px;font-size:20px;color:#ffd166}
+  .nav a{display:block;padding:10px 12px;margin:6px 0;border-radius:8px;text-decoration:none;color:var(--text)}
+  .nav a.active{background:#223157;box-shadow:inset 0 0 0 1px #2d416f}
+  main{flex:1;padding:18px}
+  .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:14px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px}
+  .card h3{margin:0 0 12px;color:var(--accent);font-size:16px}
+  .kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+  .kpi{display:flex;justify-content:space-between;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:#0f1627}
+  table{width:100%;border-collapse:collapse}
+  th,td{padding:8px 10px;border:1px solid var(--line)}
+  th{background:#1b2742;text-align:left}
+  td.num{text-align:right}
+  .muted{color:var(--muted)}
+  .view{display:none} .view.active{display:block}
+  .error{color:#ff8181}
+  @media (max-width:950px){.grid{grid-template-columns:1fr}.kpis{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 <div class="layout">
-  <nav>
-    <h2>⚔️ Empire</h2>
-    <a class="navlink active" href="#overview" data-target="overview">Overview</a>
-  </nav>
+  <aside>
+    <h1>⚔️ THE EMPIRE</h1>
+    <nav class="nav">
+      <a href="#dashboard" data-view="dashboard" class="active">Dashboard</a>
+      <a href="#cpa"        data-view="cpa">CPA Accounts</a>
+      <a href="#users"      data-view="users">Users</a>
+      <a href="#analytics"  data-view="analytics">Analytics</a>
+      <a href="#wallet"     data-view="wallet">Wallet</a>
+      <a href="#monitoring" data-view="monitoring">Monitoring</a>
+      <a href="#settings"   data-view="settings">Settings</a>
+    </nav>
+  </aside>
+
   <main>
-    <section id="overview" class="view active card">
-      <div class="toolbar">
-        <h3 style="margin-right:auto">Overview</h3>
-        <button id="btnRefresh">Refresh</button>
-        <span class="muted" id="stamp">—</span>
+    <!-- DASHBOARD -->
+    <section id="dashboard" class="view active">
+      <div class="grid">
+        <div class="card" style="grid-column:span 4">
+          <h3>Totals</h3>
+          <div class="kpis">
+            <div class="kpi"><span>Earnings</span><strong id="k-earn">$0.00</strong></div>
+            <div class="kpi"><span>Leads</span><strong id="k-leads">0</strong></div>
+            <div class="kpi"><span>Clicks</span><strong id="k-clicks">0</strong></div>
+            <div class="kpi"><span>Conversion</span><strong id="k-cr">0.00%</strong></div>
+            <div class="kpi"><span>EPC</span><strong id="k-epc">$0.00</strong></div>
+            <div class="kpi"><span>CPA</span><strong id="k-cpa">$0.00</strong></div>
+            <div class="kpi"><span>RPM</span><strong id="k-rpm">$0.00</strong></div>
+          </div>
+          <p class="muted" id="asof">—</p>
+          <p class="error" id="err"></p>
+        </div>
+
+        <div class="card" style="grid-column:span 4">
+          <h3>By Geo</h3>
+          <table>
+            <thead><tr><th>Country</th><th class="num">Earnings ($)</th></tr></thead>
+            <tbody id="t-geo"><tr><td class="muted">—</td><td class="num muted">—</td></tr></tbody>
+          </table>
+        </div>
+
+        <div class="card" style="grid-column:span 4">
+          <h3>By Device</h3>
+          <table>
+            <thead><tr><th>Device</th><th class="num">Earnings ($)</th></tr></thead>
+            <tbody id="t-device"><tr><td class="muted">—</td><td class="num muted">—</td></tr></tbody>
+          </table>
+        </div>
+
+        <div class="card" style="grid-column:span 6">
+          <h3>By Offer Type</h3>
+          <table>
+            <thead><tr><th>Offer Type</th><th class="num">Earnings ($)</th></tr></thead>
+            <tbody id="t-offer"><tr><td class="muted">—</td><td class="num muted">—</td></tr></tbody>
+          </table>
+        </div>
+
+        <div class="card" style="grid-column:span 6">
+          <h3>By Day</h3>
+          <table>
+            <thead><tr><th>Date</th><th class="num">Earnings ($)</th></tr></thead>
+            <tbody id="t-day"><tr><td class="muted">—</td><td class="num muted">—</td></tr></tbody>
+          </table>
+        </div>
       </div>
-
-      <div class="row" id="kpis">
-        <div class="kpi"><div class="label">Earnings</div><div class="val" id="ov-earnings">$0.00</div></div>
-        <div class="kpi"><div class="label">Leads</div><div class="val" id="ov-leads">0</div></div>
-        <div class="kpi"><div class="label">Clicks</div><div class="val" id="ov-clicks">0</div></div>
-        <div class="kpi"><div class="label">Conversion Rate</div><div class="val" id="ov-convrate">0.00%</div></div>
-        <div class="kpi"><div class="label">EPC</div><div class="val" id="ov-epc">$0.00</div></div>
-        <div class="kpi"><div class="label">CPA</div><div class="val" id="ov-cpa">$0.00</div></div>
-        <div class="kpi"><div class="label">RPM</div><div class="val" id="ov-rpm">$0.00</div></div>
-      </div>
-
-      <h4>By Geo</h4>
-      <table><thead><tr><th>Country</th><th class="num">Earnings ($)</th></tr></thead><tbody id="tbl-geo"></tbody></table>
-
-      <h4>By Device</h4>
-      <table><thead><tr><th>Device</th><th class="num">Earnings ($)</th></tr></thead><tbody id="tbl-device"></tbody></table>
-
-      <h4>By Offer Type</h4>
-      <table><thead><tr><th>Offer Type</th><th class="num">Earnings ($)</th></tr></thead><tbody id="tbl-offerType"></tbody></table>
-
-      <h4>By Day</h4>
-      <table><thead><tr><th>Date</th><th class="num">Earnings ($)</th></tr></thead><tbody id="tbl-byDay"></tbody></table>
-
-      <div class="log" id="debug"></div>
     </section>
+
+    <!-- Other tabs (stubs so the app is complete) -->
+    <section id="cpa" class="view card"><h3>CPA Accounts</h3><p class="muted">Hook this to your Sheets when ready.</p></section>
+    <section id="users" class="view card"><h3>Users</h3><p class="muted">Hook this to your Sheets when ready.</p></section>
+    <section id="analytics" class="view card"><h3>Analytics</h3><p class="muted">Hook this to your Sheets when ready.</p></section>
+    <section id="wallet" class="view card"><h3>Wallet</h3><p class="muted">Hook this to your payout sheet/webhook when ready.</p></section>
+    <section id="monitoring" class="view card"><h3>Monitoring</h3><p class="muted">Status & alerts will appear here.</p></section>
+    <section id="settings" class="view card"><h3>Settings</h3><p class="muted">System configuration.</p></section>
   </main>
 </div>
 
 <script>
-/*** 1) CONFIG — replace with your working Apps Script Web App URL ***/
-const API_URL = https://script.google.com/macros/s/AKfycbz-jj7Cr_KzqCku4SQPQ14MEIuCPdq5OEgiiqjo_O2A0FItBrHlmfkoJHViDxuX4P6z/exec
+/* ===== 1) CONFIG: paste your working GAS Web App URL here ===== */
+const API_URL = "https://script.google.com/macros/s/AKfycbz-jj7Cr_KzqCku4SQPQ14MEIuCPdq5OEgiiqjo_O2A0FItBrHlmfkoJHViDxuX4P6z/exec";
 
-/*** 2) HELPERS ***/
-const $$ = s => document.querySelector(s);
-const fmtMoney = n => "$" + Number(n||0).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2});
-const fmtPct    = n => Number(n||0).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2}) + "%";
-function setStamp(){ $$("#stamp").textContent = new Date().toLocaleString(); }
-function log(obj){ $$("#debug").textContent = typeof obj==="string" ? obj : JSON.stringify(obj,null,2); }
-function fillTable(tbodySel, obj, labelHeader){
-  const tb = $$(tbodySel); tb.innerHTML = "";
-  if(!obj || typeof obj!=="object"){ tb.innerHTML = `<tr><td colspan="2" class="muted">No data</td></tr>`; return; }
-  // sort descending by value
-  const rows = Object.entries(obj).sort((a,b)=>Number(b[1])-Number(a[1]));
-  for(const [k,v] of rows){
-    const tr = document.createElement("tr");
-    tr.innerHTML = `<td>${k}</td><td class="num">${fmtMoney(v)}</td>`;
-    tb.appendChild(tr);
-  }
+/* ===== 2) tiny router ===== */
+const links=[...document.querySelectorAll('.nav a')], views=[...document.querySelectorAll('.view')];
+function show(id){ links.forEach(a=>a.classList.toggle('active',a.dataset.view===id)); views.forEach(v=>v.classList.toggle('active',v.id===id)); }
+links.forEach(a=>a.addEventListener('click',e=>{e.preventDefault();const id=a.dataset.view;history.replaceState(null,"","#"+id);show(id); if(id==='dashboard') loadDashboard();}));
+show((location.hash||'#dashboard').replace('#',''));
+
+/* ===== 3) helpers ===== */
+const $ = s => document.querySelector(s);
+const fmtMoney = v => "$" + Number(v||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+const fmtPct   = v => Number(v||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}) + "%";
+function fillTable(tbody, obj, keyFormatter=(k)=>k){
+  if(!obj || !Object.keys(obj).length){ tbody.innerHTML = `<tr><td class="muted">No data</td><td class="num muted">—</td></tr>`; return; }
+  tbody.innerHTML = Object.entries(obj)
+    .sort((a,b)=>b[1]-a[1])
+    .map(([k,v])=>`<tr><td>${keyFormatter(k)}</td><td class="num">${fmtMoney(v)}</td></tr>`).join("");
 }
 
-/*** 3) CORE: load overview matching your payload shape ***/
-async function loadOverview(){
+/* ===== 4) tolerant parser (supports both of your JSON shapes) ===== */
+function normalizePayload(raw){
+  const totals = raw.totals || {};
+  const b = raw.breakdowns || {};
+  return {
+    totals: {
+      earnings: totals.earnings??totals.revenue??0,
+      leads: totals.leads??0,
+      clicks: totals.clicks??0,
+      convRate: totals.conversionRate??totals.convRate??0,
+      epc: totals.epc??0,
+      cpa: totals.cpa??0,
+      rpm: totals.rpm??0,
+    },
+    geo: raw.geo || b.byGeo || {},
+    devices: raw.devices || b.byDevice || {},
+    offerTypes: raw.offerTypes || b.byOfferType || {},
+    byDay: raw.byDay || b.byDay || {}
+  };
+}
+
+/* ===== 5) data loader ===== */
+async function loadDashboard(){
+  $("#err").textContent = "";
+  $("#asof").textContent = "Loading…";
   try{
-    const url = API_URL; // endpoint already returns totals + breakdowns
-    const res = await fetch(url, {cache:"no-store"});
+    const res = await fetch(API_URL + "?t=" + Date.now(), {cache:"no-store"});
     if(!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
+    const json = await res.json();
+    if(json.ok === false) throw new Error(json.message||"API returned ok:false");
+    const data = normalizePayload(json);
 
-    // keep a compact copy in the log for troubleshooting
-    log(data);
+    // Totals
+    $("#k-earn").textContent = fmtMoney(data.totals.earnings);
+    $("#k-leads").textContent = data.totals.leads||0;
+    $("#k-clicks").textContent = data.totals.clicks||0;
+    $("#k-cr").textContent = fmtPct(data.totals.convRate);
+    $("#k-epc").textContent = fmtMoney(data.totals.epc);
+    $("#k-cpa").textContent = fmtMoney(data.totals.cpa);
+    $("#k-rpm").textContent = fmtMoney(data.totals.rpm);
 
-    // --- totals: your payload uses "totals" with convRate, epc, cpa, rpm ---
-    const t = data.totals || {};
-    $$("#ov-earnings").textContent = fmtMoney(t.earnings);
-    $$("#ov-leads").textContent    = Number(t.leads||0).toLocaleString();
-    $$("#ov-clicks").textContent   = Number(t.clicks||0).toLocaleString();
-    $$("#ov-convrate").textContent = fmtPct(t.convRate ?? t.conversionRate);
-    $$("#ov-epc").textContent      = fmtMoney(t.epc);
-    $$("#ov-cpa").textContent      = fmtMoney(t.cpa);
-    $$("#ov-rpm").textContent      = fmtMoney(t.rpm);
+    // Tables
+    fillTable($("#t-geo"), data.geo);
+    fillTable($("#t-device"), data.devices);
+    fillTable($("#t-offer"), data.offerTypes);
+    // byDay: human date
+    const dayPretty = {};
+    Object.entries(data.byDay||{}).forEach(([k,v])=>{
+      const d = isNaN(Date.parse(k)) ? k : new Date(k).toDateString();
+      dayPretty[d] = v;
+    });
+    fillTable($("#t-day"), dayPretty);
 
-    // --- breakdowns: byGeo, byDevice, byOfferType, byDay ---
-    const b = data.breakdowns || data; // support either structure
-    fillTable("#tbl-geo",       b.byGeo);
-    fillTable("#tbl-device",    b.byDevice);
-    fillTable("#tbl-offerType", b.byOfferType);
-
-    // byDay may be an object with date-string keys; sort by date desc
-    const byDay = b.byDay || {};
-    const dayRows = Object.entries(byDay)
-      .map(([k,v]) => [new Date(k), v])
-      .sort((a,b)=>b[0]-a[0]);
-
-    const tbDay = $$("#tbl-byDay"); tbDay.innerHTML = "";
-    if(dayRows.length===0){
-      tbDay.innerHTML = `<tr><td colspan="2" class="muted">No data</td></tr>`;
-    } else {
-      for(const [d,amt] of dayRows){
-        const tr = document.createElement("tr");
-        tr.innerHTML = `<td>${d.toDateString()}</td><td class="num">${fmtMoney(amt)}</td>`;
-        tbDay.appendChild(tr);
-      }
-    }
-
-    setStamp();
+    $("#asof").textContent = "Updated: " + new Date().toLocaleString();
   }catch(err){
-    log("Error: " + (err?.message || err));
+    console.error(err);
+    $("#err").textContent = "Failed to load data: " + err.message;
+    $("#asof").textContent = "—";
   }
 }
 
-/*** 4) BOOT ***/
-document.getElementById("btnRefresh").addEventListener("click", loadOverview);
-loadOverview();
+/* initial load */
+loadDashboard();
 </script>
 </body>
 </html>

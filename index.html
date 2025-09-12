@@ -4,10 +4,24 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>⚔️ The Empire Dashboard ⚔️</title>
+
+  <!-- Brand favicon (inline, works instantly) -->
+  <link rel="icon" type="image/svg+xml"
+        href="data:image/svg+xml;utf8,
+  <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128'>
+    <rect width='128' height='128' rx='24' fill='%230f172a'/>
+    <g stroke='%23ffd166' stroke-width='10' stroke-linecap='round'>
+      <path d='M30 36 L92 98'/>
+      <path d='M92 36 L30 98'/>
+    </g>
+  </svg>">
+  <meta name="theme-color" content="#0b1424">
+
   <style>
     :root{
       --bg:#0b1424; --panel:#0f172a; --card:#111; --accent:#ffd166; --muted:#9fb3c8; --line:#1f2a44;
     }
+    *{box-sizing:border-box}
     body{margin:0;font-family:Arial,system-ui,sans-serif;background:var(--bg);color:#e6f1ff}
     .layout{display:flex;min-height:100vh}
     nav{width:240px;background:var(--panel);padding:20px;box-sizing:border-box}
@@ -29,6 +43,10 @@
     button:hover{filter:brightness(0.95)}
     .view{display:none}
     .view.active{display:block}
+    .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin:10px 0 16px}
+    .kpi{background:#0f1527;border:1px solid #223157;border-radius:10px;padding:10px}
+    .kpi .label{font-size:12px;color:var(--muted)}
+    .kpi .val{font-size:20px;font-weight:700;margin-top:4px}
   </style>
 </head>
 <body>
@@ -50,31 +68,34 @@
       <!-- Overview -->
       <section id="overview" class="view active card">
         <h3>Overview</h3>
-        <p>Earnings: <span id="ov-earnings">$0.00</span></p>
-        <p>Leads: <span id="ov-leads">0</span></p>
-        <p>Clicks: <span id="ov-clicks">0</span></p>
-        <p>Conversion Rate: <span id="ov-convrate">0.00%</span></p>
-        <p>EPC: <span id="ov-epc">$0.00</span></p>
-        <p>CPA: <span id="ov-cpa">$0.00</span></p>
-        <p>RPM: <span id="ov-rpm">$0.00</span></p>
+
+        <div class="kpis">
+          <div class="kpi"><div class="label">Earnings</div><div class="val" id="ov-earnings">$0.00</div></div>
+          <div class="kpi"><div class="label">Leads</div><div class="val" id="ov-leads">0</div></div>
+          <div class="kpi"><div class="label">Clicks</div><div class="val" id="ov-clicks">0</div></div>
+          <div class="kpi"><div class="label">Conversion</div><div class="val" id="ov-convrate">0.00%</div></div>
+          <div class="kpi"><div class="label">EPC</div><div class="val" id="ov-epc">$0.00</div></div>
+          <div class="kpi"><div class="label">CPA</div><div class="val" id="ov-cpa">$0.00</div></div>
+          <div class="kpi"><div class="label">RPM</div><div class="val" id="ov-rpm">$0.00</div></div>
+        </div>
 
         <h4>By Geo</h4>
-        <table><thead><tr><th>Country</th><th class="num">Earnings ($)</th></tr></thead><tbody id="tbl-geo"></tbody></table>
+        <table><thead><tr><th>Country</th><th class="num">Earnings ($)</th></tr></thead><tbody id="tbl-geo"><tr><td colspan="2" class="muted">—</td></tr></tbody></table>
 
         <h4>By Device</h4>
-        <table><thead><tr><th>Device</th><th class="num">Earnings ($)</th></tr></thead><tbody id="tbl-device"></tbody></table>
+        <table><thead><tr><th>Device</th><th class="num">Earnings ($)</th></tr></thead><tbody id="tbl-device"><tr><td colspan="2" class="muted">—</td></tr></tbody></table>
 
         <h4>By Offer Type</h4>
-        <table><thead><tr><th>Offer Type</th><th class="num">Earnings ($)</th></tr></thead><tbody id="tbl-offerType"></tbody></table>
+        <table><thead><tr><th>Offer Type</th><th class="num">Earnings ($)</th></tr></thead><tbody id="tbl-offerType"><tr><td colspan="2" class="muted">—</td></tr></tbody></table>
 
         <h4>By Day</h4>
-        <table><thead><tr><th>Date</th><th class="num">Earnings ($)</th></tr></thead><tbody id="tbl-byDay"></tbody></table>
+        <table><thead><tr><th>Date</th><th class="num">Earnings ($)</th></tr></thead><tbody id="tbl-byDay"><tr><td colspan="2" class="muted">—</td></tr></tbody></table>
       </section>
 
       <!-- CPA Accounts -->
       <section id="cpa" class="view card">
         <h3>CPA Accounts Management</h3>
-        <div id="cpaAccounts"></div>
+        <div id="cpaAccounts" class="muted">Loaded from Sheets in your build. (UI present; backend wiring TBD.)</div>
       </section>
 
       <!-- Users -->
@@ -82,11 +103,11 @@
         <h3>Users Management</h3>
         <table>
           <thead><tr><th>Name</th><th>Email</th><th>Phone</th></tr></thead>
-          <tbody id="usersBody"></tbody>
+          <tbody id="usersBody"><tr><td colspan="3" class="muted">Loaded from Sheets in your build.</td></tr></tbody>
         </table>
         <h4>Invite Link</h4>
-        <input id="inviteLink" type="text" readonly style="width:100%" />
-        <input id="inviteRef" type="text" readonly style="width:100%;margin-top:5px;" />
+        <input id="inviteLink" type="text" readonly style="width:100%" value="" />
+        <input id="inviteRef"  type="text" readonly style="width:100%;margin-top:5px;" value="" />
       </section>
 
       <!-- Analytics -->
@@ -94,7 +115,7 @@
         <h3>Analytics & Reports</h3>
         <table>
           <thead><tr><th>Date</th><th>Clicks</th><th>Leads</th><th>Earnings</th></tr></thead>
-          <tbody id="analyticsBody"></tbody>
+          <tbody id="analyticsBody"><tr><td colspan="4" class="muted">Overview’s byDay feeds here in your next wiring.</td></tr></tbody>
         </table>
       </section>
 
@@ -116,7 +137,7 @@
       <section id="monitoring" class="view card">
         <h3>Monitoring</h3>
         <p>Overall Health: <span id="mon-health">0.00%</span></p>
-        <ul id="mon-feed"></ul>
+        <ul id="mon-feed"><li class="muted">Events will appear here.</li></ul>
       </section>
 
       <!-- Settings -->
@@ -124,53 +145,115 @@
         <h3>System & Authority Settings</h3>
         <table>
           <thead><tr><th>Key</th><th>Value</th><th>Description</th><th>Updated</th></tr></thead>
-          <tbody id="settingsBody"></tbody>
+          <tbody id="settingsBody"><tr><td colspan="4" class="muted">Populate from your GAS/Sheets in your next push.</td></tr></tbody>
         </table>
       </section>
     </main>
   </div>
 
-  <!-- Scripts -->
-  <!-- Scripts: config first, then per-tab renderers -->
-<script src="/assets/js/config.js?v=1001"></script>
-<script src="/assets/js/overview.js?v=1001"></script>
-<script src="/assets/js/cpa.js?v=1001"></script>
-<script src="/assets/js/users.js?v=1001"></script>
-<script src="/assets/js/analytics.js?v=1001"></script>
-<script src="/assets/js/wallet.js?v=1001"></script>
-<script src="/assets/js/monitoring.js?v=1001"></script>
-<script src="/assets/js/settings.js?v=1001"></script>
-
-  <!-- Tiny tab router -->
+  <!-- ALL JS INLINE (one file) -->
   <script>
-    (function(){
-      const links = Array.from(document.querySelectorAll(".navlink"));
-      const views = Array.from(document.querySelectorAll(".view"));
+  // ========== CONFIG (single source of truth) ==========
+  const EMPIRE_API_URL = "https://script.google.com/macros/s/AKfycbzdaxii5JO262nziCmwndM399wryf0TX9RGltFUDVbmuQGht8mcHrPP1FY3ODHdr-iW/exec";
 
-      function show(tabId){
-        links.forEach(a => a.classList.toggle("active", a.dataset.target === tabId));
-        views.forEach(v => v.classList.toggle("active", v.id === tabId));
-        try {
-          if (tabId === "overview"   && typeof loadOverview   === "function") loadOverview();
-          if (tabId === "cpa"        && typeof loadCPAAccounts=== "function") loadCPAAccounts();
-          if (tabId === "users"      && typeof loadUsers      === "function") loadUsers();
-          if (tabId === "analytics"  && typeof loadAnalytics  === "function") loadAnalytics();
-          if (tabId === "wallet"     && typeof loadWallet     === "function") loadWallet();
-          if (tabId === "monitoring" && typeof loadMonitoring === "function") loadMonitoring();
-          if (tabId === "settings"   && typeof loadSettings   === "function") loadSettings();
-        } catch(e){ console.error(e); }
-      }
+  // ========== UTILITIES ==========
+  const $ = (id) => document.getElementById(id);
+  const money = (n) => "$" + (Number(n)||0).toFixed(2);
+  const pct2  = (n) => (Number(n)||0).toFixed(2) + "%";
 
-      links.forEach(a => a.addEventListener("click", ev=>{
-        ev.preventDefault();
-        const id = a.dataset.target;
-        history.replaceState(null, "", "#"+id);
-        show(id);
-      }));
+  function tbodyFromMap(tbodyId, obj, sortByDate=false){
+    const tb = $(tbodyId); if (!tb) return;
+    const ent = Object.entries(obj || {});
+    ent.sort(sortByDate
+      ? (a,b)=> new Date(a[0]) - new Date(b[0])
+      : (a,b)=> Number(b[1]) - Number(a[1])
+    );
+    tb.innerHTML = ent.length
+      ? ent.map(([k,v]) => `<tr><td>${k}</td><td class="num">${money(v)}</td></tr>`).join("")
+      : `<tr><td colspan="2" class="muted">No data</td></tr>`;
+  }
 
-      const initial = (location.hash || "#overview").replace("#","");
-      show(initial);
-    })();
+  // ========== OVERVIEW LOADER ==========
+  async function loadOverview(){
+    try{
+      const url = EMPIRE_API_URL + (EMPIRE_API_URL.includes("?")?"&":"?") + "_ts=" + Date.now();
+      const res = await fetch(url, { cache:"no-store" });
+      if(!res.ok) throw new Error("HTTP " + res.status);
+      const data = await res.json();
+      console.log("[Overview payload]", data);
+
+      // Totals – tolerant to convRate OR conversionRate
+      const t  = data.totals || {};
+      const totals = {
+        earnings: t.earnings || 0,
+        leads:    t.leads    || 0,
+        clicks:   t.clicks   || 0,
+        conv:     (t.convRate ?? t.conversionRate) || 0,
+        epc:      t.epc || 0,
+        cpa:      t.cpa || 0,
+        rpm:      t.rpm || 0
+      };
+
+      $("ov-earnings").textContent = money(totals.earnings);
+      $("ov-leads").textContent    = Number(totals.leads).toLocaleString();
+      $("ov-clicks").textContent   = Number(totals.clicks).toLocaleString();
+      $("ov-convrate").textContent = pct2(totals.conv);
+      $("ov-epc").textContent      = money(totals.epc);
+      $("ov-cpa").textContent      = money(totals.cpa);
+      $("ov-rpm").textContent      = money(totals.rpm);
+
+      // Breakdowns – tolerant to your two shapes
+      const B = data.breakdowns || {};
+      const byGeo       = B.byGeo       || data.geo        || {};
+      const byDevice    = B.byDevice    || data.devices    || {};
+      const byOfferType = B.byOfferType || data.offerTypes || {};
+      const byDay       = B.byDay       || data.byDay      || {};
+
+      tbodyFromMap("tbl-geo",       byGeo);
+      tbodyFromMap("tbl-device",    byDevice);
+      tbodyFromMap("tbl-offerType", byOfferType);
+      tbodyFromMap("tbl-byDay",     byDay, true);
+    }catch(err){
+      console.error("[Overview] failed:", err);
+      // Leave placeholders; message in console is enough for now
+    }
+  }
+
+  // ========== SIMPLE TAB ROUTER ==========
+  (function(){
+    const links = Array.from(document.querySelectorAll(".navlink"));
+    const views = Array.from(document.querySelectorAll(".view"));
+
+    function show(tabId){
+      links.forEach(a => a.classList.toggle("active", a.dataset.target === tabId));
+      views.forEach(v => v.classList.toggle("active", v.id === tabId));
+      // per-tab lazy loaders
+      if (tabId === "overview")   loadOverview();
+      // Add others when their endpoints are ready:
+      // if (tabId === "cpa")      loadCPA();
+      // if (tabId === "users")    loadUsers();
+      // if (tabId === "analytics")loadAnalytics();
+      // if (tabId === "wallet")   loadWallet();
+      // if (tabId === "monitoring")loadMonitoring();
+      // if (tabId === "settings") loadSettings();
+    }
+
+    links.forEach(a => a.addEventListener("click", ev=>{
+      ev.preventDefault();
+      const id = a.dataset.target;
+      history.replaceState(null, "", "#"+id);
+      show(id);
+    }));
+
+    // Initial route
+    const initial = (location.hash || "#overview").slice(1);
+    show(initial);
+
+    // Also fetch overview once on ready (covers first paint)
+    window.addEventListener("DOMContentLoaded", ()=> {
+      if (initial === "overview") loadOverview();
+    });
+  })();
   </script>
 </body>
 </html>

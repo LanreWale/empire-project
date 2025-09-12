@@ -1,63 +1,100 @@
-(function () {
-  const API = window.EMPIRE && window.EMPIRE.API_URL;
-  const $  = (id) => document.getElementById(id);
-  const $m = (n) => "$" + (Number(n)||0).toFixed(2);
-  const $p = (n) => (Number(n)||0).toFixed(2) + "%";
-  const $i = (n) => (Number(n)||0).toLocaleString();
+// assets/js/overview.js
 
-  function rowsToTbody(tbodyId, entries, money=true, dateSort=false){
-    const tb = $(tbodyId); if (!tb) return;
-    const arr = Object.entries(entries||{});
-    if (dateSort) arr.sort((a,b)=> new Date(a[0]) - new Date(b[0]));
-    else          arr.sort((a,b)=> Number(b[1]) - Number(a[1]));
-    tb.innerHTML = arr.map(([k,v]) =>
-      `<tr><td>${k}</td><td class="num">${money? $m(v) : $i(v)}</td></tr>`
-    ).join("") || `<tr><td colspan="2" class="muted">No data</td></tr>`;
+function $id(id){ return document.getElementById(id); }
+function money(n){
+  if (n == null || isNaN(n)) return "$0.00";
+  return "$" + Number(n).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2});
+}
+function pct(n){
+  if (n == null || isNaN(n)) return "0.00%";
+  return Number(n).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2}) + "%";
+}
+function fillTable(tbodyId, rows){
+  const tb = $id(tbodyId);
+  tb.innerHTML = rows.length ? rows.map(r=>`<tr><td>${r[0]}</td><td class="num">${money(r[1])}</td></tr>`).join("") : `<tr><td colspan="2" class="muted">—</td></tr>`;
+}
+
+// Normalizes slightly different key names that have appeared in your samples
+function normalizeTotals(t){
+  if (!t) return {};
+  return {
+    earnings:       t.earnings ?? t.Earnings ?? 0,
+    leads:          t.leads ?? t.Leads ?? 0,
+    clicks:         t.clicks ?? t.Clicks ?? 0,
+    convRate:       t.convRate ?? t.conversionRate ?? t.ConversionRate ?? 0,
+    epc:            t.epc ?? t.EPC ?? 0,
+    cpa:            t.cpa ?? t.CPA ?? 0,
+    rpm:            t.rpm ?? t.RPM ?? 0,
+  };
+}
+
+async function fetchOverview(){
+  const url = window.EMPIRE?.API_URL;
+  if (!url) throw new Error("API_URL missing in window.EMPIRE");
+  const res  = await fetch(url, {headers: {"Accept":"application/json"}});
+  const text = await res.text();             // guard against non-JSON errors
+  let data;
+  try { data = JSON.parse(text); } catch(e){
+    console.error("Non-JSON response:", text);
+    throw new Error("API returned non-JSON. See console for payload.");
   }
+  console.log("[EMPIRE] RAW API:", data);
+  if (data.ok !== true) {
+    throw new Error("API returned ok=false");
+  }
+  // expected shape:
+  // { ok:true, totals:{...}, breakdowns:{ byGeo:{}, byDevice:{}, byOfferType:{}, byDay:{} } }
+  return data;
+}
 
-  async function loadOverview(){
-    try{
-      if(!API){ console.warn("[OV] Missing EMPIRE.API_URL"); return; }
-      const res = await fetch(API + "?t=" + Date.now(), {cache:"no-store"});
-      if(!res.ok) throw new Error("HTTP "+res.status);
-      const data = await res.json();
-      console.log("[OV] payload:", data);
+window.loadOverview = async function loadOverview(){
+  try {
+    const { totals, breakdowns } = await fetchOverview();
 
-      // Totals: supports convRate OR conversionRate
-      const t = data.totals || {};
-      const totals = {
-        earnings: t.earnings||0,
-        leads: t.leads||0,
-        clicks: t.clicks||0,
-        conv: t.convRate ?? t.conversionRate ?? 0,
-        epc: t.epc||0, cpa: t.cpa||0, rpm: t.rpm||0
-      };
+    const t = normalizeTotals(totals);
 
-      $("ov-earnings").textContent = $m(totals.earnings);
-      $("ov-leads").textContent    = $i(totals.leads);
-      $("ov-clicks").textContent   = $i(totals.clicks);
-      $("ov-convrate").textContent = $p(totals.conv);
-      $("ov-epc").textContent      = $m(totals.epc);
-      $("ov-cpa").textContent      = $m(totals.cpa);
-      $("ov-rpm").textContent      = $m(totals.rpm);
+    // Fallback compute if some totals missing
+    if (!t.epc && t.clicks) t.epc = t.earnings / t.clicks;
+    if (!t.cpa && t.leads)  t.cpa = t.earnings / t.leads;
+    if (!t.rpm)             t.rpm = t.earnings * 1000 / (t.clicks || 1000); // soft fallback
 
-      // Breakdowns: supports both shapes
-      const B = data.breakdowns || {};
-      const byGeo       = B.byGeo       || data.geo        || {};
-      const byDevice    = B.byDevice    || data.devices    || {};
-      const byOfferType = B.byOfferType || data.offerTypes || {};
-      const byDay       = B.byDay       || data.byDay      || {};
+    // Totals
+    $id("ov-earnings").textContent  = money(t.earnings);
+    $id("ov-leads").textContent     = Number(t.leads || 0).toLocaleString();
+    $id("ov-clicks").textContent    = Number(t.clicks || 0).toLocaleString();
+    $id("ov-convrate").textContent  = pct(t.convRate || 0);
+    $id("ov-epc").textContent       = money(t.epc || 0);
+    $id("ov-cpa").textContent       = money(t.cpa || 0);
+    $id("ov-rpm").textContent       = money(t.rpm || 0);
 
-      rowsToTbody("tbl-geo",       byGeo);
-      rowsToTbody("tbl-device",    byDevice);
-      rowsToTbody("tbl-offerType", byOfferType);
-      rowsToTbody("tbl-byDay",     byDay, true, true);
-    }catch(err){
-      console.error("[OV] failed:", err);
+    // Breakdowns
+    const byGeo      = Object.entries(breakdowns?.byGeo || {});
+    const byDevice   = Object.entries(breakdowns?.byDevice || {});
+    const byOffer    = Object.entries(breakdowns?.byOfferType || {});
+    const byDayPairs = Object.entries(breakdowns?.byDay || {}); // { dateString: earnings }
+
+    fillTable("tbl-geo",       byGeo);
+    fillTable("tbl-device",    byDevice);
+    fillTable("tbl-offerType", byOffer);
+
+    // By Day (format date a bit)
+    const byDay = byDayPairs.map(([k,v])=>{
+      const d = new Date(k);
+      const label = isNaN(d) ? k : d.toDateString();
+      return [label, v];
+    });
+    const tb = document.getElementById("tbl-byDay");
+    tb.innerHTML = byDay.length ? byDay.map(r=>`<tr><td>${r[0]}</td><td class="num">${money(r[1])}</td></tr>`).join("") : `<tr><td colspan="2" class="muted">—</td></tr>`;
+  } catch(err){
+    console.error("[EMPIRE] Overview failed:", err);
+    // Surface a gentle message in the UI (center totals box)
+    const totalsBox = document.querySelector('#overview .card') || document.getElementById('overview');
+    if (totalsBox) {
+      const warn = document.createElement('div');
+      warn.style.color = '#ff6b6b';
+      warn.style.margin = '6px 0';
+      warn.textContent = "Failed to load data: " + err.message;
+      totalsBox.prepend(warn);
     }
   }
-
-  window.loadOverview = loadOverview;
-  // fire once on first paint too
-  window.addEventListener("DOMContentLoaded", loadOverview);
-})();
+};

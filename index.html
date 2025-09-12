@@ -8,7 +8,7 @@
   <!-- Favicon -->
   <link rel="icon" href="/assets/brand/empire-logo.png" type="image/png">
 
-  <!-- Fonts & CSS Reset -->
+  <!-- Fonts & Styles -->
   <style>
     * {margin:0;padding:0;box-sizing:border-box}
     body {
@@ -19,24 +19,17 @@
       display:flex;
       justify-content:center;
       align-items:center;
+      flex-direction:column;
     }
     .splash {
-      width:100%;
-      max-width:960px;
-      padding:30px;
       text-align:center;
+      margin-bottom:40px;
     }
-    .splash .hero {
-      background:#0c1323 url("/assets/brand/empire-hero-final.jpg") center/cover no-repeat;
-      border-radius:16px;
-      border:1px solid rgba(255,255,255,.06);
-      min-height:380px;
-      padding:40px 20px;
-      display:flex;
-      flex-direction:column;
-      justify-content:center;
-      align-items:center;
-      box-shadow:0 0 40px rgba(0,0,0,.6);
+    .splash img {
+      width:100px;
+      height:100px;
+      border-radius:14px;
+      box-shadow:0 0 0 3px rgba(255,209,102,.15);
     }
     .splash h1 {
       font-size:2.4rem;
@@ -47,47 +40,107 @@
     .splash p.sub {
       font-size:1rem;
       color:#bbb;
-      margin-bottom:24px;
+      margin-bottom:20px;
     }
-    .enter-btn {
-      background:#ffd166;
-      color:#000;
-      font-weight:600;
-      padding:14px 32px;
+    .login-container {
+      display:flex;
+      justify-content:center;
+      gap:20px;
+      flex-wrap:wrap;
+      width:100%;
+      max-width:900px;
+    }
+    .login-card {
+      flex:1 1 320px;
+      background:#111a2e;
+      border-radius:14px;
+      padding:25px;
+      text-align:center;
+      box-shadow:0 0 20px rgba(0,0,0,.5);
+      border:1px solid rgba(255,255,255,.06);
+      transition:transform .25s ease;
+    }
+    .login-card:hover {
+      transform:translateY(-4px);
+    }
+    .login-card img {
+      width:80px;
+      margin-bottom:12px;
+    }
+    .login-card h2 {
+      font-size:1.3rem;
+      margin-bottom:8px;
+      color:#ffd166;
+    }
+    .login-card p {
+      font-size:.95rem;
+      color:#aaa;
+      margin-bottom:18px;
+      min-height:40px;
+    }
+    .login-btn {
+      display:inline-block;
+      padding:12px 24px;
       border:none;
       border-radius:8px;
+      font-size:1rem;
+      font-weight:600;
       cursor:pointer;
-      font-size:1.1rem;
       transition:all .25s ease;
     }
-    .enter-btn:hover {
+    .commander {
+      background:#ffd166;
+      color:#000;
+    }
+    .commander:hover {
       background:#ffb703;
-      transform:translateY(-2px);
+    }
+    .user {
+      background:#1976d2;
+      color:#fff;
+    }
+    .user:hover {
+      background:#0d47a1;
     }
     footer {
-      margin-top:25px;
+      margin-top:40px;
       font-size:.9rem;
       color:#888;
+      text-align:center;
     }
   </style>
 </head>
 <body>
+
+  <!-- Splash / Hero -->
   <div class="splash">
-    <div class="hero">
-      <!-- Logo -->
-      <img src="/assets/brand/empire-logo.png" alt="THE EMPIRE" style="width:90px;height:90px;border-radius:14px;box-shadow:0 0 0 3px rgba(255,209,102,.15)">
+    <img src="/assets/brand/empire-logo.png" alt="THE EMPIRE">
+    <h1>THE EMPIRE</h1>
+    <p class="sub">Affiliate Command Intelligence • Real-Time Earnings • Global Performance Engine</p>
+  </div>
 
-      <h1>THE EMPIRE</h1>
-      <p class="sub">Affiliate Command Intelligence • Real-Time Earnings • Global Performance Engine</p>
-
-      <!-- Enter Button -->
-      <button class="enter-btn" onclick="enterCommand()">ENTER COMMAND</button>
+  <!-- Login Split -->
+  <div class="login-container">
+    <!-- Commander Login -->
+    <div class="login-card">
+      <img src="/assets/brand/welcome_banner.jpg" alt="Supreme Command">
+      <h2>Supreme Command Access</h2>
+      <p>Full system control with unlimited privileges</p>
+      <button class="login-btn commander" onclick="enterCommander()">⚔️ Commander Login</button>
     </div>
 
-    <footer>
-      BUILT FOR LEGENDS. POWERED BY TRUTH. DEPLOYED FOR VICTORY.
-    </footer>
+    <!-- User Login -->
+    <div class="login-card">
+      <img src="/assets/brand/empire-hero-final.jpg" alt="User Access">
+      <h2>User Access</h2>
+      <p>Personal dashboard with earnings tracking</p>
+      <button class="login-btn user" onclick="enterUser()">👤 User Login</button>
+    </div>
   </div>
+
+  <footer>
+    BUILT FOR LEGENDS. POWERED BY TRUTH. DEPLOYED FOR VICTORY.
+  </footer>
 
   <!-- GAS Config -->
   <script>
@@ -95,9 +148,11 @@
       API_URL: "https://script.google.com/macros/s/AKfycbz-jj7Cr_KzqCku4SQPQ14MEIuCPdq5OEgiiqjo_O2A0FItBrHlmfkoJHViDxuX4P6z/exec"
     };
 
-    function enterCommand() {
-      // Redirect to main dashboard
-      window.location.href = "/dashboard.html";
+    function enterCommander() {
+      window.location.href = "/dashboard.html?role=commander";
+    }
+    function enterUser() {
+      window.location.href = "/dashboard.html?role=user";
     }
   </script>
 

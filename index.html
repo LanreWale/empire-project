@@ -1,132 +1,204 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>The Empire Command Dashboard</title>
-  <link rel="stylesheet" href="styles.css"/>
+  <meta charset="UTF-8">
+  <title>⚔️ THE EMPIRE Dashboard ⚔️</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- ====== INLINE CSS ====== -->
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #0d1117;
+      color: #e6edf3;
+      display: flex;
+      height: 100vh;
+    }
+
+    h1, h3 {
+      margin: 0 0 10px 0;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .sidebar {
+      width: 220px;
+      background: #161b22;
+      padding: 20px 10px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sidebar .brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 1.2rem;
+      font-weight: bold;
+      margin-bottom: 20px;
+      color: #f0b90b;
+    }
+
+    .nav {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .nav button {
+      background: none;
+      border: none;
+      color: #c9d1d9;
+      padding: 10px 15px;
+      text-align: left;
+      font-size: 0.95rem;
+      cursor: pointer;
+      border-radius: 6px;
+      transition: background 0.2s;
+    }
+
+    .nav button:hover {
+      background: #21262d;
+    }
+
+    .nav button.active {
+      background: #238636;
+      color: white;
+    }
+
+    main {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+    }
+
+    .view.hidden {
+      display: none;
+    }
+
+    .kpis {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 12px;
+      margin: 20px 0;
+    }
+
+    .kpis div {
+      background: #161b22;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      text-align: center;
+    }
+
+    .kpis span {
+      display: block;
+      font-size: 1.2rem;
+      font-weight: bold;
+      margin-top: 4px;
+      color: #f0b90b;
+    }
+
+    .grids {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
+    }
+
+    .grids h3 {
+      font-size: 1rem;
+      margin-bottom: 8px;
+      color: #58a6ff;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #161b22;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    table td {
+      padding: 8px 10px;
+      font-size: 0.85rem;
+      border-bottom: 1px solid #30363d;
+    }
+
+    table tr:last-child td {
+      border-bottom: none;
+    }
+
+    table td:first-child {
+      font-weight: 500;
+    }
+
+    .note.err {
+      color: #f85149;
+      margin-top: 15px;
+      font-size: 0.9rem;
+    }
+  </style>
 </head>
 <body>
+  <!-- ====== SIDEBAR ====== -->
   <aside class="sidebar">
-    <div class="brand">
-      <img src="assets/logo.png" alt="Empire Logo" style="height:40px"/>
-      <span>THE EMPIRE</span>
-    </div>
-    <nav class="nav">
-      <button data-tab="overview" class="active">Overview</button>
+    <div class="brand">⚔️ THE EMPIRE</div>
+    <div class="nav">
+      <button data-tab="dashboard" class="active">Overview</button>
       <button data-tab="cpa">CPA Accounts</button>
       <button data-tab="users">Users</button>
       <button data-tab="analytics">Analytics</button>
       <button data-tab="wallet">Wallet</button>
       <button data-tab="monitoring">Monitoring</button>
       <button data-tab="settings">Settings</button>
-    </nav>
+    </div>
   </aside>
 
+  <!-- ====== MAIN ====== -->
   <main>
-    <!-- OVERVIEW -->
-    <section id="view-overview" class="view">
-      <h1>WELCOME TO THE EMPIRE</h1>
+    <section id="view-dashboard" class="view">
+      <h1>Command Dashboard</h1>
       <div class="kpis">
-        <div>Earnings: <span id="kpi-earn">$0.00</span></div>
-        <div>Leads: <span id="kpi-leads">0</span></div>
-        <div>Clicks: <span id="kpi-clicks">0</span></div>
-        <div>EPC: <span id="kpi-epc">$0.00</span></div>
-        <div>CPA: <span id="kpi-cpa">$0.00</span></div>
-        <div>RPM: <span id="kpi-rpm">$0.00</span></div>
+        <div>Earnings <span id="kpi-earn">$0.00</span></div>
+        <div>Leads <span id="kpi-leads">0</span></div>
+        <div>Clicks <span id="kpi-clicks">0</span></div>
+        <div>EPC <span id="kpi-epc">$0.00</span></div>
+        <div>CPA <span id="kpi-cpa">$0.00</span></div>
+        <div>RPM <span id="kpi-rpm">$0.00</span></div>
       </div>
 
       <div class="grids">
         <div>
           <h3>By Geo</h3>
-          <table><tbody id="geoBody"></tbody></table>
+          <table id="tbl-geo"><tbody></tbody></table>
         </div>
         <div>
           <h3>By Device</h3>
-          <table><tbody id="devBody"></tbody></table>
+          <table id="tbl-device"><tbody></tbody></table>
         </div>
         <div>
           <h3>By Offer Type</h3>
-          <table><tbody id="offerBody"></tbody></table>
+          <table id="tbl-offer"><tbody></tbody></table>
         </div>
         <div>
           <h3>By Day</h3>
-          <table><tbody id="dayBody"></tbody></table>
+          <table id="tbl-day"><tbody></tbody></table>
         </div>
       </div>
-      <div id="errMsg" class="note err"></div>
+      <div id="overviewNote" class="note err hidden"></div>
     </section>
 
-    <!-- Other sections -->
-    <section id="view-cpa" class="view hidden">CPA Accounts here</section>
-    <section id="view-users" class="view hidden">Users here</section>
-    <section id="view-analytics" class="view hidden">Analytics here</section>
-    <section id="view-wallet" class="view hidden">Wallet here</section>
-    <section id="view-monitoring" class="view hidden">Monitoring here</section>
-    <section id="view-settings" class="view hidden">Settings here</section>
+    <!-- other tabs follow (CPA, Users, Analytics, Wallet, Monitoring...) -->
+    <section id="view-cpa" class="view hidden"><h1>CPA Accounts</h1></section>
+    <section id="view-users" class="view hidden"><h1>Users</h1></section>
+    <section id="view-analytics" class="view hidden"><h1>Analytics</h1></section>
+    <section id="view-wallet" class="view hidden"><h1>Wallet</h1></section>
+    <section id="view-monitoring" class="view hidden"><h1>Monitoring</h1></section>
+    <section id="view-settings" class="view hidden"><h1>Settings</h1></section>
   </main>
 
-  <script>
-    /* ===== GAS wiring ===== */
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbz-jj7Cr_KzqCku4SQPQ14MEIuCPdq5OEgiiqjo_O2A0FItBrHlmfkoJHViDxuX4P6z/exec";
-
-    const $ = id => document.getElementById(id);
-    const esc = s => String(s??"").replace(/[&<>"']/g,m=>({ "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;" }[m]));
-    const fmtUSD = n => new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(+n||0);
-    const num = n => (+n||0).toLocaleString();
-
-    /* ===== NAV ===== */
-    const views = {
-      overview: $('view-overview'),
-      cpa: $('view-cpa'),
-      users: $('view-users'),
-      analytics: $('view-analytics'),
-      wallet: $('view-wallet'),
-      monitoring: $('view-monitoring'),
-      settings: $('view-settings')
-    };
-    document.querySelectorAll('.nav button').forEach(b=>{
-      b.addEventListener('click', ()=>{
-        document.querySelectorAll('.nav button').forEach(x=>x.classList.remove('active'));
-        b.classList.add('active');
-        Object.values(views).forEach(v=>v.classList.add('hidden'));
-        (views[b.dataset.tab]||views.overview).classList.remove('hidden');
-        if(b.dataset.tab==="overview") loadOverview();
-      });
-    });
-
-    /* ===== LOAD OVERVIEW ===== */
-    async function loadOverview(){
-      try{
-        const r = await fetch(GAS_URL,{method:'GET',headers:{'cache-control':'no-store'}});
-        const data = await r.json();
-
-        if(!data.ok) throw new Error("Invalid response");
-
-        const t = data.totals || {};
-        $('kpi-earn').textContent  = fmtUSD(t.earnings||0);
-        $('kpi-leads').textContent = num(t.leads||0);
-        $('kpi-clicks').textContent= num(t.clicks||0);
-        $('kpi-epc').textContent   = fmtUSD(t.epc||0);
-        $('kpi-cpa').textContent   = fmtUSD(t.cpa||0);
-        $('kpi-rpm').textContent   = fmtUSD(t.rpm||0);
-
-        const geo = data.geo||{};
-        const dev = data.devices||{};
-        const off = data.offerTypes||{};
-        const day = data.byDay||{};
-
-        $('geoBody').innerHTML = Object.entries(geo).map(([k,v])=>`<tr><td>${esc(k)}</td><td>${fmtUSD(v)}</td></tr>`).join('');
-        $('devBody').innerHTML = Object.entries(dev).map(([k,v])=>`<tr><td>${esc(k)}</td><td>${fmtUSD(v)}</td></tr>`).join('');
-        $('offerBody').innerHTML = Object.entries(off).map(([k,v])=>`<tr><td>${esc(k)}</td><td>${fmtUSD(v)}</td></tr>`).join('');
-        $('dayBody').innerHTML = Object.entries(day).map(([k,v])=>`<tr><td>${esc(k)}</td><td>${fmtUSD(v)}</td></tr>`).join('');
-        $('errMsg').textContent="";
-      }catch(e){
-        $('errMsg').textContent="Failed to load overview: "+e.message;
-      }
-    }
-
-    window.addEventListener("DOMContentLoaded",()=>{ loadOverview(); });
-  </script>
+  <!-- ====== JS (wired to GAS + dashboard) ====== -->
+  <script src="app/dashboard.js"></script>
 </body>
 </html>

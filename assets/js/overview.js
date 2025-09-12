@@ -1,108 +1,136 @@
+/* assets/js/overview.js
+ * Populates the Overview tab from the GAS endpoint.
+ * Expects config.js to define GAS_ENDPOINT. Falls back to the hardcoded URL below.
+ */
+
 (function () {
-  const cfg = (window.EmpireConfig || {});
-  const API = cfg.BASE_API;
+  // ---- CONFIG ----
+  const ENDPOINT =
+    (typeof window !== "undefined" && window.GAS_ENDPOINT) ||
+    "https://script.google.com/macros/s/AKfycbz-jj7Cr_KzqCku4SQPQ14MEIuCPdq5OEgiiqjo_O2A0FItBrHlmfkoJHViDxuX4P6z/exec";
 
-  const $ = (id) => document.getElementById(id);
+  // ---- HELPERS ----
+  const $ = (sel) => document.querySelector(sel);
 
-  const fmtNumber = (n) =>
-    (typeof n === "number" ? n : Number(n || 0)).toLocaleString(cfg.LOCALE, {
-      maximumFractionDigits: 2,
-      minimumFractionDigits: 0,
-    });
+  const formatUSD = (n) =>
+    isFinite(n) ? `$${Number(n).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "$0.00";
 
-  const fmtMoney = (n) =>
-    (typeof n === "number" ? n : Number(n || 0)).toLocaleString(cfg.LOCALE, {
-      style: "currency",
-      currency: cfg.CURRENCY || "USD",
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    });
+  const formatNum = (n) =>
+    isFinite(n) ? Number(n).toLocaleString(undefined) : "0";
 
-  const fmtPct = (n) =>
-    (typeof n === "number" ? n : Number(n || 0)).toLocaleString(cfg.LOCALE, {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }) + "%";
+  const formatPct = (n) =>
+    isFinite(n) ? `${Number(n).toFixed(2)}%` : "0.00%";
 
-  function tableFromEntries(entries, col1, col2, isMoney) {
-    if (!entries || !entries.length) return "<div class='muted'>No data</div>";
-    const rows = entries
+  function fillTable(tbodyEl, rows) {
+    tbodyEl.innerHTML = rows
       .map(
-        ([k, v]) =>
-          `<tr><td>${k}</td><td class="num">${
-            isMoney ? fmtMoney(v) : fmtNumber(v)
-          }</td></tr>`
+        (r) =>
+          `<tr><td>${r[0]}</td><td class="num">${formatUSD(r[1])}</td></tr>`
       )
       .join("");
-    return `
-      <table>
-        <thead><tr><th>${col1}</th><th class="num">${col2}</th></tr></thead>
-        <tbody>${rows}</tbody>
-      </table>`;
   }
 
-  async function fetchOverview() {
-    const url = API + (API.includes("?") ? "&" : "?") + "t=" + Date.now();
-    const r = await fetch(url, { cache: "no-store" });
-    if (!r.ok) throw new Error("API HTTP " + r.status);
-    return r.json();
-  }
-
-  async function render() {
+  function safeGet(obj, path, fallback = 0) {
     try {
-      const data = await fetchOverview();
-      if (!data || data.ok !== true) throw new Error("Bad payload");
-
-      const t = data.totals || {};
-      $("ov-earnings").textContent = fmtMoney(t.earnings);
-      $("ov-leads").textContent = fmtNumber(t.leads);
-      $("ov-clicks").textContent = fmtNumber(t.clicks);
-      $("ov-convrate").textContent = fmtPct(t.conversionRate);
-      $("ov-epc").textContent = fmtMoney(t.epc);
-      $("ov-cpa").textContent = fmtMoney(t.cpa);
-      $("ov-rpm").textContent = fmtMoney(t.rpm);
-
-      // By Geo (sorted desc)
-      const geo = Object.entries(data.geo || {}).sort((a, b) => b[1] - a[1]);
-      $("tbl-geo").innerHTML = tableFromEntries(geo, "Country", "Earnings ($)", true);
-
-      // By Device
-      const dev = Object.entries(data.devices || {}).sort((a, b) => b[1] - a[1]);
-      $("tbl-device").innerHTML = tableFromEntries(dev, "Device", "Earnings ($)", true);
-
-      // By Offer Type
-      const offer = Object.entries(data.offerTypes || {}).sort((a, b) => b[1] - a[1]);
-      $("tbl-offerType").innerHTML = tableFromEntries(offer, "Offer", "Earnings ($)", true);
-
-      // By Day (sort by date asc)
-      const byDay = Object.entries(data.byDay || {}).sort(
-        (a, b) => new Date(a[0]) - new Date(b[0])
-      );
-      $("tbl-byDay").innerHTML = tableFromEntries(byDay, "Date", "Earnings ($)", true);
-
-      // Debug (optional): open console to verify payload once
-      // console.log("Overview data:", data);
-
-    } catch (e) {
-      console.error(e);
-      // Leave the placeholders, but show a small note once
-      const noteId = "ov-error-note";
-      if (!$(noteId)) {
-        const p = document.createElement("p");
-        p.id = noteId;
-        p.className = "muted";
-        p.textContent = "Unable to load overview at the moment.";
-        $("overview").appendChild(p);
-      }
+      const val = path.split(".").reduce((a, k) => (a ? a[k] : undefined), obj);
+      return val == null ? fallback : val;
+    } catch {
+      return fallback;
     }
   }
 
-  // Expose for your tab router
-  window.loadOverview = render;
+  async function fetchOverview() {
+    const url = ENDPOINT + (ENDPOINT.includes("?") ? "&" : "?") + "_ts=" + Date.now();
+    const res = await fetch(url, { credentials: "omit" });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return res.json();
+  }
 
-  // If Overview is the landing tab, render immediately
-  document.addEventListener("DOMContentLoaded", () => {
-    const sec = document.getElementById("overview");
-    if (sec && sec.classList.contains("active")) render();
-  });
+  // ---- MAIN LOADER ----
+  async function loadOverview() {
+    try {
+      // show placeholders (prevents “all zeros” feelings during fetch)
+      $("#ov-earnings").textContent = "…";
+      $("#ov-leads").textContent = "…";
+      $("#ov-clicks").textContent = "…";
+      $("#ov-convrate").textContent = "…";
+      $("#ov-epc").textContent = "…";
+      $("#ov-cpa").textContent = "…";
+      $("#ov-rpm").textContent = "…";
+      $("#tbl-geo").innerHTML =
+        '<tr><td class="muted" colspan="2">Loading…</td></tr>';
+      $("#tbl-device").innerHTML =
+        '<tr><td class="muted" colspan="2">Loading…</td></tr>';
+      $("#tbl-offerType").innerHTML =
+        '<tr><td class="muted" colspan="2">Loading…</td></tr>';
+      $("#tbl-byDay").innerHTML =
+        '<tr><td class="muted" colspan="2">Loading…</td></tr>';
+
+      const data = await fetchOverview();
+      if (!data || data.ok !== true) throw new Error("Invalid payload");
+
+      // Totals
+      const totals = data.totals || {};
+      $("#ov-earnings").textContent = formatUSD(totals.earnings);
+      $("#ov-leads").textContent = formatNum(totals.leads);
+      $("#ov-clicks").textContent = formatNum(totals.clicks);
+      $("#ov-convrate").textContent = formatPct(totals.conversionRate);
+      $("#ov-epc").textContent = formatUSD(totals.epc);
+      $("#ov-cpa").textContent = formatUSD(totals.cpa);
+      $("#ov-rpm").textContent = formatUSD(totals.rpm);
+
+      // By Geo
+      const geo = safeGet(data, "geo", {});
+      const geoRows = Object.entries(geo)
+        .sort((a, b) => b[1] - a[1]);
+      $("#tbl-geo").innerHTML = "";
+      fillTable($("#tbl-geo"), geoRows);
+
+      // By Device
+      const devices = safeGet(data, "devices", {});
+      const deviceRows = Object.entries(devices)
+        .sort((a, b) => b[1] - a[1]);
+      $("#tbl-device").innerHTML = "";
+      fillTable($("#tbl-device"), deviceRows);
+
+      // By Offer Type
+      const offerTypes = safeGet(data, "offerTypes", {});
+      const offerRows = Object.entries(offerTypes)
+        .sort((a, b) => b[1] - a[1]);
+      $("#tbl-offerType").innerHTML = "";
+      fillTable($("#tbl-offerType"), offerRows);
+
+      // By Day
+      const byDay = safeGet(data, "byDay", {});
+      const dayRows = Object.entries(byDay)
+        .sort((a, b) => (a[0] < b[0] ? -1 : 1))
+        .map(([d, v]) => [d, v]);
+      $("#tbl-byDay").innerHTML = dayRows
+        .map(
+          (r) =>
+            `<tr><td>${r[0]}</td><td class="num">${formatUSD(r[1])}</td></tr>`
+        )
+        .join("");
+
+    } catch (err) {
+      console.error("Overview load failed:", err);
+      // graceful fallback UI
+      const failMsg =
+        '<tr><td class="muted" colspan="2">No data</td></tr>';
+      $("#tbl-geo").innerHTML = failMsg;
+      $("#tbl-device").innerHTML = failMsg;
+      $("#tbl-offerType").innerHTML = failMsg;
+      $("#tbl-byDay").innerHTML = failMsg;
+      $("#ov-earnings").textContent = "$0.00";
+      $("#ov-leads").textContent = "0";
+      $("#ov-clicks").textContent = "0";
+      $("#ov-convrate").textContent = "0.00%";
+      $("#ov-epc").textContent = "$0.00";
+      $("#ov-cpa").textContent = "$0.00";
+      $("#ov-rpm").textContent = "$0.00";
+    }
+  }
+
+  // expose for the tab router
+  window.loadOverview = loadOverview;
 })();

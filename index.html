@@ -1,259 +1,12 @@
-<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>⚔️ THE EMPIRE — Command & Control</title>
-<link rel="icon" href="/assets/brand/empire-logo.png" type="image/png"/>
-
-<style>
-  :root{
-    --bg:#0b1424; --panel:#0f172a; --card:#0c1321; --accent:#ffd166; --muted:#9fb3c8;
-    --line:#1f2a44; --ink:#e6f1ff; --ok:#1cc88a; --warn:#ffb703; --bad:#ff6b6b;
-  }
-  *{box-sizing:border-box}
-  body{margin:0;font-family:Inter,Segoe UI,Arial,system-ui,sans-serif;background:var(--bg);color:var(--ink)}
-  .layout{display:flex;min-height:100vh}
-  nav{width:260px;background:var(--panel);padding:22px 18px}
-  main{flex:1;padding:20px;overflow-y:auto}
-  .brand{display:flex;align-items:center;gap:12px;margin-bottom:18px;padding-bottom:16px;border-bottom:1px solid var(--line)}
-  .brand img{width:38px;height:38px;border-radius:10px;box-shadow:0 0 0 2px rgba(255,209,102,.15)}
-  .brand h1{margin:0;font-size:15px;line-height:1.2;letter-spacing:.2px}
-  .brand .sub{display:block;color:var(--muted);font-size:11px;margin-top:2px}
-  .navlink{display:block;padding:11px 12px;margin:6px 0;border-radius:10px;color:var(--ink);text-decoration:none;font-weight:600;letter-spacing:.2px}
-  .navlink:hover{background:#1b2742}
-  .navlink.active{background:#223157;box-shadow:inset 0 0 0 1px #2d416f}
-  .card{background:var(--card);border-radius:14px;padding:16px;margin-bottom:20px;box-shadow:0 6px 20px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.02)}
-  .card h3{margin:0 0 12px;color:var(--accent);letter-spacing:.3px}
-  h4{margin:16px 0 8px}
-  table{width:100%;border-collapse:collapse;margin-top:8px}
-  th,td{padding:9px 10px;border:1px solid var(--line)}
-  th{background:#142042}
-  .muted{color:var(--muted)}
-  .num{text-align:right}
-  input,select,button{padding:10px 12px;margin-top:8px;border-radius:10px;border:1px solid var(--line);background:#0b1320;color:var(--ink)}
-  button{background:linear-gradient(180deg,var(--accent),#ffb703);color:#1b1700;border:none;font-weight:800;cursor:pointer;letter-spacing:.3px}
-  button:hover{filter:brightness(.96)}
-  .row{display:flex;flex-wrap:wrap;gap:12px}
-  .col{flex:1 1 240px}
-  .kpi{font-size:22px;font-weight:800}
-  .pill{display:inline-block;padding:2px 8px;border-radius:999px;background:#223157;color:#aecdff;font-size:12px;margin-left:8px}
-  .badge{display:inline-block;padding:4px 9px;border-radius:999px;font-size:12px}
-  .badge.ok{background:rgba(28,200,138,.12);border:1px solid rgba(28,200,138,.6);color:#9ff5cf}
-  .badge.warn{background:rgba(255,183,3,.12);border:1px solid rgba(255,183,3,.6);color:#ffe39f}
-  .badge.down{background:rgba(255,107,107,.12);border:1px solid rgba(255,107,107,.6);color:#ffb6b6}
-  .view{display:none}
-  .view.active{display:block}
-  .msg{white-space:pre-wrap;border-radius:10px;padding:10px;margin-top:8px}
-  .msg.ok{background:rgba(28,200,138,.08);border:1px solid rgba(28,200,138,.25)}
-  .msg.bad{background:rgba(255,107,107,.08);border:1px solid rgba(255,107,107,.25)}
-  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
-  .note{padding:10px;border-radius:10px;background:#101a33;border:1px dashed #2a3a66;color:#cde}
-  .status{padding:2px 8px;border-radius:999px;background:#223157}
-  .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
-  .rolechip{font-size:12px;padding:4px 8px;border-radius:999px;background:#223157;color:#cde}
-</style>
-</head>
-<body>
-  <div class="layout">
-    <!-- Sidebar -->
-    <nav>
-      <div class="brand">
-        <img src="/assets/brand/empire-logo.png" alt="THE EMPIRE logo">
-        <h1>THE EMPIRE <span class="sub">Command & Control</span></h1>
-      </div>
-
-      <a class="navlink" href="#overview"   data-target="overview">Overview</a>
-      <a class="navlink" href="#cpa"        data-target="cpa">CPA Accounts</a>
-      <a class="navlink" href="#users"      data-target="users">Users</a>
-      <a class="navlink" href="#analytics"  data-target="analytics">Analytics</a>
-      <a class="navlink" href="#wallet"     data-target="wallet">Wallet</a>
-      <a class="navlink" href="#monitoring" data-target="monitoring">Monitoring</a>
-      <a class="navlink" href="#settings"   data-target="settings">Settings</a>
-
-      <div style="margin-top:10px" class="muted">Signed in: <span id="whoEmail">—</span> <span id="whoRole" class="pill">—</span></div>
-      <button id="logoutBtn" style="margin-top:12px;width:100%">Sign out</button>
-    </nav>
-
-    <!-- Main -->
-    <main>
-      <div class="topbar">
-        <div class="muted" id="routeInfo"></div>
-        <div class="rolechip" id="roleChip">—</div>
-      </div>
-
-      <!-- Overview -->
-      <section id="overview" class="view active card">
-        <h3>Overview</h3>
-        <div class="row">
-          <div class="col">Earnings: <span id="ov-earnings" class="kpi">$0.00</span></div>
-          <div class="col">Leads: <span id="ov-leads" class="kpi">0</span></div>
-          <div class="col">Clicks: <span id="ov-clicks" class="kpi">0</span></div>
-          <div class="col">Conversion Rate: <span id="ov-convrate" class="kpi">0.00%</span></div>
-          <div class="col">EPC: <span id="ov-epc" class="kpi">$0.00</span></div>
-          <div class="col">CPA: <span id="ov-cpa" class="kpi">$0.00</span></div>
-          <div class="col">RPM: <span id="ov-rpm" class="kpi">$0.00</span></div>
-        </div>
-
-        <h4>By Geo</h4>
-        <table><thead><tr><th>Country</th><th class="num">Earnings ($)</th></tr></thead><tbody id="tbl-geo"></tbody></table>
-
-        <h4>By Device</h4>
-        <table><thead><tr><th>Device</th><th class="num">Earnings ($)</th></tr></thead><tbody id="tbl-device"></tbody></table>
-
-        <h4>By Offer Type</h4>
-        <table><thead><tr><th>Offer Type</th><th class="num">Earnings ($)</th></tr></thead><tbody id="tbl-offerType"></tbody></table>
-
-        <h4>By Day</h4>
-        <table><thead><tr><th>Date</th><th class="num">Earnings ($)</th></tr></thead><tbody id="tbl-byDay"></tbody></table>
-      </section>
-
-      <!-- CPA Accounts -->
-      <section id="cpa" class="view card">
-        <h3>CPA Accounts Management</h3>
-        <div id="cpaGrid" class="grid"></div>
-        <div id="cpaNote" class="note" style="display:none">Saved. Reloading…</div>
-      </section>
-
-      <!-- Users -->
-      <section id="users" class="view card">
-        <h3>Users Management</h3>
-        <div class="row">
-          <div class="col"><b>Pending</b>
-            <table>
-              <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Action</th></tr></thead>
-              <tbody id="pendingBody"></tbody>
-            </table>
-          </div>
-          <div class="col"><b>Approved</b>
-            <table>
-              <thead><tr><th>Name</th><th>Email</th><th>WhatsApp</th><th>Bank</th><th>Account</th><th>Authority</th><th>Status</th></tr></thead>
-              <tbody id="usersBody"></tbody>
-            </table>
-          </div>
-        </div>
-
-        <h4>Invite Link</h4>
-        <input id="inviteLink" type="text" readonly style="width:100%"/>
-        <input id="inviteRef" type="text" readonly style="width:100%;margin-top:5px;display:none"/>
-
-        <h4>Commander Tools</h4>
-        <div class="row">
-          <div class="col">
-            <b>Create Invite</b>
-            <input id="inv_name"  placeholder="Name"/>
-            <input id="inv_email" placeholder="Email"/>
-            <input id="inv_phone" placeholder="Phone"/>
-            <input id="inv_tg"    placeholder="Telegram handle"/>
-            <button id="btnInvite">Create Invite</button>
-            <div id="inviteMsg" class="msg"></div>
-          </div>
-          <div class="col">
-            <b>Approve / Reject</b>
-            <input id="appr_name"   placeholder="Name"/>
-            <input id="appr_email"  placeholder="Email"/>
-            <input id="appr_phone"  placeholder="Phone"/>
-            <select id="appr_approve">
-              <option value="true">Approve</option>
-              <option value="false">Reject</option>
-            </select>
-            <button id="btnApprove">Submit</button>
-            <div id="apprMsg" class="msg"></div>
-          </div>
-          <div class="col">
-            <b>Set User Level</b>
-            <input id="lvl_email"  placeholder="Email"/>
-            <input id="lvl_level"  placeholder="Level (user/commander)"/>
-            <input id="lvl_reason" placeholder="Reason"/>
-            <button id="btnLevel">Set Level</button>
-            <div id="lvlMsg" class="msg"></div>
-          </div>
-        </div>
-
-        <h4>Performance Log</h4>
-        <div class="row">
-          <div class="col">
-            <input id="perf_email"       placeholder="Email"/>
-            <input id="perf_clicks"      placeholder="Clicks" type="number"/>
-            <input id="perf_conversions" placeholder="Leads" type="number"/>
-            <input id="perf_revenue"     placeholder="Revenue USD" type="number" step="0.01"/>
-            <input id="perf_level"       placeholder="Level label"/>
-            <input id="perf_phone"       placeholder="Phone"/>
-            <input id="perf_notes"       placeholder="Notes"/>
-            <select id="perf_notify">
-              <option value="false">Notify: No</option>
-              <option value="true">Notify: Yes</option>
-            </select>
-            <button id="btnPerf">Log Performance</button>
-            <div id="perfMsg" class="msg"></div>
-          </div>
-        </div>
-
-        <h4>Authority PIN (x-cmd-user header)</h4>
-        <div class="row">
-          <div class="col">
-            <input id="pin" placeholder="Commander PIN"/>
-            <button id="savePin" class="btn">Save PIN</button>
-            <button id="clearPin" class="btn">Clear PIN</button>
-            <span id="pinStatus" class="pill">—</span>
-          </div>
-        </div>
-      </section>
-
-      <!-- Analytics -->
-      <section id="analytics" class="view card">
-        <h3>Analytics & Reports</h3>
-        <table>
-          <thead><tr><th>Date</th><th>Clicks</th><th>Leads</th><th>Earnings</th></tr></thead>
-          <tbody id="analyticsBody"></tbody>
-        </table>
-      </section>
-
-      <!-- Wallet -->
-      <section id="wallet" class="view card">
-        <h3>Wallet & Withdrawal</h3>
-        <div class="row">
-          <div class="col">Total In: <span id="wallet-totalIn" class="kpi">$0.00</span></div>
-          <div class="col">Total Out: <span id="wallet-totalOut" class="kpi">$0.00</span></div>
-          <div class="col">Balance: <span id="wallet-balance" class="kpi">$0.00</span></div>
-        </div>
-        <form onsubmit="return false;">
-          <input id="acctNumber" type="text" placeholder="Account Number"/><br/>
-          <select id="bankSelect"><option>Loading banks...</option></select><br/>
-          <input id="withdrawAmt" type="number" placeholder="Amount (USD)"/><br/>
-          <button type="button" id="btnWithdraw">Withdraw</button>
-        </form>
-        <div id="walletList" style="margin-top:10px"></div>
-      </section>
-
-      <!-- Monitoring -->
-      <section id="monitoring" class="view card">
-        <h3>Monitoring</h3>
-        <div class="row">
-          <div class="col">Server <span id="serverBadge" class="badge">—</span></div>
-          <div class="col">DB <span id="dbBadge" class="badge">—</span></div>
-          <div class="col">Sheets <span id="sheetsBadge" class="badge">—</span></div>
-          <div class="col">AI <span id="aiBadge" class="badge">—</span></div>
-        </div>
-        <h4>Events</h4>
-        <table>
-          <thead><tr><th>Time</th><th>Type</th><th>Message</th><th>Ref</th><th>Actor</th></tr></thead>
-          <tbody id="evBody"></tbody>
-        </table>
-      </section>
-
-      <!-- Settings -->
-      <section id="settings" class="view card">
-        <h3>System & Authority Settings</h3>
-        <table>
-          <thead><tr><th>Key</th><th>Value</th><th>Description</th><th>Updated</th></tr></thead>
-          <tbody id="settingsBody"></tbody>
-        </table>
-      </section>
-    </main>
-  </div>
-
 <script>
+/* ========= tiny on-screen console (helps on mobile) ========= */
+(function(){
+  const box=document.createElement('div');
+  box.id='empireDebug'; box.style.cssText='position:fixed;right:10px;bottom:10px;max-width:60vw;max-height:40vh;overflow:auto;background:#0b1320;border:1px solid #2a3a66;border-radius:10px;padding:8px 10px;font:12px/1.4 system-ui,Segoe UI,Arial;color:#cde;z-index:99999;display:none';
+  document.body.appendChild(box);
+  window.empireLog=(...a)=>{ box.style.display='block'; const d=document.createElement('div'); d.textContent=a.map(x=>typeof x==='string'?x:JSON.stringify(x)).join(' '); box.appendChild(d); };
+})();
+
 /* ====================== CONFIG ====================== */
 const EMPIRE = {
   API_URL: "https://script.google.com/macros/s/AKfycbz-jj7Cr_KzqCku4SQPQ14MEIuCPdq5OEgiiqjo_O2A0FItBrHlmfkoJHViDxuX4P6z/exec",
@@ -263,368 +16,239 @@ const EMPIRE = {
 /* ====================== UTILS ======================= */
 const $=id=>document.getElementById(id);
 const qa=(s,r=document)=>Array.from(r.querySelectorAll(s));
-const fmtUSD=n=> (Number(n||0)).toLocaleString('en-US',{style:'currency',currency:'USD',minimumFractionDigits:2,maximumFractionDigits:2});
-const num=n=> (Number(n||0)).toLocaleString('en-US',{maximumFractionDigits:2});
+const fmtUSD=n=> (Number(n||0)).toLocaleString('en-US',{style:'currency',currency:'USD',minimumFractionDigits:2});
+const num=n=> (Number(n||0)).toLocaleString('en-US');
 const pct=n=> (Number(n||0)).toFixed(2)+'%';
 const esc=s=> String(s??'').replace(/[&<>"']/g,m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
 const escapeHTML = (s) => String(s).replace(/[&<>]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[ch]));
 
-/* ===================== AUTH/UI ====================== */
-(function roleBootstrap(){
-  const qs = new URLSearchParams(location.search);
-  const email = (qs.get("email") || localStorage.getItem("empire:email") || "").trim();
-  const role  = (qs.get("role")  || localStorage.getItem("empire:role")  || "commander").toLowerCase();
-
-  if (email) localStorage.setItem("empire:email", email);
-  localStorage.setItem("empire:role", role);
-
-  $("#whoEmail").textContent = email || "Unknown";
-  $("#whoRole").textContent  = role.toUpperCase();
-  $("#roleChip").textContent = role.toUpperCase();
-
-  // Commander-only sections toggle (keep visible for now; lock down later if required)
-})();
-
-$("#logoutBtn").addEventListener("click", ()=>{
-  localStorage.removeItem("empire:role");
-  localStorage.removeItem("empire:email");
-  location.href = "/index.html";
-});
-
-/* ====================== NAV ========================= */
-(function tabs(){
-  const links = qa(".navlink");
-  const views = qa(".view");
-  function show(tabId){
-    links.forEach(a=>a.classList.toggle("active", a.dataset.target===tabId));
-    views.forEach(v=>v.classList.toggle("active", v.id===tabId));
-    try{
-      if (tabId==="overview")   loadOverview();
-      if (tabId==="cpa")        loadCPA();
-      if (tabId==="users")      loadUsers();
-      if (tabId==="analytics")  loadAnalytics();
-      if (tabId==="wallet")     loadWallet();
-      if (tabId==="monitoring") loadMonitoring();
-      if (tabId==="settings")   loadSettings();
-    }catch(e){console.error(e);}
-    $("#routeInfo").textContent = "Route: #"+tabId;
-  }
-  links.forEach(a=>a.addEventListener("click",ev=>{
-    ev.preventDefault();
-    const id=a.dataset.target; history.replaceState(null,"","#"+id); show(id);
-  }));
-  const initial=(location.hash||"#overview").replace("#",""); show(initial);
-})();
-
 /* =================== API HELPERS ==================== */
-const hdr = {"Content-Type":"application/json"};
-const withKey = (u) => { if (EMPIRE.KEY) u.searchParams.set("key", EMPIRE.KEY); return u; };
-
+function withKey(u){ if(EMPIRE.KEY) u.searchParams.set('key',EMPIRE.KEY); return u; }
 async function apiGet(action, params={}){
   const u = withKey(new URL(EMPIRE.API_URL));
-  u.searchParams.set("action", action);
+  u.searchParams.set('action', action);
   Object.entries(params).forEach(([k,v])=>u.searchParams.set(k,String(v)));
-  const r = await fetch(u.toString(), {method:"GET"});
-  if (!r.ok) throw new Error("HTTP "+r.status);
-  return r.json();
+  empireLog('GET', u.toString());
+  const r = await fetch(u.toString(), {method:'GET'});
+  const j = await r.json().catch(()=>({ok:false,error:'Invalid JSON from GAS'}));
+  empireLog('→', j);
+  return j;
 }
 async function apiPost(action, body={}){
   const u = withKey(new URL(EMPIRE.API_URL));
-  u.searchParams.set("action", action);
-  const r = await fetch(u.toString(), {method:"POST", headers:hdr, body:JSON.stringify(body)});
-  if (!r.ok) throw new Error("HTTP "+r.status);
-  return r.json();
+  u.searchParams.set('action', action);
+  empireLog('POST', u.toString(), body);
+  const r = await fetch(u.toString(), {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)});
+  const j = await r.json().catch(()=>({ok:false,error:'Invalid JSON from GAS'}));
+  empireLog('→', j);
+  return j;
+}
+
+/* ====================== NAV ========================= */
+function showTab(tabId){
+  qa('.navlink').forEach(a=>a.classList.toggle('active', a.dataset.target===tabId));
+  qa('.view').forEach(v=>v.classList.toggle('active', v.id===tabId));
+  $('#routeInfo').textContent = 'Route: #'+tabId;
+  // lazy-load per tab
+  if (tabId==='overview')   loadOverview().catch(e=>empireLog('overview err',e));
+  if (tabId==='cpa')        loadCPA().catch(e=>empireLog('cpa err',e));
+  if (tabId==='users')      loadUsers().catch(e=>empireLog('users err',e));
+  if (tabId==='analytics')  loadAnalytics().catch(e=>empireLog('analytics err',e));
+  if (tabId==='wallet')     loadWallet().catch(e=>empireLog('wallet err',e));
+  if (tabId==='monitoring') loadMonitoring().catch(e=>empireLog('monitoring err',e));
+  if (tabId==='settings')   loadSettings().catch(e=>empireLog('settings err',e));
+}
+function initTabs(){
+  qa('.navlink').forEach(a=>{
+    a.addEventListener('click',e=>{
+      e.preventDefault();
+      const id=a.dataset.target;
+      history.replaceState(null,'','#'+id);
+      showTab(id);
+    });
+  });
+  window.addEventListener('hashchange', ()=>{
+    const id=(location.hash||'#overview').replace('#','');
+    showTab(id);
+  });
+  const start=(location.hash||'#overview').replace('#','');
+  showTab(start);
 }
 
 /* ================ OVERVIEW LOADER =================== */
 async function loadOverview(){
-  try{
-    // Accept either {totals:{...}} or flat keys, and various breakdown keys
-    const d   = await apiGet("overview");
-    const t   = d.totals || d || {};
-    const geo = d.geo || (d.breakdowns&&d.breakdowns.byGeo) || {};
-    const dev = d.devices || (d.breakdowns&&d.breakdowns.byDevice) || {};
-    const typ = d.offerTypes || (d.breakdowns&&d.breakdowns.byOfferType) || {};
-    const byD = d.byDay || (d.breakdowns&&d.breakdowns.byDay) || {};
+  const d = await apiGet('overview');
+  const t   = d.totals || d || {};
+  const geo = d.geo || (d.breakdowns&&d.breakdowns.byGeo) || {};
+  const dev = d.devices || (d.breakdowns&&d.breakdowns.byDevice) || {};
+  const typ = d.offerTypes || (d.breakdowns&&d.breakdowns.byOfferType) || {};
+  const byD = d.byDay || (d.breakdowns&&d.breakdowns.byDay) || {};
 
-    $("#ov-earnings").textContent = fmtUSD(t.earnings || t.totalEarnings || 0);
-    $("#ov-leads").textContent    = num(t.leads || t.activeUsers || 0);
-    $("#ov-clicks").textContent   = num(t.clicks || 0);
-    $("#ov-convrate").textContent = (t.convRate!=null? pct(t.convRate) : (t.conversionRate!=null? pct(t.conversionRate):"0.00%"));
-    $("#ov-epc").textContent      = fmtUSD(t.epc || 0);
-    $("#ov-cpa").textContent      = fmtUSD(t.cpa || 0);
-    $("#ov-rpm").textContent      = fmtUSD(t.rpm || 0);
+  $('#ov-earnings').textContent = fmtUSD(t.earnings || t.totalEarnings || 0);
+  $('#ov-leads').textContent    = num(t.leads || t.activeUsers || 0);
+  $('#ov-clicks').textContent   = num(t.clicks || 0);
+  $('#ov-convrate').textContent = (t.convRate!=null? pct(t.convRate) : (t.conversionRate!=null? pct(t.conversionRate):'0.00%'));
+  $('#ov-epc').textContent      = fmtUSD(t.epc || 0);
+  $('#ov-cpa').textContent      = fmtUSD(t.cpa || 0);
+  $('#ov-rpm').textContent      = fmtUSD(t.rpm || 0);
 
-    // helpers
-    const paintObj = (elId, obj) => {
-      const tb=$(elId); tb.innerHTML="";
-      Object.keys(obj||{}).forEach(k=>{
-        const tr=document.createElement("tr");
-        tr.innerHTML = `<td>${esc(k)}</td><td class="num">${fmtUSD(obj[k])}</td>`;
-        tb.appendChild(tr);
-      });
-      if (!tb.children.length) tb.innerHTML=`<tr><td colspan="2" class="muted">No data</td></tr>`;
-    };
-
-    paintObj("tbl-geo",       geo);
-    paintObj("tbl-device",    dev);
-    paintObj("tbl-offerType", typ);
-
-    const byDayBody = $("#tbl-byDay"); byDayBody.innerHTML = "";
-    const entries = Array.isArray(byD) ? byD : Object.entries(byD||{}).map(([date,val])=>({date,val}));
-    entries.forEach(x=>{
-      const tr=document.createElement("tr");
-      const dt = x.date || x[0] || "";
-      const v  = x.val || x.value || x.amount || x[1] || 0;
-      tr.innerHTML = `<td>${esc(dt)}</td><td class="num">${fmtUSD(v)}</td>`;
-      byDayBody.appendChild(tr);
+  const paint = (id, obj)=>{
+    const tb=$(id); tb.innerHTML='';
+    Object.keys(obj||{}).forEach(k=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML = `<td>${esc(k)}</td><td class="num">${fmtUSD(obj[k])}</td>`;
+      tb.appendChild(tr);
     });
-    if (!byDayBody.children.length) byDayBody.innerHTML=`<tr><td colspan="2" class="muted">No data</td></tr>`;
-  }catch(e){
-    console.error(e);
-  }
+    if(!tb.children.length) tb.innerHTML=`<tr><td colspan="2" class="muted">No data</td></tr>`;
+  };
+  paint('tbl-geo',geo); paint('tbl-device',dev); paint('tbl-offerType',typ);
+
+  const byBody=$('#tbl-byDay'); byBody.innerHTML='';
+  const rows = Array.isArray(byD) ? byD : Object.entries(byD||{}).map(([date,val])=>({date,val}));
+  rows.forEach(x=>{
+    const tr=document.createElement('tr');
+    const dt=x.date||x[0]||''; const v=x.val||x.value||x.amount||x[1]||0;
+    tr.innerHTML=`<td>${esc(dt)}</td><td class="num">${fmtUSD(v)}</td>`;
+    byBody.appendChild(tr);
+  });
+  if(!byBody.children.length) byBody.innerHTML=`<tr><td colspan="2" class="muted">No data</td></tr>`;
 }
 
 /* ================ CPA ACCOUNTS ====================== */
 async function loadCPA(){
-  const grid=$("#cpaGrid"); grid.innerHTML="";
-  try{
-    const r = await apiGet("cpaaccounts");
-    (r.items || r.accounts || r.rows || []).forEach(acc=>{
-      const name = acc.name || acc.id || "CPA";
-      const offers = acc.offers || acc.activeOffers || 0;
-      const revenue = acc.revenue || 0;
-      const clicks = acc.clicks || 0;
-      const cr = acc.conversionRate!=null ? (typeof acc.conversionRate==="string"?acc.conversionRate:pct(acc.conversionRate)) : "—";
-      const el=document.createElement("div"); el.className="card";
-      el.innerHTML = `
-        <div class="muted" style="margin-bottom:6px">${esc(name)}</div>
-        <div class="row">
-          <div class="col"><div class="muted">Active Offers</div><div class="kpi">${num(offers)}</div></div>
-          <div class="col"><div class="muted">Revenue</div><div class="kpi">${fmtUSD(revenue)}</div></div>
-          <div class="col"><div class="muted">Clicks</div><div class="kpi">${num(clicks)}</div></div>
-          <div class="col"><div class="muted">Conversion</div><div class="kpi">${cr}</div></div>
-        </div>`;
-      grid.appendChild(el);
-    });
-    if (!grid.children.length) grid.innerHTML = `<div class="note">No CPA Grip accounts returned. Ensure Sheet "CPA_Accounts" is populated.</div>`;
-  }catch(e){
-    grid.innerHTML = `<div class="note">Failed to load accounts: ${esc(e.message)}</div>`;
-  }
+  const grid=$('#cpaGrid'); grid.innerHTML='';
+  const r = await apiGet('cpaaccounts');
+  (r.items || r.accounts || r.rows || []).forEach(acc=>{
+    const name=acc.name||acc.id||'CPA';
+    const offers=acc.offers||acc.activeOffers||0;
+    const revenue=acc.revenue||0; const clicks=acc.clicks||0;
+    const cr = acc.conversionRate!=null ? (typeof acc.conversionRate==='string'?acc.conversionRate:pct(acc.conversionRate)) : '—';
+    const el=document.createElement('div'); el.className='card';
+    el.innerHTML = `
+      <div class="muted" style="margin-bottom:6px">${esc(name)}</div>
+      <div class="row">
+        <div class="col"><div class="muted">Active Offers</div><div class="kpi">${num(offers)}</div></div>
+        <div class="col"><div class="muted">Revenue</div><div class="kpi">${fmtUSD(revenue)}</div></div>
+        <div class="col"><div class="muted">Clicks</div><div class="kpi">${num(clicks)}</div></div>
+        <div class="col"><div class="muted">Conversion</div><div class="kpi">${cr}</div></div>
+      </div>`;
+    grid.appendChild(el);
+  });
+  if(!grid.children.length) grid.innerHTML=`<div class="note">No CPA Grip accounts found in GAS output.</div>`;
 }
 
 /* ==================== USERS ======================== */
 async function loadUsers(){
   // Pending
   try{
-    const p = await apiGet("users",{state:"pending"});
-    const body=$("#pendingBody"); body.innerHTML="";
-    (p.items || p.users || []).forEach(u=>{
-      const tr=document.createElement("tr");
-      tr.innerHTML = `<td>${esc(u.name||"")}</td><td>${esc(u.email||"")}</td><td>${esc(u.phone||"")}</td>
-                      <td><button class="btnApproveRow">Approve</button></td>`;
-      const btn = tr.querySelector(".btnApproveRow");
-      btn.onclick = async ()=>{
-        try{
-          const res = await apiPost("approve-user",{email:u.email, approve:true});
-          alert(res.ok? "Approved" : ("Failed: "+(res.error||"")));
-          loadUsers();
-        }catch(e){ alert(e.message); }
+    const p = await apiGet('users',{state:'pending'});
+    const body=$('#pendingBody'); body.innerHTML='';
+    (p.items||p.users||[]).forEach(u=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML=`<td>${esc(u.name||'')}</td><td>${esc(u.email||'')}</td><td>${esc(u.phone||'')}</td>
+                    <td><button class="btnApproveRow">Approve</button></td>`;
+      tr.querySelector('.btnApproveRow').onclick=async()=>{
+        const res=await apiPost('approve-user',{email:u.email,approve:true});
+        alert(res.ok?'Approved':('Failed: '+(res.error||''))); loadUsers();
       };
       body.appendChild(tr);
     });
-    if (!body.children.length) body.innerHTML=`<tr><td colspan="4" class="muted">No pending users</td></tr>`;
-  }catch(e){
-    $("#pendingBody").innerHTML=`<tr><td colspan="4">Failed: ${esc(e.message)}</td></tr>`;
-  }
+    if(!body.children.length) body.innerHTML=`<tr><td colspan="4" class="muted">No pending users</td></tr>`;
+  }catch(e){ $('#pendingBody').innerHTML=`<tr><td colspan="4">Failed: ${esc(e.message)}</td></tr>`; }
 
   // Approved
   try{
-    const a = await apiGet("users",{state:"approved"});
-    const body=$("#usersBody"); body.innerHTML="";
-    (a.items || a.users || []).forEach(u=>{
-      const tr=document.createElement("tr");
-      tr.innerHTML = `<td>${esc(u.name||"")}</td><td>${esc(u.email||"")}</td><td>${esc(u.whatsapp||u.phone||"")}</td>
-                      <td>${esc(u.bank||"")}</td><td>${esc(u.account||"")}</td>
-                      <td>${esc(u.authority||"User")}</td><td><span class="status">${esc(u.status||"ACTIVE")}</span></td>`;
+    const a = await apiGet('users',{state:'approved'});
+    const body=$('#usersBody'); body.innerHTML='';
+    (a.items||a.users||[]).forEach(u=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML=`<td>${esc(u.name||'')}</td><td>${esc(u.email||'')}</td><td>${esc(u.whatsapp||u.phone||'')}</td>
+                    <td>${esc(u.bank||'')}</td><td>${esc(u.account||'')}</td>
+                    <td>${esc(u.authority||'User')}</td><td><span class="status">${esc(u.status||'ACTIVE')}</span></td>`;
       body.appendChild(tr);
     });
-    if (!body.children.length) body.innerHTML=`<tr><td colspan="7" class="muted">No approved users</td></tr>`;
-  }catch(e){
-    $("#usersBody").innerHTML=`<tr><td colspan="7">Failed: ${esc(e.message)}</td></tr>`;
-  }
-
-  // Commander tools (invite/approve/level/log)
-  const INVITE = "https://superlative-pothos-ebf5f2.netlify.app/?ref=SUPREME_COMMANDER";
-  const inv = $("#inviteLink"); if (inv) inv.value = INVITE;
+    if(!body.children.length) body.innerHTML=`<tr><td colspan="7" class="muted">No approved users</td></tr>`;
+  }catch(e){ $('#usersBody').innerHTML=`<tr><td colspan="7">Failed: ${esc(e.message)}</td></tr>`; }
 }
 
 /* =================== ANALYTICS ===================== */
 async function loadAnalytics(){
-  try{
-    const r = await apiGet("analytics");
-    const body=$("#analyticsBody"); body.innerHTML="";
-    const rows = r.rows || r.items || r.byDay || r.daily || [];
-    const arr  = Array.isArray(rows) ? rows
-                 : Object.entries(rows).map(([date,v])=>({date, clicks:v.clicks||0, leads:v.leads||0, earnings:v.earnings||v||0}));
-    arr.forEach(x=>{
-      const tr=document.createElement("tr");
-      tr.innerHTML = `<td>${esc(x.date||"")}</td><td class="num">${num(x.clicks||0)}</td>
-                      <td class="num">${num(x.leads||0)}</td><td class="num">${fmtUSD(x.earnings||0)}</td>`;
-      body.appendChild(tr);
-    });
-    if (!body.children.length) body.innerHTML=`<tr><td colspan="4" class="muted">No analytics data</td></tr>`;
-  }catch(e){
-    $("#analyticsBody").innerHTML=`<tr><td colspan="4">Failed: ${esc(e.message)}</td></tr>`;
-  }
+  const r = await apiGet('analytics');
+  const body=$('#analyticsBody'); body.innerHTML='';
+  const rows = r.rows || r.items || r.byDay || r.daily || [];
+  const arr  = Array.isArray(rows) ? rows
+               : Object.entries(rows).map(([date,v])=>({date,clicks:v.clicks||0,leads:v.leads||0,earnings:v.earnings||v||0}));
+  arr.forEach(x=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${esc(x.date||'')}</td><td class="num">${num(x.clicks||0)}</td>
+                  <td class="num">${num(x.leads||0)}</td><td class="num">${fmtUSD(x.earnings||0)}</td>`;
+    body.appendChild(tr);
+  });
+  if(!body.children.length) body.innerHTML=`<tr><td colspan="4" class="muted">No analytics data</td></tr>`;
 }
 
 /* ===================== WALLET ====================== */
 async function loadWallet(){
   try{
-    const w = await apiGet("walletoverview");
-    $("#wallet-totalIn").textContent  = fmtUSD(w.totalIn  ?? 0);
-    $("#wallet-totalOut").textContent = fmtUSD(w.totalOut ?? 0);
-    $("#wallet-balance").textContent  = fmtUSD(w.balance  ?? ((w.totalIn||0)-(w.totalOut||0)));
-
+    const w = await apiGet('walletoverview');
+    $('#wallet-totalIn').textContent  = fmtUSD(w.totalIn  ?? 0);
+    $('#wallet-totalOut').textContent = fmtUSD(w.totalOut ?? 0);
+    $('#wallet-balance').textContent  = fmtUSD(w.balance  ?? ((w.totalIn||0)-(w.totalOut||0)));
     // banks
     try{
-      const b = await apiGet("banks");
-      const sel=$("#bankSelect"); sel.innerHTML="";
+      const b = await apiGet('banks');
+      const sel=$('#bankSelect'); sel.innerHTML='';
       (b.banks||b.rows||[]).forEach(x=>{
-        const opt=document.createElement("option");
-        opt.value = x.code || x.id || "";
-        opt.textContent = `${x.name||"Bank"} (${x.code||""})`;
+        const opt=document.createElement('option');
+        opt.value=x.code||x.id||''; opt.textContent=`${x.name||'Bank'} (${x.code||''})`;
         sel.appendChild(opt);
       });
-    }catch(_){/* noop */}
-  }catch(e){
-    console.error(e);
-  }
+    }catch(_){}
+  }catch(e){ empireLog('wallet err',e); }
 
-  // Withdraw click
-  $("#btnWithdraw").onclick = async ()=>{
-    const acct  = $("#acctNumber").value.trim();
-    const bank  = $("#bankSelect").value;
-    const amt   = Number($("#withdrawAmt").value||0);
-    if (!acct || !bank || !amt) return alert("Enter account, bank and amount.");
-    if (amt < 50) return alert("Minimum withdrawal is $50.");
-    try{
-      const res = await apiPost("withdraw-request",{account:acct, bank, amount:amt});
-      alert(res.ok ? "Withdrawal requested." : ("Failed: "+(res.error||"")));
-      loadWallet();
-    }catch(e){ alert(e.message); }
+  $('#btnWithdraw').onclick=async()=>{
+    const acct=$('#acctNumber').value.trim(), bank=$('#bankSelect').value, amt=Number($('#withdrawAmt').value||0);
+    if(!acct||!bank||!amt) return alert('Enter account, bank and amount.');
+    if(amt<50) return alert('Minimum withdrawal is $50.');
+    const res = await apiPost('withdraw-request',{account:acct,bank,amount:amt});
+    alert(res.ok?'Withdrawal requested':('Failed: '+(res.error||''))); loadWallet();
   };
 }
 
 /* =================== MONITORING ==================== */
-async function setBadge(el, ok){
-  el.textContent = ok ? "ONLINE" : "OFFLINE";
-  el.className = "badge " + (ok ? "ok" : "down");
-}
+function setBadge(el, ok){ el.textContent=ok?'ONLINE':'OFFLINE'; el.className='badge '+(ok?'ok':'down'); }
 async function loadMonitoring(){
-  try{
-    const st = await apiGet("monitoring");
-    await setBadge($("#serverBadge"),  st.server   !== false);
-    await setBadge($("#dbBadge"),      st.db       !== false);
-    await setBadge($("#sheetsBadge"),  st.sheets   !== false);
-    await setBadge($("#aiBadge"),      st.ai       !== false);
-
-    const feed = st.events || st.feed || [];
-    const body=$("#evBody"); body.innerHTML="";
-    (feed||[]).forEach(e=>{
-      const tr=document.createElement("tr");
-      tr.innerHTML=`<td>${esc(e.time||"")}</td><td>${esc(e.type||"")}</td><td>${esc(e.msg||"")}</td><td>${esc(e.ref||"")}</td><td>${esc(e.actor||"")}</td>`;
-      body.appendChild(tr);
-    });
-    if (!body.children.length) body.innerHTML=`<tr><td colspan="5" class="muted">No events</td></tr>`;
-
-  }catch(e){
-    $("#evBody").innerHTML=`<tr><td colspan="5">Failed: ${esc(e.message)}</td></tr>`;
-  }
+  const st = await apiGet('monitoring');
+  setBadge($('#serverBadge'), st.server!==false);
+  setBadge($('#dbBadge'),     st.db!==false);
+  setBadge($('#sheetsBadge'), st.sheets!==false);
+  setBadge($('#aiBadge'),     st.ai!==false);
+  const body=$('#evBody'); body.innerHTML='';
+  (st.events||st.feed||[]).forEach(e=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${esc(e.time||'')}</td><td>${esc(e.type||'')}</td><td>${esc(e.msg||'')}</td><td>${esc(e.ref||'')}</td><td>${esc(e.actor||'')}</td>`;
+    body.appendChild(tr);
+  });
+  if(!body.children.length) body.innerHTML=`<tr><td colspan="5" class="muted">No events</td></tr>`;
 }
 
 /* ===================== SETTINGS ==================== */
 async function loadSettings(){
-  try{
-    const r = await apiGet("systemsettings");
-    const rows = r.settings || r.rows || [];
-    const body=$("#settingsBody"); body.innerHTML="";
-    (rows||[]).forEach(x=>{
-      const tr=document.createElement("tr");
-      tr.innerHTML = `<td>${esc(x.key||x.k||"")}</td><td>${esc(x.value||x.v||"")}</td>
-                      <td>${esc(x.desc||x.description||"")}</td><td>${esc(x.updated||"")}</td>`;
-      body.appendChild(tr);
-    });
-    if (!body.children.length) body.innerHTML=`<tr><td colspan="4" class="muted">No settings</td></tr>`;
-  }catch(e){
-    $("#settingsBody").innerHTML=`<tr><td colspan="4">Failed: ${esc(e.message)}</td></tr>`;
-  }
-}
-
-/* ================== COMMANDER API ================== */
-function initCommanderTools(){
-  const getPIN  = () => localStorage.getItem("empire_cmd_user") || "";
-  const setPIN  = (v) => localStorage.setItem("empire_cmd_user", v || "");
-  const headerAuth = () => (getPIN() ? {"x-cmd-user": getPIN()} : {});
-
-  // Rewire the API POST to include header when present
-  const _apiPost = apiPost;
-  apiPost = async function(action, body={}){
-    const u = new URL(EMPIRE.API_URL);
-    u.searchParams.set("action", action);
-    if (EMPIRE.KEY) u.searchParams.set("key", EMPIRE.KEY);
-    const headers = {"Content-Type":"application/json", ...headerAuth()};
-    const r = await fetch(u.toString(), {method:"POST", headers, body:JSON.stringify(body)});
-    if (!r.ok) throw new Error("HTTP "+r.status);
-    return r.json();
-  };
-
-  // Wire PIN controls
-  const save=$("#savePin"), clr=$("#clearPin"), pin=$("#pin"), sts=$("#pinStatus");
-  if (save) save.onclick = ()=>{ setPIN(pin.value.trim()); if(sts) sts.textContent="PIN saved (x-cmd-user)"; };
-  if (clr)  clr.onclick  = ()=>{ setPIN(""); if(pin) pin.value=""; if(sts) sts.textContent="PIN cleared"; };
-  if (pin && sts){ pin.value=getPIN(); sts.textContent = getPIN()?"PIN loaded.":"No PIN saved."; }
-
-  // Wire commander buttons
-  const setMsg = (el, ok, html) => { el.className="msg "+(ok?"ok":"bad"); el.innerHTML=html; };
-
-  const btnInvite=$("#btnInvite"); if (btnInvite) btnInvite.onclick=async ()=>{
-    const body={ name:$("#inv_name").value.trim(), email:$("#inv_email").value.trim(),
-      phone:$("#inv_phone").value.trim(), telegramHandle:$("#inv_tg").value.trim() };
-    try{ const data=await apiPost("invite-create", body); setMsg($("#inviteMsg"), data.ok!==false, escapeHTML(JSON.stringify(data,null,2))); }
-    catch(e){ setMsg($("#inviteMsg"), false, escapeHTML(String(e))); }
-  };
-
-  const btnApprove=$("#btnApprove"); if (btnApprove) btnApprove.onclick=async ()=>{
-    const body={ name:$("#appr_name").value.trim(), email:$("#appr_email").value.trim(), phone:$("#appr_phone").value.trim(),
-      approve: $("#appr_approve").value==="true" };
-    try{ const data=await apiPost("approve-user", body); setMsg($("#apprMsg"), data.ok!==false, escapeHTML(JSON.stringify(data,null,2))); }
-    catch(e){ setMsg($("#apprMsg"), false, escapeHTML(String(e))); }
-  };
-
-  const btnLevel=$("#btnLevel"); if (btnLevel) btnLevel.onclick=async ()=>{
-    const body={ email:$("#lvl_email").value.trim(), level:$("#lvl_level").value.trim(), reason:$("#lvl_reason").value.trim() };
-    try{ const data=await apiPost("user-level-set", body); setMsg($("#lvlMsg"), data.ok!==false, escapeHTML(JSON.stringify(data,null,2))); }
-    catch(e){ setMsg($("#lvlMsg"), false, escapeHTML(String(e))); }
-  };
-
-  const btnPerf=$("#btnPerf"); if (btnPerf) btnPerf.onclick=async ()=>{
-    const body={ email:$("#perf_email").value.trim(), clicks:Number($("#perf_clicks").value||0),
-      conversions:Number($("#perf_conversions").value||0), revenueUSD:Number($("#perf_revenue").value||0),
-      level:$("#perf_level").value.trim(), notes:$("#perf_notes").value.trim(),
-      phone:$("#perf_phone").value.trim(), notify:$("#perf_notify").value==="true" };
-    try{ const data=await apiPost("log-performance", body); setMsg($("#perfMsg"), data.ok!==false, escapeHTML(JSON.stringify(data,null,2))); }
-    catch(e){ setMsg($("#perfMsg"), false, escapeHTML(String(e))); }
-  };
+  const r = await apiGet('systemsettings');
+  const rows=r.settings||r.rows||[];
+  const body=$('#settingsBody'); body.innerHTML='';
+  (rows||[]).forEach(x=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${esc(x.key||x.k||'')}</td><td>${esc(x.value||x.v||'')}</td>
+                  <td>${esc(x.desc||x.description||'')}</td><td>${esc(x.updated||'')}</td>`;
+    body.appendChild(tr);
+  });
+  if(!body.children.length) body.innerHTML=`<tr><td colspan="4" class="muted">No settings</td></tr>`;
 }
 
 /* ====================== INIT ======================= */
-window.addEventListener("DOMContentLoaded", ()=>{
-  // kick Overview first; rest load on tab click
-  loadOverview();
-  initCommanderTools();
+window.addEventListener('DOMContentLoaded', ()=>{
+  initTabs();            // hash+click router
+  showTab((location.hash||'#overview').replace('#','')); // initial load
 });
 </script>
-</body>
-</html>

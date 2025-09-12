@@ -1,39 +1,50 @@
-/* ======= GAS wiring ======= */
+/* ======= Commander Tools → GAS wiring ======= */
+/* Place this in app/dashboard.js (do NOT duplicate $ or escapeHTML) */
+
 const GAS_URL = "https://script.google.com/macros/s/AKfycbz-jj7Cr_KzqCku4SQPQ14MEIuCPdq5OEgiiqjo_O2A0FItBrHlmfkoJHViDxuX4P6z/exec";
 const KEY     = "GENERALISIMO@15769";
 
-const $ = (id) => document.getElementById(id);
-const escapeHTML = (s) => String(s).replace(/[&<>]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[ch]}));
-const getPIN = () => localStorage.getItem("empire_cmd_user") || "";
-const setPIN = (v) => localStorage.setItem("empire_cmd_user", v || "");
+// Uses the same $ from your UTILS section
+// Uses escapeHTML you added in UTILS (make sure it is defined once)
+
+/* PIN storage used as x-cmd-user header */
+const getPIN  = () => localStorage.getItem("empire_cmd_user") || "";
+const setPIN  = (v) => localStorage.setItem("empire_cmd_user", v || "");
 const headerAuth = () => (getPIN() ? { "x-cmd-user": getPIN() } : {});
 
+/* Small helper to paint responses */
 const setMsg = (el, ok, html) => {
   el.className = "msg " + (ok ? "ok" : "bad");
   el.innerHTML = html;
 };
 
+/* Wire PIN save/clear controls (if present on the page) */
 function initPIN() {
-  $("savePin").onclick = () => {
-    setPIN($("pin").value.trim());
-    $("pinStatus").textContent = "PIN saved (used as x-cmd-user header).";
+  const save = $("savePin");
+  const clr  = $("clearPin");
+  const pin  = $("pin");
+  const sts  = $("pinStatus");
+
+  if (save) save.onclick = () => {
+    setPIN(pin.value.trim());
+    if (sts) sts.textContent = "PIN saved (used as x-cmd-user header).";
   };
-  $("clearPin").onclick = () => {
+  if (clr) clr.onclick = () => {
     setPIN("");
-    $("pin").value = "";
-    $("pinStatus").textContent = "PIN cleared.";
+    if (pin) pin.value = "";
+    if (sts) sts.textContent = "PIN cleared.";
   };
-  window.addEventListener("DOMContentLoaded", () => {
-    $("pin").value = getPIN();
-    $("pinStatus").textContent = getPIN() ? "PIN loaded." : "No PIN saved.";
-  });
+  if (pin && sts) {
+    pin.value = getPIN();
+    sts.textContent = getPIN() ? "PIN loaded." : "No PIN saved.";
+  }
 }
 
-// Generic POSTer to GAS ?action=...&key=...
+/* Generic POSTer to GAS ?action=...&key=... */
 async function callGAS(action, body, msgEl){
   const url = `${GAS_URL}?action=${encodeURIComponent(action)}&key=${encodeURIComponent(KEY)}`;
   try{
-    const headers = { "content-type": "application/json", ...headerAuth() };
+    const headers = { "Content-Type": "application/json", ...headerAuth() };
     const r = await fetch(url, { method:"POST", headers, body: JSON.stringify(body || {}) });
     const data = await r.json();
     setMsg(msgEl, data.ok !== false, `<pre>${escapeHTML(JSON.stringify(data, null, 2))}</pre>`);
@@ -42,10 +53,14 @@ async function callGAS(action, body, msgEl){
   }
 }
 
-/* ======= Button handlers (pointing to GAS) ======= */
-function initButtons() {
-  // Create Invite
-  $("btnInvite").onclick = () => {
+/* Buttons that talk to GAS (only wires if elements exist) */
+function initCommanderButtons() {
+  const btnInvite  = $("btnInvite");
+  const btnApprove = $("btnApprove");
+  const btnLevel   = $("btnLevel");
+  const btnPerf    = $("btnPerf");
+
+  if (btnInvite) btnInvite.onclick = () => {
     const body = {
       name: $("inv_name").value.trim(),
       email: $("inv_email").value.trim(),
@@ -55,8 +70,7 @@ function initButtons() {
     callGAS("invite-create", body, $("inviteMsg"));
   };
 
-  // Approve / Reject User
-  $("btnApprove").onclick = () => {
+  if (btnApprove) btnApprove.onclick = () => {
     const body = {
       name: $("appr_name").value.trim(),
       email: $("appr_email").value.trim(),
@@ -66,8 +80,7 @@ function initButtons() {
     callGAS("approve-user", body, $("apprMsg"));
   };
 
-  // Set User Level
-  $("btnLevel").onclick = () => {
+  if (btnLevel) btnLevel.onclick = () => {
     const body = {
       email: $("lvl_email").value.trim(),
       level: $("lvl_level").value.trim(),
@@ -76,8 +89,7 @@ function initButtons() {
     callGAS("user-level-set", body, $("lvlMsg"));
   };
 
-  // Log Performance
-  $("btnPerf").onclick = () => {
+  if (btnPerf) btnPerf.onclick = () => {
     const body = {
       email: $("perf_email").value.trim(),
       clicks: Number($("perf_clicks").value || 0),
@@ -92,8 +104,8 @@ function initButtons() {
   };
 }
 
-// Bootstrap everything
+/* Bootstrap the commander tools */
 window.addEventListener("DOMContentLoaded", () => {
   initPIN();
-  initButtons();
+  initCommanderButtons();
 });

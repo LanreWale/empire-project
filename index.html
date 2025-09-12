@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>⚔️ The Empire Dashboard ⚔️</title>
 
-  <!-- Brand favicon (inline, works instantly) -->
   <link rel="icon" type="image/svg+xml"
         href="data:image/svg+xml;utf8,
   <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128'>
@@ -15,7 +14,6 @@
       <path d='M92 36 L30 98'/>
     </g>
   </svg>">
-  <meta name="theme-color" content="#0b1424">
 
   <style>
     :root{
@@ -47,6 +45,8 @@
     .kpi{background:#0f1527;border:1px solid #223157;border-radius:10px;padding:10px}
     .kpi .label{font-size:12px;color:var(--muted)}
     .kpi .val{font-size:20px;font-weight:700;margin-top:4px}
+    .row{display:flex;gap:12px;flex-wrap:wrap}
+    .row .col{flex:1 1 260px}
   </style>
 </head>
 <body>
@@ -68,7 +68,6 @@
       <!-- Overview -->
       <section id="overview" class="view active card">
         <h3>Overview</h3>
-
         <div class="kpis">
           <div class="kpi"><div class="label">Earnings</div><div class="val" id="ov-earnings">$0.00</div></div>
           <div class="kpi"><div class="label">Leads</div><div class="val" id="ov-leads">0</div></div>
@@ -79,35 +78,48 @@
           <div class="kpi"><div class="label">RPM</div><div class="val" id="ov-rpm">$0.00</div></div>
         </div>
 
-        <h4>By Geo</h4>
-        <table><thead><tr><th>Country</th><th class="num">Earnings ($)</th></tr></thead><tbody id="tbl-geo"><tr><td colspan="2" class="muted">—</td></tr></tbody></table>
+        <div class="row">
+          <div class="col">
+            <h4>By Geo</h4>
+            <table><thead><tr><th>Country</th><th class="num">Earnings ($)</th></tr></thead><tbody id="tbl-geo"><tr><td colspan="2" class="muted">—</td></tr></tbody></table>
+          </div>
+          <div class="col">
+            <h4>By Device</h4>
+            <table><thead><tr><th>Device</th><th class="num">Earnings ($)</th></tr></thead><tbody id="tbl-device"><tr><td colspan="2" class="muted">—</td></tr></tbody></table>
+          </div>
+        </div>
 
-        <h4>By Device</h4>
-        <table><thead><tr><th>Device</th><th class="num">Earnings ($)</th></tr></thead><tbody id="tbl-device"><tr><td colspan="2" class="muted">—</td></tr></tbody></table>
-
-        <h4>By Offer Type</h4>
-        <table><thead><tr><th>Offer Type</th><th class="num">Earnings ($)</th></tr></thead><tbody id="tbl-offerType"><tr><td colspan="2" class="muted">—</td></tr></tbody></table>
-
-        <h4>By Day</h4>
-        <table><thead><tr><th>Date</th><th class="num">Earnings ($)</th></tr></thead><tbody id="tbl-byDay"><tr><td colspan="2" class="muted">—</td></tr></tbody></table>
+        <div class="row">
+          <div class="col">
+            <h4>By Offer Type</h4>
+            <table><thead><tr><th>Offer Type</th><th class="num">Earnings ($)</th></tr></thead><tbody id="tbl-offerType"><tr><td colspan="2" class="muted">—</td></tr></tbody></table>
+          </div>
+          <div class="col">
+            <h4>By Day</h4>
+            <table><thead><tr><th>Date</th><th class="num">Earnings ($)</th></tr></thead><tbody id="tbl-byDay"><tr><td colspan="2" class="muted">—</td></tr></tbody></table>
+          </div>
+        </div>
       </section>
 
       <!-- CPA Accounts -->
       <section id="cpa" class="view card">
         <h3>CPA Accounts Management</h3>
-        <div id="cpaAccounts" class="muted">Loaded from Sheets in your build. (UI present; backend wiring TBD.)</div>
+        <table>
+          <thead><tr><th>Network</th><th>Account/ID</th><th>Email</th><th>Status</th></tr></thead>
+          <tbody id="cpaAccounts"><tr><td colspan="4" class="muted">Loading…</td></tr></tbody>
+        </table>
       </section>
 
       <!-- Users -->
       <section id="users" class="view card">
         <h3>Users Management</h3>
         <table>
-          <thead><tr><th>Name</th><th>Email</th><th>Phone</th></tr></thead>
-          <tbody id="usersBody"><tr><td colspan="3" class="muted">Loaded from Sheets in your build.</td></tr></tbody>
+          <thead><tr><th>Name</th><th>Email</th><th>WhatsApp</th><th>Role</th></tr></thead>
+          <tbody id="usersBody"><tr><td colspan="4" class="muted">Loading…</td></tr></tbody>
         </table>
-        <h4>Invite Link</h4>
-        <input id="inviteLink" type="text" readonly style="width:100%" value="" />
-        <input id="inviteRef"  type="text" readonly style="width:100%;margin-top:5px;" value="" />
+        <h4 style="margin-top:14px">Invite Link</h4>
+        <input id="inviteLink" type="text" readonly style="width:100%" />
+        <input id="inviteRef"  type="text" readonly style="width:100%;margin-top:5px;" />
       </section>
 
       <!-- Analytics -->
@@ -115,83 +127,109 @@
         <h3>Analytics & Reports</h3>
         <table>
           <thead><tr><th>Date</th><th>Clicks</th><th>Leads</th><th>Earnings</th></tr></thead>
-          <tbody id="analyticsBody"><tr><td colspan="4" class="muted">Overview’s byDay feeds here in your next wiring.</td></tr></tbody>
+          <tbody id="analyticsBody"><tr><td colspan="4" class="muted">Loading…</td></tr></tbody>
         </table>
       </section>
 
       <!-- Wallet -->
       <section id="wallet" class="view card">
         <h3>Wallet & Withdrawal</h3>
-        <p>Total In: <span id="wallet-totalIn">$0.00</span></p>
-        <p>Total Out: <span id="wallet-totalOut">$0.00</span></p>
-        <p>Balance: <span id="wallet-balance">$0.00</span></p>
-        <form onsubmit="return false;">
+        <div class="kpis">
+          <div class="kpi"><div class="label">Total In</div><div class="val" id="wallet-totalIn">$0.00</div></div>
+          <div class="kpi"><div class="label">Total Out</div><div class="val" id="wallet-totalOut">$0.00</div></div>
+          <div class="kpi"><div class="label">Balance</div><div class="val" id="wallet-balance">$0.00</div></div>
+        </div>
+        <form onsubmit="return false;" id="withdrawForm">
           <input id="acctNumber" type="text" placeholder="Account Number" /><br/>
-          <select id="bankSelect"><option>Loading banks...</option></select><br/>
+          <select id="bankSelect"><option>Loading banks…</option></select><br/>
           <input id="withdrawAmt" type="number" placeholder="Amount (USD)" /><br/>
-          <button type="button" onclick="alert('Withdraw requested')">Withdraw</button>
+          <button type="button" id="btnWithdraw">Withdraw</button>
         </form>
+        <p class="muted" id="walletNote" style="margin-top:8px;">Minimum withdrawal is <strong>$50</strong>. Account will be validated before submission.</p>
       </section>
 
       <!-- Monitoring -->
       <section id="monitoring" class="view card">
         <h3>Monitoring</h3>
         <p>Overall Health: <span id="mon-health">0.00%</span></p>
-        <ul id="mon-feed"><li class="muted">Events will appear here.</li></ul>
+        <ul id="mon-feed"><li class="muted">Loading…</li></ul>
       </section>
 
       <!-- Settings -->
       <section id="settings" class="view card">
-        <h3>System & Authority Settings</h3>
+        <h3>System Settings</h3>
         <table>
           <thead><tr><th>Key</th><th>Value</th><th>Description</th><th>Updated</th></tr></thead>
-          <tbody id="settingsBody"><tr><td colspan="4" class="muted">Populate from your GAS/Sheets in your next push.</td></tr></tbody>
+          <tbody id="settingsBody"><tr><td colspan="4" class="muted">Loading…</td></tr></tbody>
         </table>
       </section>
     </main>
   </div>
 
-  <!-- ALL JS INLINE (one file) -->
+  <!-- ALL JS INLINE -->
   <script>
-  // ========== CONFIG (single source of truth) ==========
+  // ===== CONFIG =====
   const EMPIRE_API_URL = "https://script.google.com/macros/s/AKfycbzdaxii5JO262nziCmwndM399wryf0TX9RGltFUDVbmuQGht8mcHrPP1FY3ODHdr-iW/exec";
+  const MIN_WITHDRAWAL = 50;
 
-  // ========== UTILITIES ==========
-  const $ = (id) => document.getElementById(id);
-  const money = (n) => "$" + (Number(n)||0).toFixed(2);
-  const pct2  = (n) => (Number(n)||0).toFixed(2) + "%";
+  // ===== UTIL =====
+  const $ = id => document.getElementById(id);
+  const money = n => "$" + (Number(n)||0).toFixed(2);
+  const pct2  = n => (Number(n)||0).toFixed(2) + "%";
 
-  function tbodyFromMap(tbodyId, obj, sortByDate=false){
-    const tb = $(tbodyId); if (!tb) return;
-    const ent = Object.entries(obj || {});
-    ent.sort(sortByDate
-      ? (a,b)=> new Date(a[0]) - new Date(b[0])
-      : (a,b)=> Number(b[1]) - Number(a[1])
-    );
-    tb.innerHTML = ent.length
-      ? ent.map(([k,v]) => `<tr><td>${k}</td><td class="num">${money(v)}</td></tr>`).join("")
-      : `<tr><td colspan="2" class="muted">No data</td></tr>`;
+  async function apiGet(params) {
+    const u = new URL(EMPIRE_API_URL);
+    Object.entries(params||{}).forEach(([k,v]) => u.searchParams.set(k,v));
+    const r = await fetch(u.toString()+"&t="+Date.now(), {cache:"no-store"});
+    if (!r.ok) throw new Error("HTTP "+r.status);
+    return r.json();
   }
 
-  // ========== OVERVIEW LOADER ==========
+  async function tryActions(names, extras={}) {
+    for (const name of names) {
+      try {
+        const data = await apiGet({action:name, ...extras});
+        if (data && (data.ok===true || data.rows || data.accounts || data.users || data.settings)) {
+          console.log("[API OK]", name, data);
+          return data;
+        }
+      } catch(e) {
+        console.warn("[API FAIL]", name, e.message);
+      }
+    }
+    throw new Error("All actions failed: "+names.join(", "));
+  }
+
+  function fillKVTable(tbodyId, obj, isMoney=true, dateSort=false) {
+    const tb = $(tbodyId); tb.innerHTML = "";
+    const entries = Object.entries(obj||{});
+    entries.sort(dateSort ? (a,b)=>new Date(a[0])-new Date(b[0]) : (a,b)=>Number(b[1])-Number(a[1]));
+    if (!entries.length) { tb.innerHTML = `<tr><td colspan="2" class="muted">No data</td></tr>`; return; }
+    entries.forEach(([k,v])=>{
+      tb.insertAdjacentHTML("beforeend",
+        `<tr><td>${k}</td><td class="num">${isMoney?money(v):Number(v).toLocaleString()}</td></tr>`);
+    });
+  }
+
+  // ===== OVERVIEW =====
   async function loadOverview(){
     try{
-      const url = EMPIRE_API_URL + (EMPIRE_API_URL.includes("?")?"&":"?") + "_ts=" + Date.now();
-      const res = await fetch(url, { cache:"no-store" });
-      if(!res.ok) throw new Error("HTTP " + res.status);
-      const data = await res.json();
-      console.log("[Overview payload]", data);
+      // Works with either: GET / (overview payload) OR action=overview
+      let data;
+      try {
+        data = await apiGet({});             // no action
+        if (!data || data.ok!==true || !data.totals) throw new Error("no_overview_root");
+      } catch {
+        data = await tryActions(["overview","summary"]); // fallback
+      }
 
-      // Totals – tolerant to convRate OR conversionRate
-      const t  = data.totals || {};
+      const t = data.totals || {};
       const totals = {
-        earnings: t.earnings || 0,
-        leads:    t.leads    || 0,
-        clicks:   t.clicks   || 0,
-        conv:     (t.convRate ?? t.conversionRate) || 0,
-        epc:      t.epc || 0,
-        cpa:      t.cpa || 0,
-        rpm:      t.rpm || 0
+        earnings: t.earnings||0,
+        leads: t.leads||0,
+        clicks: t.clicks||0,
+        conv: (t.convRate ?? t.conversionRate) || 0,
+        epc: t.epc||0, cpa: t.cpa||0, rpm: t.rpm||0
       };
 
       $("ov-earnings").textContent = money(totals.earnings);
@@ -202,24 +240,206 @@
       $("ov-cpa").textContent      = money(totals.cpa);
       $("ov-rpm").textContent      = money(totals.rpm);
 
-      // Breakdowns – tolerant to your two shapes
       const B = data.breakdowns || {};
       const byGeo       = B.byGeo       || data.geo        || {};
       const byDevice    = B.byDevice    || data.devices    || {};
       const byOfferType = B.byOfferType || data.offerTypes || {};
       const byDay       = B.byDay       || data.byDay      || {};
 
-      tbodyFromMap("tbl-geo",       byGeo);
-      tbodyFromMap("tbl-device",    byDevice);
-      tbodyFromMap("tbl-offerType", byOfferType);
-      tbodyFromMap("tbl-byDay",     byDay, true);
+      fillKVTable("tbl-geo", byGeo, true, false);
+      fillKVTable("tbl-device", byDevice, true, false);
+      fillKVTable("tbl-offerType", byOfferType, true, false);
+      fillKVTable("tbl-byDay", byDay, true, true);
     }catch(err){
-      console.error("[Overview] failed:", err);
-      // Leave placeholders; message in console is enough for now
+      console.error("[Overview] ", err);
     }
   }
 
-  // ========== SIMPLE TAB ROUTER ==========
+  // ===== CPA ACCOUNTS =====
+  async function loadCPA(){
+    try{
+      // Accepts any of these action names:
+      const d = await tryActions(["cpaAccounts","listCPA","accounts","cpa_list"]);
+      const rows = d.accounts || d.rows || d.cpa || [];
+      const tb = $("cpaAccounts"); tb.innerHTML = "";
+      if (!rows.length) { tb.innerHTML = `<tr><td colspan="4" class="muted">No CPA accounts</td></tr>`; return; }
+      rows.forEach(r=>{
+        const net  = r.network || r.type || "CPA Grip";
+        const acct = r.account || r.id || r.username || "";
+        const mail = r.email || r.contact || "";
+        const st   = r.status || "Active";
+        tb.insertAdjacentHTML("beforeend",
+          `<tr><td>${net}</td><td>${acct}</td><td>${mail}</td><td>${st}</td></tr>`);
+      });
+    }catch(err){
+      console.error("[CPA] ", err);
+      $("cpaAccounts").innerHTML = `<tr><td colspan="4" class="muted">Failed to load</td></tr>`;
+    }
+  }
+
+  // ===== USERS =====
+  async function loadUsers(){
+    try{
+      const d = await tryActions(["users","listassociates","listUsers","associates"]);
+      const rows = d.users || d.rows || [];
+      const tb = $("usersBody"); tb.innerHTML = "";
+      if (!rows.length) { tb.innerHTML = `<tr><td colspan="4" class="muted">No users</td></tr>`; }
+      rows.forEach(u=>{
+        const wa = u.whatsapp || u.phone || "";
+        tb.insertAdjacentHTML("beforeend",
+          `<tr><td>${u.name||""}</td><td>${u.email||""}</td><td>${wa}</td><td>${u.role||"User"}</td></tr>`);
+      });
+
+      // invite links if present
+      if (d.inviteLink) $("inviteLink").value = d.inviteLink;
+      if (d.inviteRef)  $("inviteRef").value  = d.inviteRef;
+    }catch(err){
+      console.error("[Users] ", err);
+      $("usersBody").innerHTML = `<tr><td colspan="4" class="muted">Failed to load</td></tr>`;
+    }
+  }
+
+  // ===== ANALYTICS =====
+  async function loadAnalytics(){
+    const tb = $("analyticsBody"); tb.innerHTML = `<tr><td colspan="4" class="muted">Loading…</td></tr>`;
+    try{
+      // Prefer explicit analytics action
+      let d;
+      try {
+        d = await tryActions(["analytics","reports","performance"]);
+      } catch {
+        // fallback: derive from overview
+        d = await apiGet({});
+      }
+
+      const rows = d.rows || [];
+      tb.innerHTML = "";
+
+      if (rows.length){
+        rows.forEach(r=>{
+          tb.insertAdjacentHTML("beforeend",
+            `<tr><td>${r.date||""}</td><td class="num">${Number(r.clicks||0).toLocaleString()}</td><td class="num">${Number(r.leads||0).toLocaleString()}</td><td class="num">${money(r.earnings||0)}</td></tr>`);
+        });
+        return;
+      }
+
+      // derive from byDay if no explicit rows
+      const B = d.breakdowns || {};
+      const byDay = B.byDay || d.byDay || {};
+      const ent = Object.entries(byDay).sort((a,b)=> new Date(a[0]) - new Date(b[0]));
+      if (!ent.length) { tb.innerHTML = `<tr><td colspan="4" class="muted">No analytics</td></tr>`; return; }
+      tb.innerHTML = ent.map(([date,earn]) => `<tr><td>${date}</td><td class="num">—</td><td class="num">—</td><td class="num">${money(earn)}</td></tr>`).join("");
+    }catch(err){
+      console.error("[Analytics] ", err);
+      tb.innerHTML = `<tr><td colspan="4" class="muted">Failed to load</td></tr>`;
+    }
+  }
+
+  // ===== WALLET =====
+  async function loadWallet(){
+    try{
+      const d  = await tryActions(["walletoverview","wallet","balance"]);
+      const tIn  = d.totalIn ?? (d.wallet && d.wallet.totalIn) ?? 0;
+      const tOut = d.totalOut ?? (d.wallet && d.wallet.totalOut) ?? 0;
+      const bal  = d.balance ?? (tIn - tOut);
+
+      $("wallet-totalIn").textContent  = money(tIn);
+      $("wallet-totalOut").textContent = money(tOut);
+      $("wallet-balance").textContent  = money(bal);
+
+      const banks = d.banks ? d.banks
+                  : (d.rows && Array.isArray(d.rows) && d.rows[0] && d.rows[0].code ? d.rows : null);
+      if (!banks) {
+        // Fetch banks separately if needed
+        try {
+          const b = await tryActions(["banks","listbanks"]);
+          const list = b.banks || b.rows || [];
+          fillBanks(list);
+        } catch(e){ console.warn("[Wallet] no banks list", e.message); }
+      } else {
+        fillBanks(banks);
+      }
+    }catch(err){
+      console.error("[Wallet] ", err);
+    }
+  }
+
+  function fillBanks(list){
+    const sel = $("bankSelect");
+    sel.innerHTML = "";
+    if (!list || !list.length) { sel.innerHTML = `<option>No banks</option>`; return; }
+    list.forEach(b=>{
+      const opt = document.createElement("option");
+      opt.value = b.code || b.id || "";
+      opt.textContent = `${b.name||"Bank"} (${b.code||"-"})`;
+      sel.appendChild(opt);
+    });
+  }
+
+  function validateAccount(acct){
+    // Basic: 8–12 digits
+    return /^[0-9]{8,12}$/.test(acct);
+    // If you need real-time BVN/NUBAN validation, hook your GAS validator action here.
+  }
+
+  async function submitWithdrawal(){
+    const acct = $("acctNumber").value.trim();
+    const bank = $("bankSelect").value;
+    const amt  = Number($("withdrawAmt").value || 0);
+
+    if (!validateAccount(acct)) { alert("Enter a valid account number (8–12 digits)."); return; }
+    if (!bank) { alert("Select a bank."); return; }
+    if (isNaN(amt) || amt < MIN_WITHDRAWAL) { alert(`Minimum withdrawal is $${MIN_WITHDRAWAL}.`); return; }
+
+    try{
+      // Try common action names; adjust backend as needed
+      const res = await tryActions(["withdraw","payout","cashout"], { acct, bank, amount: amt });
+      if (res.ok) alert("Withdrawal requested successfully.");
+      else alert("Withdrawal failed: " + (res.error || "unknown"));
+    }catch(err){
+      alert("Withdrawal failed: " + err.message);
+    }
+  }
+
+  // ===== MONITORING =====
+  async function loadMonitoring(){
+    try{
+      const d = await tryActions(["monitoring","health","status"]);
+      const health = d.health ?? d.score ?? 0;
+      $("mon-health").textContent = pct2(health);
+
+      const feed = d.feed || d.events || [];
+      const ul = $("mon-feed"); ul.innerHTML = "";
+      if (!feed.length){ ul.innerHTML = `<li class="muted">No recent events</li>`; return; }
+      feed.forEach(ev=>{
+        const li = document.createElement("li");
+        li.textContent = `${ev.time||ev.date||""} — ${ev.msg||ev.message||JSON.stringify(ev)}`;
+        ul.appendChild(li);
+      });
+    }catch(err){
+      console.error("[Monitoring] ", err);
+      $("mon-feed").innerHTML = `<li class="muted">Failed to load</li>`;
+    }
+  }
+
+  // ===== SETTINGS =====
+  async function loadSettings(){
+    try{
+      const d = await tryActions(["systemsettings","settings","config"]);
+      const rows = d.settings || d.rows || [];
+      const tb = $("settingsBody"); tb.innerHTML = "";
+      if (!rows.length) { tb.innerHTML = `<tr><td colspan="4" class="muted">No settings</td></tr>`; return; }
+      rows.forEach(s=>{
+        tb.insertAdjacentHTML("beforeend",
+          `<tr><td>${s.key||s.name||""}</td><td>${s.value||""}</td><td>${s.desc||s.description||""}</td><td>${s.updated||s.updatedAt||""}</td></tr>`);
+      });
+    }catch(err){
+      console.error("[Settings] ", err);
+      $("settingsBody").innerHTML = `<tr><td colspan="4" class="muted">Failed to load</td></tr>`;
+    }
+  }
+
+  // ===== ROUTER =====
   (function(){
     const links = Array.from(document.querySelectorAll(".navlink"));
     const views = Array.from(document.querySelectorAll(".view"));
@@ -227,15 +447,14 @@
     function show(tabId){
       links.forEach(a => a.classList.toggle("active", a.dataset.target === tabId));
       views.forEach(v => v.classList.toggle("active", v.id === tabId));
-      // per-tab lazy loaders
+
       if (tabId === "overview")   loadOverview();
-      // Add others when their endpoints are ready:
-      // if (tabId === "cpa")      loadCPA();
-      // if (tabId === "users")    loadUsers();
-      // if (tabId === "analytics")loadAnalytics();
-      // if (tabId === "wallet")   loadWallet();
-      // if (tabId === "monitoring")loadMonitoring();
-      // if (tabId === "settings") loadSettings();
+      if (tabId === "cpa")        loadCPA();
+      if (tabId === "users")      loadUsers();
+      if (tabId === "analytics")  loadAnalytics();
+      if (tabId === "wallet")     loadWallet();
+      if (tabId === "monitoring") loadMonitoring();
+      if (tabId === "settings")   loadSettings();
     }
 
     links.forEach(a => a.addEventListener("click", ev=>{
@@ -245,14 +464,11 @@
       show(id);
     }));
 
-    // Initial route
     const initial = (location.hash || "#overview").slice(1);
     show(initial);
 
-    // Also fetch overview once on ready (covers first paint)
-    window.addEventListener("DOMContentLoaded", ()=> {
-      if (initial === "overview") loadOverview();
-    });
+    // Wire wallet button
+    $("btnWithdraw").addEventListener("click", submitWithdrawal);
   })();
   </script>
 </body>

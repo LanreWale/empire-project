@@ -27,7 +27,6 @@
     input,select,button{padding:10px 12px;margin-top:8px;border-radius:8px;border:1px solid var(--line);background:#0b1320;color:#e6f1ff}
     button{background:var(--accent);color:#000;border:none;font-weight:700;cursor:pointer}
     button:hover{filter:brightness(0.95)}
-    /* tab views */
     .view{display:none}
     .view.active{display:block}
   </style>
@@ -52,21 +51,24 @@
       <section id="overview" class="view active card">
         <h3>Overview</h3>
         <p>Earnings: <span id="ov-earnings">$0.00</span></p>
-        <p>Leads: <span id="ov-leads">0.00</span></p>
-        <p>Clicks: <span id="ov-clicks">0.00</span></p>
+        <p>Leads: <span id="ov-leads">0</span></p>
+        <p>Clicks: <span id="ov-clicks">0</span></p>
         <p>Conversion Rate: <span id="ov-convrate">0.00%</span></p>
         <p>EPC: <span id="ov-epc">$0.00</span></p>
         <p>CPA: <span id="ov-cpa">$0.00</span></p>
         <p>RPM: <span id="ov-rpm">$0.00</span></p>
 
         <h4>By Geo</h4>
-        <div id="tbl-geo"></div>
+        <table><thead><tr><th>Country</th><th class="num">Earnings ($)</th></tr></thead><tbody id="tbl-geo"></tbody></table>
+
         <h4>By Device</h4>
-        <div id="tbl-device"></div>
+        <table><thead><tr><th>Device</th><th class="num">Earnings ($)</th></tr></thead><tbody id="tbl-device"></tbody></table>
+
         <h4>By Offer Type</h4>
-        <div id="tbl-offerType"></div>
+        <table><thead><tr><th>Offer Type</th><th class="num">Earnings ($)</th></tr></thead><tbody id="tbl-offerType"></tbody></table>
+
         <h4>By Day</h4>
-        <div id="tbl-byDay"></div>
+        <table><thead><tr><th>Date</th><th class="num">Earnings ($)</th></tr></thead><tbody id="tbl-byDay"></tbody></table>
       </section>
 
       <!-- CPA Accounts -->
@@ -102,7 +104,6 @@
         <p>Total In: <span id="wallet-totalIn">$0.00</span></p>
         <p>Total Out: <span id="wallet-totalOut">$0.00</span></p>
         <p>Balance: <span id="wallet-balance">$0.00</span></p>
-
         <form onsubmit="return false;">
           <input id="acctNumber" type="text" placeholder="Account Number" /><br/>
           <select id="bankSelect"><option>Loading banks...</option></select><br/>
@@ -129,15 +130,15 @@
     </main>
   </div>
 
-  <!-- Scripts: config first, then per-tab renderers -->
-<script src="assets/js/config.js?v=5"></script>
-<script src="assets/js/overview.js?v=5"></script>
-<script src="assets/js/cpa.js?v=5"></script>
-<script src="assets/js/users.js?v=5"></script>
-<script src="assets/js/analytics.js?v=5"></script>
-<script src="assets/js/wallet.js?v=5"></script>
-<script src="assets/js/monitoring.js?v=5"></script>
-<script src="assets/js/settings.js?v=5"></script>
+  <!-- Scripts -->
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/overview.js"></script>
+  <script src="assets/js/cpa.js"></script>
+  <script src="assets/js/users.js"></script>
+  <script src="assets/js/analytics.js"></script>
+  <script src="assets/js/wallet.js"></script>
+  <script src="assets/js/monitoring.js"></script>
+  <script src="assets/js/settings.js"></script>
 
   <!-- Tiny tab router -->
   <script>
@@ -146,12 +147,8 @@
       const views = Array.from(document.querySelectorAll(".view"));
 
       function show(tabId){
-        // toggle active nav
         links.forEach(a => a.classList.toggle("active", a.dataset.target === tabId));
-        // toggle visible section
         views.forEach(v => v.classList.toggle("active", v.id === tabId));
-
-        // lazy-load per tab if needed
         try {
           if (tabId === "overview"   && typeof loadOverview   === "function") loadOverview();
           if (tabId === "cpa"        && typeof loadCPAAccounts=== "function") loadCPAAccounts();
@@ -163,62 +160,16 @@
         } catch(e){ console.error(e); }
       }
 
-      // click handlers
-      links.forEach(a => a.addEventListener("click", (ev)=>{
+      links.forEach(a => a.addEventListener("click", ev=>{
         ev.preventDefault();
         const id = a.dataset.target;
         history.replaceState(null, "", "#"+id);
         show(id);
       }));
 
-      // initial route from hash (default: overview)
       const initial = (location.hash || "#overview").replace("#","");
       show(initial);
     })();
   </script>
-<script>
-(async function(){
-  const API = "https://script.google.com/macros/s/AKfycbz-jj7Cr_KzqCku4SQPQ14MEIuCPdq5OEgiiqjo_O2A0FItBrHlmfkoJHViDxuX4P6z/exec";
-
-  const $ = (id) => document.getElementById(id);
-  const money = n => "$" + Number(n||0).toFixed(2);
-  const pct   = n => Number(n||0).toFixed(2) + "%";
-
-  function tableFromObject(obj, h1, h2){
-    if (!obj || !Object.keys(obj).length) return "<p class='muted'>No data</p>";
-    let html = `<table><thead><tr><th>${h1}</th><th>${h2}</th></tr></thead><tbody>`;
-    for (const [k,v] of Object.entries(obj)) {
-      html += `<tr><td>${k}</td><td class="num">${money(v)}</td></tr>`;
-    }
-    html += "</tbody></table>";
-    return html;
-  }
-
-  try {
-    const res = await fetch(API + "?_=" + Date.now(), {headers:{"Accept":"application/json"}});
-    if (!res.ok) throw new Error("HTTP " + res.status);
-    const data = await res.json();
-    console.log("DATA:", data);
-    window.AppState = data;
-
-    const t = data.totals || {};
-    $("ov-earnings").textContent = money(t.earnings);
-    $("ov-leads").textContent    = Number(t.leads||0).toFixed(0);
-    $("ov-clicks").textContent   = Number(t.clicks||0).toFixed(0);
-    $("ov-convrate").textContent = pct(t.conversionRate);
-    $("ov-epc").textContent      = money(t.epc);
-    $("ov-cpa").textContent      = money(t.cpa);
-    $("ov-rpm").textContent      = money(t.rpm);
-
-    $("tbl-geo").innerHTML        = tableFromObject(data.geo,        "Country",   "Earnings ($)");
-    $("tbl-device").innerHTML     = tableFromObject(data.devices,    "Device",    "Earnings ($)");
-    $("tbl-offerType").innerHTML  = tableFromObject(data.offerTypes, "Offer Type","Earnings ($)");
-    $("tbl-byDay").innerHTML      = tableFromObject(data.byDay,      "Date",      "Earnings ($)");
-  } catch (e) {
-    console.error(e);
-    alert("Overview load failed: " + e.message);
-  }
-})();
-</script>
 </body>
 </html>

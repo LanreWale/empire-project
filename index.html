@@ -1,162 +1,149 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>⚔️ THE EMPIRE ⚔️</title>
+  <link rel="icon" type="image/png" href="/assets/brand/empire-logo.png"/>
 
-  <!-- Favicon -->
-  <link rel="icon" href="/assets/brand/empire-logo.png" type="image/png">
-
-  <!-- Fonts & Styles -->
   <style>
-    * {margin:0;padding:0;box-sizing:border-box}
-    body {
-      font-family: 'Segoe UI', Roboto, sans-serif;
-      background:#0c1323;
-      color:#fff;
-      min-height:100vh;
-      display:flex;
-      justify-content:center;
-      align-items:center;
-      flex-direction:column;
-    }
-    .splash {
-      text-align:center;
-      margin-bottom:40px;
-    }
-    .splash img {
-      width:100px;
-      height:100px;
-      border-radius:14px;
-      box-shadow:0 0 0 3px rgba(255,209,102,.15);
-    }
-    .splash h1 {
-      font-size:2.4rem;
-      font-weight:700;
-      margin:15px 0;
-      color:#ffd166;
-    }
-    .splash p.sub {
-      font-size:1rem;
-      color:#bbb;
-      margin-bottom:20px;
-    }
-    .login-container {
-      display:flex;
-      justify-content:center;
-      gap:20px;
-      flex-wrap:wrap;
-      width:100%;
-      max-width:900px;
-    }
-    .login-card {
-      flex:1 1 320px;
-      background:#111a2e;
-      border-radius:14px;
-      padding:25px;
-      text-align:center;
-      box-shadow:0 0 20px rgba(0,0,0,.5);
-      border:1px solid rgba(255,255,255,.06);
-      transition:transform .25s ease;
-    }
-    .login-card:hover {
-      transform:translateY(-4px);
-    }
-    .login-card img {
-      width:80px;
-      margin-bottom:12px;
-    }
-    .login-card h2 {
-      font-size:1.3rem;
-      margin-bottom:8px;
-      color:#ffd166;
-    }
-    .login-card p {
-      font-size:.95rem;
-      color:#aaa;
-      margin-bottom:18px;
-      min-height:40px;
-    }
-    .login-btn {
-      display:inline-block;
-      padding:12px 24px;
-      border:none;
-      border-radius:8px;
-      font-size:1rem;
-      font-weight:600;
-      cursor:pointer;
-      transition:all .25s ease;
-    }
-    .commander {
-      background:#ffd166;
-      color:#000;
-    }
-    .commander:hover {
-      background:#ffb703;
-    }
-    .user {
-      background:#1976d2;
-      color:#fff;
-    }
-    .user:hover {
-      background:#0d47a1;
-    }
-    footer {
-      margin-top:40px;
-      font-size:.9rem;
-      color:#888;
-      text-align:center;
-    }
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:'Segoe UI',Roboto,system-ui,Arial,sans-serif;background:#0c1323;color:#fff;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px}
+    .splash{text-align:center;margin-bottom:28px}
+    .splash img{width:104px;height:104px;border-radius:14px;box-shadow:0 0 0 3px rgba(255,209,102,.15)}
+    .splash h1{font-size:2.4rem;margin:14px 0;color:#ffd166}
+    .splash p{color:#b9c4d6}
+    .login-wrap{display:flex;gap:20px;flex-wrap:wrap;max-width:960px;width:100%;justify-content:center}
+    .card{flex:1 1 320px;background:#111a2e;border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:22px;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.35);transition:transform .2s ease}
+    .card:hover{transform:translateY(-4px)}
+    .card img{width:86px;margin-bottom:10px}
+    .card h2{font-size:1.25rem;color:#ffd166;margin-bottom:6px}
+    .card p{color:#aab4c8;min-height:40px;margin-bottom:14px}
+    .btn{display:inline-block;padding:12px 20px;border:none;border-radius:8px;font-weight:700;cursor:pointer}
+    .btn-commander{background:#ffd166;color:#000}
+    .btn-commander:hover{background:#ffb703}
+    .btn-user{background:#1976d2;color:#fff}
+    .btn-user:hover{background:#0d47a1}
+    .or{margin:14px 0;color:#8aa;display:none}
+    .idbox{margin-top:10px}
+    .idbox input{width:100%;padding:10px;border:1px solid #26314d;background:#0e1630;color:#fff;border-radius:8px}
+    footer{margin-top:26px;color:#8aa;text-align:center}
+    .hidden{display:none !important}
+    .error{color:#ff6b6b;margin-top:8px;font-size:.95rem}
   </style>
 </head>
 <body>
 
-  <!-- Splash / Hero -->
+  <!-- Hero -->
   <div class="splash">
     <img src="/assets/brand/empire-logo.png" alt="THE EMPIRE">
     <h1>THE EMPIRE</h1>
-    <p class="sub">Affiliate Command Intelligence • Real-Time Earnings • Global Performance Engine</p>
+    <p>Affiliate Command Intelligence • Real-Time Earnings • Global Performance Engine</p>
   </div>
 
-  <!-- Login Split -->
-  <div class="login-container">
-    <!-- Commander Login -->
-    <div class="login-card">
+  <!-- Choice (shown only if we can't auto-resolve) -->
+  <div id="choice" class="login-wrap hidden">
+    <div class="card">
       <img src="/assets/brand/welcome_banner.jpg" alt="Supreme Command">
       <h2>Supreme Command Access</h2>
       <p>Full system control with unlimited privileges</p>
-      <button class="login-btn commander" onclick="enterCommander()">⚔️ Commander Login</button>
+      <button class="btn btn-commander" onclick="startLogin('commander')">⚔️ Commander Login</button>
+      <div class="idbox">
+        <input id="emailCommander" type="email" placeholder="Enter your email (Commander)"/>
+      </div>
     </div>
 
-    <!-- User Login -->
-    <div class="login-card">
+    <div class="card">
       <img src="/assets/brand/empire-hero-final.jpg" alt="User Access">
       <h2>User Access</h2>
       <p>Personal dashboard with earnings tracking</p>
-      <button class="login-btn user" onclick="enterUser()">👤 User Login</button>
+      <button class="btn btn-user" onclick="startLogin('user')">👤 User Login</button>
+      <div class="idbox">
+        <input id="emailUser" type="email" placeholder="Enter your email (User)"/>
+      </div>
     </div>
   </div>
 
-  <footer>
-    BUILT FOR LEGENDS. POWERED BY TRUTH. DEPLOYED FOR VICTORY.
-  </footer>
+  <div id="status" class="error hidden"></div>
 
-  <!-- GAS Config -->
+  <footer>BUILT FOR LEGENDS • POWERED BY TRUTH • DEPLOYED FOR VICTORY</footer>
+
+  <!-- Config (points to your GAS web app) -->
   <script>
     window.EMPIRE = {
       API_URL: "https://script.google.com/macros/s/AKfycbz-jj7Cr_KzqCku4SQPQ14MEIuCPdq5OEgiiqjo_O2A0FItBrHlmfkoJHViDxuX4P6z/exec"
     };
 
-    function enterCommander() {
-      window.location.href = "/dashboard.html?role=commander";
+    // --- Small helper ---
+    const qs = new URLSearchParams(location.search);
+    const api = (path) => `${EMPIRE.API_URL}${path}`;
+
+    // Decide immediately: if we can figure out who you are, route you.
+    (async function bootstrap() {
+      // 1) If URL has ?email=…, try that first.
+      let email = (qs.get("email") || "").trim();
+      if (!email) {
+        // 2) Else look in localStorage from a previous visit
+        email = (localStorage.getItem("empire:email") || "").trim();
+      }
+
+      if (email) {
+        const role = await resolveRole(email);
+        if (role) return go(role, email);  // commander|user
+      }
+
+      // 3) Otherwise show the choice cards
+      document.getElementById("choice").classList.remove("hidden");
+    })();
+
+    async function resolveRole(email) {
+      try {
+        const url = api(`?action=whoami&email=${encodeURIComponent(email)}`);
+        const res = await fetch(url, { method: "GET", mode: "cors" });
+        const data = await res.json();
+        if (data && data.ok && (data.role === "commander" || data.role === "user")) {
+          return data.role;
+        }
+        return null;
+      } catch (e) {
+        showError("Unable to contact auth service.");
+        return null;
+      }
     }
-    function enterUser() {
-      window.location.href = "/dashboard.html?role=user";
+
+    // Manual start via the two buttons; role is only a hint—server decides.
+    async function startLogin(prefRole) {
+      const email = (prefRole === "commander"
+        ? document.getElementById("emailCommander").value
+        : document.getElementById("emailUser").value).trim();
+
+      if (!email) return showError("Please enter your email.");
+
+      const role = await resolveRole(email);
+      if (!role) return showError("Email not recognized. Check the Users sheet (Email, Role).");
+
+      go(role, email);
+    }
+
+    function go(role, email) {
+      // persist and route
+      localStorage.setItem("empire:email", email);
+      localStorage.setItem("empire:role", role);
+      const dest = (role === "commander")
+        ? "/dashboard.html?role=commander"
+        : "/dashboard.html?role=user";
+      window.location.href = dest;
+    }
+
+    function showError(msg) {
+      const el = document.getElementById("status");
+      el.textContent = msg;
+      el.classList.remove("hidden");
+      setTimeout(()=> el.classList.add("hidden"), 5000);
     }
   </script>
 
-  <!-- Empire Adapter -->
-  <script src="/assets/js/empire-adapter.js?v=1"></script>
+  <!-- Your adapter (optional; safe if it’s not present yet) -->
+  <script src="/assets/js/empire-adapter.js?v=1" defer></script>
 </body>
 </html>

@@ -1,151 +1,75 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>⚔️ THE EMPIRE Dashboard ⚔️</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8" />
+  <title>⚔️ THE EMPIRE — Command Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <!-- ====== INLINE CSS ====== -->
+  <!-- ================== INLINE EMPIRE THEME ================== -->
   <style>
-    body {
-      margin: 0;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: #0d1117;
-      color: #e6edf3;
-      display: flex;
-      height: 100vh;
+    :root{
+      --bg:#0d1117; --panel:#161b22; --muted:#8b949e; --line:#30363d;
+      --brand:#f0b90b; --accent:#58a6ff; --ok:#238636; --err:#f85149;
+      --text:#e6edf3;
     }
-
-    h1, h3 {
-      margin: 0 0 10px 0;
-      font-weight: 600;
-      text-transform: uppercase;
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Inter,Arial,sans-serif;
+      background:var(--bg); color:var(--text); display:flex; min-height:100%;
     }
-
-    .sidebar {
-      width: 220px;
-      background: #161b22;
-      padding: 20px 10px;
-      display: flex;
-      flex-direction: column;
+    /* Sidebar */
+    .sidebar{width:220px; background:var(--panel); padding:18px 10px; display:flex; flex-direction:column}
+    .brand{display:flex; align-items:center; gap:8px; color:var(--brand); font-weight:800; letter-spacing:.4px; margin:4px 8px 18px}
+    .brand:before{content:"👑"}
+    .nav{display:flex; flex-direction:column; gap:6px}
+    .nav button{
+      border:0; outline:0; background:transparent; color:#c9d1d9; text-align:left;
+      padding:10px 12px; border-radius:8px; cursor:pointer; font-size:.95rem
     }
-
-    .sidebar .brand {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 1.2rem;
-      font-weight: bold;
-      margin-bottom: 20px;
-      color: #f0b90b;
-    }
-
-    .nav {
-      display: flex;
-      flex-direction: column;
-    }
-
-    .nav button {
-      background: none;
-      border: none;
-      color: #c9d1d9;
-      padding: 10px 15px;
-      text-align: left;
-      font-size: 0.95rem;
-      cursor: pointer;
-      border-radius: 6px;
-      transition: background 0.2s;
-    }
-
-    .nav button:hover {
-      background: #21262d;
-    }
-
-    .nav button.active {
-      background: #238636;
-      color: white;
-    }
-
-    main {
-      flex: 1;
-      padding: 20px;
-      overflow-y: auto;
-    }
-
-    .view.hidden {
-      display: none;
-    }
-
-    .kpis {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-      gap: 12px;
-      margin: 20px 0;
-    }
-
-    .kpis div {
-      background: #161b22;
-      padding: 12px;
-      border-radius: 8px;
-      font-size: 0.9rem;
-      text-align: center;
-    }
-
-    .kpis span {
-      display: block;
-      font-size: 1.2rem;
-      font-weight: bold;
-      margin-top: 4px;
-      color: #f0b90b;
-    }
-
-    .grids {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 16px;
-    }
-
-    .grids h3 {
-      font-size: 1rem;
-      margin-bottom: 8px;
-      color: #58a6ff;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      background: #161b22;
-      border-radius: 8px;
-      overflow: hidden;
-    }
-
-    table td {
-      padding: 8px 10px;
-      font-size: 0.85rem;
-      border-bottom: 1px solid #30363d;
-    }
-
-    table tr:last-child td {
-      border-bottom: none;
-    }
-
-    table td:first-child {
-      font-weight: 500;
-    }
-
-    .note.err {
-      color: #f85149;
-      margin-top: 15px;
-      font-size: 0.9rem;
+    .nav button:hover{background:#21262d}
+    .nav button.active{background:var(--ok); color:white}
+    /* Main */
+    main{flex:1; padding:18px; overflow:auto}
+    h1{margin:0 0 12px; font-weight:800; text-transform:uppercase; letter-spacing:.5px}
+    h3{margin:0 0 8px; font-size:1rem; color:var(--accent); font-weight:700}
+    .view.hidden{display:none}
+    /* KPIs */
+    .kpis{display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:12px; margin:14px 0 18px}
+    .kpi{background:var(--panel); padding:12px; border-radius:10px; text-align:center}
+    .kpi .lbl{color:var(--muted); font-size:.85rem}
+    .kpi .val{margin-top:4px; font-size:1.25rem; font-weight:800; color:var(--brand)}
+    /* Grid cards */
+    .grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:16px}
+    .card{background:var(--panel); border-radius:10px; padding:12px}
+    /* Tables */
+    table{width:100%; border-collapse:collapse; overflow:hidden; border-radius:8px}
+    tbody tr+tr td{border-top:1px solid var(--line)}
+    td{padding:8px 10px; font-size:.9rem}
+    td:first-child{color:#d1d7e0; font-weight:600}
+    .muted{color:var(--muted)}
+    .note{margin-top:10px}
+    .note.err{color:var(--err)}
+    /* Simple sections for other tabs */
+    .placeholder{background:var(--panel); border-radius:10px; padding:14px; color:var(--muted)}
+    @media (max-width:760px){ .sidebar{width:72px} .brand{font-size:0; padding-left:8px} .nav button{font-size:0} .nav button:before{font-size:18px}
+      .nav button[data-tab="dashboard"]:before{content:"🏠"}
+      .nav button[data-tab="cpa"]:before{content:"💹"}
+      .nav button[data-tab="users"]:before{content:"👥"}
+      .nav button[data-tab="analytics"]:before{content:"📊"}
+      .nav button[data-tab="wallet"]:before{content:"💼"}
+      .nav button[data-tab="monitoring"]:before{content:"🛰️"}
+      .nav button[data-tab="settings"]:before{content:"⚙️"}
     }
   </style>
 </head>
 <body>
-  <!-- ====== SIDEBAR ====== -->
+
+  <!-- ================== SIDEBAR ================== -->
   <aside class="sidebar">
-    <div class="brand">⚔️ THE EMPIRE</div>
+    <div class="brand">THE EMPIRE</div>
     <div class="nav">
-      <button data-tab="dashboard" class="active">Overview</button>
+      <button class="active" data-tab="dashboard">Overview</button>
       <button data-tab="cpa">CPA Accounts</button>
       <button data-tab="users">Users</button>
       <button data-tab="analytics">Analytics</button>
@@ -155,50 +79,145 @@
     </div>
   </aside>
 
-  <!-- ====== MAIN ====== -->
+  <!-- ================== MAIN ================== -->
   <main>
+    <!-- ========== OVERVIEW ========== -->
     <section id="view-dashboard" class="view">
       <h1>Command Dashboard</h1>
+
       <div class="kpis">
-        <div>Earnings <span id="kpi-earn">$0.00</span></div>
-        <div>Leads <span id="kpi-leads">0</span></div>
-        <div>Clicks <span id="kpi-clicks">0</span></div>
-        <div>EPC <span id="kpi-epc">$0.00</span></div>
-        <div>CPA <span id="kpi-cpa">$0.00</span></div>
-        <div>RPM <span id="kpi-rpm">$0.00</span></div>
+        <div class="kpi"><div class="lbl">Earnings</div><div id="kpi-earn"  class="val">$0.00</div></div>
+        <div class="kpi"><div class="lbl">Leads</div>   <div id="kpi-leads" class="val">0</div></div>
+        <div class="kpi"><div class="lbl">Clicks</div>  <div id="kpi-clicks" class="val">0</div></div>
+        <div class="kpi"><div class="lbl">EPC</div>     <div id="kpi-epc"   class="val">$0.00</div></div>
+        <div class="kpi"><div class="lbl">CPA</div>     <div id="kpi-cpa"   class="val">$0.00</div></div>
+        <div class="kpi"><div class="lbl">RPM</div>     <div id="kpi-rpm"   class="val">$0.00</div></div>
       </div>
 
-      <div class="grids">
-        <div>
+      <div class="grid">
+        <div class="card">
           <h3>By Geo</h3>
           <table id="tbl-geo"><tbody></tbody></table>
         </div>
-        <div>
+        <div class="card">
           <h3>By Device</h3>
           <table id="tbl-device"><tbody></tbody></table>
         </div>
-        <div>
+        <div class="card">
           <h3>By Offer Type</h3>
           <table id="tbl-offer"><tbody></tbody></table>
         </div>
-        <div>
+        <div class="card">
           <h3>By Day</h3>
           <table id="tbl-day"><tbody></tbody></table>
         </div>
       </div>
-      <div id="overviewNote" class="note err hidden"></div>
+
+      <div id="overviewNote" class="note err" style="display:none">Failed to load overview.</div>
     </section>
 
-    <!-- other tabs follow (CPA, Users, Analytics, Wallet, Monitoring...) -->
-    <section id="view-cpa" class="view hidden"><h1>CPA Accounts</h1></section>
-    <section id="view-users" class="view hidden"><h1>Users</h1></section>
-    <section id="view-analytics" class="view hidden"><h1>Analytics</h1></section>
-    <section id="view-wallet" class="view hidden"><h1>Wallet</h1></section>
-    <section id="view-monitoring" class="view hidden"><h1>Monitoring</h1></section>
-    <section id="view-settings" class="view hidden"><h1>Settings</h1></section>
+    <!-- ========== OTHER TABS (placeholders) ========== -->
+    <section id="view-cpa" class="view hidden"><div class="placeholder">CPA Accounts screen</div></section>
+    <section id="view-users" class="view hidden"><div class="placeholder">Users screen</div></section>
+    <section id="view-analytics" class="view hidden"><div class="placeholder">Analytics screen</div></section>
+    <section id="view-wallet" class="view hidden"><div class="placeholder">Wallet screen</div></section>
+    <section id="view-monitoring" class="view hidden"><div class="placeholder">Monitoring screen</div></section>
+    <section id="view-settings" class="view hidden"><div class="placeholder">Settings screen</div></section>
   </main>
 
-  <!-- ====== JS (wired to GAS + dashboard) ====== -->
-  <script src="app/dashboard.js"></script>
+  <!-- ================== INLINE JS ================== -->
+  <script>
+    /* ---------- CONFIG ---------- */
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbz-jj7Cr_KzqCku4SQPQ14MEIuCPdq5OEgiiqjo_O2A0FItBrHlmfkoJHViDxuX4P6z/exec";
+
+    /* ---------- UTILS ---------- */
+    const $ = (id) => document.getElementById(id);
+    const esc = (s) => String(s ?? "").replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+    const fmtUSD = (n) => new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(+n || 0);
+    const num = (n) => (+n || 0).toLocaleString();
+
+    function showTab(key){
+      document.querySelectorAll('.nav button').forEach(b=>{
+        b.classList.toggle('active', b.dataset.tab === key);
+      });
+      document.querySelectorAll('.view').forEach(v=>v.classList.add('hidden'));
+      (document.getElementById('view-'+key) || document.getElementById('view-dashboard')).classList.remove('hidden');
+    }
+
+    document.querySelectorAll('.nav button').forEach(b=>{
+      b.addEventListener('click',()=>{
+        showTab(b.dataset.tab);
+        if (b.dataset.tab === 'dashboard') loadOverview().catch(()=>{});
+      });
+    });
+
+    /* ---------- RENDER HELPERS ---------- */
+    function renderKVTable(tbodyId, obj){
+      const tb = $(tbodyId).querySelector('tbody');
+      tb.innerHTML = '';
+      const rows = Object.entries(obj || {}).sort((a,b)=> (b[1]||0) - (a[1]||0));
+      rows.forEach(([k,v])=>{
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${esc(k)}</td><td class="muted">${fmtUSD(v)}</td>`;
+        tb.appendChild(tr);
+      });
+    }
+    function renderDayTable(tbodyId, obj){
+      const tb = $(tbodyId).querySelector('tbody');
+      tb.innerHTML = '';
+      const rows = Object.entries(obj || {}).sort((a,b)=> a[0] < b[0] ? 1 : -1);
+      rows.forEach(([date, amt])=>{
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${esc(date)}</td><td class="muted">${fmtUSD(amt)}</td>`;
+        tb.appendChild(tr);
+      });
+    }
+
+    /* ---------- DATA LOADER ---------- */
+    async function fetchOverview(){
+      // try plain URL first (works with your provided live endpoint)
+      try{
+        const r = await fetch(GAS_URL, {cache:'no-store'});
+        const t = await r.text();
+        return typeof t === 'string' ? JSON.parse(t) : t;
+      }catch(_){}
+      // fallback to ?action=overview if your GAS expects it
+      const u = new URL(GAS_URL);
+      u.searchParams.set('action','overview');
+      const r = await fetch(u.toString(), {cache:'no-store'});
+      return r.json();
+    }
+
+    async function loadOverview(){
+      const note = document.getElementById('overviewNote');
+      note.style.display = 'none';
+      try{
+        const data = await fetchOverview();
+
+        const t = data.totals || {};
+        $('kpi-earn').textContent  = fmtUSD(t.earnings);
+        $('kpi-leads').textContent = num(t.leads);
+        $('kpi-clicks').textContent= num(t.clicks);
+        $('kpi-epc').textContent   = fmtUSD(t.epc);
+        $('kpi-cpa').textContent   = fmtUSD(t.cpa);
+        $('kpi-rpm').textContent   = fmtUSD(t.rpm);
+
+        renderKVTable('tbl-geo',    data.geo);
+        renderKVTable('tbl-device', data.devices);
+        renderKVTable('tbl-offer',  data.offerTypes);
+        renderDayTable('tbl-day',   data.byDay);
+      }catch(e){
+        console.warn('overview failed', e);
+        note.textContent = 'Failed to load overview.';
+        note.style.display = '';
+      }
+    }
+
+    /* ---------- INIT ---------- */
+    window.addEventListener('DOMContentLoaded', ()=>{
+      showTab('dashboard');
+      loadOverview().catch(()=>{});
+    });
+  </script>
 </body>
 </html>

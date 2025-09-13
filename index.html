@@ -697,5 +697,47 @@ const GAS_BASE = window.GAS_BASE || 'https://script.google.com/macros/s/REPLACE_
 })();
 </script>
 <!-- ===================  /END ADD CPA ACCOUNT  =================== -->
+<!-- … your dashboard content … -->
+
+  <!-- CPA Accounts Add Modal -->
+  <div id="emp-cpa-modal" class="emp-modal hidden">
+    <div class="emp-modal__backdrop" data-close="true"></div>
+    <div class="emp-modal__panel">
+      <div class="emp-modal__header" id="emp-cpa-drag">
+        <div class="emp-modal__title">Add New CPA Account</div>
+        <button class="emp-modal__close" data-close="true">×</button>
+      </div>
+
+      <form id="emp-cpa-form" class="emp-modal__body">
+        <div class="emp-field">
+          <label class="emp-label">Account Name</label>
+          <input class="emp-input" name="AccountName" required />
+        </div>
+        <div class="emp-field">
+          <label class="emp-label">Network</label>
+          <select class="emp-input" name="Network" required>
+            <option value="">Select Network</option>
+            <option value="CPA Grip">CPA Grip</option>
+            <option value="CPAlead">CPAlead</option>
+            <option value="AdWorkMedia">AdWork Media</option>
+            <option value="OGAds">OGAds</option>
+          </select>
+        </div>
+        <div class="emp-field">
+          <label class="emp-label">Account ID</label>
+          <input class="emp-input" name="AccountID" required />
+        </div>
+        <div class="emp-modal__footer">
+          <button type="button" class="emp-btn" data-close="true">Cancel</button>
+          <button type="submit" class="emp-btn emp-btn-primary">+ Add Account</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- scripts here -->
+  <script src="app.js"></script>
+</body>
+</html>
 </body>
 </html>

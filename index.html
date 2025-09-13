@@ -6,10 +6,7 @@
 <title>THE EMPIRE — Command Dashboard</title>
 <link rel="icon" href="assets/brand/favicon.png" type="image/png"/>
 <style>
-  :root{
-    --bg:#0f1620; --panel:#121a25; --ink:#e9eef6; --muted:#8ca1c2;
-    --brand:#f2c230; --line:#223046;
-  }
+  :root{ --bg:#0f1620; --panel:#121a25; --ink:#e9eef6; --muted:#8ca1c2; --brand:#f2c230; --line:#223046; }
   *{box-sizing:border-box}
   html,body{height:100%;background:var(--bg);color:var(--ink);font:14px/1.5 Inter,system-ui,Segoe UI,Roboto,Arial}
   .app{display:grid;grid-template-columns:240px 1fr;min-height:100vh}
@@ -47,7 +44,6 @@
 </head>
 <body>
 <div class="app">
-  <!-- Sidebar -->
   <aside class="side">
     <div class="brand">
       <img src="assets/brand/empire-logo.png" alt="The Empire"/>
@@ -64,9 +60,7 @@
     </div>
   </aside>
 
-  <!-- Main -->
   <main>
-    <!-- OVERVIEW -->
     <section id="view-dashboard" class="view">
       <h1>COMMAND DASHBOARD</h1>
       <div class="hero span-12">WELCOME TO THE EMPIRE</div>
@@ -102,25 +96,21 @@
       <div id="ovrErr" class="note err hidden">Failed to load overview.</div>
     </section>
 
-    <!-- CPA -->
     <section id="view-cpa" class="view hidden">
       <h1>CPA ACCOUNTS</h1>
       <div id="cpaGrid" class="grid"></div>
     </section>
 
-    <!-- USERS -->
     <section id="view-users" class="view hidden">
       <h1>USERS</h1>
       <table id="tbl-users"><thead><tr><th>Name</th><th>Email</th><th>Phone</th></tr></thead><tbody></tbody></table>
     </section>
 
-    <!-- ANALYTICS -->
     <section id="view-analytics" class="view hidden">
       <h1>ANALYTICS</h1>
       <table id="tbl-analytics"><thead><tr><th>Metric</th><th>Value</th></tr></thead><tbody></tbody></table>
     </section>
 
-    <!-- WALLET -->
     <section id="view-wallet" class="view hidden">
       <h1>WALLET</h1>
       <div class="kpis">
@@ -129,13 +119,11 @@
       <div id="walletList" class="grid"></div>
     </section>
 
-    <!-- MONITORING -->
     <section id="view-monitoring" class="view hidden">
       <h1>MONITORING</h1>
       <table id="tbl-monitor"><thead><tr><th>Time</th><th>Type</th><th>Message</th></tr></thead><tbody></tbody></table>
     </section>
 
-    <!-- SETTINGS -->
     <section id="view-settings" class="view hidden">
       <h1>SETTINGS</h1>
       <pre id="cfgDump" class="panel" style="white-space:pre-wrap"></pre>
@@ -145,49 +133,22 @@
 
 <script>
   /* ======= CONFIG ======= */
-  // ⚠️ REPLACE with your verified googleusercontent echo URL:
   const GAS_BASE = "https://script.google.com/macros/s/AKfycbwqR_8O9CDaDKePAeNophBITJALF91rRfJezFap5Xf6hTk5xlc3YiC4BtACV3gcIu17/exec";
-
-  // ✅ auto-pick ? or & depending on URL
-  const api = (action) =>
-    GAS_BASE + (GAS_BASE.includes("?") ? "&" : "?") + "action=" + encodeURIComponent(action);
+  const api = (action) => GAS_BASE + (GAS_BASE.includes("?") ? "&" : "?") + "action=" + encodeURIComponent(action);
 
   /* ======= UTILS ======= */
   const $ = (id) => document.getElementById(id);
-  const esc = (s) => String(s ?? '').replace(/[&<>"']/g, m => (
-    {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]
-  ));
+  const esc = (s) => String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
   const num = (n) => (+n || 0).toLocaleString();
   const usd = (n) => new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(+n||0);
-
-  async function jget(url){
-    const r = await fetch(url, {cache:'no-store', headers:{'Accept':'application/json'}});
-    if(!r.ok) throw new Error(`${r.status} ${r.statusText}`);
-    return r.json();
-  }
-  function showError(el, msg){ el.classList.remove('hidden'); el.textContent = msg; }
-</script>
-
-  /* ======= UTILS ======= */
-  const $ = (id) => document.getElementById(id);
-  const esc = s => String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-  const num = n => (+n||0).toLocaleString();
-  const usd = n => new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(+n||0);
-  async function jget(url){
-    const r = await fetch(url, {cache:'no-store', headers:{'Accept':'application/json'}});
-    if(!r.ok) throw new Error(`${r.status} ${r.statusText}`);
-    return r.json();
-  }
-  function showError(el, msg){ el.classList.remove('hidden'); el.textContent = msg; }
+  async function jget(url){ const r = await fetch(url,{cache:'no-store',headers:{'Accept':'application/json'}}); if(!r.ok) throw new Error(`${r.status} ${r.statusText}`); return r.json(); }
+  function showError(el,msg){ el.classList.remove('hidden'); el.textContent = msg; }
 
   /* ======= TABS ======= */
   function showTab(key){
-    document.querySelectorAll('.nav button').forEach(b=>{
-      b.classList.toggle('active', b.dataset.tab===key);
-    });
+    document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active', b.dataset.tab===key));
     document.querySelectorAll('.view').forEach(v=>v.classList.add('hidden'));
-    const view = document.getElementById('view-'+key);
-    if(view) view.classList.remove('hidden');
+    const view = document.getElementById('view-'+key); if(view) view.classList.remove('hidden');
 
     if(key==='dashboard') loadOverview();
     if(key==='cpa')       loadCpa();
@@ -198,7 +159,7 @@
     if(key==='settings')  loadSettings();
   }
   document.querySelectorAll('.nav button').forEach(b=>{
-    b.addEventListener('click',()=>{ location.hash=b.dataset.tab; showTab(b.dataset.tab); });
+    b.addEventListener('click', ()=>{ location.hash=b.dataset.tab; showTab(b.dataset.tab); });
   });
 
   /* ======= OVERVIEW ======= */
@@ -207,7 +168,6 @@
       const j = await jget(api("overview"));
       const t = j.totals || {};
       const tp = j.totalsPretty || {};
-
       $('kpi-earn').textContent  = usd(t.earnings || 0);
       $('kpi-leads').textContent = num(t.leads || 0);
       $('kpi-clicks').textContent= num(t.clicks || 0);
@@ -225,11 +185,11 @@
         });
         if(!tbody.children.length){ tbody.innerHTML = `<tr><td colspan="2" class="muted">No data</td></tr>`; }
       };
-      fillObj($('#tbl-geo tbody'), j.geo);
-      fillObj($('#tbl-device tbody'), j.devices);
-      fillObj($('#tbl-offer tbody'), j.offerTypes);
+      fillObj(document.querySelector('#tbl-geo tbody'), j.geo);
+      fillObj(document.querySelector('#tbl-device tbody'), j.devices);
+      fillObj(document.querySelector('#tbl-offer tbody'), j.offerTypes);
 
-      const dayBody = $('#tbl-day tbody'); dayBody.innerHTML='';
+      const dayBody = document.querySelector('#tbl-day tbody'); dayBody.innerHTML='';
       const byDay = Array.isArray(j.byDay) ? j.byDay
                    : Object.entries(j.byDay||{}).map(([d,v])=>({t:d, earnings:v}));
       byDay.forEach(r=>{
@@ -239,16 +199,16 @@
       });
       if(!dayBody.children.length) dayBody.innerHTML=`<tr><td colspan="2" class="muted">No data</td></tr>`;
 
-      $('ovrErr').classList.add('hidden');
+      document.getElementById('ovrErr').classList.add('hidden');
     }catch(e){
-      showError($('ovrErr'), `Failed to load overview: ${e.message}`);
+      showError(document.getElementById('ovrErr'), `Failed to load overview: ${e.message}`);
       console.warn('overview failed', e);
     }
   }
 
   /* ======= CPA ======= */
   async function loadCpa(){
-    const grid=$('cpaGrid'); grid.innerHTML='';
+    const grid=document.getElementById('cpaGrid'); grid.innerHTML='';
     try{
       const j = await jget(api("cpa"));
       (j.items||[]).forEach(acc=>{
@@ -259,10 +219,9 @@
         const clicks = acc.clicks ?? 0;
         const conv = (()=>{
           if (acc.conversionRate != null) {
-            const n = (typeof acc.conversionRate === 'string' && acc.conversionRate.endsWith('%'))
+            return (typeof acc.conversionRate === 'string' && acc.conversionRate.endsWith('%'))
               ? acc.conversionRate
               : ((+acc.conversionRate)*100).toFixed(1)+'%';
-            return n;
           }
           if (acc.conversion != null) {
             return (typeof acc.conversion === 'string' && acc.conversion.endsWith('%'))
@@ -290,7 +249,7 @@
 
   /* ======= USERS ======= */
   async function loadUsers(){
-    const body=$('#tbl-users tbody'); body.innerHTML='';
+    const body=document.querySelector('#tbl-users tbody'); body.innerHTML='';
     try{
       const j = await jget(api("users"));
       (j.items||[]).forEach(u=>{
@@ -307,10 +266,9 @@
 
   /* ======= ANALYTICS ======= */
   async function loadAnalytics(){
-    const body=$('#tbl-analytics tbody'); body.innerHTML='';
+    const body=document.querySelector('#tbl-analytics tbody'); body.innerHTML='';
     try{
       const j = await jget(api("analytics"));
-      // Supports {items:[{metric,value}]} OR {totals:{}, ...} OR passthrough row list
       if (Array.isArray(j.items) && j.items.length && j.items[0].metric !== undefined) {
         j.items.forEach(r=>{
           const tr=document.createElement('tr');
@@ -324,11 +282,11 @@
           body.appendChild(tr);
         });
       } else if (Array.isArray(j.items)) {
-        // Generic rows: show first 6 key/value pairs per row
+        const firstTwo = (obj)=>Object.entries(obj).slice(0,2).map(e=>e[1]||'');
         j.items.forEach(r=>{
-          const first = Object.entries(r).slice(0,2);
+          const [a,b]=firstTwo(r);
           const tr=document.createElement('tr');
-          tr.innerHTML = `<td>${esc((first[0]||['',''])[1])}</td><td>${esc((first[1]||['',''])[1])}</td>`;
+          tr.innerHTML=`<td>${esc(a)}</td><td>${esc(b)}</td>`;
           body.appendChild(tr);
         });
       }
@@ -340,16 +298,16 @@
 
   /* ======= WALLET ======= */
   async function loadWallet(){
-    const list=$('walletList'); list.innerHTML='';
+    const list=document.getElementById('walletList'); list.innerHTML='';
     try{
       const j = await jget(api("wallet"));
-      $('wallet-balance').textContent = usd(j.balance||0);
+      document.getElementById('wallet-balance').textContent = usd(j.balance||0);
       (j.history||[]).forEach(tx=>{
         const div=document.createElement('div'); div.className='card span-6';
         div.innerHTML = `<div style="display:flex;justify-content:space-between;gap:10px">
-            <div><div class="muted">${esc(tx.date||'')}</div><div>${esc(tx.method||'')}</div></div>
-            <div style="text-align:right"><div style="font-weight:800">${usd(tx.amount||0)}</div><span class="muted">${esc(tx.status||'COMPLETED')}</span></div>
-          </div>`;
+          <div><div class="muted">${esc(tx.date||'')}</div><div>${esc(tx.method||'')}</div></div>
+          <div style="text-align:right"><div style="font-weight:800">${usd(tx.amount||0)}</div><span class="muted">${esc(tx.status||'COMPLETED')}</span></div>
+        </div>`;
         list.appendChild(div);
       });
       if(!list.children.length) list.innerHTML=`<div class="note err">No transactions.</div>`;
@@ -360,7 +318,7 @@
 
   /* ======= MONITORING ======= */
   async function loadMonitoring(){
-    const body=$('#tbl-monitor tbody'); body.innerHTML='';
+    const body=document.querySelector('#tbl-monitor tbody'); body.innerHTML='';
     try{
       const j = await jget(api("monitoring"));
       (j.events||[]).forEach(ev=>{
@@ -378,9 +336,9 @@
   async function loadSettings(){
     try{
       const j = await jget(api("config"));
-      $('cfgDump').textContent = JSON.stringify(j,null,2);
+      document.getElementById('cfgDump').textContent = JSON.stringify(j,null,2);
     }catch(e){
-      $('cfgDump').textContent = 'Failed to load config.';
+      document.getElementById('cfgDump').textContent = 'Failed to load config.';
     }
   }
 

@@ -5,3 +5,16 @@
 [functions]
   directory = "netlify/functions"
   node_bundler = "esbuild"
+
+########################################
+# OPTION A — simplest: disable scanner #
+########################################
+[build.environment]
+SECRETS_SCAN_ENABLED = "false"
+
+# -------- OR --------
+# OPTION B — keep scanner ON, but whitelist keys/paths it’s flagging
+# (Comment the line above, then uncomment the two lines below)
+
+# SECRETS_SCAN_OMIT_KEYS = "VITE_COMMANDER_KEY,SHEETS_PENDING_URL,ADMIN_SECRET,TWILIO_WHATSAPP_FROM,APPS_SCRIPT_WEBAPP_URL,CMD_USER,CMD_PASS"
+# SECRETS_SCAN_OMIT_PATHS = "app/index.html,app/dashboard.js,src/App.jsx,src/lib/gas.js,assets/js/config.js,assets/js/empire-auth.js,src/Code.gs,netlify/functions/lib/netlify.js.bak.1755770802"

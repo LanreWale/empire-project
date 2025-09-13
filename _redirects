@@ -1,7 +1,2 @@
-/               /index.html    200
-/admin          /admin/index.html 200
-/login          /login/index.html 200
-/register       /register/index.html 200
-
-# Proxy API calls to your working GAS web app
-/api/:action  https://script.google.com/macros/s/AKfycbwqR_8O9CDaDKePAeNophBITJALF91rRfJezFap5Xf6hTk5xlc3YiC4BtACV3gcIu17/exec?action=:action  200
+/api/*  https://script.google.com/macros/s/AKfycbwqR_8O9CDaDKePAeNophBITJALF91rRfJezFap5Xf6hTk5xlc3YiC4BtACV3gcIu17/exec?action=:splat  200
+/*      /index.html  200

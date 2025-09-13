@@ -132,17 +132,35 @@
 </div>
 
 <script>
-  /* ======= CONFIG ======= */
+  /* ======= CONFIG (YOUR /exec URL) ======= */
   const GAS_BASE = "https://script.google.com/macros/s/AKfycbwqR_8O9CDaDKePAeNophBITJALF91rRfJezFap5Xf6hTk5xlc3YiC4BtACV3gcIu17/exec";
-  const api = (action) => GAS_BASE + (GAS_BASE.includes("?") ? "&" : "?") + "action=" + encodeURIComponent(action);
 
   /* ======= UTILS ======= */
-  const $ = (id) => document.getElementById(id);
+  const $   = (id) => document.getElementById(id);
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
   const num = (n) => (+n || 0).toLocaleString();
-  const usd = (n) => new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(+n||0);
-  async function jget(url){ const r = await fetch(url,{cache:'no-store',headers:{'Accept':'application/json'}}); if(!r.ok) throw new Error(`${r.status} ${r.statusText}`); return r.json(); }
+  const usd = (n) => new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',minimumFractionDigits:2,maximumFractionDigits:2}).format(+n||0);
+  const fmtPct = (v) => {
+    const x = Number(v);
+    if (!isFinite(x)) return "0.00%";
+    return (x > 1.0000001 ? x : x*100).toFixed(2) + "%";
+  };
   function showError(el,msg){ el.classList.remove('hidden'); el.textContent = msg; }
+
+  /* ======= JSONP (avoids CORS) ======= */
+  function jsonp(action){
+    return new Promise((resolve, reject)=>{
+      const cb = "cb_" + Math.random().toString(36).slice(2);
+      window[cb] = (payload) => { try { resolve(payload); } finally { delete window[cb]; s.remove(); } };
+      const s = document.createElement("script");
+      const url = GAS_BASE + (GAS_BASE.includes("?") ? "&" : "?")
+        + "action=" + encodeURIComponent(action)
+        + "&callback=" + cb;
+      s.src = url;
+      s.onerror = () => { delete window[cb]; s.remove(); reject(new Error("network")); };
+      document.body.appendChild(s);
+    });
+  }
 
   /* ======= TABS ======= */
   function showTab(key){
@@ -165,16 +183,17 @@
   /* ======= OVERVIEW ======= */
   async function loadOverview(){
     try{
-      const j = await jget(api("overview"));
-      const t = j.totals || {};
+      const j = await jsonp("overview");
+      const t  = j.totals || {};
       const tp = j.totalsPretty || {};
-      $('kpi-earn').textContent  = usd(t.earnings || 0);
-      $('kpi-leads').textContent = num(t.leads || 0);
-      $('kpi-clicks').textContent= num(t.clicks || 0);
-      $('kpi-epc').textContent   = usd(t.epc || 0);
-      $('kpi-cpa').textContent   = usd(t.cpa || 0);
-      $('kpi-rpm').textContent   = usd(t.rpm || 0);
-      $('kpi-cr').textContent    = tp.conversionRatePct || ((t.conversionRate ?? 0).toFixed(2) + '%');
+
+      $('kpi-earn').textContent   = usd(t.earnings);
+      $('kpi-leads').textContent  = num(t.leads);
+      $('kpi-clicks').textContent = num(t.clicks);
+      $('kpi-epc').textContent    = usd(t.epc);
+      $('kpi-cpa').textContent    = usd(t.cpa);
+      $('kpi-rpm').textContent    = usd(t.rpm);
+      $('kpi-cr').textContent     = tp.conversionRatePct || fmtPct(t.conversionRate);
 
       const fillObj = (tbody, obj) => {
         tbody.innerHTML = '';
@@ -185,9 +204,9 @@
         });
         if(!tbody.children.length){ tbody.innerHTML = `<tr><td colspan="2" class="muted">No data</td></tr>`; }
       };
-      fillObj(document.querySelector('#tbl-geo tbody'), j.geo);
+      fillObj(document.querySelector('#tbl-geo tbody'),    j.geo);
       fillObj(document.querySelector('#tbl-device tbody'), j.devices);
-      fillObj(document.querySelector('#tbl-offer tbody'), j.offerTypes);
+      fillObj(document.querySelector('#tbl-offer tbody'),  j.offerTypes);
 
       const dayBody = document.querySelector('#tbl-day tbody'); dayBody.innerHTML='';
       const byDay = Array.isArray(j.byDay) ? j.byDay
@@ -199,37 +218,28 @@
       });
       if(!dayBody.children.length) dayBody.innerHTML=`<tr><td colspan="2" class="muted">No data</td></tr>`;
 
-      document.getElementById('ovrErr').classList.add('hidden');
+      $('ovrErr').classList.add('hidden');
     }catch(e){
-      showError(document.getElementById('ovrErr'), `Failed to load overview: ${e.message}`);
+      showError($('ovrErr'), `Failed to load overview: ${e.message}`);
       console.warn('overview failed', e);
     }
   }
 
   /* ======= CPA ======= */
   async function loadCpa(){
-    const grid=document.getElementById('cpaGrid'); grid.innerHTML='';
+    const grid=$('cpaGrid'); grid.innerHTML='';
     try{
-      const j = await jget(api("cpa"));
+      const j = await jsonp("cpa");
       (j.items||[]).forEach(acc=>{
         const name = acc.account || acc.name || 'CPA';
         const network = acc.network || '—';
         const offers = acc.activeOffers ?? acc.offers ?? 0;
         const revenue = acc.revenue ?? 0;
         const clicks = acc.clicks ?? 0;
-        const conv = (()=>{
-          if (acc.conversionRate != null) {
-            return (typeof acc.conversionRate === 'string' && acc.conversionRate.endsWith('%'))
-              ? acc.conversionRate
-              : ((+acc.conversionRate)*100).toFixed(1)+'%';
-          }
-          if (acc.conversion != null) {
-            return (typeof acc.conversion === 'string' && acc.conversion.endsWith('%'))
-              ? acc.conversion
-              : ((+acc.conversion)*100).toFixed(1)+'%';
-          }
-          return '—';
-        })();
+
+        let conv = '—';
+        if (acc.conversionRate != null) conv = fmtPct(acc.conversionRate);
+        else if (acc.conversion != null) conv = fmtPct(acc.conversion);
 
         const card=document.createElement('div'); card.className='card span-4';
         card.innerHTML = `
@@ -251,7 +261,7 @@
   async function loadUsers(){
     const body=document.querySelector('#tbl-users tbody'); body.innerHTML='';
     try{
-      const j = await jget(api("users"));
+      const j = await jsonp("users");
       (j.items||[]).forEach(u=>{
         const emailClean = String(u.email||'').replace(/\+$/,'').trim();
         const tr=document.createElement('tr');
@@ -268,7 +278,7 @@
   async function loadAnalytics(){
     const body=document.querySelector('#tbl-analytics tbody'); body.innerHTML='';
     try{
-      const j = await jget(api("analytics"));
+      const j = await jsonp("analytics");
       if (Array.isArray(j.items) && j.items.length && j.items[0].metric !== undefined) {
         j.items.forEach(r=>{
           const tr=document.createElement('tr');
@@ -298,10 +308,10 @@
 
   /* ======= WALLET ======= */
   async function loadWallet(){
-    const list=document.getElementById('walletList'); list.innerHTML='';
+    const list=$('walletList'); list.innerHTML='';
     try{
-      const j = await jget(api("wallet"));
-      document.getElementById('wallet-balance').textContent = usd(j.balance||0);
+      const j = await jsonp("wallet");
+      $('wallet-balance').textContent = usd(j.balance||0);
       (j.history||[]).forEach(tx=>{
         const div=document.createElement('div'); div.className='card span-6';
         div.innerHTML = `<div style="display:flex;justify-content:space-between;gap:10px">
@@ -320,7 +330,7 @@
   async function loadMonitoring(){
     const body=document.querySelector('#tbl-monitor tbody'); body.innerHTML='';
     try{
-      const j = await jget(api("monitoring"));
+      const j = await jsonp("monitoring");
       (j.events||[]).forEach(ev=>{
         const tr=document.createElement('tr');
         tr.innerHTML=`<td>${esc(ev.time||'')}</td><td>${esc(ev.type||'')}</td><td>${esc(ev.msg||'')}</td>`;
@@ -335,10 +345,10 @@
   /* ======= SETTINGS ======= */
   async function loadSettings(){
     try{
-      const j = await jget(api("config"));
-      document.getElementById('cfgDump').textContent = JSON.stringify(j,null,2);
+      const j = await jsonp("config");
+      $('cfgDump').textContent = JSON.stringify(j,null,2);
     }catch(e){
-      document.getElementById('cfgDump').textContent = 'Failed to load config.';
+      $('cfgDump').textContent = 'Failed to load config.';
     }
   }
 

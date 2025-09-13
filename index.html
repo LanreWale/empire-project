@@ -147,10 +147,9 @@
 </div>
 
 <script>
-  /* ======= CONFIG (uses verified GAS URL) ======= */
-  const GAS_BASE = "https://script.googleusercontent.com/macros/echo?user_content_key=AehSKLi5ACfpSBFmN3s6Z4FZnTOI32ftObzJ0GoQY5_nmzx8MdOrWPrYegT9nwAhBcLVJ685yi2Vt5BZQJldczlvH1WgYvUpmapCw8Z4FiZGuCtrCTdZb3XmWUdCKKpl9EmacaV8V1G6JJfrHNdk2Gux44f8lMUjuKR0C7nE-Xmi8DIKjWzibUZhD0N0CthBbpcyj0XWy191qdmW_5gi49uiQxTZEsuCk82E4cbn2I85M09TtylXJdxXoOAiGUkLOYibZv1S0-NCsdfTe_3nAizqO9BB12_C4wt3Ed7dAIkzp27IzcgnnrULbfKZWzncDudf6xKUkx49S6kNHHzPmSS0PCxWSDc3Ag&lib=MK8iVDTIfyF2ZR8udAfTkOfjs5DVd1bkh";
-  // Build API URLs safely (avoids double-? issue)
-  const api = (action) => GAS_BASE + "&action=" + encodeURIComponent(action);
+  /* ======= CONFIG — use Netlify same-origin proxy to avoid CORS ======= */
+  const API_BASE = "/api";
+  const api = (action) => `${API_BASE}/${encodeURIComponent(action)}`;
 
   /* ======= UTILS ======= */
   const $=id=>document.getElementById(id);

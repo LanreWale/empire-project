@@ -1,25 +1,29 @@
+# THE EMPIRE — root static publish (no build step)
 [build]
-  command = ""
-  publish = "app"
+  command = ""      # skip vite/rollup build
+  publish = "."     # serve the project root where index.html lives
 
 [build.environment]
   NODE_VERSION = "20"
   SECRETS_SCAN_ENABLED = "false"
 
 [functions]
-  directory = "netlify/functions"
+  directory    = "netlify/functions"
   node_bundler = "esbuild"
 
+# Shortener function stays
 [[redirects]]
   from = "/i/*"
   to   = "/.netlify/functions/shortner?path=:splat"
   status = 200
 
+# Root serves the dashboard directly
 [[redirects]]
   from = "/"
   to   = "/index.html"
   status = 200
 
+# Prevent borked cached index from sticking
 [[headers]]
   for = "/index.html"
   [headers.values]

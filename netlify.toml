@@ -1,44 +1,20 @@
-# THE EMPIRE — root static publish (no build step)
 [build]
-  command = ""      # skip vite/rollup build
-  publish = "."     # serve the project root where index.html lives
-
-[build.environment]
-  NODE_VERSION = "20"
-  SECRETS_SCAN_ENABLED = "false"
+  command = ""
+  publish = "."   # must point where your index.html lives
 
 [functions]
-  directory    = "netlify/functions"
-  node_bundler = "esbuild"
+  directory = "netlify/functions"
 
-# ─────────────────────────────────────────────────────────
-# API proxy: call Google Apps Script through same-origin to avoid CORS
+# API proxy → GAS
 [[redirects]]
   from = "/api/:action"
   to   = "https://script.googleusercontent.com/macros/echo?user_content_key=AehSKLi5ACfpSBFmN3s6Z4FZnTOI32ftObzJ0GoQY5_nmzx8MdOrWPrYegT9nwAhBcLVJ685yi2Vt5BZQJldczlvH1WgYvUpmapCw8Z4FiZGuCtrCTdZb3XmWUdCKKpl9EmacaV8V1G6JJfrHNdk2Gux44f8lMUjuKR0C7nE-Xmi8DIKjWzibUZhD0N0CthBbpcyj0XWy191qdmW_5gi49uiQxTZEsuCk82E4cbn2I85M09TtylXJdxXoOAiGUkLOYibZv1S0-NCsdfTe_3nAizqO9BB12_C4wt3Ed7dAIkzp27IzcgnnrULbfKZWzncDudf6xKUkx49S6kNHHzPmSS0PCxWSDc3Ag&lib=MK8iVDTIfyF2ZR8udAfTkOfjs5DVd1bkh&action=:action"
   status = 200
   force  = true
 
-# Don’t cache API responses
-[[headers]]
-  for = "/api/*"
-  [headers.values]
-  Cache-Control = "no-cache, no-store, must-revalidate"
-
-# Shortener function stays
-[[redirects]]
-  from = "/i/*"
-  to   = "/.netlify/functions/shortner?path=:splat"
-  status = 200
-
-# Root serves the dashboard directly
+# Root → new index.html
 [[redirects]]
   from = "/"
   to   = "/index.html"
   status = 200
-
-# Prevent borked cached index from sticking
-[[headers]]
-  for = "/index.html"
-  [headers.values]
-  Cache-Control = "no-cache, no-store, must-revalidate"
+  force  = true

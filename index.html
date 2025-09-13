@@ -507,5 +507,195 @@
     showTab(h);
   });
 </script>
+<!-- ===================  ADD CPA ACCOUNT – ONE-PIECE COMPONENT  =================== -->
+<style>
+  :root{
+    --emp-bg:#0d1b2a; --emp-panel:#0a1522; --emp-border:rgba(255,255,255,.10);
+    --emp-text:#e8f1ff; --emp-muted:#9bb2c5; --emp-brand:#ffb800; --emp-shadow:rgba(0,0,0,.45);
+  }
+  .emp-btn{padding:.6rem 1rem;border-radius:.6rem;border:0;background:#2c3e50;color:#fff;cursor:pointer}
+  .emp-btn-primary{background:var(--emp-brand);color:#111;font-weight:700}
+  .emp-btn:disabled{opacity:.6;cursor:not-allowed}
+
+  /* Modal Shell */
+  .emp-modal.hidden{display:none}
+  .emp-modal{position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center}
+  .emp-modal__backdrop{position:absolute;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(2px)}
+  .emp-modal__panel{
+    position:relative;z-index:1;width:min(620px,94vw);max-height:min(86vh,1000px);
+    background:var(--emp-bg);border:1px solid var(--emp-border);border-radius:16px;
+    box-shadow:0 28px 90px var(--emp-shadow);color:var(--emp-text);display:flex;flex-direction:column
+  }
+  .emp-modal__header{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--emp-border)}
+  .emp-modal__title{font-size:1.05rem;letter-spacing:.3px}
+  .emp-modal__close{all:unset;cursor:pointer;font-size:22px;line-height:1;padding:4px 8px;border-radius:8px}
+  .emp-modal__body{display:grid;gap:12px;padding:16px;overflow:auto}
+  .emp-field{display:grid;gap:6px}
+  .emp-label{font-size:.85rem;color:var(--emp-muted)}
+  .emp-input{
+    padding:.65rem .75rem;border-radius:.55rem;border:1px solid var(--emp-border);
+    background:var(--emp-panel);color:var(--emp-text);outline:none
+  }
+  .emp-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media (max-width:720px){.emp-row{grid-template-columns:1fr}}
+  .emp-modal__footer{display:flex;gap:10px;justify-content:flex-end;margin-top:4px}
+
+  /* tiny toast */
+  .emp-toast{position:fixed;right:14px;bottom:14px;background:#0b2033;color:#dff3ff;border:1px solid var(--emp-border);
+    padding:.65rem .8rem;border-radius:10px;z-index:11000;box-shadow:0 10px 30px var(--emp-shadow);opacity:0;transform:translateY(8px);
+    transition:.25s ease}
+  .emp-toast.show{opacity:1;transform:translateY(0)}
+</style>
+
+<!-- Trigger Button (place anywhere in your toolbar) -->
+<button id="emp-open-cpa" class="emp-btn emp-btn-primary">+ Add CPA Account</button>
+
+<!-- Modal -->
+<div id="emp-cpa-modal" class="emp-modal hidden" aria-hidden="true">
+  <div class="emp-modal__backdrop" data-close="true"></div>
+  <div class="emp-modal__panel" role="dialog" aria-modal="true" aria-labelledby="emp-cpa-title">
+    <div class="emp-modal__header">
+      <div class="emp-modal__title" id="emp-cpa-title">Add CPA Account</div>
+      <button class="emp-modal__close" aria-label="Close" data-close="true">×</button>
+    </div>
+
+    <form id="emp-cpa-form" class="emp-modal__body">
+      <div class="emp-row">
+        <div class="emp-field">
+          <label class="emp-label">Account ID</label>
+          <input class="emp-input" name="AccountID" required />
+        </div>
+        <div class="emp-field">
+          <label class="emp-label">Network (e.g., CPA Grip)</label>
+          <input class="emp-input" name="Network" required />
+        </div>
+      </div>
+
+      <div class="emp-row">
+        <div class="emp-field">
+          <label class="emp-label">Custom Domain</label>
+          <input class="emp-input" name="Domain" placeholder="yourdomain.com" required />
+        </div>
+        <div class="emp-field">
+          <label class="emp-label">Active Offers</label>
+          <input class="emp-input" type="number" min="0" name="ActiveOffers" required />
+        </div>
+      </div>
+
+      <div class="emp-row">
+        <div class="emp-field">
+          <label class="emp-label">Revenue (USD)</label>
+          <input class="emp-input" type="number" min="0" step="0.01" name="Revenue" required />
+        </div>
+        <div class="emp-field">
+          <label class="emp-label">Clicks</label>
+          <input class="emp-input" type="number" min="0" name="Clicks" required />
+        </div>
+      </div>
+
+      <div class="emp-row">
+        <div class="emp-field">
+          <label class="emp-label">Conversion Rate (%)</label>
+          <input class="emp-input" type="number" min="0" step="0.001" name="ConversionRate" />
+        </div>
+        <div class="emp-field">
+          <label class="emp-label">Status</label>
+          <select class="emp-input" name="Status">
+            <option value="ACTIVE" selected>ACTIVE</option>
+            <option value="PAUSED">PAUSED</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="emp-modal__footer">
+        <button type="button" class="emp-btn" data-close="true">Cancel</button>
+        <button id="emp-cpa-save" type="submit" class="emp-btn emp-btn-primary">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="emp-toast" class="emp-toast" role="status" aria-live="polite"></div>
+
+<script>
+/* ====== CONFIG: set once ====== */
+const GAS_BASE = window.GAS_BASE || 'https://script.google.com/macros/s/REPLACE_WITH_YOUR_DEPLOYMENT/exec';
+/* Expected GAS behavior:
+   - Accept POST JSON: { action: "addCpa", account: { AccountID, Network, Domain, ActiveOffers, Revenue, Clicks, ConversionRate, Status } }
+   - Upsert by AccountID (insert if new, update if existing). Return {ok:true}.
+*/
+
+(function(){
+  const modal   = document.getElementById('emp-cpa-modal');
+  const openBtn = document.getElementById('emp-open-cpa');
+  const form    = document.getElementById('emp-cpa-form');
+  const saveBtn = document.getElementById('emp-cpa-save');
+  const toastEl = document.getElementById('emp-toast');
+
+  const showToast = (msg, ms=2500) => {
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    setTimeout(()=>toastEl.classList.remove('show'), ms);
+  };
+
+  const escClose = (e)=>{ if(e.key==='Escape') closeModal(); };
+
+  function openModal(){
+    modal.classList.remove('hidden');
+    document.body.style.overflow='hidden';
+    const first = form.querySelector('input,select'); first && first.focus();
+    window.addEventListener('keydown', escClose);
+  }
+  function closeModal(){
+    modal.classList.add('hidden');
+    document.body.style.overflow='';
+    window.removeEventListener('keydown', escClose);
+    form.reset();
+  }
+
+  openBtn?.addEventListener('click', openModal);
+  modal.addEventListener('click', (e)=>{ if(e.target.dataset.close) closeModal(); });
+  window.addEventListener('hashchange', closeModal);
+
+  form.addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const data = Object.fromEntries(new FormData(form).entries());
+
+    // clean/normalize
+    data.ActiveOffers    = +data.ActiveOffers || 0;
+    data.Revenue         = +data.Revenue || 0;
+    data.Clicks          = +data.Clicks || 0;
+    data.ConversionRate  = data.ConversionRate ? +data.ConversionRate : null;
+    data.Status          = data.Status || 'ACTIVE';
+
+    saveBtn.disabled = true;
+
+    try{
+      const res = await fetch(GAS_BASE, {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ action:'addCpa', account:data })
+      });
+      const json = await res.json().catch(()=>({ok:false, error:'Bad JSON'}));
+      if(!res.ok || !json.ok){ throw new Error(json.error || ('HTTP '+res.status)); }
+
+      showToast('CPA account saved');
+      closeModal();
+
+      // If you have a refresh function on the page, call it:
+      if (typeof window.refreshCpaAccounts === 'function') {
+        window.refreshCpaAccounts();  // re-pulls from GAS to avoid duplicates in UI
+      }
+    }catch(err){
+      console.error(err);
+      showToast('Save failed: '+err.message, 3500);
+    }finally{
+      saveBtn.disabled = false;
+    }
+  });
+})();
+</script>
+<!-- ===================  /END ADD CPA ACCOUNT  =================== -->
 </body>
 </html>

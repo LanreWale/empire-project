@@ -11,7 +11,8 @@
     --bg:#0f1620; --panel:#121a25; --ink:#e9eef6; --muted:#8ca1c2;
     --brand:#f2c230; --brand2:#1f2937; --ok:#19c37d; --err:#ef4444; --line:#223046;
   }
-  *{box-sizing:border-box} html,body{height:100%;background:var(--bg);color:var(--ink);font:14px/1.5 Inter,system-ui,Segoe UI,Roboto,Arial}
+  *{box-sizing:border-box}
+  html,body{height:100%;background:var(--bg);color:var(--ink);font:14px/1.5 Inter,system-ui,Segoe UI,Roboto,Arial}
   a{color:inherit}
   .app{display:grid;grid-template-columns:240px 1fr;min-height:100vh}
   .side{background:#0c121a;border-right:1px solid var(--line);padding:14px 10px}
@@ -147,13 +148,13 @@
 </div>
 
 <script>
-  /* ======= CONFIG — direct GAS endpoint ======= */
-  const GAS_BASE = "https://script.google.com/macros/s/AKfycbwqR_8O9CDaDKePAeNophBITJALF91rRfJezFap5Xf6hTk5xlc3YiC4BtACV3gcIu17/exec";
-  const api = (action) => `${GAS_BASE}?action=${encodeURIComponent(action)}&t=${Date.now()}`;
+  /* ======= CONFIG — Netlify proxy to GAS ======= */
+  const API_BASE = "/api";
+  const api = (action) => `${API_BASE}/${encodeURIComponent(action)}`;
 
   /* ======= UTILS ======= */
   const $=id=>document.getElementById(id);
-  const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',''':'&#39;'}[m]));
+  const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[m]));
   const num=n=>(+n||0).toLocaleString();
   const fmtUSD=n=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(+n||0);
   async function jget(url){ const r=await fetch(url,{cache:'no-store'}); if(!r.ok) throw new Error(r.status); return r.json(); }
@@ -309,31 +310,4 @@
         tr.innerHTML=`<td>${esc(ev.time||'')}</td><td>${esc(ev.type||'')}</td><td>${esc(ev.msg||'')}</td>`;
         body.appendChild(tr);
       });
-      if(!body.children.length) body.innerHTML=`<tr><td colspan="3" class="muted">No events.</td></tr>`;
-    }catch(e){
-      body.innerHTML=`<tr><td colspan="3">Failed to load events.</td></tr>`;
-    }
-  }
-
-  /* ======= SETTINGS ======= */
-  async function loadSettings(){
-    try{
-      const j = await jget(api("config"));
-      $('cfgDump').textContent = JSON.stringify(j,null,2);
-    }catch(e){
-      $('cfgDump').textContent = 'Failed to load config.';
-    }
-  }
-
-  /* ======= INIT ======= */
-  window.addEventListener('DOMContentLoaded', ()=>{
-    const h=(location.hash||'#dashboard').replace('#','');
-    showTab(h);
-  });
-  window.addEventListener('hashchange', ()=>{
-    const h=(location.hash||'#dashboard').replace('#','');
-    showTab(h);
-  });
-</script>
-</body>
-</html>
+      if(!body.children.length) body.innerHTML=`<tr><td colspan="3" class="mut

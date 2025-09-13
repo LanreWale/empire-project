@@ -38,7 +38,7 @@
   th{color:var(--muted);text-align:left;font-weight:600}
   .muted{color:var(--muted)}
   .badge{padding:2px 8px;border-radius:999px;border:1px solid var(--line);font-size:12px}
-  .ok{color:#0b5133;background:#093; }
+  .ok{color:#0b5133;background:#093}
   .down{color:#460;background:#640}
   .note{padding:10px;border-radius:8px}
   .note.err{background:#2b1114;border:1px solid #541015}
@@ -147,8 +147,10 @@
 </div>
 
 <script>
-  /* ======= CONFIG ======= */
-  const GAS_URL = "https://script.google.com/macros/s/AKfycbz-jj7Cr_KzqCku4SQPQ14MEIuCPdq5OEgiiqjo_O2A0FItBrHlmfkoJHViDxuX4P6z/exec";
+  /* ======= CONFIG (uses verified GAS URL) ======= */
+  const GAS_BASE = "https://script.googleusercontent.com/macros/echo?user_content_key=AehSKLi5ACfpSBFmN3s6Z4FZnTOI32ftObzJ0GoQY5_nmzx8MdOrWPrYegT9nwAhBcLVJ685yi2Vt5BZQJldczlvH1WgYvUpmapCw8Z4FiZGuCtrCTdZb3XmWUdCKKpl9EmacaV8V1G6JJfrHNdk2Gux44f8lMUjuKR0C7nE-Xmi8DIKjWzibUZhD0N0CthBbpcyj0XWy191qdmW_5gi49uiQxTZEsuCk82E4cbn2I85M09TtylXJdxXoOAiGUkLOYibZv1S0-NCsdfTe_3nAizqO9BB12_C4wt3Ed7dAIkzp27IzcgnnrULbfKZWzncDudf6xKUkx49S6kNHHzPmSS0PCxWSDc3Ag&lib=MK8iVDTIfyF2ZR8udAfTkOfjs5DVd1bkh";
+  // Build API URLs safely (avoids double-? issue)
+  const api = (action) => GAS_BASE + "&action=" + encodeURIComponent(action);
 
   /* ======= UTILS ======= */
   const $=id=>document.getElementById(id);
@@ -181,7 +183,7 @@
   /* ======= OVERVIEW ======= */
   async function loadOverview(){
     try{
-      const j = await jget(GAS_URL+"?action=overview");
+      const j = await jget(api("overview"));
       const t = j.totals||{};
       $('kpi-earn').textContent = fmtUSD(t.earnings||0);
       $('kpi-leads').textContent = num(t.leads||0);
@@ -192,7 +194,7 @@
 
       const fill = (tbody, obj, keyLabel) => {
         tbody.innerHTML='';
-        if(Array.isArray(obj)){ // if server sends array of {label,value}
+        if(Array.isArray(obj)){
           obj.forEach(r=>{
             const tr=document.createElement('tr');
             tr.innerHTML=`<td>${esc(r.label||r[keyLabel]||'')}</td><td>${fmtUSD(r.value||r.amount||0)}</td>`;
@@ -210,7 +212,7 @@
       fill($('#tbl-geo tbody'), j.geo, 'country');
       fill($('#tbl-device tbody'), j.devices, 'device');
       fill($('#tbl-offer tbody'), j.offerTypes, 'offer');
-      // byDay may be object {date:value}
+
       const dayBody=$('#tbl-day tbody'); dayBody.innerHTML='';
       Object.entries(j.byDay||{}).forEach(([d,v])=>{
         const tr=document.createElement('tr');
@@ -229,7 +231,7 @@
   async function loadCpa(){
     const grid=$('cpaGrid'); grid.innerHTML='';
     try{
-      const j = await jget(GAS_URL+"?action=cpa");
+      const j = await jget(api("cpa"));
       (j.items||[]).forEach(acc=>{
         const card=document.createElement('div'); card.className='card span-4';
         card.innerHTML = `
@@ -250,7 +252,7 @@
   async function loadUsers(){
     const body=$('#tbl-users tbody'); body.innerHTML='';
     try{
-      const j = await jget(GAS_URL+"?action=users");
+      const j = await jget(api("users"));
       (j.items||[]).forEach(u=>{
         const tr=document.createElement('tr');
         tr.innerHTML=`<td>${esc(u.name||'')}</td><td>${esc(u.email||'')}</td><td>${esc(u.phone||'')}</td>`;
@@ -266,7 +268,7 @@
   async function loadAnalytics(){
     const body=$('#tbl-analytics tbody'); body.innerHTML='';
     try{
-      const j = await jget(GAS_URL+"?action=analytics");
+      const j = await jget(api("analytics"));
       (j.items||[]).forEach(r=>{
         const tr=document.createElement('tr');
         tr.innerHTML=`<td>${esc(r.metric||'')}</td><td>${esc(r.value||'')}</td>`;
@@ -282,7 +284,7 @@
   async function loadWallet(){
     $('walletList').innerHTML='';
     try{
-      const j = await jget(GAS_URL+"?action=wallet");
+      const j = await jget(api("wallet"));
       $('wallet-balance').textContent = fmtUSD(j.balance||0);
       (j.history||[]).forEach(tx=>{
         const div=document.createElement('div'); div.className='card span-6';
@@ -302,7 +304,7 @@
   async function loadMonitoring(){
     const body=$('#tbl-monitor tbody'); body.innerHTML='';
     try{
-      const j = await jget(GAS_URL+"?action=monitoring");
+      const j = await jget(api("monitoring"));
       (j.events||[]).forEach(ev=>{
         const tr=document.createElement('tr');
         tr.innerHTML=`<td>${esc(ev.time||'')}</td><td>${esc(ev.type||'')}</td><td>${esc(ev.msg||'')}</td>`;
@@ -317,7 +319,7 @@
   /* ======= SETTINGS ======= */
   async function loadSettings(){
     try{
-      const j = await jget(GAS_URL+"?action=config");
+      const j = await jget(api("config"));
       $('cfgDump').textContent = JSON.stringify(j,null,2);
     }catch(e){
       $('cfgDump').textContent = 'Failed to load config.';

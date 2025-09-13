@@ -8,25 +8,30 @@
 <style>
   :root{
     --bg:#0f1620; --panel:#121a25; --ink:#e9eef6; --muted:#8ca1c2;
-    --brand:#f2c230; --ok:#19c37d; --err:#ef4444; --line:#223046;
+    --brand:#f2c230; --line:#223046;
   }
-  *{box-sizing:border-box} html,body{height:100%;margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 Inter,system-ui,Segoe UI,Roboto,Arial}
+  *{box-sizing:border-box}
+  html,body{height:100%;background:var(--bg);color:var(--ink);font:14px/1.5 Inter,system-ui,Segoe UI,Roboto,Arial}
   .app{display:grid;grid-template-columns:240px 1fr;min-height:100vh}
   .side{background:#0c121a;border-right:1px solid var(--line);padding:14px 10px}
-  .brand{font-weight:800;letter-spacing:.5px;color:var(--brand);padding:8px 10px;margin-bottom:8px}
+  .brand{display:flex;align-items:center;gap:8px;padding:8px 10px;margin-bottom:8px}
+  .brand img{width:20px;height:20px}
+  .brand .t1{font-weight:800;letter-spacing:.5px}
   .nav{display:flex;flex-direction:column;gap:6px;margin-top:8px}
   .nav button{all:unset;cursor:pointer;padding:9px 12px;border-radius:8px;color:var(--muted)}
   .nav button.active,.nav button:hover{background:var(--panel);color:var(--ink);border:1px solid var(--line)}
   main{padding:18px}
-  h1{font-size:18px;margin:0 0 12px 0;letter-spacing:.6px}
+  h1{font-size:18px;letter-spacing:.6px;margin:0 0 12px 0}
   .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:12px}
+  .span-12{grid-column:span 12}
   .span-6{grid-column:span 6}
+  .span-4{grid-column:span 4}
   .kpis{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0}
   .kpi{background:var(--panel);border:1px solid var(--line);padding:10px 12px;border-radius:10px;min-width:120px}
   .kpi .lab{color:var(--muted);font-size:12px}
   .kpi .val{font-weight:800;font-size:18px}
   .panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px}
-  .panel h3{margin:0 0 10px 0;font-size:13px;color:var(--muted)}
+  .panel h3{margin:0 0 10px 0;font-size:13px;color:var(--muted);letter-spacing:.3px}
   table{width:100%;border-collapse:collapse}
   th,td{padding:8px;border-bottom:1px solid var(--line)}
   th{color:var(--muted);text-align:left;font-weight:600}
@@ -35,14 +40,19 @@
   .note.err{background:#2b1114;border:1px solid #541015}
   .hidden{display:none}
   .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px}
-  @media(max-width:1024px){ .grid{grid-template-columns:repeat(6,1fr)} .span-6{grid-column:span 6} }
+  .hero{background:url('assets/brand/welcome_banner.jpg') center/cover no-repeat;min-height:90px;border-radius:12px;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:28px;letter-spacing:2px}
+  @media(max-width:1024px){ .grid{grid-template-columns:repeat(6,1fr)} .span-6{grid-column:span 6} .span-4{grid-column:span 6} }
   @media(max-width:680px){ .app{grid-template-columns:1fr} .side{position:sticky;top:0;z-index:2} }
 </style>
 </head>
 <body>
 <div class="app">
+  <!-- Sidebar -->
   <aside class="side">
-    <div class="brand">⚔️ THE EMPIRE</div>
+    <div class="brand">
+      <img src="assets/brand/empire-logo.png" alt="The Empire"/>
+      <div class="t1">THE EMPIRE</div>
+    </div>
     <div class="nav">
       <button class="active" data-tab="dashboard">Overview</button>
       <button data-tab="cpa">CPA Accounts</button>
@@ -54,10 +64,13 @@
     </div>
   </aside>
 
+  <!-- Main -->
   <main>
     <!-- OVERVIEW -->
     <section id="view-dashboard" class="view">
       <h1>COMMAND DASHBOARD</h1>
+      <div class="hero span-12">WELCOME TO THE EMPIRE</div>
+
       <div class="kpis">
         <div class="kpi"><div class="lab">Earnings</div><div class="val" id="kpi-earn">$0.00</div></div>
         <div class="kpi"><div class="lab">Leads</div><div class="val" id="kpi-leads">0</div></div>
@@ -65,7 +78,7 @@
         <div class="kpi"><div class="lab">EPC</div><div class="val" id="kpi-epc">$0.00</div></div>
         <div class="kpi"><div class="lab">CPA</div><div class="val" id="kpi-cpa">$0.00</div></div>
         <div class="kpi"><div class="lab">RPM</div><div class="val" id="kpi-rpm">$0.00</div></div>
-        <div class="kpi"><div class="lab">Conv. Rate</div><div class="val" id="kpi-cr">0%</div></div>
+        <div class="kpi"><div class="lab">Conv. Rate</div><div class="val" id="kpi-cr">0.00%</div></div>
       </div>
 
       <div class="grid">
@@ -131,38 +144,32 @@
 </div>
 
 <script>
-  /* ========= YOUR LIVE GAS ========= */
-  const GAS_BASE = "https://script.google.com/macros/s/AKfycbwqR_8O9CDaDKePAeNophBITJALF91rRfJezFap5Xf6hTk5xlc3YiC4BtACV3gcIu17/exec";
-  const urlFor = (action) => {
-    if (!action) return GAS_BASE;
-    const u = new URL(GAS_BASE); u.searchParams.set('action', action); return u.toString();
-  };
+  /* ======= CONFIG ======= */
+  // ⚠️ REPLACE with your verified googleusercontent echo URL (keep the &lib=... etc.):
+  const GAS_BASE = "PASTE_YOUR_GOOGLEUSERCONTENT_ECHO_URL_HERE";
+  const api = (action) => GAS_BASE + "&action=" + encodeURIComponent(action);
 
-  /* ========= UTILITIES ========= */
-  const $=id=>document.getElementById(id);
-  const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[m]));
-  const num=n=>(+n||0).toLocaleString();
-  const usd=n=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(+n||0);
-
-  async function jget(u){
-    // Try as-is (some handlers return JSON without ?action)
-    try{
-      const r = await fetch(u,{cache:'no-store',mode:'cors'});
-      const ct = r.headers.get('content-type')||'';
-      if (ct.includes('application/json')) return r.json();
-      return JSON.parse(await r.text());
-    }catch(e){
-      // Fallback to explicit action if needed
-      if (!u.includes('action=')) return jget(urlFor('overview'));
-      throw e;
-    }
+  /* ======= UTILS ======= */
+  const $ = (id) => document.getElementById(id);
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  const num = n => (+n||0).toLocaleString();
+  const usd = n => new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(+n||0);
+  async function jget(url){
+    const r = await fetch(url, {cache:'no-store', headers:{'Accept':'application/json'}});
+    if(!r.ok) throw new Error(`${r.status} ${r.statusText}`);
+    return r.json();
   }
+  function showError(el, msg){ el.classList.remove('hidden'); el.textContent = msg; }
 
-  /* ========= TAB HANDLER ========= */
+  /* ======= TABS ======= */
   function showTab(key){
-    document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active', b.dataset.tab===key));
+    document.querySelectorAll('.nav button').forEach(b=>{
+      b.classList.toggle('active', b.dataset.tab===key);
+    });
     document.querySelectorAll('.view').forEach(v=>v.classList.add('hidden'));
-    (document.getElementById('view-'+key)||document.getElementById('view-dashboard')).classList.remove('hidden');
+    const view = document.getElementById('view-'+key);
+    if(view) view.classList.remove('hidden');
+
     if(key==='dashboard') loadOverview();
     if(key==='cpa')       loadCpa();
     if(key==='users')     loadUsers();
@@ -175,80 +182,102 @@
     b.addEventListener('click',()=>{ location.hash=b.dataset.tab; showTab(b.dataset.tab); });
   });
 
-  /* ========= OVERVIEW ========= */
+  /* ======= OVERVIEW ======= */
   async function loadOverview(){
     try{
-      const j = await jget(urlFor()); // plain
-      const data = j && j.ok!==false ? j : await jget(urlFor('overview'));
-      const t = data.totals || data.totalsPretty || {};
-      $('kpi-earn').textContent = usd(t.earnings||0);
-      $('kpi-leads').textContent = num(t.leads||0);
-      $('kpi-clicks').textContent = num(t.clicks||0);
-      $('kpi-epc').textContent   = usd(t.epc||0);
-      $('kpi-cpa').textContent   = usd(t.cpa||0);
-      $('kpi-rpm').textContent   = usd(t.rpm||0);
-      let cr = t.conversionRate;
-      if (typeof cr === 'number') cr = (cr*100).toFixed(2)+'%';
-      if (typeof cr === 'string' && !cr.endsWith('%')) cr = parseFloat(cr||0).toFixed(2)+'%';
-      $('kpi-cr').textContent = cr || '0%';
+      const j = await jget(api("overview"));
+      const t = j.totals || {};
+      const tp = j.totalsPretty || {};
 
-      const fill=(tbody, obj)=>{
-        tbody.innerHTML='';
+      $('kpi-earn').textContent  = usd(t.earnings || 0);
+      $('kpi-leads').textContent = num(t.leads || 0);
+      $('kpi-clicks').textContent= num(t.clicks || 0);
+      $('kpi-epc').textContent   = usd(t.epc || 0);
+      $('kpi-cpa').textContent   = usd(t.cpa || 0);
+      $('kpi-rpm').textContent   = usd(t.rpm || 0);
+      $('kpi-cr').textContent    = tp.conversionRatePct || ((t.conversionRate ?? 0).toFixed(2) + '%');
+
+      const fillObj = (tbody, obj) => {
+        tbody.innerHTML = '';
         Object.entries(obj||{}).forEach(([k,v])=>{
           const tr=document.createElement('tr');
-          tr.innerHTML=`<td>${esc(k)}</td><td>${usd(v)}</td>`;
+          tr.innerHTML = `<td>${esc(k)}</td><td>${usd(v)}</td>`;
           tbody.appendChild(tr);
         });
+        if(!tbody.children.length){ tbody.innerHTML = `<tr><td colspan="2" class="muted">No data</td></tr>`; }
       };
-      fill($('#tbl-geo tbody'),    data.geo);
-      fill($('#tbl-device tbody'), data.devices);
-      fill($('#tbl-offer tbody'),  data.offerTypes);
+      fillObj($('#tbl-geo tbody'), j.geo);
+      fillObj($('#tbl-device tbody'), j.devices);
+      fillObj($('#tbl-offer tbody'), j.offerTypes);
 
-      const day=$('#tbl-day tbody'); day.innerHTML='';
-      Object.entries(data.byDay||{}).forEach(([d,v])=>{
+      const dayBody = $('#tbl-day tbody'); dayBody.innerHTML='';
+      const byDay = Array.isArray(j.byDay) ? j.byDay
+                   : Object.entries(j.byDay||{}).map(([d,v])=>({t:d, earnings:v}));
+      byDay.forEach(r=>{
         const tr=document.createElement('tr');
-        tr.innerHTML=`<td>${esc(d)}</td><td>${usd(v)}</td>`;
-        day.appendChild(tr);
+        tr.innerHTML=`<td>${esc(r.t||r.date||'')}</td><td>${usd(r.earnings||r.value||0)}</td>`;
+        dayBody.appendChild(tr);
       });
+      if(!dayBody.children.length) dayBody.innerHTML=`<tr><td colspan="2" class="muted">No data</td></tr>`;
 
       $('ovrErr').classList.add('hidden');
     }catch(e){
-      $('ovrErr').classList.remove('hidden');
+      showError($('ovrErr'), `Failed to load overview: ${e.message}`);
       console.warn('overview failed', e);
     }
   }
 
-  /* ========= CPA ========= */
+  /* ======= CPA ======= */
   async function loadCpa(){
     const grid=$('cpaGrid'); grid.innerHTML='';
     try{
-      const j = await jget(urlFor('cpa'));
+      const j = await jget(api("cpa"));
       (j.items||[]).forEach(acc=>{
-        const rate = acc.conversionRate!=null
-          ? (typeof acc.conversionRate==='string'?acc.conversionRate:((acc.conversionRate*100).toFixed(2)+'%')):'—';
-        const card=document.createElement('div'); card.className='card span-6';
+        const name = acc.account || acc.name || 'CPA';
+        const network = acc.network || '—';
+        const offers = acc.activeOffers ?? acc.offers ?? 0;
+        const revenue = acc.revenue ?? 0;
+        const clicks = acc.clicks ?? 0;
+        const conv = (()=>{
+          if (acc.conversionRate != null) {
+            const n = (typeof acc.conversionRate === 'string' && acc.conversionRate.endsWith('%'))
+              ? acc.conversionRate
+              : ((+acc.conversionRate)*100).toFixed(1)+'%';
+            return n;
+          }
+          if (acc.conversion != null) {
+            return (typeof acc.conversion === 'string' && acc.conversion.endsWith('%'))
+              ? acc.conversion
+              : ((+acc.conversion)*100).toFixed(1)+'%';
+          }
+          return '—';
+        })();
+
+        const card=document.createElement('div'); card.className='card span-4';
         card.innerHTML = `
-          <div style="font-weight:800;margin-bottom:6px">${esc(acc.name||'CPA')}</div>
-          <div class="muted">Offers</div><div style="font-weight:700">${num(acc.offers||acc.activeOffers||0)}</div>
-          <div class="muted">Revenue</div><div style="font-weight:700">${usd(acc.revenue||0)}</div>
-          <div class="muted">Clicks</div><div style="font-weight:700">${num(acc.clicks||0)}</div>
-          <div class="muted">Conversion</div><div style="font-weight:700">${rate}</div>`;
+          <div style="font-weight:800;margin-bottom:6px">${esc(name)}</div>
+          <div class="muted">Network</div><div style="font-weight:700">${esc(network)}</div>
+          <div class="muted">Active Offers</div><div style="font-weight:700">${num(offers)}</div>
+          <div class="muted">Revenue</div><div style="font-weight:700">${usd(revenue)}</div>
+          <div class="muted">Clicks</div><div style="font-weight:700">${num(clicks)}</div>
+          <div class="muted">Conversion</div><div style="font-weight:700">${conv}</div>`;
         grid.appendChild(card);
       });
-      if(!grid.children.length) grid.innerHTML=`<div class="note err">No CPA accounts.</div>`;
+      if(!grid.children.length) grid.innerHTML=`<div class="note err">No CPA accounts returned.</div>`;
     }catch(e){
-      grid.innerHTML=`<div class="note err">Failed to load CPA.</div>`;
+      grid.innerHTML=`<div class="note err">Failed to load CPA: ${esc(e.message)}</div>`;
     }
   }
 
-  /* ========= USERS ========= */
+  /* ======= USERS ======= */
   async function loadUsers(){
     const body=$('#tbl-users tbody'); body.innerHTML='';
     try{
-      const j = await jget(urlFor('users'));
+      const j = await jget(api("users"));
       (j.items||[]).forEach(u=>{
+        const emailClean = String(u.email||'').replace(/\+$/,'').trim();
         const tr=document.createElement('tr');
-        tr.innerHTML=`<td>${esc(u.name||'')}</td><td>${esc(u.email||'')}</td><td>${esc(u.phone||'')}</td>`;
+        tr.innerHTML=`<td>${esc(u.name||'')}</td><td>${esc(emailClean)}</td><td>${esc(u.phone||'')}</td>`;
         body.appendChild(tr);
       });
       if(!body.children.length) body.innerHTML=`<tr><td colspan="3" class="muted">No users.</td></tr>`;
@@ -257,47 +286,64 @@
     }
   }
 
-  /* ========= ANALYTICS ========= */
+  /* ======= ANALYTICS ======= */
   async function loadAnalytics(){
     const body=$('#tbl-analytics tbody'); body.innerHTML='';
     try{
-      const j = await jget(urlFor('analytics'));
-      (j.items||[]).forEach(r=>{
-        const tr=document.createElement('tr');
-        tr.innerHTML=`<td>${esc(r.metric||'')}</td><td>${esc(r.value||'')}</td>`;
-        body.appendChild(tr);
-      });
+      const j = await jget(api("analytics"));
+      // Supports {items:[{metric,value}]} OR {totals:{}, ...} OR passthrough row list
+      if (Array.isArray(j.items) && j.items.length && j.items[0].metric !== undefined) {
+        j.items.forEach(r=>{
+          const tr=document.createElement('tr');
+          tr.innerHTML=`<td>${esc(r.metric||'')}</td><td>${esc(r.value||'')}</td>`;
+          body.appendChild(tr);
+        });
+      } else if (j.totals) {
+        Object.entries(j.totals).forEach(([k,v])=>{
+          const tr=document.createElement('tr');
+          tr.innerHTML=`<td>${esc(k)}</td><td>${esc(v)}</td>`;
+          body.appendChild(tr);
+        });
+      } else if (Array.isArray(j.items)) {
+        // Generic rows: show first 6 key/value pairs per row
+        j.items.forEach(r=>{
+          const first = Object.entries(r).slice(0,2);
+          const tr=document.createElement('tr');
+          tr.innerHTML = `<td>${esc((first[0]||['',''])[1])}</td><td>${esc((first[1]||['',''])[1])}</td>`;
+          body.appendChild(tr);
+        });
+      }
       if(!body.children.length) body.innerHTML=`<tr><td colspan="2" class="muted">No analytics rows.</td></tr>`;
     }catch(e){
       body.innerHTML=`<tr><td colspan="2">Failed to load analytics.</td></tr>`;
     }
   }
 
-  /* ========= WALLET ========= */
+  /* ======= WALLET ======= */
   async function loadWallet(){
-    const wrap=$('walletList'); wrap.innerHTML='';
+    const list=$('walletList'); list.innerHTML='';
     try{
-      const j = await jget(urlFor('wallet'));
+      const j = await jget(api("wallet"));
       $('wallet-balance').textContent = usd(j.balance||0);
       (j.history||[]).forEach(tx=>{
         const div=document.createElement('div'); div.className='card span-6';
         div.innerHTML = `<div style="display:flex;justify-content:space-between;gap:10px">
             <div><div class="muted">${esc(tx.date||'')}</div><div>${esc(tx.method||'')}</div></div>
-            <div style="text-align:right"><div style="font-weight:800">${usd(tx.amount||0)}</div>
-            <span class="muted">${esc(tx.status||'COMPLETED')}</span></div></div>`;
-        wrap.appendChild(div);
+            <div style="text-align:right"><div style="font-weight:800">${usd(tx.amount||0)}</div><span class="muted">${esc(tx.status||'COMPLETED')}</span></div>
+          </div>`;
+        list.appendChild(div);
       });
-      if(!wrap.children.length) wrap.innerHTML=`<div class="note err">No transactions.</div>`;
+      if(!list.children.length) list.innerHTML=`<div class="note err">No transactions.</div>`;
     }catch(e){
-      wrap.innerHTML=`<div class="note err">Failed to load wallet.</div>`;
+      list.innerHTML=`<div class="note err">Failed to load wallet.</div>`;
     }
   }
 
-  /* ========= MONITORING ========= */
+  /* ======= MONITORING ======= */
   async function loadMonitoring(){
     const body=$('#tbl-monitor tbody'); body.innerHTML='';
     try{
-      const j = await jget(urlFor('monitoring'));
+      const j = await jget(api("monitoring"));
       (j.events||[]).forEach(ev=>{
         const tr=document.createElement('tr');
         tr.innerHTML=`<td>${esc(ev.time||'')}</td><td>${esc(ev.type||'')}</td><td>${esc(ev.msg||'')}</td>`;
@@ -309,20 +355,25 @@
     }
   }
 
-  /* ========= SETTINGS ========= */
+  /* ======= SETTINGS ======= */
   async function loadSettings(){
     try{
-      const j = await jget(urlFor('config'));
+      const j = await jget(api("config"));
       $('cfgDump').textContent = JSON.stringify(j,null,2);
     }catch(e){
       $('cfgDump').textContent = 'Failed to load config.';
     }
   }
 
-  /* ========= INIT ========= */
-  const start = () => (location.hash||'#dashboard').replace('#','');
-  window.addEventListener('DOMContentLoaded', ()=>{ showTab(start()); });
-  window.addEventListener('hashchange', ()=>{ showTab(start()); });
+  /* ======= INIT ======= */
+  window.addEventListener('DOMContentLoaded', ()=>{
+    const h=(location.hash||'#dashboard').replace('#','');
+    showTab(h);
+  });
+  window.addEventListener('hashchange', ()=>{
+    const h=(location.hash||'#dashboard').replace('#','');
+    showTab(h);
+  });
 </script>
 </body>
 </html>

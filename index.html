@@ -132,35 +132,17 @@
 </div>
 
 <script>
-  /* ======= CONFIG (YOUR /exec URL) ======= */
-  const GAS_BASE = "https://script.google.com/macros/s/AKfycbwqR_8O9CDaDKePAeNophBITJALF91rRfJezFap5Xf6hTk5xlc3YiC4BtACV3gcIu17/exec";
+  /* ======= CONFIG ======= */
+  const GAS_BASE = "https://script.google.com/macros/s/AKfycbybjkx3-vLj8D3LZgvG7YWdOgJOnQdxIZ56MZ8KtnIZoBFjIJcYveX8IZ8j9rVtpKtR/exec";
+  const api = (action) => GAS_BASE + (GAS_BASE.includes("?") ? "&" : "?") + "action=" + encodeURIComponent(action);
 
   /* ======= UTILS ======= */
-  const $   = (id) => document.getElementById(id);
+  const $ = (id) => document.getElementById(id);
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
   const num = (n) => (+n || 0).toLocaleString();
-  const usd = (n) => new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',minimumFractionDigits:2,maximumFractionDigits:2}).format(+n||0);
-  const fmtPct = (v) => {
-    const x = Number(v);
-    if (!isFinite(x)) return "0.00%";
-    return (x > 1.0000001 ? x : x*100).toFixed(2) + "%";
-  };
+  const usd = (n) => new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(+n||0);
+  async function jget(url){ const r = await fetch(url,{cache:'no-store',headers:{'Accept':'application/json'}}); if(!r.ok) throw new Error(`${r.status} ${r.statusText}`); return r.json(); }
   function showError(el,msg){ el.classList.remove('hidden'); el.textContent = msg; }
-
-  /* ======= JSONP (avoids CORS) ======= */
-  function jsonp(action){
-    return new Promise((resolve, reject)=>{
-      const cb = "cb_" + Math.random().toString(36).slice(2);
-      window[cb] = (payload) => { try { resolve(payload); } finally { delete window[cb]; s.remove(); } };
-      const s = document.createElement("script");
-      const url = GAS_BASE + (GAS_BASE.includes("?") ? "&" : "?")
-        + "action=" + encodeURIComponent(action)
-        + "&callback=" + cb;
-      s.src = url;
-      s.onerror = () => { delete window[cb]; s.remove(); reject(new Error("network")); };
-      document.body.appendChild(s);
-    });
-  }
 
   /* ======= TABS ======= */
   function showTab(key){
@@ -183,17 +165,16 @@
   /* ======= OVERVIEW ======= */
   async function loadOverview(){
     try{
-      const j = await jsonp("overview");
-      const t  = j.totals || {};
+      const j = await jget(api("overview"));
+      const t = j.totals || {};
       const tp = j.totalsPretty || {};
-
-      $('kpi-earn').textContent   = usd(t.earnings);
-      $('kpi-leads').textContent  = num(t.leads);
-      $('kpi-clicks').textContent = num(t.clicks);
-      $('kpi-epc').textContent    = usd(t.epc);
-      $('kpi-cpa').textContent    = usd(t.cpa);
-      $('kpi-rpm').textContent    = usd(t.rpm);
-      $('kpi-cr').textContent     = tp.conversionRatePct || fmtPct(t.conversionRate);
+      $('kpi-earn').textContent  = usd(t.earnings || 0);
+      $('kpi-leads').textContent = num(t.leads || 0);
+      $('kpi-clicks').textContent= num(t.clicks || 0);
+      $('kpi-epc').textContent   = usd(t.epc || 0);
+      $('kpi-cpa').textContent   = usd(t.cpa || 0);
+      $('kpi-rpm').textContent   = usd(t.rpm || 0);
+      $('kpi-cr').textContent    = tp.conversionRatePct || ((t.conversionRate ?? 0).toFixed(2) + '%');
 
       const fillObj = (tbody, obj) => {
         tbody.innerHTML = '';
@@ -204,9 +185,9 @@
         });
         if(!tbody.children.length){ tbody.innerHTML = `<tr><td colspan="2" class="muted">No data</td></tr>`; }
       };
-      fillObj(document.querySelector('#tbl-geo tbody'),    j.geo);
+      fillObj(document.querySelector('#tbl-geo tbody'), j.geo);
       fillObj(document.querySelector('#tbl-device tbody'), j.devices);
-      fillObj(document.querySelector('#tbl-offer tbody'),  j.offerTypes);
+      fillObj(document.querySelector('#tbl-offer tbody'), j.offerTypes);
 
       const dayBody = document.querySelector('#tbl-day tbody'); dayBody.innerHTML='';
       const byDay = Array.isArray(j.byDay) ? j.byDay
@@ -218,28 +199,37 @@
       });
       if(!dayBody.children.length) dayBody.innerHTML=`<tr><td colspan="2" class="muted">No data</td></tr>`;
 
-      $('ovrErr').classList.add('hidden');
+      document.getElementById('ovrErr').classList.add('hidden');
     }catch(e){
-      showError($('ovrErr'), `Failed to load overview: ${e.message}`);
+      showError(document.getElementById('ovrErr'), `Failed to load overview: ${e.message}`);
       console.warn('overview failed', e);
     }
   }
 
   /* ======= CPA ======= */
   async function loadCpa(){
-    const grid=$('cpaGrid'); grid.innerHTML='';
+    const grid=document.getElementById('cpaGrid'); grid.innerHTML='';
     try{
-      const j = await jsonp("cpa");
+      const j = await jget(api("cpa"));
       (j.items||[]).forEach(acc=>{
         const name = acc.account || acc.name || 'CPA';
         const network = acc.network || '—';
         const offers = acc.activeOffers ?? acc.offers ?? 0;
         const revenue = acc.revenue ?? 0;
         const clicks = acc.clicks ?? 0;
-
-        let conv = '—';
-        if (acc.conversionRate != null) conv = fmtPct(acc.conversionRate);
-        else if (acc.conversion != null) conv = fmtPct(acc.conversion);
+        const conv = (()=>{
+          if (acc.conversionRate != null) {
+            return (typeof acc.conversionRate === 'string' && acc.conversionRate.endsWith('%'))
+              ? acc.conversionRate
+              : ((+acc.conversionRate)*100).toFixed(1)+'%';
+          }
+          if (acc.conversion != null) {
+            return (typeof acc.conversion === 'string' && acc.conversion.endsWith('%'))
+              ? acc.conversion
+              : ((+acc.conversion)*100).toFixed(1)+'%';
+          }
+          return '—';
+        })();
 
         const card=document.createElement('div'); card.className='card span-4';
         card.innerHTML = `
@@ -261,7 +251,7 @@
   async function loadUsers(){
     const body=document.querySelector('#tbl-users tbody'); body.innerHTML='';
     try{
-      const j = await jsonp("users");
+      const j = await jget(api("users"));
       (j.items||[]).forEach(u=>{
         const emailClean = String(u.email||'').replace(/\+$/,'').trim();
         const tr=document.createElement('tr');
@@ -278,7 +268,7 @@
   async function loadAnalytics(){
     const body=document.querySelector('#tbl-analytics tbody'); body.innerHTML='';
     try{
-      const j = await jsonp("analytics");
+      const j = await jget(api("analytics"));
       if (Array.isArray(j.items) && j.items.length && j.items[0].metric !== undefined) {
         j.items.forEach(r=>{
           const tr=document.createElement('tr');
@@ -297,70 +287,4 @@
           const [a,b]=firstTwo(r);
           const tr=document.createElement('tr');
           tr.innerHTML=`<td>${esc(a)}</td><td>${esc(b)}</td>`;
-          body.appendChild(tr);
-        });
-      }
-      if(!body.children.length) body.innerHTML=`<tr><td colspan="2" class="muted">No analytics rows.</td></tr>`;
-    }catch(e){
-      body.innerHTML=`<tr><td colspan="2">Failed to load analytics.</td></tr>`;
-    }
-  }
-
-  /* ======= WALLET ======= */
-  async function loadWallet(){
-    const list=$('walletList'); list.innerHTML='';
-    try{
-      const j = await jsonp("wallet");
-      $('wallet-balance').textContent = usd(j.balance||0);
-      (j.history||[]).forEach(tx=>{
-        const div=document.createElement('div'); div.className='card span-6';
-        div.innerHTML = `<div style="display:flex;justify-content:space-between;gap:10px">
-          <div><div class="muted">${esc(tx.date||'')}</div><div>${esc(tx.method||'')}</div></div>
-          <div style="text-align:right"><div style="font-weight:800">${usd(tx.amount||0)}</div><span class="muted">${esc(tx.status||'COMPLETED')}</span></div>
-        </div>`;
-        list.appendChild(div);
-      });
-      if(!list.children.length) list.innerHTML=`<div class="note err">No transactions.</div>`;
-    }catch(e){
-      list.innerHTML=`<div class="note err">Failed to load wallet.</div>`;
-    }
-  }
-
-  /* ======= MONITORING ======= */
-  async function loadMonitoring(){
-    const body=document.querySelector('#tbl-monitor tbody'); body.innerHTML='';
-    try{
-      const j = await jsonp("monitoring");
-      (j.events||[]).forEach(ev=>{
-        const tr=document.createElement('tr');
-        tr.innerHTML=`<td>${esc(ev.time||'')}</td><td>${esc(ev.type||'')}</td><td>${esc(ev.msg||'')}</td>`;
-        body.appendChild(tr);
-      });
-      if(!body.children.length) body.innerHTML=`<tr><td colspan="3" class="muted">No events.</td></tr>`;
-    }catch(e){
-      body.innerHTML=`<tr><td colspan="3">Failed to load events.</td></tr>`;
-    }
-  }
-
-  /* ======= SETTINGS ======= */
-  async function loadSettings(){
-    try{
-      const j = await jsonp("config");
-      $('cfgDump').textContent = JSON.stringify(j,null,2);
-    }catch(e){
-      $('cfgDump').textContent = 'Failed to load config.';
-    }
-  }
-
-  /* ======= INIT ======= */
-  window.addEventListener('DOMContentLoaded', ()=>{
-    const h=(location.hash||'#dashboard').replace('#','');
-    showTab(h);
-  });
-  window.addEventListener('hashchange', ()=>{
-    const h=(location.hash||'#dashboard').replace('#','');
-    showTab(h);
-  });
-</script>
-</body>
-</html>
+          body.appendChild(tr

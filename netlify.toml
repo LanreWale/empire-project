@@ -1,42 +1,25 @@
-# ─────────────────────────────────────────────────────────
-# THE EMPIRE — Static Publish (no Vite build)
-# ─────────────────────────────────────────────────────────
 [build]
-  command = ""          # no build step — avoid ARM/rollup issue
-  publish = "app"       # serve /app as the site root
+  command = ""
+  publish = "app"
 
 [build.environment]
   NODE_VERSION = "20"
   SECRETS_SCAN_ENABLED = "false"
 
 [functions]
-  directory   = "netlify/functions"
+  directory = "netlify/functions"
   node_bundler = "esbuild"
 
-# Functions/shortener stays reachable
 [[redirects]]
   from = "/i/*"
   to   = "/.netlify/functions/shortner?path=:splat"
   status = 200
 
-# Optional convenience routes
-[[redirects]]
-  from = "/admin"
-  to   = "/admin/"
-  status = 301
-
-[[redirects]]
-  from = "/app"
-  to   = "/"
-  status = 301
-
-# Root now serves the app's index directly (since publish = "app")
 [[redirects]]
   from = "/"
   to   = "/index.html"
   status = 200
 
-# Prevent a bad cached index from bricking the site
 [[headers]]
   for = "/index.html"
   [headers.values]

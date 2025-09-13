@@ -145,9 +145,28 @@
 
 <script>
   /* ======= CONFIG ======= */
-  // ⚠️ REPLACE with your verified googleusercontent echo URL (keep the &lib=... etc.):
+  // ⚠️ REPLACE with your verified googleusercontent echo URL:
   const GAS_BASE = "https://script.google.com/macros/s/AKfycbwqR_8O9CDaDKePAeNophBITJALF91rRfJezFap5Xf6hTk5xlc3YiC4BtACV3gcIu17/exec";
-  const api = (action) => GAS_BASE + "&action=" + encodeURIComponent(action);
+
+  // ✅ auto-pick ? or & depending on URL
+  const api = (action) =>
+    GAS_BASE + (GAS_BASE.includes("?") ? "&" : "?") + "action=" + encodeURIComponent(action);
+
+  /* ======= UTILS ======= */
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s ?? '').replace(/[&<>"']/g, m => (
+    {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]
+  ));
+  const num = (n) => (+n || 0).toLocaleString();
+  const usd = (n) => new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(+n||0);
+
+  async function jget(url){
+    const r = await fetch(url, {cache:'no-store', headers:{'Accept':'application/json'}});
+    if(!r.ok) throw new Error(`${r.status} ${r.statusText}`);
+    return r.json();
+  }
+  function showError(el, msg){ el.classList.remove('hidden'); el.textContent = msg; }
+</script>
 
   /* ======= UTILS ======= */
   const $ = (id) => document.getElementById(id);

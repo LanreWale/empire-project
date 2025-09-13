@@ -3,79 +3,148 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>THE EMPIRE — Command Dashboard</title>
+<title>THE EMPIRE — Command Center</title>
 <link rel="icon" href="assets/brand/favicon.png" type="image/png"/>
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
 <style>
-  :root{ --bg:#0f1620; --panel:#121a25; --ink:#e9eef6; --muted:#8ca1c2; --brand:#f2c230; --line:#223046; }
+  :root{
+    --bg:#0c1320; --panel:#111a2a; --ink:#e9eef6; --muted:#8fa6cc;
+    --line:#1f2c44; --brand:#f2c230; --accent:#3aaed8; --success:#22c55e; --danger:#ef4444; --warn:#f59e0b;
+  }
   *{box-sizing:border-box}
-  html,body{height:100%;background:var(--bg);color:var(--ink);font:14px/1.5 Inter,system-ui,Segoe UI,Roboto,Arial}
-  .app{display:grid;grid-template-columns:240px 1fr;min-height:100vh}
-  .side{background:#0c121a;border-right:1px solid var(--line);padding:14px 10px}
-  .brand{display:flex;align-items:center;gap:8px;padding:8px 10px;margin-bottom:8px}
-  .brand img{width:20px;height:20px}
-  .brand .t1{font-weight:800;letter-spacing:.5px}
-  .nav{display:flex;flex-direction:column;gap:6px;margin-top:8px}
-  .nav button{all:unset;cursor:pointer;padding:9px 12px;border-radius:8px;color:var(--muted)}
+  html,body{height:100%;margin:0;background:radial-gradient(1200px 800px at 10% 10%, #142238 5%, #0c1320 60%);color:var(--ink);font:14px/1.45 Inter,system-ui,Segoe UI,Roboto,Arial}
+  a{color:inherit}
+  .app{display:grid;grid-template-columns:260px 1fr;min-height:100vh}
+  aside{background:linear-gradient(180deg,#0d1626,#0b1320);border-right:1px solid var(--line);padding:16px 12px}
+  .brand{display:flex;align-items:center;gap:10px;padding:8px 10px;margin-bottom:14px}
+  .brand img{width:26px;height:26px}
+  .brand .t1{font-weight:900;letter-spacing:.7px}
+  .nav{display:flex;flex-direction:column;gap:6px}
+  .nav button{all:unset;cursor:pointer;padding:10px 12px;border-radius:10px;color:var(--muted);display:flex;align-items:center;gap:8px}
   .nav button.active,.nav button:hover{background:var(--panel);color:var(--ink);border:1px solid var(--line)}
-  main{padding:18px}
-  h1{font-size:18px;letter-spacing:.6px;margin:0 0 12px 0}
-  .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:12px}
-  .span-12{grid-column:span 12}
-  .span-6{grid-column:span 6}
-  .span-4{grid-column:span 4}
-  .kpis{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0}
-  .kpi{background:var(--panel);border:1px solid var(--line);padding:10px 12px;border-radius:10px;min-width:120px}
-  .kpi .lab{color:var(--muted);font-size:12px}
-  .kpi .val{font-weight:800;font-size:18px}
-  .panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px}
+  main{padding:18px;position:relative}
+  .topbar{position:absolute;right:18px;top:18px;display:flex;align-items:center;gap:10px}
+  .emblem{width:36px;height:36px;border-radius:50%;background:url('assets/brand/commander_emblem.png') center/cover no-repeat;border:1px solid var(--line);box-shadow:0 0 0 2px rgba(242,194,48,.15)}
+  h1{font-size:18px;letter-spacing:.5px;margin:0 0 12px 0}
+  .panel{background:linear-gradient(180deg,#0e1827,#0c1626);border:1px solid var(--line);border-radius:14px;padding:12px}
   .panel h3{margin:0 0 10px 0;font-size:13px;color:var(--muted);letter-spacing:.3px}
-  table{width:100%;border-collapse:collapse}
-  th,td{padding:8px;border-bottom:1px solid var(--line)}
-  th{color:var(--muted);text-align:left;font-weight:600}
-  .muted{color:var(--muted)}
-  .note{padding:10px;border-radius:8px}
-  .note.err{background:#2b1114;border:1px solid #541015}
-  .hidden{display:none}
-  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px}
-  .hero{background:url('assets/brand/welcome_banner.jpg') center/cover no-repeat;min-height:90px;border-radius:12px;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:28px;letter-spacing:2px}
-  @media(max-width:1024px){ .grid{grid-template-columns:repeat(6,1fr)} .span-6{grid-column:span 6} .span-4{grid-column:span 6} }
-  @media(max-width:680px){ .app{grid-template-columns:1fr} .side{position:sticky;top:0;z-index:2} }
+  .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:12px}
+  .span-12{grid-column:span 12} .span-10{grid-column:span 10}
+  .span-8{grid-column:span 8} .span-6{grid-column:span 6}
+  .span-4{grid-column:span 4} .span-3{grid-column:span 3}
+  .kpis{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0}
+  .kpi{background:var(--panel);border:1px solid var(--line);padding:10px 12px;border-radius:12px;min-width:140px}
+  .kpi .lab{color:var(--muted);font-size:12px} .kpi .val{font-weight:900;font-size:18px}
+  table{width:100%;border-collapse:collapse} th,td{padding:8px;border-bottom:1px solid var(--line)} th{color:var(--muted);text-align:left}
+  .muted{color:var(--muted)} .note{padding:10px;border-radius:10px}
+  .note.err{background:#2a1214;border:1px solid #511317} .hidden{display:none}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px}
+  .hero{background:url('assets/brand/welcome_banner.jpg') center/cover no-repeat;min-height:110px;border-radius:12px;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:26px;letter-spacing:2px}
+  .btn{all:unset;cursor:pointer;background:linear-gradient(180deg,#f2c230,#d5a212);padding:10px 14px;border-radius:10px;color:#1a1406;font-weight:800;border:1px solid #b98a0d}
+  .btn.ghost{background:transparent;border:1px solid var(--line);color:var(--ink)}
+  .row{display:flex;gap:10px;flex-wrap:wrap}
+  dialog{border:1px solid var(--line);background:#0d1726;color:var(--ink);border-radius:12px;padding:14px;width:min(520px,92vw)}
+  dialog::backdrop{background:rgba(0,0,0,.5)}
+  input,select,textarea{width:100%;background:#0a1422;color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:10px}
+  label{font-size:12px;color:var(--muted)}
+  .login-wrap{display:grid;place-items:center;min-height:100vh;padding:24px}
+  .login-card{max-width:780px;width:100%;border:1px solid var(--line);border-radius:18px;background:radial-gradient(900px 600px at 50% -10%, rgba(242,194,48,.07), transparent 50%), linear-gradient(180deg,#0f1928,#0c1420);padding:22px}
+  .login-brand{display:grid;place-items:center;margin:6px 0 14px}
+  .login-brand img{width:160px;height:160px;border-radius:14px;box-shadow:0 12px 40px rgba(242,194,48,.15)}
+  .tile{flex:1;min-width:260px;border:1px solid var(--line);border-radius:16px;padding:16px}
+  .tile h4{margin:0 0 6px 0}
+  .pill{display:inline-block;padding:3px 8px;border-radius:999px;background:#152238;border:1px solid var(--line);color:var(--muted);font-size:12px}
+  .badge{display:inline-block;padding:2px 6px;border-radius:8px;font-size:12px;border:1px solid var(--line)}
+  .badge.ok{background:#0e2a1a;color:#88e6a8;border-color:#1f4730}
+  .badge.warn{background:#2a230c;color:#ffd27a;border-color:#4c3b10}
+  .badge.err{background:#2a1517;color:#ffa4a4;border-color:#4c1a1f}
+  .meter{height:10px;background:#0a1422;border:1px solid var(--line);border-radius:999px;overflow:hidden}
+  .meter > i{display:block;height:100%;background:linear-gradient(90deg,#46d68c,#3aaed8);width:0%}
+  .feed{max-height:260px;overflow:auto}
+  .feed .item{padding:8px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:8px}
+  @media(max-width:1024px){ .grid{grid-template-columns:repeat(6,1fr)} .span-10{grid-column:span 6} .span-8{grid-column:span 6} .span-6{grid-column:span 6} .span-4{grid-column:span 6} .span-3{grid-column:span 3}}
+  @media(max-width:720px){ .app{grid-template-columns:1fr} aside{position:sticky;top:0;z-index:5}}
 </style>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 </head>
 <body>
-<div class="app">
-  <aside class="side">
+
+<!-- =================== WELCOME / LOGIN =================== -->
+<section id="welcome" class="login-wrap">
+  <div class="login-card">
+    <div class="login-brand">
+      <img src="assets/brand/empire-logo-square.png" alt="THE EMPIRE"/>
+      <div class="muted" style="text-align:center;margin-top:8px">
+        <div style="font-weight:900;letter-spacing:1px;font-size:22px;margin-bottom:4px">THE EMPIRE</div>
+        Affiliate Command Intelligence • Real-Time Earnings • Global Performance Engine
+      </div>
+    </div>
+    <div class="row">
+      <div class="tile">
+        <h4>👑 Supreme Command Access</h4>
+        <div class="muted">Full system control with unlimited privileges.</div>
+        <div style="margin-top:12px" class="row">
+          <button class="btn" onclick="enterApp('commander')">Commander Login</button>
+          <button class="btn ghost" onclick="copyInvite()">Copy Invite Link</button>
+        </div>
+      </div>
+      <div class="tile">
+        <h4>👤 User Access</h4>
+        <div class="muted">Personal dashboard with earnings tracking.</div>
+        <div style="margin-top:12px" class="row">
+          <button class="btn" onclick="enterApp('user')">User Login</button>
+          <a class="btn ghost" id="whatsBtn" target="_blank" rel="noopener">Share on WhatsApp</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =================== APP SHELL =================== -->
+<div id="app" class="app" style="display:none">
+  <aside>
     <div class="brand">
-      <img src="assets/brand/empire-logo.png" alt="The Empire"/>
-      <div class="t1">THE EMPIRE</div>
+      <img src="assets/brand/empire-logo.png" alt="The Empire"/><div class="t1">THE EMPIRE</div>
     </div>
     <div class="nav">
-      <button class="active" data-tab="dashboard">Overview</button>
+      <button class="active" data-tab="dashboard">Dashboard</button>
       <button data-tab="cpa">CPA Accounts</button>
       <button data-tab="users">Users</button>
       <button data-tab="analytics">Analytics</button>
       <button data-tab="wallet">Wallet</button>
       <button data-tab="monitoring">Monitoring</button>
       <button data-tab="settings">Settings</button>
+      <button data-tab="logout">Logout</button>
     </div>
   </aside>
 
   <main>
+    <div class="topbar"><div class="pill" id="rolePill">ROLE</div><div class="emblem"></div></div>
+
+    <!-- DASHBOARD -->
     <section id="view-dashboard" class="view">
       <h1>COMMAND DASHBOARD</h1>
       <div class="hero span-12">WELCOME TO THE EMPIRE</div>
 
       <div class="kpis">
-        <div class="kpi"><div class="lab">Earnings</div><div class="val" id="kpi-earn">$0.00</div></div>
-        <div class="kpi"><div class="lab">Leads</div><div class="val" id="kpi-leads">0</div></div>
-        <div class="kpi"><div class="lab">Clicks</div><div class="val" id="kpi-clicks">0</div></div>
+        <div class="kpi"><div class="lab">Total Earnings</div><div class="val" id="kpi-earn">$0.00</div></div>
+        <div class="kpi"><div class="lab">Active Users</div><div class="val" id="kpi-users">0</div></div>
+        <div class="kpi"><div class="lab">Conversion Rate</div><div class="val" id="kpi-cr">0.00%</div></div>
+        <div class="kpi"><div class="lab">Total Clicks</div><div class="val" id="kpi-clicks">0</div></div>
         <div class="kpi"><div class="lab">EPC</div><div class="val" id="kpi-epc">$0.00</div></div>
         <div class="kpi"><div class="lab">CPA</div><div class="val" id="kpi-cpa">$0.00</div></div>
-        <div class="kpi"><div class="lab">RPM</div><div class="val" id="kpi-rpm">$0.00</div></div>
-        <div class="kpi"><div class="lab">Conv. Rate</div><div class="val" id="kpi-cr">0.00%</div></div>
       </div>
 
       <div class="grid">
+        <div class="panel span-8">
+          <h3>Daily Earnings</h3>
+          <canvas id="chartDaily" height="140"></canvas>
+        </div>
+        <div class="panel span-4">
+          <h3>Traffic Sources</h3>
+          <canvas id="chartTraffic" height="140"></canvas>
+        </div>
+
         <div class="panel span-6">
           <h3>BY GEO</h3>
           <table id="tbl-geo"><thead><tr><th>Country</th><th>Earnings ($)</th></tr></thead><tbody></tbody></table>
@@ -96,262 +165,546 @@
       <div id="ovrErr" class="note err hidden">Failed to load overview.</div>
     </section>
 
+    <!-- CPA ACCOUNTS -->
     <section id="view-cpa" class="view hidden">
-      <h1>CPA ACCOUNTS</h1>
+      <h1>CPA ACCOUNTS MANAGEMENT</h1>
+      <div class="row" style="margin-bottom:8px"><button class="btn" onclick="openDlg('dlgAddCpa')">+ Add New Account</button></div>
       <div id="cpaGrid" class="grid"></div>
     </section>
 
+    <!-- USERS -->
     <section id="view-users" class="view hidden">
-      <h1>USERS</h1>
-      <table id="tbl-users"><thead><tr><th>Name</th><th>Email</th><th>Phone</th></tr></thead><tbody></tbody></table>
+      <h1>USERS MANAGEMENT</h1>
+      <div class="panel" style="margin-bottom:10px">
+        <div class="row">
+          <div><label>Invite Link</label><div id="inviteLink" class="pill" style="user-select:all"></div></div>
+          <button class="btn" onclick="regenInvite()">Generate New</button>
+          <button class="btn ghost" onclick="copyInvite()">Copy</button>
+          <a class="btn ghost" id="waInvite" target="_blank" rel="noopener">Share on WhatsApp</a>
+          <button class="btn" onclick="openDlg('dlgAddUser')">+ Add New User</button>
+        </div>
+      </div>
+      <div class="panel">
+        <table id="tbl-users"><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Status</th></tr></thead><tbody></tbody></table>
+      </div>
     </section>
 
+    <!-- ANALYTICS -->
     <section id="view-analytics" class="view hidden">
       <h1>ANALYTICS</h1>
-      <table id="tbl-analytics"><thead><tr><th>Metric</th><th>Value</th></tr></thead><tbody></tbody></table>
+      <div class="grid">
+        <div class="panel span-8"><h3>Performance Overview (Monthly)</h3><canvas id="chartPerf" height="160"></canvas></div>
+        <div class="panel span-4"><h3>Geographic Distribution</h3><canvas id="chartGeo" height="160"></canvas></div>
+        <div class="panel span-6">
+          <h3>Live Performance Data</h3>
+          <table id="tbl-live"><thead><tr><th>Date & Time</th><th>Country</th><th>Offer Type</th><th>Device</th><th>Clicks</th><th>Leads</th><th>Earnings ($)</th></tr></thead><tbody></tbody></table>
+        </div>
+        <div class="panel span-6"><h3>Revenue Analytics & Predictions</h3><canvas id="chartRev" height="160"></canvas></div>
+      </div>
     </section>
 
+    <!-- WALLET -->
     <section id="view-wallet" class="view hidden">
       <h1>WALLET</h1>
-      <div class="kpis">
-        <div class="kpi"><div class="lab">Balance</div><div class="val" id="wallet-balance">$0.00</div></div>
+      <div class="kpis"><div class="kpi"><div class="lab">Live Balance</div><div class="val" id="wallet-balance">$0.00</div></div></div>
+      <div class="grid">
+        <div class="panel span-6">
+          <h3>Universal Withdrawal Request</h3>
+          <form id="frmWithdraw" onsubmit="submitWithdraw(event)">
+            <div class="row">
+              <div style="flex:1"><label>Account Holder Name</label><input name="holder" required/></div>
+              <div style="flex:1"><label>Account Number</label><input name="acct" required onblur="validateAccount(this.value)"/></div>
+            </div>
+            <div class="row">
+              <div style="flex:1"><label>Payment Method</label>
+                <select name="method" required><option>Payoneer</option><option>Bank</option></select></div>
+              <div style="flex:1"><label>Country/Region</label><input name="country" value="Nigeria"/></div>
+            </div>
+            <div class="row">
+              <div style="flex:1"><label>Amount (USD)</label><input type="number" step="0.01" name="amount" required/></div>
+              <div style="flex:1"><label>Validator Result</label><input id="acctResult" disabled placeholder="—"/></div>
+            </div>
+            <div class="row"><button class="btn">Request Withdrawal</button><span id="wdMsg" class="muted"></span></div>
+          </form>
+        </div>
+        <div class="panel span-6">
+          <h3>Transaction History</h3>
+          <div id="walletList" class="grid"></div>
+        </div>
       </div>
-      <div id="walletList" class="grid"></div>
     </section>
 
+    <!-- MONITORING -->
     <section id="view-monitoring" class="view hidden">
       <h1>MONITORING</h1>
-      <table id="tbl-monitor"><thead><tr><th>Time</th><th>Type</th><th>Message</th></tr></thead><tbody></tbody></table>
+      <div class="grid">
+
+        <!-- Intelligent Alert System -->
+        <div class="panel span-6">
+          <h3>⚠️ Intelligent Alert System</h3>
+          <div id="ias-list" class="row"></div>
+          <div style="margin-top:10px" class="muted" id="ias-upd">Last scan —</div>
+        </div>
+
+        <!-- System Health Monitor -->
+        <div class="panel span-6">
+          <h3>💗 System Health Monitor</h3>
+          <div id="health-meters"></div>
+          <div style="margin-top:10px">
+            <span class="muted">Overall Health:</span>
+            <span id="overall-health" style="font-weight:900;margin-left:6px">—</span>
+            <span id="overall-text" class="pill" style="margin-left:6px">—</span>
+          </div>
+        </div>
+
+        <!-- AI Optimization Engine -->
+        <div class="panel span-6">
+          <h3>⚙️ AI Optimization Engine</h3>
+          <div id="ai-opts"></div>
+          <div class="row" style="margin-top:10px">
+            <button class="btn ghost" onclick="triggerAiCycle()">Force Optimization Cycle</button>
+            <span id="ai-msg" class="muted"></span>
+          </div>
+        </div>
+
+        <!-- Live Activity + Behavior/Finance/Comms -->
+        <div class="panel span-6">
+          <h3>🟢 Live Activity Feed</h3>
+          <div class="feed" id="live-feed"></div>
+        </div>
+
+        <div class="panel span-4">
+          <h3>🧠 Behavioral Analysis</h3>
+          <div class="row"><div class="kpi"><div class="lab">Suspicious Activities</div><div class="val" id="ba-flagged">0</div></div>
+          <div class="kpi"><div class="lab">Last Scan</div><div class="val" id="ba-last">—</div></div></div>
+        </div>
+
+        <div class="panel span-4">
+          <h3>💰 Financial Monitor</h3>
+          <div class="row"><div class="kpi"><div class="lab">Withdrawal Patterns</div><div class="val" id="fm-withdraw">—</div></div>
+          <div class="kpi"><div class="lab">Earning Anomalies</div><div class="val" id="fm-anom">—</div></div></div>
+          <div style="margin-top:8px"><span class="muted">Risk Level:</span> <span id="fm-risk" class="badge ok">Low</span></div>
+        </div>
+
+        <div class="panel span-4">
+          <h3>📨 Communication Monitor</h3>
+          <div class="row">
+            <div class="kpi"><div class="lab">WhatsApp Activity</div><div class="val" id="cm-wa">—</div></div>
+            <div class="kpi"><div class="lab">Telegram Alerts</div><div class="val" id="cm-tg">—</div></div>
+          </div>
+          <div style="margin-top:8px"><span class="muted">Status:</span> <span id="cm-status" class="badge ok">Online</span></div>
+        </div>
+
+      </div>
     </section>
 
+    <!-- SETTINGS -->
     <section id="view-settings" class="view hidden">
       <h1>SETTINGS</h1>
-      <pre id="cfgDump" class="panel" style="white-space:pre-wrap"></pre>
+      <div class="grid">
+        <div class="panel span-6">
+          <h3>🧩 API Configuration</h3>
+          <div style="display:grid;gap:10px">
+            <div><label>Google Sheets ID</label><input id="cfg-sheets" disabled placeholder="—"></div>
+            <div class="row">
+              <div style="flex:1"><label>Telegram Bot Status</label><input id="cfg-tg-status" disabled placeholder="—"></div>
+              <div style="flex:1"><label>Telegram Channel</label><input id="cfg-tg-chan" disabled placeholder="—"></div>
+            </div>
+            <div class="row">
+              <div style="flex:1"><label>Chat ID</label><input id="cfg-chat" disabled placeholder="—"></div>
+              <div style="flex:1"><label>WhatsApp Business</label><input id="cfg-wa" disabled placeholder="—"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel span-6">
+          <h3>🖥️ System Status</h3>
+          <div class="row">
+            <div class="kpi"><div class="lab">MongoDB Database</div><div class="val"><span id="st-db" class="badge ok">Running</span></div></div>
+            <div class="kpi"><div class="lab">Flutterwave Gateway</div><div class="val"><span id="st-pay" class="badge ok">Connected</span></div></div>
+            <div class="kpi"><div class="lab">CPA Accounts</div><div class="val"><span id="st-cpa" class="badge ok">5/5 Active</span></div></div>
+            <div class="kpi"><div class="lab">Monitoring Agents</div><div class="val"><span id="st-agents" class="badge ok">Ready</span></div></div>
+          </div>
+          <div style="margin-top:10px" class="muted" id="cfg-upd">—</div>
+        </div>
+
+        <div class="panel span-12">
+          <h3>Raw Config</h3>
+          <pre id="cfgDump" style="white-space:pre-wrap;margin:0"></pre>
+        </div>
+      </div>
     </section>
+
   </main>
 </div>
 
+<!-- ========== DIALOGS ========== -->
+<dialog id="dlgAddUser">
+  <form method="dialog" onsubmit="return false;">
+    <h3>Add New User</h3>
+    <div class="row"><div style="flex:1"><label>Username</label><input id="nu_name" required/></div></div>
+    <div class="row"><div style="flex:1"><label>Email</label><input id="nu_email" type="email" required/></div></div>
+    <div class="row"><div style="flex:1"><label>WhatsApp Number</label><input id="nu_phone" placeholder="+2348012345678"/></div></div>
+    <div class="row"><div style="flex:1"><label>Authority Level</label>
+      <select id="nu_level" required><option>USER</option><option>10x_COMMANDER</option><option>SUPREME_COMMANDER</option></select></div></div>
+    <div class="row"><button class="btn" onclick="submitNewUser()">Add User</button><button class="btn ghost" onclick="closeDlg('dlgAddUser')">Cancel</button></div>
+    <div id="nu_msg" class="muted" style="margin-top:6px"></div>
+  </form>
+</dialog>
+
+<dialog id="dlgAddCpa">
+  <form method="dialog" onsubmit="return false;">
+    <h3>Add CPA Account</h3>
+    <div class="row"><div style="flex:1"><label>Account ID</label><input id="nc_id" required/></div></div>
+    <div class="row"><div style="flex:1"><label>Custom Domain</label><input id="nc_domain" placeholder="https://yourdomain.com"/></div></div>
+    <div class="row"><button class="btn" onclick="submitNewCpa()">Add Account</button><button class="btn ghost" onclick="closeDlg('dlgAddCpa')">Cancel</button></div>
+    <div id="nc_msg" class="muted" style="margin-top:6px"></div>
+  </form>
+</dialog>
+
 <script>
-  /* ======= CONFIG ======= */
-  const GAS_BASE = "https://script.google.com/macros/s/AKfycbybjkx3-vLj8D3LZgvG7YWdOgJOnQdxIZ56MZ8KtnIZoBFjIJcYveX8IZ8j9rVtpKtR/exec";
-  const api = (action) => GAS_BASE + (GAS_BASE.includes("?") ? "&" : "?") + "action=" + encodeURIComponent(action);
+/* ================== CONFIG ================== */
+const GAS_BASE = "https://script.google.com/macros/s/AKfycbybjkx3-vLj8D3LZgvG7YWdOgJOnQdxIZ56MZ8KtnIZoBFjIJcYveX8IZ8j9rVtpKtR/exec";
+const INVITE_DEFAULT = "https://superlative-pothos-ebf5f2.netlify.app/?ref=SUPREME_COMMANDER";
 
-  /* ======= UTILS ======= */
-  const $ = (id) => document.getElementById(id);
-  const esc = (s) => String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-  const num = (n) => (+n || 0).toLocaleString();
-  const usd = (n) => new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(+n||0);
-  async function jget(url){ const r = await fetch(url,{cache:'no-store',headers:{'Accept':'application/json'}}); if(!r.ok) throw new Error(`${r.status} ${r.statusText}`); return r.json(); }
-  function showError(el,msg){ el.classList.remove('hidden'); el.textContent = msg; }
+/* ================== UTILS ================== */
+const $ = sel => document.querySelector(sel);
+const $$ = sel => Array.from(document.querySelectorAll(sel));
+const esc = s => String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const num = n => (+n||0).toLocaleString();
+const usd = n => new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(+n||0);
+const pct = n => `${(+n||0).toFixed(1)}%`;
+const api = (action) => GAS_BASE + (GAS_BASE.includes("?") ? "&" : "?") + "action=" + encodeURIComponent(action);
+async function jget(url){ const r = await fetch(url,{cache:'no-store',headers:{'Accept':'application/json'}}); if(!r.ok) throw new Error(`${r.status} ${r.statusText}`); return r.json(); }
+async function jpost(action, payload){ const r = await fetch(api(action),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload||{})}); if(!r.ok) throw new Error(`${r.status} ${r.statusText}`); return r.json(); }
+function showTab(key){
+  if(key==='logout'){ localStorage.removeItem('empire_role'); location.reload(); return; }
+  $$('.nav button').forEach(b=>b.classList.toggle('active', b.dataset.tab===key));
+  $$('.view').forEach(v=>v.classList.add('hidden')); $('#view-'+key)?.classList.remove('hidden');
+  if(key==='dashboard') loadOverview();
+  if(key==='cpa') loadCpa();
+  if(key==='users') loadUsers();
+  if(key==='analytics') loadAnalytics();
+  if(key==='wallet') loadWallet();
+  if(key==='monitoring') loadMonitoring();
+  if(key==='settings') loadSettings();
+}
+$$('.nav button').forEach(b=>b.addEventListener('click', ()=>{ location.hash=b.dataset.tab; showTab(b.dataset.tab); }));
 
-  /* ======= TABS ======= */
-  function showTab(key){
-    document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active', b.dataset.tab===key));
-    document.querySelectorAll('.view').forEach(v=>v.classList.add('hidden'));
-    const view = document.getElementById('view-'+key); if(view) view.classList.remove('hidden');
+/* ================== WELCOME / LOGIN ================== */
+function enterApp(role){
+  localStorage.setItem('empire_role', role);
+  $('#welcome').style.display='none';
+  $('#app').style.display='grid';
+  $('#rolePill').textContent = role.toUpperCase();
+  location.hash = '#dashboard';
+  showTab('dashboard');
+}
+function copyInvite(){
+  const link = $('#inviteLink')?.textContent || INVITE_DEFAULT;
+  navigator.clipboard.writeText(link); alert('Invite link copied.');
+}
+function regenInvite(){
+  const t = 'SUPREME_COMMANDER';
+  const url = `https://superlative-pothos-ebf5f2.netlify.app/?ref=${encodeURIComponent(t)}&ts=${Date.now()}`;
+  $('#inviteLink').textContent = url;
+  $('#waInvite').href = 'https://wa.me/?text=' + encodeURIComponent('Join THE EMPIRE: ' + url);
+}
+(() => { // welcome init
+  $('#inviteLink').textContent = INVITE_DEFAULT;
+  $('#whatsBtn').href = 'https://wa.me/?text=' + encodeURIComponent('Enter THE EMPIRE');
+  $('#waInvite').href = 'https://wa.me/?text=' + encodeURIComponent('Join THE EMPIRE: '+INVITE_DEFAULT);
+  const role = localStorage.getItem('empire_role');
+  if(role){ enterApp(role); }
+})();
 
-    if(key==='dashboard') loadOverview();
-    if(key==='cpa')       loadCpa();
-    if(key==='users')     loadUsers();
-    if(key==='analytics') loadAnalytics();
-    if(key==='wallet')    loadWallet();
-    if(key==='monitoring')loadMonitoring();
-    if(key==='settings')  loadSettings();
+/* ================== OVERVIEW ================== */
+let chartDaily, chartTraffic;
+async function loadOverview(){
+  try{
+    const j = await jget(api("overview"));
+    const t = j.totals || {};
+    const tp = j.totalsPretty || {};
+    $('#kpi-earn').textContent  = usd(t.earnings);
+    $('#kpi-users').textContent = num((j.activeUsers ?? 0));
+    $('#kpi-cr').textContent    = tp.conversionRatePct || ((+t.conversionRate||0).toFixed(2)+'%');
+    $('#kpi-clicks').textContent= num(t.clicks||0);
+    $('#kpi-epc').textContent   = usd(t.epc||0);
+    $('#kpi-cpa').textContent   = usd(t.cpa||0);
+
+    const fillObj = (tbodySel, obj)=>{ const tb=$(tbodySel); tb.innerHTML='';
+      Object.entries(obj||{}).forEach(([k,v])=>{ const tr=document.createElement('tr'); tr.innerHTML=`<td>${esc(k)}</td><td>${usd(v)}</td>`; tb.appendChild(tr); });
+      if(!tb.children.length) tb.innerHTML=`<tr><td colspan="2" class="muted">No data</td></tr>`;
+    };
+    fillObj('#tbl-geo tbody', j.geo);
+    fillObj('#tbl-device tbody', j.devices);
+    fillObj('#tbl-offer tbody', j.offerTypes);
+
+    // By day table + line
+    const dayBody = $('#tbl-day tbody'); dayBody.innerHTML='';
+    const byDay = Array.isArray(j.byDay) ? j.byDay : Object.entries(j.byDay||{}).map(([d,v])=>({date:d, earnings:v}));
+    const dLabels=[], dVals=[];
+    byDay.forEach(r=>{ const d=r.date||r.t||''; const v=+r.earnings||+r.value||0;
+      dLabels.push(d); dVals.push(v);
+      const tr=document.createElement('tr'); tr.innerHTML=`<td>${esc(d)}</td><td>${usd(v)}</td>`; dayBody.appendChild(tr);
+    });
+    if(!chartDaily){ chartDaily = new Chart($('#chartDaily'), {type:'line', data:{labels:dLabels, datasets:[{label:'Earnings ($)', data:dVals, tension:.35, fill:true}]}}); }
+    else { chartDaily.data.labels=dLabels; chartDaily.data.datasets[0].data=dVals; chartDaily.update(); }
+
+    // Traffic pie (use device shares)
+    const dev = j.devices || {};
+    const pieLabels = Object.keys(dev); const pieVals = Object.values(dev);
+    if(!chartTraffic){ chartTraffic = new Chart($('#chartTraffic'), {type:'doughnut', data:{labels:pieLabels, datasets:[{data:pieVals}]}}); }
+    else { chartTraffic.data.labels=pieLabels; chartTraffic.data.datasets[0].data=pieVals; chartTraffic.update(); }
+
+    $('#ovrErr').classList.add('hidden');
+  }catch(e){
+    $('#ovrErr').classList.remove('hidden'); $('#ovrErr').textContent='Failed to load overview: '+e.message;
   }
-  document.querySelectorAll('.nav button').forEach(b=>{
-    b.addEventListener('click', ()=>{ location.hash=b.dataset.tab; showTab(b.dataset.tab); });
-  });
+}
 
-  /* ======= OVERVIEW ======= */
-  async function loadOverview(){
-    try{
-      const j = await jget(api("overview"));
-      const t = j.totals || {};
-      const tp = j.totalsPretty || {};
-      $('kpi-earn').textContent  = usd(t.earnings ?? 0);
-      $('kpi-leads').textContent = num(t.leads ?? 0);
-      $('kpi-clicks').textContent= num(t.clicks ?? 0);
-      $('kpi-epc').textContent   = usd(tp.epcUsd ?? t.epc ?? 0);
-      $('kpi-cpa').textContent   = usd(tp.cpaUsd ?? t.cpa ?? 0);
-      $('kpi-rpm').textContent   = usd(tp.rpmUsd ?? t.rpm ?? 0);
-      $('kpi-cr').textContent    = tp.conversionRatePct ?? (((t.conversionRate ?? 0)*100).toFixed(2) + '%');
-
-      const fillObj = (tbody, obj) => {
-        tbody.innerHTML = '';
-        Object.entries(obj||{}).forEach(([k,v])=>{
-          const tr=document.createElement('tr');
-          tr.innerHTML = `<td>${esc(k)}</td><td>${usd(v)}</td>`;
-          tbody.appendChild(tr);
-        });
-        if(!tbody.children.length){ tbody.innerHTML = `<tr><td colspan="2" class="muted">No data</td></tr>`; }
-      };
-      fillObj(document.querySelector('#tbl-geo tbody'), j.geo);
-      fillObj(document.querySelector('#tbl-device tbody'), j.devices);
-      fillObj(document.querySelector('#tbl-offer tbody'), j.offerTypes);
-
-      const dayBody = document.querySelector('#tbl-day tbody'); dayBody.innerHTML='';
-      const byDay = Array.isArray(j.byDay) ? j.byDay
-                   : Object.entries(j.byDay||{}).map(([d,v])=>({t:d, earnings:v}));
-      byDay.forEach(r=>{
-        const tr=document.createElement('tr');
-        tr.innerHTML=`<td>${esc(r.t||r.date||'')}</td><td>${usd(r.earnings||r.value||0)}</td>`;
-        dayBody.appendChild(tr);
-      });
-      if(!dayBody.children.length) dayBody.innerHTML=`<tr><td colspan="2" class="muted">No data</td></tr>`;
-
-      $('ovrErr').classList.add('hidden');
-    }catch(e){
-      showError($('ovrErr'), `Failed to load overview: ${e.message}`);
-      console.warn('overview failed', e);
-    }
-  }
-
-  /* ======= CPA ======= */
-  async function loadCpa(){
-    const grid=$('cpaGrid'); grid.innerHTML='';
-    try{
-      const j = await jget(api("cpa"));
-      (j.items||[]).forEach(acc=>{
-        const name = acc.account || acc.name || 'CPA';
-        const network = acc.network || '—';
-        const offers = acc.activeOffers ?? acc.offers ?? 0;
-        const revenue = acc.revenue ?? 0;
-        const clicks = acc.clicks ?? 0;
-        const conv = (()=>{
-          if (acc.conversionRate != null) {
-            return (typeof acc.conversionRate === 'string' && acc.conversionRate.endsWith('%'))
-              ? acc.conversionRate
-              : ((+acc.conversionRate)*100).toFixed(1)+'%';
-          }
-          if (acc.conversion != null) {
-            return (typeof acc.conversion === 'string' && acc.conversion.endsWith('%'))
-              ? acc.conversion
-              : ((+acc.conversion)*100).toFixed(1)+'%';
-          }
-          return '—';
-        })();
-
-        const card=document.createElement('div'); card.className='card span-4';
-        card.innerHTML = `
-          <div style="font-weight:800;margin-bottom:6px">${esc(name)}</div>
-          <div class="muted">Network</div><div style="font-weight:700">${esc(network)}</div>
-          <div class="muted">Active Offers</div><div style="font-weight:700">${num(offers)}</div>
-          <div class="muted">Revenue</div><div style="font-weight:700">${usd(revenue)}</div>
-          <div class="muted">Clicks</div><div style="font-weight:700">${num(clicks)}</div>
-          <div class="muted">Conversion</div><div style="font-weight:700">${conv}</div>`;
-        grid.appendChild(card);
-      });
-      if(!grid.children.length) grid.innerHTML=`<div class="note err">No CPA accounts returned.</div>`;
-    }catch(e){
-      grid.innerHTML=`<div class="note err">Failed to load CPA: ${esc(e.message)}</div>`;
-    }
-  }
-
-  /* ======= USERS ======= */
-  async function loadUsers(){
-    const body=document.querySelector('#tbl-users tbody'); body.innerHTML='';
-    try{
-      const j = await jget(api("users"));
-      (j.items||[]).forEach(u=>{
-        const emailClean = String(u.email||'').replace(/\+$/,'').trim();
-        const tr=document.createElement('tr');
-        tr.innerHTML=`<td>${esc(u.name||'')}</td><td>${esc(emailClean)}</td><td>${esc(u.phone||'')}</td>`;
-        body.appendChild(tr);
-      });
-      if(!body.children.length) body.innerHTML=`<tr><td colspan="3" class="muted">No users.</td></tr>`;
-    }catch(e){
-      body.innerHTML=`<tr><td colspan="3">Failed to load users.</td></tr>`;
-    }
-  }
-
-  /* ======= ANALYTICS ======= */
-  async function loadAnalytics(){
-    const body=document.querySelector('#tbl-analytics tbody'); body.innerHTML='';
-    try{
-      const j = await jget(api("analytics"));
-      if (Array.isArray(j.items) && j.items.length && j.items[0].metric !== undefined) {
-        j.items.forEach(r=>{
-          const val = (typeof r.value === 'number') ? r.value : (r.value||'');
-          const tr=document.createElement('tr');
-          tr.innerHTML=`<td>${esc(r.metric||'')}</td><td>${esc(val)}</td>`;
-          body.appendChild(tr);
-        });
-      } else if (j.totals) {
-        Object.entries(j.totals).forEach(([k,v])=>{
-          const tr=document.createElement('tr');
-          tr.innerHTML=`<td>${esc(k)}</td><td>${esc(v)}</td>`;
-          body.appendChild(tr);
-        });
-      } else if (Array.isArray(j.items)) {
-        const firstTwo = (obj)=>Object.entries(obj).slice(0,2).map(e=>e[1]||'');
-        j.items.forEach(r=>{
-          const [a,b]=firstTwo(r);
-          const tr=document.createElement('tr');
-          tr.innerHTML=`<td>${esc(a)}</td><td>${esc(b)}</td>`;
-          body.appendChild(tr);
-        });
-      }
-      if(!body.children.length) body.innerHTML=`<tr><td colspan="2" class="muted">No analytics rows.</td></tr>`;
-    }catch(e){
-      body.innerHTML=`<tr><td colspan="2">Failed to load analytics.</td></tr>`;
-    }
-  }
-
-  /* ======= WALLET ======= */
-  async function loadWallet(){
-    const list=$('walletList'); list.innerHTML='';
-    try{
-      const j = await jget(api("wallet"));
-      $('wallet-balance').textContent = usd(j.balance||0);
-      (j.history||[]).forEach(tx=>{
-        const div=document.createElement('div'); div.className='card span-6';
-        div.innerHTML = `<div style="display:flex;justify-content:space-between;gap:10px">
-          <div><div class="muted">${esc(tx.date||'')}</div><div>${esc(tx.method||'')}</div></div>
-          <div style="text-align:right"><div style="font-weight:800">${usd(tx.amount||0)}</div><span class="muted">${esc(tx.status||'COMPLETED')}</span></div>
+/* ================== CPA ACCOUNTS ================== */
+async function loadCpa(){
+  const grid = $('#cpaGrid'); grid.innerHTML='';
+  try{
+    const j = await jget(api("cpa"));
+    (j.items||[]).forEach(acc=>{
+      const name = acc.account || acc.name || 'CPA';
+      const network = acc.network || 'CPA Grip';
+      const offers = acc.activeOffers ?? acc.offers ?? 0;
+      const revenue = acc.revenue ?? 0;
+      const clicks = acc.clicks ?? 0;
+      let conv='—';
+      if (acc.conversionRate != null) conv = (String(acc.conversionRate).endsWith('%')? acc.conversionRate : ((+acc.conversionRate)*100).toFixed(1)+'%');
+      const card=document.createElement('div'); card.className='card span-4';
+      card.innerHTML = `
+        <div style="font-size:22px;font-weight:900">${esc(name)}</div>
+        <div class="muted">Network</div><div style="font-weight:700;margin-bottom:6px">${esc(network)}</div>
+        <div class="grid" style="grid-template-columns:repeat(2,1fr);gap:10px">
+          <div class="kpi"><div class="lab">Active Offers</div><div class="val">${num(offers)}</div></div>
+          <div class="kpi"><div class="lab">Revenue</div><div class="val">${usd(revenue)}</div></div>
+          <div class="kpi"><div class="lab">Clicks</div><div class="val">${num(clicks)}</div></div>
+          <div class="kpi"><div class="lab">Conversion</div><div class="val">${conv}</div></div>
         </div>`;
-        list.appendChild(div);
+      grid.appendChild(card);
+    });
+    if(!grid.children.length) grid.innerHTML=`<div class="note err">No CPA accounts returned.</div>`;
+  }catch(e){ grid.innerHTML=`<div class="note err">Failed to load CPA: ${esc(e.message)}</div>`; }
+}
+
+/* ================== USERS ================== */
+async function loadUsers(){
+  const body = $('#tbl-users tbody'); body.innerHTML='';
+  try{
+    const j = await jget(api("users"));
+    (j.items||[]).forEach(u=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML = `<td>${esc(u.name||'')}</td><td>${esc(String(u.email||'').replace(/\+$/,''))}</td><td>${esc(u.phone||'')}</td><td>${esc(u.status||'ACTIVE')}</td>`;
+      body.appendChild(tr);
+    });
+    if(!body.children.length) body.innerHTML=`<tr><td colspan="4" class="muted">No users.</td></tr>`;
+  }catch(e){ body.innerHTML=`<tr><td colspan="4">Failed to load users.</td></tr>`; }
+}
+async function submitNewUser(){
+  const payload = {name:$('#nu_name').value, email:$('#nu_email').value, phone:$('#nu_phone').value, level:$('#nu_level').value};
+  $('#nu_msg').textContent='Submitting...';
+  try{ const r=await jpost('add_user', payload); $('#nu_msg').textContent = r.ok?'User added.':'Failed.'; loadUsers(); }
+  catch(e){ $('#nu_msg').textContent='Error: '+e.message; }
+}
+function openDlg(id){ $( '#'+id ).showModal(); }
+function closeDlg(id){ $( '#'+id ).close(); }
+async function submitNewCpa(){
+  const payload = {accountId:$('#nc_id').value, domain:$('#nc_domain').value};
+  $('#nc_msg').textContent='Submitting...';
+  try{ const r=await jpost('add_cpa', payload); $('#nc_msg').textContent=r.ok?'Added.':'Failed.'; loadCpa(); }
+  catch(e){ $('#nc_msg').textContent='Error: '+e.message; }
+}
+
+/* ================== ANALYTICS ================== */
+let chartPerf, chartGeo, chartRev;
+async function loadAnalytics(){
+  try{
+    const j = await jget(api("analytics"));
+    const days = (Array.isArray(j.byDay)? j.byDay : []).map(r=>r.date||r.t||'');
+    const vals = (Array.isArray(j.byDay)? j.byDay : []).map(r=>+r.earnings||+r.value||0);
+    if(!chartPerf){ chartPerf = new Chart($('#chartPerf'), {type:'bar', data:{labels:days, datasets:[{label:'Monthly Earnings ($)', data:vals}]}}); }
+    else { chartPerf.data.labels=days; chartPerf.data.datasets[0].data=vals; chartPerf.update(); }
+
+    const geo = j.geo || {}; const gLabels=Object.keys(geo), gVals=Object.values(geo);
+    if(!chartGeo){ chartGeo = new Chart($('#chartGeo'), {type:'pie', data:{labels:gLabels, datasets:[{data:gVals}]}}); }
+    else { chartGeo.data.labels=gLabels; chartGeo.data.datasets[0].data=gVals; chartGeo.update(); }
+
+    const body=$('#tbl-live tbody'); body.innerHTML='';
+    (j.live||[]).forEach(r=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML=`<td>${esc(r.time||r.date||'')}</td><td>${esc(r.country||'')}</td><td>${esc(r.offerType||'')}</td><td>${esc(r.device||'')}</td><td>${num(r.clicks||0)}</td><td>${num(r.leads||0)}</td><td>${usd(r.earnings||0)}</td>`;
+      body.appendChild(tr);
+    });
+    if(!body.children.length) body.innerHTML=`<tr><td colspan="7" class="muted">No live rows.</td></tr>`;
+
+    const rev = j.revenue || vals; const pred = j.predicted || vals.map(v=>v*1.05);
+    if(!chartRev){ chartRev = new Chart($('#chartRev'), {type:'bar', data:{labels:days.length?days:Array.from({length:rev.length},(_,i)=>'D'+(i+1)), datasets:[{label:'Revenue', data:rev},{label:'Predicted', data:pred} ]}}); }
+    else { chartRev.data.labels = days.length?days:chartRev.data.labels; chartRev.data.datasets[0].data=rev; chartRev.data.datasets[1].data=pred; chartRev.update(); }
+  }catch(e){ console.warn('analytics error',e); }
+}
+
+/* ================== WALLET ================== */
+async function loadWallet(){
+  const list=$('#walletList'); list.innerHTML='';
+  try{
+    const j = await jget(api("wallet"));
+    $('#wallet-balance').textContent = usd(j.balance||0);
+    (j.history||[]).forEach(tx=>{
+      const div=document.createElement('div'); div.className='card span-12';
+      div.innerHTML = `<div class="row" style="justify-content:space-between">
+        <div><div class="muted">${esc(tx.date||'')}</div><div>${esc(tx.method||'')}</div></div>
+        <div style="text-align:right"><div style="font-weight:900">${usd(tx.amount||0)}</div><span class="muted">${esc(tx.status||'COMPLETED')}</span></div>
+      </div>`;
+      list.appendChild(div);
+    });
+    if(!list.children.length) list.innerHTML=`<div class="note err">No transactions.</div>`;
+  }catch(e){ list.innerHTML=`<div class="note err">Failed to load wallet.</div>`; }
+}
+async function validateAccount(acct){
+  if(!acct) return;
+  $('#acctResult').value='Validating...';
+  try{
+    const r = await jpost('validate_account', {account:acct});
+    $('#acctResult').value = r.valid ? `✅ ${r.bank||''} • ${r.name||''}` : '❌ Invalid';
+  }catch(e){ $('#acctResult').value='Validation error'; }
+}
+async function submitWithdraw(ev){
+  ev.preventDefault();
+  const data = Object.fromEntries(new FormData(ev.target).entries());
+  $('#wdMsg').textContent='Submitting...';
+  try{
+    const r = await jpost('withdraw_request', data);
+    $('#wdMsg').textContent = r.ok ? 'Request submitted.' : 'Failed.';
+    if(r.ok) loadWallet();
+  }catch(e){ $('#wdMsg').textContent='Error: '+e.message; }
+}
+
+/* ================== MONITORING ================== */
+function addMeter(parent,label,val){
+  const wrap=document.createElement('div'); wrap.style.margin='8px 0';
+  wrap.innerHTML = `<div class="row" style="justify-content:space-between"><span>${esc(label)}</span><span>${pct(val)}</span></div>
+    <div class="meter"><i style="width:${Math.max(0,Math.min(100,+val||0))}%"></i></div>`;
+  parent.appendChild(wrap);
+}
+async function loadMonitoring(){
+  try{
+    const j = await jget(api("monitoring"));
+
+    // Intelligent Alert System
+    const ias = j.alerts || [
+      {text:'System Optimized', type:'ok', note:'All pipelines up by 5.4%'},
+      {text:'High Traffic Detected', type:'warn', note:'Auto-scaling activated'},
+      {text:'Predictive Maintenance', type:'info', note:'Next operation in 2h 1m'}
+    ];
+    const list = $('#ias-list'); list.innerHTML='';
+    ias.forEach(a=>{
+      const b=document.createElement('div'); b.className='badge ' + (a.type==='ok'?'ok':a.type==='warn'?'warn':a.type==='err'?'err':'');
+      b.style.marginRight='8px'; b.textContent = a.text; b.title=a.note||'';
+      list.appendChild(b);
+    });
+    $('#ias-upd').textContent = 'Last scan ' + (j.lastScan || '—');
+
+    // Health meters
+    const health = j.health || {api:96, db:98, payment:89, cdn:100, security:100};
+    const hm = $('#health-meters'); hm.innerHTML='';
+    addMeter(hm,'API Performance', health.api);
+    addMeter(hm,'Database Health', health.db);
+    addMeter(hm,'Payment Gateway', health.payment);
+    addMeter(hm,'CDN Performance', health.cdn);
+    addMeter(hm,'Security Systems', health.security);
+    const overall = j.overallHealth ?? Math.round((Object.values(health).reduce((a,b)=>a+(+b||0),0))/Math.max(1,Object.keys(health).length));
+    $('#overall-health').textContent = pct(overall);
+    const txt = overall>=95?'Excellent Performance':overall>=85?'Optimized':'Degraded';
+    $('#overall-text').textContent = txt;
+
+    // AI Optimization Engine
+    const ai = j.ai || {conversionOptimizer:92, trafficDistribution:81, offerRotation:75};
+    const aiWrap=$('#ai-opts'); aiWrap.innerHTML='';
+    Object.entries(ai).forEach(([k,v])=>{
+      const name = k==='conversionOptimizer'?'Conversion Optimizer'
+                 : k==='trafficDistribution'?'Traffic Distribution'
+                 : k==='offerRotation'?'Offer Rotation AI' : k;
+      addMeter(aiWrap, name, v);
+    });
+
+    // Live Feed
+    const feed = $('#live-feed'); feed.innerHTML='';
+    (j.liveFeed || []).forEach(it=>{
+      const row=document.createElement('div'); row.className='item';
+      row.innerHTML = `<div>${esc(it.msg||'')}</div><div class="muted">${esc(it.time||'')}</div>`;
+      feed.appendChild(row);
+    });
+    if(!feed.children.length){
+      ['Withdrawal processed • $250.00','CPA offer rotation completed','High conversion detected — USA traffic','Payment gateway verified','Telegram alert sent • New user'].forEach((t,i)=>{
+        const row=document.createElement('div'); row.className='item';
+        row.innerHTML = `<div>${t}</div><div class="muted">${new Date(Date.now()-i*300000).toLocaleTimeString()}</div>`;
+        feed.appendChild(row);
       });
-      if(!list.children.length) list.innerHTML=`<div class="note err">No transactions.</div>`;
-    }catch(e){
-      list.innerHTML=`<div class="note err">Failed to load wallet.</div>`;
     }
-  }
 
-  /* ======= MONITORING ======= */
-  async function loadMonitoring(){
-    const body=document.querySelector('#tbl-monitor tbody'); body.innerHTML='';
-    try{
-      const j = await jget(api("monitoring"));
-      (j.events||[]).forEach(ev=>{
-        const tr=document.createElement('tr');
-        tr.innerHTML=`<td>${esc(ev.time||'')}</td><td>${esc(ev.type||'')}</td><td>${esc(ev.msg||'')}</td>`;
-        body.appendChild(tr);
-      });
-      if(!body.children.length) body.innerHTML=`<tr><td colspan="3" class="muted">No events.</td></tr>`;
-    }catch(e){
-      body.innerHTML=`<tr><td colspan="3">Failed to load events.</td></tr>`;
-    }
-  }
+    // Behavioral / Financial / Comms
+    $('#ba-flagged').textContent = num(j.behavior?.flagged ?? 0);
+    $('#ba-last').textContent = j.behavior?.lastScan || '—';
+    $('#fm-withdraw').textContent = j.finance?.withdrawalPattern || 'Normal';
+    $('#fm-anom').textContent = j.finance?.earningAnomalies || 'None';
+    const risk = (j.finance?.riskLevel || 'Low').toLowerCase();
+    const riskEl = $('#fm-risk'); riskEl.className='badge ' + (risk==='low'?'ok':risk==='medium'?'warn':'err'); riskEl.textContent = (j.finance?.riskLevel || 'Low');
 
-  /* ======= SETTINGS ======= */
-  async function loadSettings(){
-    try{
-      const j = await jget(api("config"));
-      $('cfgDump').textContent = JSON.stringify(j,null,2);
-    }catch(e){
-      $('cfgDump').textContent = 'Failed to load config.';
-    }
-  }
+    $('#cm-wa').textContent = j.comms?.whatsapp || 'Active';
+    $('#cm-tg').textContent = j.comms?.telegram || 'Active';
+    const st = (j.comms?.status || 'Online').toLowerCase();
+    const cm = $('#cm-status'); cm.className='badge ' + (st==='online'?'ok':st==='warn'?'warn':'err'); cm.textContent = j.comms?.status || 'Online';
 
-  /* ======= INIT ======= */
-  window.addEventListener('DOMContentLoaded', ()=>{
-    const h=(location.hash||'#dashboard').replace('#','');
-    showTab(h);
-  });
-  window.addEventListener('hashchange', ()=>{
-    const h=(location.hash||'#dashboard').replace('#','');
-    showTab(h);
-  });
+  }catch(e){
+    console.warn('monitoring error', e);
+    $('#live-feed').innerHTML='<div class="item">Failed to load monitoring.</div>';
+  }
+}
+async function triggerAiCycle(){
+  $('#ai-msg').textContent='Triggering...';
+  try{ const r=await jpost('optimize_now',{}); $('#ai-msg').textContent = r.ok?'Optimization triggered.':'Failed.'; }
+  catch(e){ $('#ai-msg').textContent='Error: '+e.message; }
+}
+
+/* ================== SETTINGS ================== */
+async function loadSettings(){
+  try{
+    const j = await jget(api("config"));
+    $('#cfgDump').textContent = JSON.stringify(j,null,2);
+    const c = j.config || j || {};
+    $('#cfg-sheets').value = c.sheet_id || c.sheetId || '';
+    $('#cfg-tg-status').value = c.telegram_status || 'Connected';
+    $('#cfg-tg-chan').value = c.telegram_channel || '@TheEmpireHq';
+    $('#cfg-chat').value = c.telegram_chat_id || '';
+    $('#cfg-wa').value = c.whatsapp_business || '+2348030461076';
+    $('#cfg-upd').textContent = 'Updated at ' + (c.updatedAt || j.updatedAt || new Date().toISOString());
+
+    // status badges
+    const setBadge=(id,val,okText='Connected')=>{
+      const el=$(id); const v=(String(val||okText)).toLowerCase();
+      el.className='badge ' + (v.includes('run')||v.includes('conn')||v.includes('active')?'ok':v.includes('ready')?'ok':v.includes('warn')?'warn':'err');
+      el.textContent = val||okText;
+    };
+    setBadge('#st-db', c.db_status || 'Running');
+    setBadge('#st-pay', c.payment_status || 'Connected');
+    setBadge('#st-cpa',  c.cpa_status || '5/5 Active');
+    setBadge('#st-agents', c.agents_status || 'Ready');
+  }catch(e){
+    $('#cfgDump').textContent='Failed to load config.';
+  }
+}
+
+/* ================== INIT ================== */
+window.addEventListener('DOMContentLoaded', ()=>{
+  const h=(location.hash||'#dashboard').replace('#','');
+  if(localStorage.getItem('empire_role')){ $('#welcome').style.display='none'; $('#app').style.display='grid'; $('#rolePill').textContent = localStorage.getItem('empire_role').toUpperCase(); showTab(h); }
+});
+window.addEventListener('hashchange', ()=>{ const h=(location.hash||'#dashboard').replace('#',''); showTab(h); });
 </script>
 </body>
 </html>

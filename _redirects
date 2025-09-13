@@ -1,4 +1,14 @@
-/            /app/index.html        200
-/admin       /admin/index.html      200
-/login       /login/index.html      200
-/register    /register/index.html   200
+# 1) Proxy GAS as same-origin (CORS-free)
+# The 200! forces this rule to win.
+# Keep this as the first rule.
+ /api/:action  https://script.googleusercontent.com/macros/echo?user_content_key=AehSKLi5ACfpSBFmN3s6Z4FZnTOI32ftObzJ0GoQY5_nmzx8MdOrWPrYegT9nwAhBcLVJ685yi2Vt5BZQJldczlvH1WgYvUpmapCw8Z4FiZGuCtrCTdZb3XmWUdCKKpl9EmacaV8V1G6JJfrHNdk2Gux44f8lMUjuKR0C7nE-Xmi8DIKjWzibUZhD0N0CthBbpcyj0XWy191qdmW_5gi49uiQxTZEsuCk82E4cbn2I85M09TtylXJdxXoOAiGUkLOYibZv1S0-NCsdfTe_3nAizqO9BB12_C4wt3Ed7dAIkzp27IzcgnnrULbfKZWzncDudf6xKUkx49S6kNHHzPmSS0PCxWSDc3Ag&lib=MK8iVDTIfyF2ZR8udAfTkOfjs5DVd1bkh&action=:action  200!
+
+# 2) Serve the new dashboard at root (NOT /app/)
+ /              /index.html    200!
+
+# 3) If you want pretty URLs for login/register, point at the actual files you have
+ /login         /login.html    200!
+ /register      /register.html 200!
+
+# (optional) If you truly have an /admin/ folder, keep this; otherwise remove it
+ /admin         /admin/        301

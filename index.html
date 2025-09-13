@@ -739,5 +739,158 @@ const GAS_BASE = window.GAS_BASE || 'https://script.google.com/macros/s/REPLACE_
   <script src="app.js"></script>
 </body>
 </html>
+<!-- ==== CPA MODAL (robust, draggable, closable) ==== -->
+<style>
+  .emp-modal{position:fixed;inset:0;z-index:9999;display:none}
+  .emp-modal.show{display:block}
+  .emp-modal__backdrop{position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:saturate(120%) blur(2px)}
+  .emp-modal__panel{
+    position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);
+    width:min(520px,90vw);border-radius:14px;padding:0;
+    background:linear-gradient(180deg,#0f1b2e,#0a1424);
+    box-shadow:0 12px 40px rgba(0,0,0,.45),0 0 0 1px rgba(255,255,255,.06);
+    color:#e9eefc; pointer-events:auto;
+  }
+  .emp-modal__header{display:flex;align-items:center;justify-content:space-between;
+    padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.08);cursor:move;user-select:none}
+  .emp-modal__title{font-weight:700;letter-spacing:.2px}
+  .emp-modal__close{all:unset;cursor:pointer;font-size:20px;line-height:1;padding:8px;border-radius:8px}
+  .emp-modal__close:hover{background:rgba(255,255,255,.08)}
+  .emp-modal__body{padding:16px}
+  .emp-field{margin-bottom:12px}
+  .emp-label{display:block;font-size:12px;opacity:.85;margin-bottom:6px}
+  .emp-input,.emp-select{
+    width:100%;padding:12px 12px;border-radius:10px;
+    background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:#fff;
+    outline:none;
+  }
+  .emp-input:focus,.emp-select:focus{border-color:#62b0ff;box-shadow:0 0 0 3px rgba(98,176,255,.18)}
+  .emp-modal__footer{display:flex;gap:8px;justify-content:flex-end;padding:12px 16px 16px}
+  .emp-btn{padding:10px 14px;border-radius:10px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.06);color:#fff;cursor:pointer}
+  .emp-btn-primary{background:#ffd654;color:#1b1b1b;border-color:#ffd654;font-weight:700}
+</style>
+
+<div id="emp-cpa-modal" class="emp-modal" aria-hidden="true">
+  <div class="emp-modal__backdrop" data-close="1"></div>
+  <div class="emp-modal__panel" role="dialog" aria-modal="true" aria-labelledby="emp-cpa-title">
+    <div class="emp-modal__header" id="emp-cpa-drag">
+      <div class="emp-modal__title" id="emp-cpa-title">Add New CPA Account</div>
+      <button class="emp-modal__close" data-close="1" aria-label="Close">×</button>
+    </div>
+
+    <form id="emp-cpa-form" class="emp-modal__body" autocomplete="off">
+      <div class="emp-field">
+        <label class="emp-label">Account Name</label>
+        <input class="emp-input" name="accountName" required />
+      </div>
+      <div class="emp-field">
+        <label class="emp-label">Network</label>
+        <select class="emp-select" name="network" required>
+          <option value="">Select Network</option>
+          <option>CPA Grip</option>
+          <option>CPAlead</option>
+          <option>AdWork Media</option>
+          <option>OGAds</option>
+        </select>
+      </div>
+      <div class="emp-field">
+        <label class="emp-label">Account ID</label>
+        <input class="emp-input" name="accountId" required />
+      </div>
+      <div class="emp-modal__footer">
+        <button type="button" class="emp-btn" data-close="1">Cancel</button>
+        <button type="submit" class="emp-btn emp-btn-primary">+ Add Account</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+(() => {
+  const modal   = document.getElementById('emp-cpa-modal');
+  const panel   = modal.querySelector('.emp-modal__panel');
+  const header  = document.getElementById('emp-cpa-drag');
+  const form    = document.getElementById('emp-cpa-form');
+
+  // open/close helpers
+  function openModal() {
+    modal.classList.add('show');
+    modal.setAttribute('aria-hidden','false');
+    // center only if no stored position
+    if (!panel.dataset.pinned) {
+      panel.style.left = '50%';
+      panel.style.top  = '50%';
+      panel.style.transform = 'translate(-50%,-50%)';
+    }
+    // focus first field
+    const first = form.querySelector('input,select');
+    if (first) setTimeout(() => first.focus(), 10);
+  }
+  function closeModal() {
+    modal.classList.remove('show');
+    modal.setAttribute('aria-hidden','true');
+  }
+
+  // expose an opener if you need to call from your button:
+  // <button onclick="window.empireOpenCpa()">Add CPA Account</button>
+  window.empireOpenCpa = openModal;
+
+  // close on backdrop or X
+  modal.addEventListener('click', (e) => {
+    if (e.target.dataset.close) closeModal();
+  });
+  // ESC to close
+  document.addEventListener('keydown', (e) => {
+    if (modal.classList.contains('show') && e.key === 'Escape') closeModal();
+  });
+
+  // --- DRAGGABLE ---
+  let drag = null;
+  header.addEventListener('mousedown', (e) => {
+    e.preventDefault();
+    const rect = panel.getBoundingClientRect();
+    drag = {
+      dx: e.clientX - rect.left,
+      dy: e.clientY - rect.top
+    };
+    panel.style.transform = 'none'; // disable centering transform when dragging
+    panel.dataset.pinned = '1';
+    // improve dragging across iframes/canvases
+    document.body.style.userSelect = 'none';
+  });
+  window.addEventListener('mousemove', (e) => {
+    if (!drag) return;
+    const x = Math.max(8, Math.min(window.innerWidth  - panel.offsetWidth  - 8, e.clientX - drag.dx));
+    const y = Math.max(8, Math.min(window.innerHeight - panel.offsetHeight - 8, e.clientY - drag.dy));
+    panel.style.left = x + 'px';
+    panel.style.top  = y + 'px';
+  });
+  window.addEventListener('mouseup', () => {
+    if (drag) document.body.style.userSelect = '';
+    drag = null;
+  });
+
+  // --- SUBMIT -> your GAS endpoint (already working on backend) ---
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const data = Object.fromEntries(new FormData(form).entries());
+    const payload = { action:'addcpa', ...data };
+    try {
+      const res = await fetch(YOUR_GAS_WEBAPP_URL /* <- put your URL */, {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify(payload)
+      });
+      const json = await res.json();
+      if (!json.ok) throw new Error(json.error || 'Add failed');
+      closeModal();
+      // optional: refresh list
+      if (window.refreshCpaList) window.refreshCpaList();
+    } catch(err) {
+      alert('Add CPA failed: ' + err.message);
+    }
+  });
+})();
+</script>
 </body>
 </html>

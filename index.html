@@ -11,8 +11,7 @@
     --bg:#0f1620; --panel:#121a25; --ink:#e9eef6; --muted:#8ca1c2;
     --brand:#f2c230; --brand2:#1f2937; --ok:#19c37d; --err:#ef4444; --line:#223046;
   }
-  *{box-sizing:border-box}
-  html,body{height:100%;background:var(--bg);color:var(--ink);font:14px/1.5 Inter,system-ui,Segoe UI,Roboto,Arial}
+  *{box-sizing:border-box} html,body{height:100%;background:var(--bg);color:var(--ink);font:14px/1.5 Inter,system-ui,Segoe UI,Roboto,Arial}
   a{color:inherit}
   .app{display:grid;grid-template-columns:240px 1fr;min-height:100vh}
   .side{background:#0c121a;border-right:1px solid var(--line);padding:14px 10px}
@@ -148,25 +147,26 @@
 </div>
 
 <script>
-  /* ======= CONFIG — Netlify proxy to GAS ======= */
-  const API_BASE = "/api";
-  const api = (action) => `${API_BASE}/${encodeURIComponent(action)}`;
+  /* ======= CONFIG: direct calls to GAS (no Netlify proxy) ======= */
+  const GAS_URL = "https://script.google.com/macros/s/AKfycbwqR_8O9CDaDKePAeNophBITJALF91rRfJezFap5Xf6hTk5xlc3YiC4BtACV3gcIu17/exec";
+  const api = (action) => `${GAS_URL}?action=${encodeURIComponent(action)}&t=${Date.now()}`; // cache-bust
 
   /* ======= UTILS ======= */
   const $=id=>document.getElementById(id);
   const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[m]));
   const num=n=>(+n||0).toLocaleString();
   const fmtUSD=n=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(+n||0);
-  async function jget(url){ const r=await fetch(url,{cache:'no-store'}); if(!r.ok) throw new Error(r.status); return r.json(); }
+  async function jget(url){
+    const r=await fetch(url,{cache:'no-store',mode:'cors'});
+    if(!r.ok) throw new Error(await r.text().catch(()=>r.statusText||'HTTP '+r.status));
+    return r.json();
+  }
 
   /* ======= TABS ======= */
   function showTab(key){
-    document.querySelectorAll('.nav button').forEach(b=>{
-      b.classList.toggle('active', b.dataset.tab===key);
-    });
+    document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active', b.dataset.tab===key));
     document.querySelectorAll('.view').forEach(v=>v.classList.add('hidden'));
-    const view = document.getElementById('view-'+key);
-    if(view) view.classList.remove('hidden');
+    const view = $('view-'+key); if(view) view.classList.remove('hidden');
 
     if(key==='dashboard') loadOverview();
     if(key==='cpa')       loadCpa();
@@ -223,6 +223,7 @@
       $('ovrErr').classList.add('hidden');
     }catch(e){
       $('ovrErr').classList.remove('hidden');
+      alert(`Failed to load dashboard: ${e.message||e}`);
       console.warn('overview failed',e);
     }
   }
@@ -239,12 +240,15 @@
           <div class="muted">Offers</div><div style="font-weight:700">${num(acc.offers||acc.activeOffers||0)}</div>
           <div class="muted">Revenue</div><div style="font-weight:700">${fmtUSD(acc.revenue||0)}</div>
           <div class="muted">Clicks</div><div style="font-weight:700">${num(acc.clicks||0)}</div>
-          <div class="muted">Conversion</div><div style="font-weight:700">${acc.conversionRate!=null?(typeof acc.conversionRate==='string'?acc.conversionRate:((acc.conversionRate*100).toFixed(1)+'%')):'—'}</div>`;
+          <div class="muted">Conversion</div><div style="font-weight:700">
+            ${acc.conversionRate!=null?(typeof acc.conversionRate==='string'
+              ? acc.conversionRate
+              : ((+acc.conversionRate*100).toFixed(1)+'%')):'—'}</div>`;
         grid.appendChild(card);
       });
       if(!grid.children.length) grid.innerHTML=`<div class="note err">No CPA accounts returned.</div>`;
     }catch(e){
-      grid.innerHTML=`<div class="note err">Failed to load CPA: ${esc(e.message)}</div>`;
+      grid.innerHTML=`<div class="note err">Failed to load CPA: ${esc(e.message||e)}</div>`;
     }
   }
 
@@ -310,4 +314,31 @@
         tr.innerHTML=`<td>${esc(ev.time||'')}</td><td>${esc(ev.type||'')}</td><td>${esc(ev.msg||'')}</td>`;
         body.appendChild(tr);
       });
-      if(!body.children.length) body.innerHTML=`<tr><td colspan="3" class="mut
+      if(!body.children.length) body.innerHTML=`<tr><td colspan="3" class="muted">No events.</td></tr>`;
+    }catch(e){
+      body.innerHTML=`<tr><td colspan="3">Failed to load events.</td></tr>`;
+    }
+  }
+
+  /* ======= SETTINGS ======= */
+  async function loadSettings(){
+    try{
+      const j = await jget(api("config"));
+      $('cfgDump').textContent = JSON.stringify(j,null,2);
+    }catch(e){
+      $('cfgDump').textContent = 'Failed to load config.';
+    }
+  }
+
+  /* ======= INIT ======= */
+  window.addEventListener('DOMContentLoaded', ()=>{
+    const h=(location.hash||'#dashboard').replace('#','');
+    showTab(h);
+  });
+  window.addEventListener('hashchange', ()=>{
+    const h=(location.hash||'#dashboard').replace('#','');
+    showTab(h);
+  });
+</script>
+</body>
+</html>

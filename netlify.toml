@@ -1,20 +1,7 @@
 [build]
   command = ""
-  publish = "."   # must point where your index.html lives
+  publish = "."   # root with index.html + _redirects
 
 [functions]
   directory = "netlify/functions"
-
-# API proxy → GAS
-[[redirects]]
-  from = "/api/:action"
-  to   = "https://script.googleusercontent.com/macros/echo?user_content_key=AehSKLi5ACfpSBFmN3s6Z4FZnTOI32ftObzJ0GoQY5_nmzx8MdOrWPrYegT9nwAhBcLVJ685yi2Vt5BZQJldczlvH1WgYvUpmapCw8Z4FiZGuCtrCTdZb3XmWUdCKKpl9EmacaV8V1G6JJfrHNdk2Gux44f8lMUjuKR0C7nE-Xmi8DIKjWzibUZhD0N0CthBbpcyj0XWy191qdmW_5gi49uiQxTZEsuCk82E4cbn2I85M09TtylXJdxXoOAiGUkLOYibZv1S0-NCsdfTe_3nAizqO9BB12_C4wt3Ed7dAIkzp27IzcgnnrULbfKZWzncDudf6xKUkx49S6kNHHzPmSS0PCxWSDc3Ag&lib=MK8iVDTIfyF2ZR8udAfTkOfjs5DVd1bkh&action=:action"
-  status = 200
-  force  = true
-
-# Root → new index.html
-[[redirects]]
-  from = "/"
-  to   = "/index.html"
-  status = 200
-  force  = true
+  node_bundler = "esbuild"

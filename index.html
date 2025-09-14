@@ -891,6 +891,42 @@ const GAS_BASE = window.GAS_BASE || 'https://script.google.com/macros/s/REPLACE_
     }
   });
 })();
+<!-- your modal HTML here -->
+
+<!-- script goes LAST, after the modal -->
+<script>
+ (function() {
+   const GAS_URL = "https://script.google.com/macros/s/AKfycbwD_SO3xzMetaspwhWngcu0INBZOhwMfGb8PMS5tF-pk75tjNVW0XsdXnL7YDWm7VbX/exec";
+
+   const form = document.getElementById("emp-cpa-form");
+   const modal = document.getElementById("emp-cpa-modal");
+
+   function closeModal() { modal.classList.add("hidden"); }
+
+   form.addEventListener("submit", async (e) => {
+     e.preventDefault();
+     const data = Object.fromEntries(new FormData(form).entries());
+     const payload = { action: "addcpa", ...data };
+
+     try {
+       const res = await fetch(GAS_URL, {
+         method: "POST",
+         headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
+         body: new URLSearchParams(payload).toString()
+       });
+       const json = await res.json();
+       if (!json.ok) throw new Error(json.error || "Add failed");
+
+       alert("CPA account added ✔");
+       closeModal();
+       if (window.refreshCpaList) window.refreshCpaList();
+     } catch (err) {
+       alert("Add CPA failed: " + err.message);
+     }
+   });
+ })();
 </script>
+</body>
+</html>
 </body>
 </html>

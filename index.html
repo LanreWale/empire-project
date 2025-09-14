@@ -3,504 +3,395 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>THE EMPIRE — Supreme Command</title>
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<title>THE EMPIRE</title>
 <style>
   :root{
-    --bg1:#07162a; --bg2:#0f2c54; --panel:#0a1f3d; --line:#17345f;
-    --ink:#e7f0ff; --muted:#9fb7d6; --accent:#f2c230; --good:#21c985; --warn:#ff7a1a; --bad:#f64e60;
+    --bg:#0e1a28;--bg2:#0c1623;--card:#0f1f31;--muted:#6d819d;--txt:#dce7f7;
+    --accent:#2fb5ff;--good:#25d366;--bad:#ff6b6b;--warn:#ffb020;--ink:#09131e;
+    --ring:rgba(47,181,255,.25);
   }
   *{box-sizing:border-box}
-  html,body{height:100%;margin:0;background:linear-gradient(135deg,var(--bg1),var(--bg2));color:var(--ink);font:14px/1.55 Inter,system-ui,Segoe UI,Roboto,Arial}
-  .app{display:grid;grid-template-columns:260px 1fr;min-height:100vh}
-  /* Sidebar */
-  .side{background:rgba(7,16,30,.6);backdrop-filter:blur(8px);border-right:1px solid var(--line);padding:18px 14px}
-  .brand{display:flex;align-items:center;gap:10px;margin-bottom:16px}
-  .brand img{width:28px;height:28px}
-  .brand h2{margin:0;font-size:16px;letter-spacing:.8px;font-weight:900}
-  .nav{display:flex;flex-direction:column;gap:6px}
-  .nav button{all:unset;cursor:pointer;padding:10px 12px;border-radius:10px;color:var(--muted);display:flex;align-items:center;gap:10px}
-  .nav button.active,.nav button:hover{background:var(--panel);color:var(--ink);border:1px solid var(--line)}
-  .nav .ic{width:18px;text-align:center;opacity:.9}
-  /* Main */
-  main{padding:20px 18px}
-  h1{font-size:18px;letter-spacing:.7px;margin:0 0 12px;font-weight:900}
-  .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:14px}
-  .span-12{grid-column:span 12}.span-8{grid-column:span 8}.span-6{grid-column:span 6}.span-4{grid-column:span 4}.span-3{grid-column:span 3}
-  .card{background:linear-gradient(180deg,rgba(15,44,84,.9),rgba(10,31,61,.95));border:1px solid var(--line);border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
-  .card .hd{padding:12px 14px;border-bottom:1px solid var(--line);color:var(--muted);font-weight:600;letter-spacing:.3px}
-  .card .bd{padding:14px}
-  .hero{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:linear-gradient(90deg,rgba(15,44,84,.8),rgba(20,74,130,.35));border:1px solid var(--line);border-radius:14px;margin-bottom:12px}
-  .hero .t{font-size:22px;font-weight:900;letter-spacing:1.2px}
-  .kpis{display:grid;grid-template-columns:repeat(12,1fr);gap:12px}
-  .kpi{grid-column:span 3;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px}
-  .kpi .lab{color:var(--muted);font-size:12px}
-  .kpi .val{font-size:22px;font-weight:900}
-  .kpi .sub{color:var(--good);font-size:12px}
+  html,body{height:100%}
+  body{margin:0;background:linear-gradient(135deg,#0b1a2a 0%,#0b243c 100%);color:var(--txt);font:14px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}
+  a{color:inherit;text-decoration:none}
+  .wrap{display:grid;grid-template-columns:260px 1fr;min-height:100vh}
+  /* sidebar */
+  .side{background:linear-gradient(180deg,#091525,#08101c);border-right:1px solid rgba(255,255,255,.04)}
+  .brand{display:flex;gap:.6rem;align-items:center;padding:16px 18px;border-bottom:1px solid rgba(255,255,255,.04)}
+  .brand img{width:26px;height:26px}
+  .brand b{letter-spacing:.3px}
+  .nav a{display:flex;align-items:center;gap:.6rem;padding:12px 16px;color:#c9d7ea;border-left:3px solid transparent}
+  .nav a:hover{background:rgba(255,255,255,.03)}
+  .nav a.active{background:rgba(47,181,255,.08);border-left-color:var(--accent);color:#fff}
+  .ico{width:18px;height:18px;opacity:.9}
+  /* main */
+  .main{padding:18px 18px 42px}
+  .header{display:flex;align-items:center;justify-content:space-between;margin:6px 0 14px}
+  h2{margin:0;font-weight:700;letter-spacing:.4px}
+  .badge{padding:6px 10px;border-radius:999px;background:#0d2a40;border:1px solid rgba(47,181,255,.35);color:#bfe7ff;font-weight:600}
+  /* cards */
+  .grid{display:grid;gap:14px}
+  .g-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .g-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .g-4{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .card{background:linear-gradient(180deg,#0f2033,#0c1a2a);border:1px solid rgba(255,255,255,.06);border-radius:14px;box-shadow:0 10px 24px rgba(0,0,0,.35)}
+  .card h3{margin:0 0 8px;padding:12px 14px;border-bottom:1px solid rgba(255,255,255,.06);font-size:15px;color:#b5c9e6}
+  .pad{padding:14px}
+  .kpi{display:flex;flex-direction:column;gap:6px}
+  .kpi b{font-size:22px}
+  .muted{color:var(--muted);font-size:12px}
   table{width:100%;border-collapse:collapse}
-  th,td{padding:9px;border-bottom:1px solid var(--line);text-align:left}
-  th{color:var(--muted);font-weight:600}
-  .muted{color:var(--muted)}
-  .money{color:#68ffc4;font-weight:900}
-  .badge{display:inline-block;padding:3px 8px;border-radius:999px;font-size:11px;border:1px solid var(--line);background:rgba(32,186,132,.15);color:#6affca}
-  .btn{all:unset;cursor:pointer;padding:10px 12px;border-radius:10px;background:linear-gradient(180deg,#ffd356,#f2c230);color:#12223d;font-weight:800;border:1px solid #e3b11a;box-shadow:0 6px 16px rgba(0,0,0,.25)}
-  .btn.ghost{background:transparent;color:var(--ink);border-color:var(--line)}
-  .btn.small{padding:6px 10px;border-radius:8px;font-weight:700}
-  .cta-fab{position:fixed;right:22px;bottom:22px;z-index:50}
-  /* CPA cards */
-  .cpa-card{padding:0}
-  .cpa-top{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border-bottom:1px solid var(--line)}
-  .cpa-id{font-size:18px;font-weight:900}
-  .cpa-rows{padding:8px 14px 14px}
-  .row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px dashed rgba(255,255,255,.06)}
-  .row:last-child{border-bottom:none}
-  .row .lab{color:var(--muted)}
-  .row .val{font-weight:800}
-  .card-actions{display:flex;justify-content:flex-end;padding:10px 14px;border-top:1px solid var(--line)}
-  /* Modal */
-  .modal{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
-  .modal.hidden{display:none}
-  .backdrop{position:absolute;inset:0;background:rgba(0,0,0,.65)}
-  .panel{position:relative;z-index:2;background:var(--panel);border:1px solid var(--line);border-radius:14px;min-width:340px;max-width:560px;width:92%;box-shadow:0 20px 60px rgba(0,0,0,.5)}
-  .panel .ph{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid var(--line)}
-  .panel .pb{padding:14px}
-  .field{display:flex;flex-direction:column;gap:6px;margin:10px 0}
-  .label{color:var(--muted);font-size:12px}
-  .input,select{all:unset;background:#09213f;border:1px solid var(--line);padding:10px;border-radius:10px}
-  .pf{display:flex;gap:10px;justify-content:flex-end;margin-top:12px}
-  /* Responsive */
-  @media(max-width:1200px){ .kpi{grid-column:span 6} .span-4{grid-column:span 6} .span-3{grid-column:span 6} .span-8{grid-column:span 12} }
-  @media(max-width:800px){ .app{grid-template-columns:1fr} .cta-fab{right:14px;bottom:14px} }
+  th,td{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.06)}
+  th{font-size:12px;text-transform:uppercase;letter-spacing:.3px;color:#9cb2d2;text-align:left}
+  tr:last-child td{border-bottom:none}
+  .pill{display:inline-block;padding:3px 8px;border-radius:999px;font-size:12px}
+  .pill.ok{background:rgba(37,211,102,.12);border:1px solid rgba(37,211,102,.45);color:#9dffc7}
+  .pill.warn{background:rgba(255,176,32,.12);border:1px solid rgba(255,176,32,.45);color:#ffdca3}
+  .mono{font-variant-numeric:tabular-nums}
+  .flex{display:flex;gap:12px;align-items:center}
+  .right{margin-left:auto}
+  .btn{background:#12304b;border:1px solid rgba(47,181,255,.4);color:#cfeaff;padding:10px 12px;border-radius:10px;cursor:pointer}
+  .btn:hover{box-shadow:0 0 0 3px var(--ring)}
+  /* views */
+  .view{display:none}
+  .view.active{display:block}
+  @media(max-width:980px){.wrap{grid-template-columns:1fr}.side{position:sticky;top:0;z-index:5}.nav{display:grid;grid-template-columns:repeat(3,1fr)}}
 </style>
 </head>
 <body>
-<div class="app">
-  <!-- Sidebar -->
+<div class="wrap">
+  <!-- SIDEBAR -->
   <aside class="side">
-    <div class="brand"><img src="assets/brand/empire-logo.png" alt=""><h2>THE EMPIRE</h2></div>
-    <div class="nav">
-      <button class="active" data-tab="dash"><span class="ic">🏠</span>Dashboard</button>
-      <button data-tab="cpa"><span class="ic">👑</span>CPA Accounts</button>
-      <button data-tab="users"><span class="ic">👥</span>Users</button>
-      <button data-tab="analytics"><span class="ic">📈</span>Analytics</button>
-      <button data-tab="wallet"><span class="ic">💳</span>Payments/Wallet</button>
-      <button data-tab="monitor"><span class="ic">🛰️</span>Monitoring</button>
-      <button data-tab="settings"><span class="ic">⚙️</span>Settings</button>
+    <div class="brand">
+      <img src="https://i.imgur.com/9Rr4kqP.png" alt="">
+      <b>THE EMPIRE</b>
     </div>
+    <nav class="nav" id="nav">
+      <a href="#dashboard" data-view="dashboard" class="active"><span class="ico">🏠</span>Dashboard</a>
+      <a href="#accounts"  data-view="accounts"><span class="ico">👑</span>CPA Accounts</a>
+      <a href="#users"     data-view="users"><span class="ico">👥</span>Users</a>
+      <a href="#analytics" data-view="analytics"><span class="ico">📊</span>Analytics</a>
+      <a href="#wallet"    data-view="wallet"><span class="ico">💳</span>Payments/Wallet</a>
+      <a href="#monitor"   data-view="monitor"><span class="ico">📡</span>Monitoring</a>
+      <a href="#settings"  data-view="settings"><span class="ico">⚙️</span>Settings</a>
+    </nav>
   </aside>
 
-  <!-- Main -->
-  <main>
+  <!-- MAIN -->
+  <main class="main">
     <!-- DASHBOARD -->
-    <section id="v-dash" class="view">
-      <div class="hero">
-        <div class="t">Supreme Command Dashboard</div>
-        <div class="badge" id="u-title">SUPREME COMMANDER</div>
+    <section class="view active" id="view-dashboard">
+      <div class="header">
+        <h2>Supreme Command Dashboard</h2>
+        <span class="badge" id="commander-badge">SUPREME COMMANDER</span>
       </div>
 
-      <div class="kpis">
-        <div class="kpi"><div class="lab">Total Earnings</div><div id="kpi-earn" class="val">$0.00</div><div class="sub" id="kpi-earn-sub"></div></div>
-        <div class="kpi"><div class="lab">Active Users</div><div id="kpi-users" class="val">0</div><div class="sub">24h growth</div></div>
-        <div class="kpi"><div class="lab">Conversion Rate</div><div id="kpi-cr" class="val">0.00%</div><div class="sub">industry leading</div></div>
-        <div class="kpi"><div class="lab">Total Clicks</div><div id="kpi-clicks" class="val">0</div><div class="sub">daily average</div></div>
+      <div class="grid g-4">
+        <div class="card pad kpi"><span class="muted">Total Earnings</span><b class="mono" id="kpi-earn">$0.00</b></div>
+        <div class="card pad kpi"><span class="muted">Active Users</span><b class="mono" id="kpi-users">0</b><span class="muted" id="kpi-users-sub">24h growth</span></div>
+        <div class="card pad kpi"><span class="muted">Conversion Rate</span><b class="mono" id="kpi-cr">0.00%</b><span class="muted">industry leading</span></div>
+        <div class="card pad kpi"><span class="muted">Total Clicks</span><b class="mono" id="kpi-clicks">0</b><span class="muted">daily average</span></div>
       </div>
 
-      <div class="grid" style="margin-top:12px">
-        <div class="card span-8">
-          <div class="hd">Daily Earnings</div>
-          <div class="bd"><canvas id="chart-daily" height="120"></canvas></div>
+      <div class="grid g-2" style="margin-top:14px">
+        <div class="card">
+          <h3>Daily Earnings</h3>
+          <div class="pad muted" id="sparkline">Awaiting data…</div>
         </div>
-        <div class="card span-4">
-          <div class="hd">Traffic Sources</div>
-          <div class="bd"><canvas id="chart-traffic" height="180"></canvas></div>
+        <div class="card">
+          <h3>Traffic Sources</h3>
+          <div class="pad muted" id="traffic-sources">Awaiting data…</div>
         </div>
+      </div>
 
-        <div class="card span-12">
-          <div class="hd">By Geo (Top)</div>
-          <div class="bd">
-            <table id="tbl-geo"><thead><tr><th>Country</th><th>Clicks</th><th>Leads</th><th>Earnings ($)</th></tr></thead><tbody><tr><td colspan="4" class="muted">No data</td></tr></tbody></table>
-          </div>
+      <div class="card" style="margin-top:14px">
+        <h3>By Geo (Top)</h3>
+        <div class="pad">
+          <table id="tbl-geo">
+            <thead><tr><th>Country</th><th>Clicks</th><th>Leads</th><th>Earnings ($)</th></tr></thead>
+            <tbody><tr><td colspan="4" class="muted">No data</td></tr></tbody>
+          </table>
         </div>
       </div>
     </section>
 
-    <!-- CPA -->
-    <section id="v-cpa" class="view" hidden>
-      <h1>CPA Accounts Management</h1>
-      <div id="cpaGrid" class="grid"></div>
-      <button id="fab-add" class="btn cta-fab">+ Add New Account</button>
+    <!-- ACCOUNTS -->
+    <section class="view" id="view-accounts">
+      <div class="header"><h2>CPA Accounts</h2><button class="btn" id="btn-add">+ Add New Account</button></div>
+      <div class="grid g-2" id="acc-grid"></div>
     </section>
 
     <!-- USERS -->
-    <section id="v-users" class="view" hidden>
-      <h1>Users Management</h1>
-      <div class="grid">
-        <div class="card span-8">
-          <div class="hd">Active Users</div>
-          <div class="bd">
-            <table id="tbl-users"><thead><tr><th>Username</th><th>Authority</th><th>Status</th><th>Earnings</th></tr></thead><tbody></tbody></table>
-          </div>
-        </div>
-        <div class="card span-4">
-          <div class="hd">Invite Link Management</div>
-          <div class="bd">
-            <div class="muted" style="margin-bottom:8px">Share a one-time invite link. Only works if role is SUPREME_COMMANDER.</div>
-            <div id="invite-url" style="word-break:break-all;background:#09213f;border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:10px">—</div>
-            <div style="display:flex;gap:10px">
-              <button class="btn small" id="btn-copy">Copy</button>
-              <a class="btn small ghost" id="btn-open" target="_blank">Open</a>
-            </div>
-          </div>
+    <section class="view" id="view-users">
+      <div class="header"><h2>Users</h2></div>
+      <div class="card">
+        <h3>Approved</h3>
+        <div class="pad">
+          <table id="tbl-users">
+            <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Authority</th><th>Status</th></tr></thead>
+            <tbody><tr><td colspan="5" class="muted">No users.</td></tr></tbody>
+          </table>
         </div>
       </div>
     </section>
 
     <!-- ANALYTICS -->
-    <section id="v-analytics" class="view" hidden>
-      <h1>Analytics & Reports</h1>
-      <div class="grid">
-        <div class="card span-8">
-          <div class="hd">Performance Overview (Jan–Jul 2025)</div>
-          <div class="bd"><canvas id="chart-bars" height="120"></canvas></div>
+    <section class="view" id="view-analytics">
+      <div class="header"><h2>Analytics</h2></div>
+      <div class="card">
+        <h3>Live Performance (last 2 min)</h3>
+        <div class="pad">
+          <table id="tbl-live">
+            <thead><tr><th>Time</th><th>Country</th><th>Offer</th><th>Device</th><th>Clicks</th><th>Conv.</th><th>Earnings</th></tr></thead>
+            <tbody><tr><td colspan="7" class="muted">Listening…</td></tr></tbody>
+          </table>
         </div>
-        <div class="card span-4">
-          <div class="hd">Geographic Distribution</div>
-          <div class="bd"><canvas id="chart-pie" height="180"></canvas></div>
-        </div>
+      </div>
 
-        <div class="card span-12">
-          <div class="hd">Live Performance Data (last <span id="live-min">2</span> min)</div>
-          <div class="bd">
-            <table id="tbl-live"><thead><tr><th>Date & Time</th><th>Country</th><th>Offer</th><th>Clicks</th><th>Leads</th><th>Earnings ($)</th></tr></thead><tbody></tbody></table>
-          </div>
-        </div>
-        <div class="card span-12">
-          <div class="hd">LIVE by GEO (rolling)</div>
-          <div class="bd">
-            <table id="tbl-live-geo"><thead><tr><th>Country</th><th>Clicks</th><th>Leads</th><th>Earnings ($)</th></tr></thead><tbody></tbody></table>
-          </div>
+      <div class="card" style="margin-top:14px">
+        <h3>Live by Geo (rolling)</h3>
+        <div class="pad">
+          <table id="tbl-live-geo">
+            <thead><tr><th>Country</th><th>Clicks</th><th>Conv.</th><th>Earnings</th></tr></thead>
+            <tbody><tr><td colspan="4" class="muted">Listening…</td></tr></tbody>
+          </table>
         </div>
       </div>
     </section>
 
     <!-- WALLET -->
-    <section id="v-wallet" class="view" hidden>
-      <h1>Payments / Wallet</h1>
-      <div class="kpis" style="margin-bottom:12px">
-        <div class="kpi"><div class="lab">Balance</div><div id="wallet-balance" class="val">$0.00</div></div>
+    <section class="view" id="view-wallet">
+      <div class="header"><h2>Wallet</h2></div>
+      <div class="grid g-3">
+        <div class="card pad kpi"><span class="muted">Balance</span><b class="mono" id="wallet-bal">$0.00</b></div>
+        <div class="card pad kpi"><span class="muted">Last Payout</span><b class="mono" id="wallet-last">—</b></div>
+        <div class="card pad kpi"><span class="muted">Status</span><span class="pill ok" id="wallet-status">OK</span></div>
       </div>
-      <div id="walletList" class="grid"></div>
+      <div class="card" style="margin-top:14px">
+        <h3>Transactions</h3>
+        <div class="pad">
+          <table id="tbl-tx">
+            <thead><tr><th>Date</th><th>Method</th><th>Amount ($)</th><th>Status</th></tr></thead>
+            <tbody><tr><td colspan="4" class="muted">No transactions.</td></tr></tbody>
+          </table>
+        </div>
+      </div>
     </section>
 
-    <!-- MONITORING -->
-    <section id="v-monitor" class="view" hidden>
-      <h1>Performance Monitoring</h1>
-      <div class="grid">
-        <div class="card span-4"><div class="hd">Intelligent Alert System</div><div class="bd" id="box-alerts">No alerts.</div></div>
-        <div class="card span-4"><div class="hd">Predictive Maintenance</div><div class="bd" id="box-maint">No tasks scheduled.</div></div>
-        <div class="card span-4"><div class="hd">System Health Monitor</div><div class="bd" id="box-health">—</div></div>
-        <div class="card span-12">
-          <div class="hd">Event Stream</div>
-          <div class="bd"><table id="tbl-monitor"><thead><tr><th>Time</th><th>Type</th><th>Message</th></tr></thead><tbody></tbody></table></div>
+    <!-- MONITOR -->
+    <section class="view" id="view-monitor">
+      <div class="header"><h2>Monitoring</h2></div>
+      <div class="grid g-3">
+        <div class="card pad"><div class="muted">Intelligent Alert System</div><div id="box-alerts" class="mono" style="font-size:22px">0</div></div>
+        <div class="card pad"><div class="muted">Predictive Maintenance</div><div id="box-maint" class="mono" style="font-size:22px">—</div></div>
+        <div class="card pad"><div class="muted">System Health</div><div id="box-health" class="mono" style="font-size:22px">—</div></div>
+      </div>
+      <div class="card" style="margin-top:14px">
+        <h3>Events</h3>
+        <div class="pad">
+          <table id="tbl-monitor">
+            <thead><tr><th>Time</th><th>Type</th><th>Message</th></tr></thead>
+            <tbody><tr><td colspan="3" class="muted">No events.</td></tr></tbody>
+          </table>
         </div>
       </div>
     </section>
 
     <!-- SETTINGS -->
-    <section id="v-settings" class="view" hidden>
-      <h1>Settings</h1>
-      <div class="card"><div class="bd"><pre id="cfgDump" style="white-space:pre-wrap;margin:0"></pre></div></div>
+    <section class="view" id="view-settings">
+      <div class="header"><h2>Settings</h2></div>
+      <div class="card"><h3>Current Config</h3><pre class="pad" id="settings-json" style="white-space:pre-wrap;overflow:auto"></pre></div>
     </section>
   </main>
 </div>
 
-<!-- ADD CPA MODAL -->
-<div id="cpa-modal" class="modal hidden" aria-hidden="true">
-  <div class="backdrop" data-close="1"></div>
-  <div class="panel" role="dialog" aria-modal="true">
-    <div class="ph"><div style="font-weight:800">Add New CPA Account</div><button class="btn small ghost" data-close="1">✕</button></div>
-    <div class="pb">
-      <form id="cpa-form">
-        <div class="field"><label class="label">Account Name</label><input class="input" name="AccountName" placeholder="Enter account name" required></div>
-        <div class="field"><label class="label">Network</label>
-          <select name="Network" required>
-            <option value="">Select Network</option>
-            <option>CPA Grip</option><option>CPAlead</option><option>AdWork Media</option><option>OGAds</option>
-          </select>
-        </div>
-        <div class="field"><label class="label">Account ID</label><input class="input" name="AccountID" placeholder="Enter account ID" required></div>
-        <div class="pf">
-          <button class="btn small ghost" type="button" data-close="1">Cancel</button>
-          <button class="btn small" type="submit">+ Add Account</button>
-        </div>
-      </form>
-    </div>
-  </div>
-</div>
-
 <script>
-/* ========= CONFIG ========= */
-const GAS = "https://script.google.com/macros/s/AKfycbwZVlGMvYonfCNdQlwPHiqqgOVC80_HsyktSYmqmQPBKmRrlzg_yo4lKz_Mmu85B7eY/exec";
-const a = (path) => GAS + (GAS.includes("?")?"&":"?") + path;
+/* ==== CONFIG ==== */
+const GAS = "GAS_URL_HERE"; // <-- REPLACE with your script.google.com/webapp URL
 
-/* ========= UTILS ========= */
-const $ = (id)=>document.getElementById(id);
-const pick=(o,keys,d='')=>{for(const k of keys){if(o&&o[k]!=null&&o[k]!=='')return o[k]}return d}
-const arr=(j)=>Array.isArray(j)?j: (Array.isArray(j?.items)?j.items:(Array.isArray(j?.data)?j.data:(Array.isArray(j?.rows)?j.rows:[])));
-const deMoney = (v)=> typeof v==='number'?v: parseFloat(String(v).replace(/[^0-9.\-]/g,''))||0;
-const usd=(n)=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(+(+n||0).toFixed(2));
-const num=(n)=>(+n||0).toLocaleString();
-const conv=(v)=>{ if(v==null) return '0.0%'; const s=String(v); if(s.endsWith('%')) return s; const f=parseFloat(s)||0; return (f>1&&f<=100?f:(f*100)).toFixed(1)+'%'; }
-async function get(u){const r=await fetch(u,{cache:'no-store'}); if(!r.ok) throw new Error(r.statusText); return r.json();}
-async function post(u,b){const r=await fetch(u,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)}); if(!r.ok) throw new Error(r.statusText); return r.json();}
+/* ==== HELPERS ==== */
+const $ = (q,el=document)=>el.querySelector(q);
+const $$ = (q,el=document)=>[...el.querySelectorAll(q)];
+const fmtUsd = n => Number(n||0).toLocaleString(undefined,{style:'currency',currency:'USD',maximumFractionDigits:2});
+const safe = v => v ?? '';
 
-/* ========= NAV ========= */
-function show(tab){
-  document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));
-  document.querySelectorAll('section.view').forEach(s=>s.hidden=true);
-  $('#v-'+tab).hidden=false;
-  stopLive();
-  if(tab==='dash') initDash();
-  if(tab==='cpa') initCPA();
-  if(tab==='users') initUsers();
-  if(tab==='analytics'){ initAnalytics(); startLive(); }
-  if(tab==='wallet') initWallet();
-  if(tab==='monitor') initMonitor();
-  if(tab==='settings') initSettings();
+async function api(params){
+  const url = GAS + (GAS.includes('?')?'&':'?') + new URLSearchParams(params).toString();
+  const r = await fetch(url,{cache:'no-store'});
+  if(!r.ok) throw new Error(r.status+" "+r.statusText);
+  return r.json();
 }
-document.querySelectorAll('.nav button').forEach(btn=>btn.onclick=()=>{location.hash=btn.dataset.tab; show(btn.dataset.tab);});
 
-/* ========= DASH ========= */
-let chartDaily, chartTraffic;
-async function initDash(){
+/* ==== ROUTER ==== */
+function activate(view){
+  // sidebar active
+  $$('#nav a').forEach(a=>a.classList.toggle('active',a.dataset.view===view));
+  // view panels
+  $$('.view').forEach(v=>v.classList.toggle('active',v.id==='view-'+view));
+  // lazy init
+  const fn = ({
+    dashboard:initDashboard,
+    accounts:initAccounts,
+    users:initUsers,
+    analytics:initAnalytics,
+    wallet:initWallet,
+    monitor:initMonitor,
+    settings:initSettings
+  })[view];
+  if(fn) fn();
+}
+function handleHash(){ activate(location.hash.replace('#','')||'dashboard'); }
+window.addEventListener('hashchange',handleHash);
+
+/* ==== VIEWS ==== */
+let bootDone=false, liveTimer=null;
+
+async function initDashboard(){
   try{
-    const j=await get(a("action=overview"));
-    const t=j.totals||{};
-    $('#kpi-earn').textContent = usd(deMoney(pick(t,['earnings','earningsUsd'],0)));
-    $('#kpi-earn-sub').textContent = pick(j,['deltaEarn','delta'],'↑ 0.0% from last week');
-    $('#kpi-users').textContent=num(pick(t,['activeUsers','users'],0));
-    $('#kpi-cr').textContent=conv(pick(t,['conversionRate','cr'],0));
-    $('#kpi-clicks').textContent=num(pick(t,['clicks'],0));
-    // Geo top
-    const geoBody=$('#tbl-geo tbody'); geoBody.innerHTML='';
-    (j.geoTop||[]).forEach(r=>{
-      const tr=document.createElement('tr');
-      tr.innerHTML=`<td>${r.country||''}</td><td>${num(r.clicks||0)}</td><td>${num(r.leads||0)}</td><td class="money">${usd(deMoney(r.earnings||0))}</td>`;
-      geoBody.appendChild(tr);
-    });
-    if(!geoBody.children.length) geoBody.innerHTML=`<tr><td colspan="4" class="muted">No data</td></tr>`;
-    // Charts
-    const daily = j.daily || [{label:'Mon',value:0}];
-    chartDaily?.destroy();
-    chartDaily = new Chart($('#chart-daily'),{
-      type:'line',
-      data:{labels:daily.map(d=>d.label), datasets:[{label:'Daily Earnings', data:daily.map(d=>deMoney(d.value)), tension:.35, borderWidth:3, pointRadius:3}]},
-      options:{plugins:{legend:{display:false}}, scales:{x:{grid:{color:'rgba(255,255,255,.06)'}},y:{grid:{color:'rgba(255,255,255,.06)'}}}}
-    });
-    const traffic=j.traffic||[{label:'Direct',value:1}];
-    chartTraffic?.destroy();
-    chartTraffic = new Chart($('#chart-traffic'),{
-      type:'doughnut',
-      data:{labels:traffic.map(d=>d.label),datasets:[{data:traffic.map(d=>d.value)}]},
-      options:{plugins:{legend:{position:'bottom'}}}
-    });
-  }catch(e){ /* silent */ }
-}
-
-/* ========= CPA ========= */
-function normalizeAccount(r){
-  return {
-    account: pick(r,['account','Account','Account ID','ID']),
-    network: pick(r,['network','Network']),
-    offers: +pick(r,['activeOffers','Active Offers','offers'],0),
-    revenue: deMoney(pick(r,['revenue','Revenue','Revenue ($)'],0)),
-    clicks: +pick(r,['clicks','Clicks'],0),
-    conv: conv(pick(r,['conversionRate','Conversion (%)','conversion'],0)),
-    status: pick(r,['status','Status'],'ACTIVE')
-  };
-}
-async function initCPA(){
-  const grid=$('#cpaGrid'); grid.innerHTML='';
-  try{
-    const j=await get(a("action=cpa"));
-    const rows=arr(j);
-    rows.forEach(r=>{
-      const x=normalizeAccount(r);
-      const el=document.createElement('div'); el.className='card cpa-card span-4';
-      el.innerHTML=`
-        <div class="cpa-top"><div class="cpa-id">CPA ${x.account||'—'}</div><div class="badge">${x.status}</div></div>
-        <div class="cpa-rows">
-          <div class="row"><div class="lab">Network</div><div class="val">${x.network||'—'}</div></div>
-          <div class="row"><div class="lab">Active Offers</div><div class="val">${num(x.offers)}</div></div>
-          <div class="row"><div class="lab">Revenue</div><div class="val money">${usd(x.revenue)}</div></div>
-          <div class="row"><div class="lab">Clicks</div><div class="val">${num(x.clicks)}</div></div>
-          <div class="row"><div class="lab">Conversion</div><div class="val">${x.conv}</div></div>
-        </div>
-        <div class="card-actions"><button class="btn small ghost">View Details</button></div>`;
-      grid.appendChild(el);
-    });
-    if(!grid.children.length) grid.innerHTML=`<div class="card span-12"><div class="bd muted">No CPA accounts.</div></div>`;
-  }catch(e){
-    grid.innerHTML=`<div class="card span-12"><div class="bd">Failed to load CPA.</div></div>`;
-  }
-}
-
-/* CPA modal */
-(function(){
-  const fab=$('fab-add'), modal=$('cpa-modal');
-  fab.onclick=()=>{ modal.classList.remove('hidden'); modal.setAttribute('aria-hidden','false'); }
-  modal.querySelectorAll('[data-close]').forEach(x=>x.onclick=()=>{ modal.classList.add('hidden'); modal.setAttribute('aria-hidden','true'); });
-  $('cpa-form').addEventListener('submit',async(ev)=>{
-    ev.preventDefault();
-    const fd=new FormData(ev.target);
-    const payload={ action:'addcpa', account:(fd.get('AccountID')||'').trim(), network:(fd.get('Network')||'').trim(), name:(fd.get('AccountName')||'').trim() };
-    if(!payload.account || !payload.network){ alert('Please fill Account ID and Network'); return; }
-    try{ const r=await post(GAS,payload); if(r.ok){ modal.classList.add('hidden'); ev.target.reset(); initCPA(); } else alert(r.error||'Failed'); }
-    catch(e){ alert('Add failed: '+e.message); }
-  });
-})();
-
-/* ========= USERS ========= */
-async function initUsers(){
-  const tb=$('#tbl-users tbody'); tb.innerHTML='';
-  try{
-    const j=await get(a("action=users"));
-    (arr(j).length?arr(j):(j.users||[])).forEach(u=>{
-      const tr=document.createElement('tr');
-      tr.innerHTML=`<td>${pick(u,['name','username','Username'],'USER')}</td>
-                    <td>${pick(u,['authority','Authority'],'1x User')}</td>
-                    <td>ACTIVE</td>
-                    <td class="money">${usd(deMoney(pick(u,['earnings'],0)))}</td>`;
+    const j = await api({action:'overview'});
+    $('#kpi-earn').textContent  = fmtUsd(j.earnings);
+    $('#kpi-users').textContent = safe(j.users);
+    $('#kpi-cr').textContent    = (j.conversionRate??0)+'%';
+    $('#kpi-clicks').textContent= safe(j.clicks);
+    // geo
+    const tb = $('#tbl-geo tbody'); tb.innerHTML='';
+    (j.byGeo||[]).forEach(r=>{
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${safe(r.country)}</td><td class="mono">${safe(r.clicks)}</td><td class="mono">${safe(r.leads)}</td><td class="mono">${fmtUsd(r.earnings)}</td>`;
       tb.appendChild(tr);
     });
-    if(!tb.children.length) tb.innerHTML=`<tr><td colspan="4" class="muted">No users.</td></tr>`;
-    // invite
-    const cfg=await get(a("action=config"));
-    const base=pick(cfg,['invite_base'],location.origin+'/');
-    const url=base + (base.endsWith('/')?'':'/') + 'join';
-    $('invite-url').textContent=url;
-    $('btn-open').href=url;
-    $('btn-copy').onclick=()=>{navigator.clipboard.writeText(url); $('btn-copy').textContent='Copied'; setTimeout(()=>$('btn-copy').textContent='Copy',1200);}
-  }catch(e){ tb.innerHTML=`<tr><td colspan="4">Failed to load users.</td></tr>`; }
-}
-
-/* ========= ANALYTICS ========= */
-let liveTimer=null, LIVE_WINDOW=120, POLL=3000;
-function stopLive(){ if(liveTimer){ clearInterval(liveTimer); liveTimer=null; } }
-function startLive(){
-  const tick = async()=>{
-    try{
-      const j=await get(a(`action=analytics&live=1&windowSec=${LIVE_WINDOW}&limit=50`));
-      renderLive(j);
-    }catch(e){}
-  };
-  $('live-min').textContent=Math.max(1,Math.round(LIVE_WINDOW/60));
-  tick(); liveTimer=setInterval(tick,POLL);
-}
-function renderLive(j){
-  const body=$('#tbl-live tbody'); body.innerHTML='';
-  (j.live||[]).forEach(ev=>{
-    const tr=document.createElement('tr');
-    tr.innerHTML=`<td>${ev.time||''}</td><td>${ev.country||''}</td><td>${ev.offer||''}</td>
-                  <td>${num(ev.clicks||0)}</td><td>${num(ev.conversions||0)}</td><td class="money">${usd(deMoney(ev.earnings||0))}</td>`;
-    body.appendChild(tr);
-  });
-  if(!body.children.length) body.innerHTML=`<tr><td colspan="6" class="muted">No live events.</td></tr>`;
-  const geo=$('#tbl-live-geo tbody'); geo.innerHTML='';
-  Object.entries(j.liveAgg||{}).map(([k,v])=>({country:k,...v}))
-    .sort((a,b)=>deMoney(b.earnings||0)-deMoney(a.earnings||0))
-    .forEach(r=>{
-      const tr=document.createElement('tr');
-      tr.innerHTML=`<td>${r.country}</td><td>${num(r.clicks||0)}</td><td>${num(r.conversions||0)}</td><td class="money">${usd(deMoney(r.earnings||0))}</td>`;
-      geo.appendChild(tr);
-    });
-  if(!geo.children.length) geo.innerHTML=`<tr><td colspan="4" class="muted">No geo activity.</td></tr>`;
-}
-let chartBars, chartPie;
-async function initAnalytics(){
-  try{
-    const j=await get(a("action=analytics"));
-    // Bars (monthly earnings)
-    const months = j.months || [{m:'Jan',v:0}];
-    chartBars?.destroy();
-    chartBars = new Chart($('#chart-bars'),{
-      type:'bar',
-      data:{labels:months.map(x=>x.m),datasets:[{label:'Monthly Earnings ($)',data:months.map(x=>deMoney(x.v))}]},
-      options:{plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(255,255,255,.06)'}},y:{grid:{color:'rgba(255,255,255,.06)'}}}}
-    });
-    // Pie (geo share)
-    const geo = j.geoShare || [{label:'USA',value:1}];
-    chartPie?.destroy();
-    chartPie = new Chart($('#chart-pie'),{
-      type:'pie',
-      data:{labels:geo.map(g=>g.label),datasets:[{data:geo.map(g=>g.value)}]},
-      options:{plugins:{legend:{position:'right'}}}
-    });
-  }catch(e){/* ignore */}
-}
-
-/* ========= WALLET ========= */
-async function initWallet(){
-  const list=$('#walletList'); list.innerHTML='';
-  try{
-    const j=await get(a("action=wallet"));
-    $('#wallet-balance').textContent=usd(deMoney(j.balance||0));
-    (j.history||[]).forEach(tx=>{
-      const card=document.createElement('div'); card.className='card span-6';
-      card.innerHTML=`<div class="bd" style="display:flex;justify-content:space-between">
-        <div><div class="muted">${tx.date||''}</div><div>${tx.method||''}</div></div>
-        <div style="text-align:right"><div class="money" style="font-size:18px">${usd(deMoney(tx.amount||0))}</div><div class="muted">${tx.status||'COMPLETED'}</div></div>
-      </div>`;
-      list.appendChild(card);
-    });
-    if(!list.children.length) list.innerHTML=`<div class="card span-12"><div class="bd muted">No transactions.</div></div>`;
-  }catch(e){ list.innerHTML=`<div class="card span-12"><div class="bd">Failed to load wallet.</div></div>`; }
-}
-
-<!-- ========== SCRIPTS ========== -->
-<script>
-async function fetchLiveData(){
-  try {
-    const res = await fetch("https://script.google.com/macros/s/YOUR_GAS_DEPLOY_URL/exec?action=live");
-    const j = await res.json();
-
-    // Populate Overview stats
-    if(j.overview){
-      $('#totalEarnings').textContent = j.overview.earnings;
-      $('#activeUsers').textContent   = j.overview.users;
-      $('#conversionRate').textContent= j.overview.conversionRate;
-      $('#totalClicks').textContent   = j.overview.clicks;
-    }
-
-    // Populate Analytics Live Performance Data
-    if(j.live){
-      const tb = $('#tbl-live tbody'); 
-      tb.innerHTML = '';
-      j.live.forEach(row=>{
-        const tr=document.createElement('tr');
-        tr.innerHTML = `
-          <td>${row.time||''}</td>
-          <td>${row.country||''}</td>
-          <td>${row.offer||''}</td>
-          <td>${row.device||''}</td>
-          <td>${row.clicks||0}</td>
-          <td>${row.leads||0}</td>
-          <td>${row.earnings||0}</td>
-        `;
-        tb.appendChild(tr);
-      });
-    }
-
+    if(!tb.children.length) tb.innerHTML = `<tr><td colspan="4" class="muted">No data</td></tr>`;
   }catch(e){
-    console.error("Live fetch error", e);
+    console.error(e);
   }
 }
 
-// refresh faster: every 3s
-setInterval(fetchLiveData, 3000);
-window.addEventListener('DOMContentLoaded', fetchLiveData);
+async function initAccounts(){
+  try{
+    const j = await api({action:'accounts'});
+    const grid = $('#acc-grid'); grid.innerHTML='';
+    (j.accounts||[]).forEach(a=>{
+      const card = document.createElement('div');
+      card.className='card pad';
+      card.innerHTML = `
+        <div class="flex"><b style="font-size:18px">${safe(a.account||a.id)}</b>
+          <span class="right pill ok">${safe(a.status)||'ACTIVE'}</span>
+        </div>
+        <div class="muted" style="margin-top:6px">Network</div>
+        <div style="font-weight:600">${safe(a.network||'CPA Grip')}</div>
+        <div class="grid g-3" style="margin-top:10px">
+          <div><div class="muted">Active Offers</div><div class="mono">${safe(a.active_offers||a.offers)||0}</div></div>
+          <div><div class="muted">Clicks</div><div class="mono">${safe(a.clicks)||0}</div></div>
+          <div><div class="muted">Revenue</div><div class="mono">${fmtUsd(a.revenue)}</div></div>
+        </div>
+      `;
+      grid.appendChild(card);
+    });
+  }catch(e){ console.error(e); }
+}
+
+async function initUsers(){
+  try{
+    const j = await api({action:'users'});
+    const tb = $('#tbl-users tbody'); tb.innerHTML='';
+    (j.approved||j.users||[]).forEach(u=>{
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${safe(u.name)}</td><td>${safe(u.email)}</td><td>${safe(u.phone)}</td><td>${safe(u.authority||'1x User')}</td><td><span class="pill ok">Active</span></td>`;
+      tb.appendChild(tr);
+    });
+    if(!tb.children.length) tb.innerHTML = `<tr><td colspan="5" class="muted">No users.</td></tr>`;
+  }catch(e){ console.error(e); }
+}
+
+async function initAnalytics(){
+  // start fast polling once (shared timer)
+  if(liveTimer) return;
+  const tick = async ()=>{
+    try{
+      const j = await api({action:'live'});
+      // Live performance stream
+      const tb = $('#tbl-live tbody'); if(tb) {
+        tb.innerHTML='';
+        (j.live||[]).forEach(r=>{
+          const tr=document.createElement('tr');
+          tr.innerHTML=`<td class="mono">${safe(r.time)}</td><td>${safe(r.country)}</td><td>${safe(r.offer)}</td><td>${safe(r.device)}</td><td class="mono">${safe(r.clicks)||0}</td><td class="mono">${safe(r.conversions||r.leads)||0}</td><td class="mono">${fmtUsd(r.earnings)}</td>`;
+          tb.appendChild(tr);
+        });
+        if(!tb.children.length) tb.innerHTML = `<tr><td colspan="7" class="muted">Listening…</td></tr>`;
+      }
+      // Rolling by Geo
+      const tg = $('#tbl-live-geo tbody'); if(tg){
+        tg.innerHTML='';
+        (j.byGeo||[]).forEach(r=>{
+          const tr=document.createElement('tr');
+          tr.innerHTML=`<td>${safe(r.country)}</td><td class="mono">${safe(r.clicks)||0}</td><td class="mono">${safe(r.conversions||r.leads)||0}</td><td class="mono">${fmtUsd(r.earnings)}</td>`;
+          tg.appendChild(tr);
+        });
+        if(!tg.children.length) tg.innerHTML = `<tr><td colspan="4" class="muted">Listening…</td></tr>`;
+      }
+      // mirror KPIs to dashboard if visible
+      if($('#view-dashboard').classList.contains('active')){
+        $('#kpi-earn').textContent  = fmtUsd(j.kpis?.earnings);
+        $('#kpi-clicks').textContent= j.kpis?.clicks ?? $('#kpi-clicks').textContent;
+        $('#kpi-cr').textContent    = (j.kpis?.cr ?? '0.00')+'%';
+      }
+    }catch(e){ console.warn('live tick',e.message); }
+  };
+  await tick();
+  liveTimer = setInterval(tick, 3000); // tight polling (3s)
+}
+
+async function initWallet(){
+  try{
+    const j = await api({action:'wallet'});
+    $('#wallet-bal').textContent  = fmtUsd(j.balance);
+    $('#wallet-last').textContent = safe(j.lastPayout)||'—';
+    const tb = $('#tbl-tx tbody'); tb.innerHTML='';
+    (j.tx||[]).forEach(t=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML = `<td>${safe(t.date)}</td><td>${safe(t.method)}</td><td class="mono">${fmtUsd(t.amount)}</td><td>${safe(t.status)}</td>`;
+      tb.appendChild(tr);
+    });
+    if(!tb.children.length) tb.innerHTML = `<tr><td colspan="4" class="muted">No transactions.</td></tr>`;
+  }catch(e){ console.error(e); }
+}
+
+async function initMonitor(){
+  try{
+    const j = await api({action:'monitoring'});
+    $('#box-alerts').textContent = j.alerts ?? 0;
+    $('#box-maint').textContent  = j.maintenance ?? '—';
+    $('#box-health').textContent = j.health ?? '—';
+    const tb = $('#tbl-monitor tbody'); tb.innerHTML='';
+    (j.events||[]).forEach(ev=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML=`<td class="mono">${safe(ev.time)}</td><td>${safe(ev.type)}</td><td>${safe(ev.message)}</td>`;
+      tb.appendChild(tr);
+    });
+    if(!tb.children.length) tb.innerHTML = `<tr><td colspan="3" class="muted">No events.</td></tr>`;
+  }catch(e){ console.error(e); }
+}
+
+async function initSettings(){
+  try{
+    const j = await api({action:'config'});
+    $('#settings-json').textContent = JSON.stringify(j,null,2);
+    $('#commander-badge').textContent = (j.commander_name||'SUPREME COMMANDER').replaceAll('_',' ');
+  }catch(e){
+    $('#settings-json').textContent = 'Unable to load config: '+e.message;
+  }
+}
+
+/* ==== BOOT ==== */
+window.addEventListener('DOMContentLoaded',()=>{
+  // allow clicking the whole left nav (works on mobile)
+  $$('#nav a').forEach(a=>a.addEventListener('click',ev=>{
+    ev.preventDefault(); location.hash = a.getAttribute('href');
+  }));
+  handleHash();            // show first view
+  initAnalytics();         // start live polling early (even off-tab)
+  bootDone=true;
+});
 </script>
 </body>
 </html>

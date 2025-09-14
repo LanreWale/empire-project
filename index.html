@@ -1,171 +1,597 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>⚔️ THE EMPIRE — Command Dashboard ⚔️</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- Charts -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
   <style>
-    body { font-family: Arial, sans-serif; background:#0b0c10; color:#fff; margin:0; }
-    header { padding:1rem; background:#1f2833; text-align:center; font-size:1.5rem; font-weight:bold; }
-    nav { display:flex; justify-content:center; background:#45a29e; }
-    nav button { flex:1; padding:1rem; border:none; background:#45a29e; color:white; font-size:1rem; cursor:pointer; }
-    nav button.active { background:#66fcf1; color:#000; }
-    section { display:none; padding:1rem; }
-    section.active { display:block; }
-    table { width:100%; border-collapse:collapse; margin-top:1rem; }
-    th, td { padding:0.5rem; border:1px solid #45a29e; text-align:left; }
-    .metric { display:inline-block; margin:1rem; padding:1rem; background:#1f2833; border-radius:8px; }
-    .emp-modal.hidden { display:none; }
-    .emp-modal { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); display:flex; align-items:center; justify-content:center; }
-    .emp-modal__panel { background:#1f2833; padding:1.5rem; border-radius:8px; width:400px; max-width:90%; }
-    .emp-field { margin-bottom:1rem; }
-    .emp-label { display:block; margin-bottom:0.5rem; }
-    .emp-input { width:100%; padding:0.5rem; }
-    .emp-btn { padding:0.5rem 1rem; margin:0.25rem; }
-    .emp-btn-primary { background:#66fcf1; border:none; color:#000; cursor:pointer; }
+    :root{
+      --bg:#0f1620; --panel:#121a25; --ink:#e9eef6; --muted:#8ca1c2;
+      --brand:#f2c230; --ok:#19c37d; --err:#ef4444; --line:#223046;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 Inter,system-ui,Segoe UI,Roboto,Arial}
+    a{color:inherit;text-decoration:none}
+    .app{display:grid;grid-template-columns:240px 1fr;min-height:100vh}
+    .side{background:#0c121a;border-right:1px solid var(--line);padding:14px 10px}
+    .brand{display:flex;align-items:center;gap:10px;padding:10px}
+    .brand img{width:24px;height:24px}
+    .brand .t1{font-weight:800;letter-spacing:.6px}
+    .nav{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+    .nav button{all:unset;cursor:pointer;padding:9px 12px;border-radius:8px;color:var(--muted)}
+    .nav button.active,.nav button:hover{background:var(--panel);color:var(--ink);border:1px solid var(--line)}
+    main{padding:18px}
+    h1{font-size:18px;letter-spacing:.6px;margin:0 0 12px 0}
+    h2{font-size:16px;margin:8px 0 10px 0}
+    .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:12px}
+    .span-12{grid-column:span 12}
+    .span-8{grid-column:span 8}
+    .span-6{grid-column:span 6}
+    .span-4{grid-column:span 4}
+    .panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px}
+    .panel h3{margin:0 0 10px 0;font-size:13px;color:var(--muted);letter-spacing:.3px}
+    .hero{background:url('assets/brand/welcome_banner.jpg') center/cover no-repeat;min-height:88px;border-radius:12px;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:26px;letter-spacing:1.5px}
+    .kpis{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0}
+    .kpi{background:var(--panel);border:1px solid var(--line);padding:10px 12px;border-radius:10px;min-width:140px}
+    .kpi .lab{color:var(--muted);font-size:12px}
+    .kpi .val{font-weight:800;font-size:18px}
+    table{width:100%;border-collapse:collapse}
+    th,td{padding:8px;border-bottom:1px solid var(--line);text-align:left}
+    th{color:var(--muted);font-weight:600}
+    .muted{color:var(--muted)}
+    .note{padding:10px;border-radius:8px}
+    .note.err{background:#2b1114;border:1px solid #541015}
+    .hidden{display:none}
+    .btn{all:unset;display:inline-block;cursor:pointer;padding:8px 12px;border-radius:8px;border:1px solid var(--line);background:var(--panel)}
+    .btn.brand{background:var(--brand);color:#111;font-weight:800;border:none}
+    .btn.small{padding:6px 10px;font-size:12px}
+    /* Modal */
+    .modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center}
+    .modal.hidden{display:none}
+    .modal .panel{width:min(520px,92vw);max-height:80vh;overflow:auto}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .field{display:flex;flex-direction:column;margin:8px 0}
+    .field label{font-size:12px;color:var(--muted);margin-bottom:4px}
+    .field input,.field select, .field textarea{background:#0c121a;color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:8px}
+    .flex{display:flex;gap:8px;align-items:center}
+    .right{margin-left:auto}
+    @media(max-width:1024px){ .grid{grid-template-columns:repeat(6,1fr)} .span-8{grid-column:span 6} .span-6{grid-column:span 6} .span-4{grid-column:span 6} .app{grid-template-columns:1fr} .side{position:sticky;top:0;z-index:2} }
   </style>
 </head>
 <body>
-  <header>⚔️ THE EMPIRE — Command Dashboard ⚔️</header>
-  <nav>
-    <button data-tab="overview" class="active">Overview</button>
-    <button data-tab="cpa">CPA Accounts</button>
-    <button data-tab="analytics">Analytics</button>
-    <button data-tab="wallet">Wallet</button>
-    <button data-tab="leads">Leads</button>
-  </nav>
-
-  <!-- Overview -->
-  <section id="overview" class="active">
-    <h2>Overview</h2>
-    <div id="overview-metrics">
-      <div class="metric">Total Earnings: <span id="ov-earnings">$0</span></div>
-      <div class="metric">Total Leads: <span id="ov-leads">0</span></div>
-      <div class="metric">Total Clicks: <span id="ov-clicks">0</span></div>
-      <div class="metric">Conversion Rate: <span id="ov-cr">0%</span></div>
+<div class="app">
+  <!-- Sidebar -->
+  <aside class="side">
+    <div class="brand">
+      <img src="assets/brand/empire-logo.png" alt="Empire"/>
+      <div class="t1">THE EMPIRE</div>
+      <div class="right"><img src="assets/brand/commander-insignia.png" alt="Insignia" style="width:22px;height:22px;opacity:.9"></div>
     </div>
-  </section>
+    <div class="nav">
+      <button class="active" data-tab="dashboard">Overview</button>
+      <button data-tab="cpa">CPA Accounts</button>
+      <button data-tab="users">Users</button>
+      <button data-tab="analytics">Analytics</button>
+      <button data-tab="wallet">Wallet</button>
+      <button data-tab="monitoring">Monitoring</button>
+      <button data-tab="settings">Settings</button>
+    </div>
+  </aside>
 
-  <!-- CPA Accounts -->
-  <section id="cpa">
-    <h2>CPA Accounts</h2>
-    <button id="open-add-cpa" class="emp-btn emp-btn-primary">+ Add Account</button>
-    <table>
-      <thead>
-        <tr><th>ID</th><th>Network</th><th>Domain</th><th>Offers</th><th>Revenue</th><th>Clicks</th><th>CR%</th></tr>
-      </thead>
-      <tbody id="cpa-list"></tbody>
-    </table>
-  </section>
+  <!-- Main -->
+  <main>
+    <!-- OVERVIEW -->
+    <section id="view-dashboard" class="view">
+      <h1>COMMAND DASHBOARD</h1>
+      <div class="hero span-12">WELCOME TO THE EMPIRE</div>
 
-  <!-- Analytics -->
-  <section id="analytics">
-    <h2>Analytics</h2>
-    <div class="metric">EPC: <span id="an-epc">$0</span></div>
-    <div class="metric">CPA: <span id="an-cpa">$0</span></div>
-    <div class="metric">RPM: <span id="an-rpm">$0</span></div>
-  </section>
+      <div class="kpis">
+        <div class="kpi"><div class="lab">Total Earnings</div><div class="val" id="kpi-earn">$0.00</div></div>
+        <div class="kpi"><div class="lab">Active Users</div><div class="val" id="kpi-users">0</div></div>
+        <div class="kpi"><div class="lab">Conversion Rate</div><div class="val" id="kpi-cr">0.00%</div></div>
+        <div class="kpi"><div class="lab">Total Clicks</div><div class="val" id="kpi-clicks">0</div></div>
+        <div class="kpi"><div class="lab">Total Conversions</div><div class="val" id="kpi-leads">0</div></div>
+      </div>
 
-  <!-- Wallet -->
-  <section id="wallet">
-    <h2>Wallet</h2>
-    <div class="metric">Balance: <span id="wa-balance">$0</span></div>
-    <div class="metric">Last Payout: <span id="wa-last">$0</span></div>
-  </section>
+      <div class="grid">
+        <div class="panel span-8">
+          <h3>Daily Earnings</h3>
+          <canvas id="chart-daily" height="130"></canvas>
+        </div>
+        <div class="panel span-4">
+          <h3>Traffic Sources</h3>
+          <canvas id="chart-traffic" height="130"></canvas>
+        </div>
+        <div class="panel span-6">
+          <h3>BY GEO</h3>
+          <table id="tbl-geo"><thead><tr><th>Country</th><th>Earnings ($)</th></tr></thead><tbody></tbody></table>
+        </div>
+        <div class="panel span-6">
+          <h3>BY DEVICE</h3>
+          <table id="tbl-device"><thead><tr><th>Device</th><th>Earnings ($)</th></tr></thead><tbody></tbody></table>
+        </div>
+      </div>
+      <div id="ovrErr" class="note err hidden">Failed to load overview.</div>
+    </section>
 
-  <!-- Leads -->
-  <section id="leads">
-    <h2>Leads</h2>
-    <table>
-      <thead><tr><th>ID</th><th>Offer</th><th>Country</th><th>Revenue</th></tr></thead>
-      <tbody id="leads-list"></tbody>
-    </table>
-  </section>
+    <!-- CPA -->
+    <section id="view-cpa" class="view hidden">
+      <div class="flex">
+        <h1>CPA ACCOUNTS</h1>
+        <button id="btn-open-cpa" class="btn brand right">+ Add New Account</button>
+      </div>
+      <div id="cpaGrid" class="grid"></div>
+      <div id="cpaErr" class="note err hidden">Failed to load CPA accounts.</div>
+    </section>
 
-  <!-- Modal -->
-  <div id="emp-cpa-modal" class="emp-modal hidden">
-    <div class="emp-modal__panel">
-      <h3>Add New CPA Account</h3>
-      <form id="emp-cpa-form">
-        <div class="emp-field"><label class="emp-label">Account ID</label><input class="emp-input" name="AccountID" required></div>
-        <div class="emp-field"><label class="emp-label">Network</label>
-          <select class="emp-input" name="Network" required>
-            <option value="CPA Grip">CPA Grip</option>
-            <option value="CPAlead">CPAlead</option>
-            <option value="AdWorkMedia">AdWorkMedia</option>
-            <option value="OGAds">OGAds</option>
+    <!-- USERS -->
+    <section id="view-users" class="view hidden">
+      <h1>USERS MANAGEMENT</h1>
+      <table id="tbl-users"><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Authority</th></tr></thead><tbody></tbody></table>
+      <div id="usrErr" class="note err hidden">Failed to load users.</div>
+      <div style="margin-top:10px" class="flex">
+        <button id="btn-invite-copy" class="btn small">Copy Invite Link</button>
+        <a id="btn-invite-whatsapp" class="btn small" target="_blank" rel="noopener">Share on WhatsApp</a>
+      </div>
+    </section>
+
+    <!-- ANALYTICS -->
+    <section id="view-analytics" class="view hidden">
+      <h1>ANALYTICS</h1>
+      <div class="kpis">
+        <div class="kpi"><div class="lab">EPC</div><div class="val" id="an-epc">$0.00</div></div>
+        <div class="kpi"><div class="lab">CPA</div><div class="val" id="an-cpa">$0.00</div></div>
+        <div class="kpi"><div class="lab">RPM</div><div class="val" id="an-rpm">$0.00</div></div>
+      </div>
+      <div class="grid">
+        <div class="panel span-8">
+          <h3>Performance Overview</h3>
+          <canvas id="chart-analytics" height="140"></canvas>
+        </div>
+        <div class="panel span-4">
+          <h3>Geographic Distribution</h3>
+          <canvas id="chart-geo" height="140"></canvas>
+        </div>
+      </div>
+      <table id="tbl-analytics" class="panel span-12" style="margin-top:12px">
+        <thead><tr><th>Metric</th><th>Value</th></tr></thead><tbody></tbody>
+      </table>
+      <div id="anaErr" class="note err hidden">Failed to load analytics.</div>
+    </section>
+
+    <!-- WALLET -->
+    <section id="view-wallet" class="view hidden">
+      <h1>WALLET</h1>
+      <div class="kpis">
+        <div class="kpi"><div class="lab">Balance</div><div class="val" id="wallet-balance">$0.00</div></div>
+      </div>
+
+      <div class="panel span-12" style="margin:10px 0">
+        <h3>Universal Withdrawal Request</h3>
+        <form id="form-withdraw" class="grid">
+          <div class="field span-4"><label>Method</label>
+            <select name="method"><option>Bank</option><option>Payoneer</option></select>
+          </div>
+          <div class="field span-4"><label>Country</label><input name="country" placeholder="NG" /></div>
+          <div class="field span-4"><label>Category</label><input name="category" placeholder="Personal/Business"/></div>
+
+          <div class="field span-4"><label>Bank Name</label><input name="bank" placeholder="GTBank"/></div>
+          <div class="field span-4"><label>Bank Code</label><input name="bankCode" placeholder="058"/></div>
+          <div class="field span-4"><label>Account Number</label><input name="account" id="wd-account" placeholder="0123456789"/></div>
+
+          <div class="field span-6"><label>Account Holder</label><input name="holder" id="wd-holder" placeholder="(auto-verified)" /></div>
+          <div class="field span-3"><label>Phone</label><input name="phone" placeholder="+234..." /></div>
+          <div class="field span-3"><label>Amount (USD)</label><input name="amount" type="number" step="0.01" min="200" /></div>
+
+          <div class="span-12 flex">
+            <button type="button" id="btn-validate" class="btn">Validate Account</button>
+            <div id="valStatus" class="muted"></div>
+            <button type="submit" class="btn brand right">Request Withdrawal</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="grid" id="walletList"></div>
+      <div id="walErr" class="note err hidden">Failed to load wallet.</div>
+    </section>
+
+    <!-- MONITORING -->
+    <section id="view-monitoring" class="view hidden">
+      <h1>MONITORING</h1>
+      <table id="tbl-monitor"><thead><tr><th>Time</th><th>Type</th><th>Message</th></tr></thead><tbody></tbody></table>
+      <div id="monErr" class="note err hidden">Failed to load events.</div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section id="view-settings" class="view hidden">
+      <h1>SETTINGS</h1>
+      <pre id="cfgDump" class="panel" style="white-space:pre-wrap"></pre>
+    </section>
+  </main>
+</div>
+
+<!-- Add CPA Modal -->
+<div id="emp-cpa-modal" class="modal hidden" aria-modal="true" role="dialog">
+  <div class="panel">
+    <div class="flex" style="margin-bottom:8px">
+      <h2 style="margin:0">Add New CPA Account</h2>
+      <button class="btn right" id="btn-close-cpa">×</button>
+    </div>
+    <form id="emp-cpa-form">
+      <div class="row">
+        <div class="field">
+          <label>Account Name</label>
+          <input name="accountName" placeholder="Lanre Main" required />
+        </div>
+        <div class="field">
+          <label>Network</label>
+          <select name="network" required>
+            <option value="">Select…</option>
+            <option>CPA Grip</option><option>CPAlead</option><option>AdWorkMedia</option><option>OGAds</option>
           </select>
         </div>
-        <div class="emp-field"><label class="emp-label">Custom Domain</label><input class="emp-input" name="Domain"></div>
-        <div class="emp-field"><label class="emp-label">Active Offers</label><input class="emp-input" name="ActiveOffers" type="number"></div>
-        <div class="emp-field"><label class="emp-label">Revenue</label><input class="emp-input" name="Revenue" type="number" step="0.01"></div>
-        <div class="emp-field"><label class="emp-label">Clicks</label><input class="emp-input" name="Clicks" type="number"></div>
-        <div class="emp-field"><label class="emp-label">Conversion Rate</label><input class="emp-input" name="ConversionRate" type="number" step="0.01"></div>
-        <div><button type="button" class="emp-btn" id="close-cpa">Cancel</button><button type="submit" class="emp-btn emp-btn-primary">Save</button></div>
-      </form>
-    </div>
+        <div class="field">
+          <label>Account ID</label>
+          <input name="account" placeholder="1533836" required />
+        </div>
+        <div class="field">
+          <label>Custom Domain</label>
+          <input name="domain" placeholder="yourdomain.com" />
+        </div>
+        <div class="field">
+          <label>Active Offers</label>
+          <input name="activeOffers" type="number" min="0" placeholder="0" />
+        </div>
+        <div class="field">
+          <label>Revenue (USD)</label>
+          <input name="revenue" type="number" step="0.01" min="0" placeholder="0.00" />
+        </div>
+        <div class="field">
+          <label>Clicks</label>
+          <input name="clicks" type="number" min="0" placeholder="0" />
+        </div>
+        <div class="field">
+          <label>Conversion Rate (%)</label>
+          <input name="conversionRate" type="number" step="0.01" min="0" placeholder="0.00" />
+        </div>
+      </div>
+      <div class="flex" style="margin-top:8px">
+        <button type="button" class="btn" id="btn-cancel-cpa">Cancel</button>
+        <button type="submit" class="btn brand right">+ Add Account</button>
+      </div>
+    </form>
+    <div id="cpaAddMsg" class="muted" style="margin-top:8px"></div>
   </div>
+</div>
 
-  <script>
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbwZVlGMvYonfCNdQlwPHiqqgOVC80_HsyktSYmqmQPBKmRrlzg_yo4lKz_Mmu85B7eY/exec";
+<script>
+/* ===== CONFIG ===== */
+const GAS_URL = "https://script.google.com/macros/s/AKfycbwZVlGMvYonfCNdQlwPHiqqgOVC80_HsyktSYmqmQPBKmRrlzg_yo4lKz_Mmu85B7eY/exec";
 
-    // Tabs
-    document.querySelectorAll("nav button").forEach(btn=>{
-      btn.addEventListener("click",()=>{
-        document.querySelectorAll("nav button").forEach(b=>b.classList.remove("active"));
-        btn.classList.add("active");
-        document.querySelectorAll("section").forEach(sec=>sec.classList.remove("active"));
-        document.getElementById(btn.dataset.tab).classList.add("active");
+/* ===== UTILS ===== */
+const $ = sel => document.querySelector(sel);
+const $$ = sel => Array.from(document.querySelectorAll(sel));
+const esc = s => String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const num = n => (+n||0).toLocaleString();
+const usd = n => new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(+n||0);
+async function jget(url){
+  const r = await fetch(url, {cache:'no-store', headers:{'Accept':'application/json'}});
+  if(!r.ok) throw new Error(`${r.status} ${r.statusText}`);
+  return r.json();
+}
+async function jpost(url, body){
+  const r = await fetch(url, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)});
+  if(!r.ok) throw new Error(`${r.status} ${r.statusText}`);
+  return r.json();
+}
+
+/* ===== NAV / TABS ===== */
+function showTab(key){
+  $$('.nav button').forEach(b=>b.classList.toggle('active', b.dataset.tab===key));
+  $$('.view').forEach(v=>v.classList.add('hidden'));
+  const view = $('#view-'+key); if(view) view.classList.remove('hidden');
+
+  if(key==='dashboard') loadOverview();
+  if(key==='cpa')       loadCpa();
+  if(key==='users')     loadUsers();
+  if(key==='analytics') loadAnalytics();
+  if(key==='wallet')    loadWallet();
+  if(key==='monitoring')loadMonitoring();
+  if(key==='settings')  loadSettings();
+}
+$$('.nav button').forEach(b=> b.addEventListener('click', ()=>{ location.hash=b.dataset.tab; showTab(b.dataset.tab); }));
+
+/* ===== CHARTS HOLDERS ===== */
+let chartDaily, chartTraffic, chartAnalytics, chartGeo;
+
+/* ===== OVERVIEW ===== */
+async function loadOverview(){
+  try{
+    const j = await jget(GAS_URL + "?action=overview");
+    const t = j.totals || {};
+    $('#kpi-earn').textContent  = usd((+t.earnings||0).toFixed(2));
+    $('#kpi-clicks').textContent= num(t.clicks||0);
+    $('#kpi-leads').textContent = num(t.leads||0);
+    $('#kpi-cr').textContent    = ((t.conversionRate??0).toFixed(2)) + '%';
+
+    // Active users = users count (fallback 0)
+    try{
+      const u = await jget(GAS_URL + "?action=users");
+      $('#kpi-users').textContent = num((u.items||[]).length);
+    }catch{}
+
+    // Fill tables
+    const fillObj = (tbodySel, obj) => {
+      const tb = $(tbodySel); tb.innerHTML='';
+      Object.entries(obj||{}).forEach(([k,v])=>{
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${esc(k)}</td><td>${usd((+v).toFixed(2))}</td>`;
+        tb.appendChild(tr);
       });
+      if(!tb.children.length) tb.innerHTML = `<tr><td colspan="2" class="muted">No data</td></tr>`;
+    };
+    fillObj('#tbl-geo tbody', j.geo);
+    fillObj('#tbl-device tbody', j.devices);
+
+    // Charts
+    const dayArr = Array.isArray(j.byDay) ? j.byDay : [];
+    const labels = dayArr.map(r => r.t || r.date || '');
+    const values = dayArr.map(r => +r.earnings || +r.value || 0);
+
+    if(chartDaily) chartDaily.destroy();
+    chartDaily = new Chart($('#chart-daily'), {
+      type:'line',
+      data:{ labels, datasets:[{ label:'Earnings', data:values }] },
+      options:{ responsive:true, plugins:{legend:{display:false}} }
     });
 
-    // Modal
-    const modal=document.getElementById("emp-cpa-modal");
-    document.getElementById("open-add-cpa").onclick=()=>modal.classList.remove("hidden");
-    document.getElementById("close-cpa").onclick=()=>modal.classList.add("hidden");
-    function closeModal(){ modal.classList.add("hidden"); }
-
-    // Fetch overview
-    async function loadOverview(){
-      const res=await fetch(GAS_URL+"?action=overview");
-      const j=await res.json();
-      if(j.ok){
-        document.getElementById("ov-earnings").textContent="$"+j.totals.earnings;
-        document.getElementById("ov-leads").textContent=j.totals.leads;
-        document.getElementById("ov-clicks").textContent=j.totals.clicks;
-        document.getElementById("ov-cr").textContent=j.totals.conversionRate+"%";
-      }
-    }
-
-    // Fetch CPA
-    async function loadCpa(){
-      const res=await fetch(GAS_URL+"?action=getcpa");
-      const j=await res.json();
-      if(j.ok){
-        const tbody=document.getElementById("cpa-list"); tbody.innerHTML="";
-        j.items.forEach(r=>{
-          const tr=document.createElement("tr");
-          tr.innerHTML=`<td>${r.account}</td><td>${r.network}</td><td>${r.domain}</td><td>${r.activeOffers}</td><td>$${r.revenue}</td><td>${r.clicks}</td><td>${r.conversionRate}</td>`;
-          tbody.appendChild(tr);
-        });
-      }
-    }
-
-    // Form submit
-    document.getElementById("emp-cpa-form").addEventListener("submit",async e=>{
-      e.preventDefault();
-      const data=Object.fromEntries(new FormData(e.target).entries());
-      const payload={action:"addcpa",...data};
-      try{
-        const res=await fetch(GAS_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
-        const j=await res.json();
-        if(!j.ok) throw new Error(j.error||"Add failed");
-        alert("CPA account added ✔");
-        closeModal(); loadCpa();
-      }catch(err){ alert("Add CPA failed: "+err.message); }
+    const traffic = j.offerTypes || {};
+    const trafficLabels = Object.keys(traffic);
+    const trafficVals = Object.values(traffic).map(v=>+v||0);
+    if(chartTraffic) chartTraffic.destroy();
+    chartTraffic = new Chart($('#chart-traffic'), {
+      type:'pie',
+      data:{ labels: trafficLabels, datasets:[{ data: trafficVals }] },
+      options:{ responsive:true }
     });
 
-    loadOverview(); loadCpa();
-  </script>
+    $('#ovrErr').classList.add('hidden');
+  }catch(e){
+    $('#ovrErr').classList.remove('hidden');
+  }
+}
+
+/* ===== CPA ===== */
+const cpaModal = $('#emp-cpa-modal');
+$('#btn-open-cpa').addEventListener('click',()=> cpaModal.classList.remove('hidden'));
+$('#btn-close-cpa').addEventListener('click',()=> cpaModal.classList.add('hidden'));
+$('#btn-cancel-cpa').addEventListener('click',()=> cpaModal.classList.add('hidden'));
+
+async function loadCpa(){
+  const grid = $('#cpaGrid'); grid.innerHTML='';
+  try{
+    // NOTE: action is 'cpa' (not getcpa) per your GAS router
+    const j = await jget(GAS_URL + "?action=cpa");
+    (j.items||[]).forEach(acc=>{
+      const convPct = (()=>{
+        if (typeof acc.conversionRate === 'string' && acc.conversionRate.endsWith('%')) return acc.conversionRate;
+        const n = +acc.conversionRate || 0;
+        return (n>1? n : n*100).toFixed(2) + '%';
+      })();
+      const card = document.createElement('div'); card.className='panel span-4';
+      card.innerHTML = `
+        <div style="font-weight:800;margin-bottom:6px">${esc(acc.account||acc.name||'CPA')}</div>
+        <div class="muted">Network</div><div style="font-weight:700">${esc(acc.network||'—')}</div>
+        <div class="muted">Custom Domain</div><div style="font-weight:700">${esc(acc.domain||'')}</div>
+        <div class="muted">Active Offers</div><div style="font-weight:700">${num(acc.activeOffers||acc.offers||0)}</div>
+        <div class="muted">Revenue</div><div style="font-weight:700">${usd((+acc.revenue||0).toFixed(2))}</div>
+        <div class="muted">Clicks</div><div style="font-weight:700">${num(acc.clicks||0)}</div>
+        <div class="muted">Conversion</div><div style="font-weight:700">${convPct}</div>`;
+      grid.appendChild(card);
+    });
+    if(!grid.children.length) grid.innerHTML = `<div class="note err">No CPA accounts yet.</div>`;
+    $('#cpaErr').classList.add('hidden');
+  }catch(e){
+    $('#cpaErr').classList.remove('hidden');
+  }
+}
+// Add CPA submit
+$('#emp-cpa-form').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const f = new FormData(e.target);
+  const body = {
+    action:'addcpa',
+    accountName: f.get('accountName'),
+    network: f.get('network'),
+    account: f.get('account'),
+    domain: f.get('domain'),
+    activeOffers: Number(f.get('activeOffers')||0),
+    revenue: Number(f.get('revenue')||0),
+    clicks: Number(f.get('clicks')||0),
+    // accept percent from UI and convert to fraction for GAS (if your GAS expects 0–1)
+    conversionRate: (Number(f.get('conversionRate')||0) / 100)
+  };
+  try{
+    const resp = await jpost(GAS_URL, body);
+    if(!resp.ok) throw new Error(resp.error||'Add failed');
+    $('#cpaAddMsg').textContent = 'Account added ✔';
+    setTimeout(()=>{ $('#cpaAddMsg').textContent=''; cpaModal.classList.add('hidden'); loadCpa(); }, 700);
+  }catch(err){
+    $('#cpaAddMsg').textContent = 'Add CPA failed: ' + err.message;
+  }
+});
+
+/* ===== USERS ===== */
+async function loadUsers(){
+  const body = $('#tbl-users tbody'); body.innerHTML='';
+  try{
+    const j = await jget(GAS_URL + "?action=users");
+    (j.items||[]).forEach(u=>{
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${esc(u.name||'')}</td><td>${esc((u.email||'').replace(/\+$/,''))}</td><td>${esc(u.phone||'')}</td><td>${esc(u.authority||'')}</td>`;
+      body.appendChild(tr);
+    });
+    if(!body.children.length) body.innerHTML = `<tr><td colspan="4" class="muted">No users.</td></tr>`;
+    $('#usrErr').classList.add('hidden');
+
+    // Invite helpers
+    const cfg = await jget(GAS_URL + "?action=config");
+    const base = cfg.invite_base || 'https://superlative-pothos-ebf5f2.netlify.app/';
+    const link = base + (base.includes('?')?'&':'?') + 'ref=SUPREME_COMMANDER';
+    $('#btn-invite-whatsapp').href = `https://wa.me/?text=${encodeURIComponent('Join the Empire: ' + link)}`;
+    $('#btn-invite-copy').onclick = async ()=>{
+      try{ await navigator.clipboard.writeText(link); alert('Invite link copied ✔'); }catch{ alert(link); }
+    };
+  }catch(e){
+    $('#usrErr').classList.remove('hidden');
+  }
+}
+
+/* ===== ANALYTICS ===== */
+async function loadAnalytics(){
+  try{
+    const [a, o] = await Promise.all([
+      jget(GAS_URL + "?action=analytics"),
+      jget(GAS_URL + "?action=overview")
+    ]);
+    const t = (o && o.totals) || {};
+    $('#an-epc').textContent = usd((+t.epc||0).toFixed(2));
+    $('#an-cpa').textContent = usd((+t.cpa||0).toFixed(2));
+    $('#an-rpm').textContent = usd((+t.rpm||0).toFixed(2));
+
+    // Table
+    const body = $('#tbl-analytics tbody'); body.innerHTML='';
+    (a.items||[]).forEach(r=>{
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${esc(r.metric||'')}</td><td>${esc(r.value||'')}</td>`;
+      body.appendChild(tr);
+    });
+    if(!body.children.length) body.innerHTML = `<tr><td colspan="2" class="muted">No analytics rows.</td></tr>`;
+
+    // Bar Chart from analytics items (numeric values only)
+    const items = (a.items||[]).filter(x=>!isNaN(parseFloat(x.value)));
+    const labels = items.slice(0,10).map(x=>x.metric);
+    const vals   = items.slice(0,10).map(x=>+x.value);
+    if(chartAnalytics) chartAnalytics.destroy();
+    chartAnalytics = new Chart($('#chart-analytics'), {
+      type:'bar',
+      data:{ labels, datasets:[{ label:'Value', data:vals }] },
+      options:{ responsive:true, plugins:{legend:{display:false}} }
+    });
+
+    // Geo pie from overview
+    const geo = (o && o.geo) || {};
+    if(chartGeo) chartGeo.destroy();
+    chartGeo = new Chart($('#chart-geo'), {
+      type:'doughnut',
+      data:{ labels:Object.keys(geo), datasets:[{ data:Object.values(geo).map(v=>+v||0) }] },
+      options:{ responsive:true }
+    });
+
+    $('#anaErr').classList.add('hidden');
+  }catch(e){
+    $('#anaErr').classList.remove('hidden');
+  }
+}
+
+/* ===== WALLET ===== */
+async function loadWallet(){
+  const list = $('#walletList'); list.innerHTML='';
+  try{
+    const j = await jget(GAS_URL + "?action=wallet");
+    $('#wallet-balance').textContent = usd((+j.balance||0).toFixed(2));
+    (j.history||[]).forEach(tx=>{
+      const div = document.createElement('div'); div.className='panel span-6';
+      div.innerHTML = `<div style="display:flex;justify-content:space-between;gap:10px">
+        <div><div class="muted">${esc(tx.date||'')}</div><div>${esc(tx.method||'')}</div></div>
+        <div style="text-align:right"><div style="font-weight:800">${usd((+tx.amount||0).toFixed(2))}</div><span class="muted">${esc(tx.status||'COMPLETED')}</span></div>
+      </div>`;
+      list.appendChild(div);
+    });
+    if(!list.children.length) list.innerHTML = `<div class="note err">No transactions.</div>`;
+    $('#walErr').classList.add('hidden');
+  }catch(e){
+    $('#walErr').classList.remove('hidden');
+  }
+}
+// Validator
+$('#btn-validate').addEventListener('click', async ()=>{
+  const f = new FormData($('#form-withdraw'));
+  const country = (f.get('country')||'').trim();
+  const bank    = (f.get('bank')||'').trim();
+  const code    = (f.get('bankCode')||'').trim();
+  const acct    = (f.get('account')||'').trim();
+  $('#valStatus').textContent = 'Validating…';
+  try{
+    const v = await jget(`${GAS_URL}?action=validatebank&country=${encodeURIComponent(country)}&bank=${encodeURIComponent(bank)}&code=${encodeURIComponent(code)}&acct=${encodeURIComponent(acct)}`);
+    if(v.ok && v.valid){
+      if(v.holder) $('#wd-holder').value = v.holder;
+      $('#valStatus').textContent = '✅ Account verified';
+    }else{
+      $('#valStatus').textContent = '❌ ' + (v.message||'Invalid account');
+    }
+  }catch(e){
+    $('#valStatus').textContent = '❌ Validation failed';
+  }
+});
+// Withdrawal submit
+$('#form-withdraw').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const f = new FormData(e.target);
+  const body = Object.fromEntries(f.entries());
+  body.action = 'withdraw';
+  body.amount = Number(body.amount||0);
+  try{
+    const r = await jpost(GAS_URL, body);
+    if(!r.ok) throw new Error(r.error||'Failed');
+    alert('Withdrawal requested ✔  ID: ' + r.requestId);
+    e.target.reset();
+    loadWallet();
+  }catch(err){
+    alert('Withdrawal failed: ' + err.message);
+  }
+});
+
+/* ===== MONITORING ===== */
+async function loadMonitoring(){
+  const body = $('#tbl-monitor tbody'); body.innerHTML='';
+  try{
+    const j = await jget(GAS_URL + "?action=monitoring");
+    (j.events||[]).forEach(ev=>{
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${esc(ev.time||'')}</td><td>${esc(ev.type||'')}</td><td>${esc(ev.msg||'')}</td>`;
+      body.appendChild(tr);
+    });
+    if(!body.children.length) body.innerHTML = `<tr><td colspan="3" class="muted">No events.</td></tr>`;
+    $('#monErr').classList.add('hidden');
+  }catch(e){
+    $('#monErr').classList.remove('hidden');
+  }
+}
+
+/* ===== SETTINGS ===== */
+async function loadSettings(){
+  try{
+    const j = await jget(GAS_URL + "?action=config");
+    $('#cfgDump').textContent = JSON.stringify(j, null, 2);
+  }catch(e){
+    $('#cfgDump').textContent = 'Failed to load config.';
+  }
+}
+
+/* ===== INIT ===== */
+window.addEventListener('DOMContentLoaded', ()=>{
+  const h=(location.hash||'#dashboard').replace('#','');
+  showTab(h);
+});
+window.addEventListener('hashchange', ()=>{
+  const h=(location.hash||'#dashboard').replace('#','');
+  showTab(h);
+});
+</script>
 </body>
 </html>

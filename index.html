@@ -1,396 +1,497 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>THE EMPIRE</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>THE EMPIRE · Command Center</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#0e1a28;--bg2:#0c1623;--card:#0f1f31;--muted:#6d819d;--txt:#dce7f7;
-    --accent:#2fb5ff;--good:#25d366;--bad:#ff6b6b;--warn:#ffb020;--ink:#09131e;
-    --ring:rgba(47,181,255,.25);
+    --bg-0:#0d1a27; --bg-1:#0f2233; --bg-2:#122a3f; --bg-3:#0b1825;
+    --card:#0f2233; --card-2:#132a42; --muted:#7c97b5; --text:#eaf2ff; --accent:#ffd559;
+    --good:#1dd1a1; --warn:#ffb142; --bad:#ff6b6b; --line:#173046;
+    --shadow:0 6px 24px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.02);
+    --radius:14px;
   }
   *{box-sizing:border-box}
   html,body{height:100%}
-  body{margin:0;background:linear-gradient(135deg,#0b1a2a 0%,#0b243c 100%);color:var(--txt);font:14px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}
-  a{color:inherit;text-decoration:none}
-  .wrap{display:grid;grid-template-columns:260px 1fr;min-height:100vh}
-  /* sidebar */
-  .side{background:linear-gradient(180deg,#091525,#08101c);border-right:1px solid rgba(255,255,255,.04)}
-  .brand{display:flex;gap:.6rem;align-items:center;padding:16px 18px;border-bottom:1px solid rgba(255,255,255,.04)}
-  .brand img{width:26px;height:26px}
-  .brand b{letter-spacing:.3px}
-  .nav a{display:flex;align-items:center;gap:.6rem;padding:12px 16px;color:#c9d7ea;border-left:3px solid transparent}
-  .nav a:hover{background:rgba(255,255,255,.03)}
-  .nav a.active{background:rgba(47,181,255,.08);border-left-color:var(--accent);color:#fff}
-  .ico{width:18px;height:18px;opacity:.9}
-  /* main */
-  .main{padding:18px 18px 42px}
-  .header{display:flex;align-items:center;justify-content:space-between;margin:6px 0 14px}
-  h2{margin:0;font-weight:700;letter-spacing:.4px}
-  .badge{padding:6px 10px;border-radius:999px;background:#0d2a40;border:1px solid rgba(47,181,255,.35);color:#bfe7ff;font-weight:600}
-  /* cards */
-  .grid{display:grid;gap:14px}
-  .g-2{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .g-3{grid-template-columns:repeat(3,minmax(0,1fr))}
-  .g-4{grid-template-columns:repeat(4,minmax(0,1fr))}
-  .card{background:linear-gradient(180deg,#0f2033,#0c1a2a);border:1px solid rgba(255,255,255,.06);border-radius:14px;box-shadow:0 10px 24px rgba(0,0,0,.35)}
-  .card h3{margin:0 0 8px;padding:12px 14px;border-bottom:1px solid rgba(255,255,255,.06);font-size:15px;color:#b5c9e6}
-  .pad{padding:14px}
-  .kpi{display:flex;flex-direction:column;gap:6px}
-  .kpi b{font-size:22px}
-  .muted{color:var(--muted);font-size:12px}
-  table{width:100%;border-collapse:collapse}
-  th,td{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.06)}
-  th{font-size:12px;text-transform:uppercase;letter-spacing:.3px;color:#9cb2d2;text-align:left}
-  tr:last-child td{border-bottom:none}
-  .pill{display:inline-block;padding:3px 8px;border-radius:999px;font-size:12px}
-  .pill.ok{background:rgba(37,211,102,.12);border:1px solid rgba(37,211,102,.45);color:#9dffc7}
-  .pill.warn{background:rgba(255,176,32,.12);border:1px solid rgba(255,176,32,.45);color:#ffdca3}
-  .mono{font-variant-numeric:tabular-nums}
-  .flex{display:flex;gap:12px;align-items:center}
+  body{
+    margin:0; font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial;
+    color:var(--text); background:
+      radial-gradient(1200px 1200px at 120% -10%, #163b5c 0%, transparent 60%) fixed,
+      radial-gradient(1000px 1000px at -10% 120%, #0c2338 0%, transparent 60%) fixed,
+      var(--bg-0);
+  }
+
+  /* LAYOUT */
+  .page{display:grid; grid-template-columns:260px 1fr; gap:0; min-height:100vh}
+  .sidebar{
+    background:linear-gradient(180deg,#0d1a27 0%, #0b1825 100%);
+    border-right:1px solid var(--line); padding:18px 12px; position:sticky; top:0; height:100vh;
+  }
+  .brand{display:flex; align-items:center; gap:10px; padding:8px 10px 18px}
+  .brand img{width:28px;height:28px}
+  .brand span{font-weight:800; letter-spacing:.6px}
+  .nav{display:flex; flex-direction:column; gap:6px; margin-top:6px}
+  .nav a{
+    display:flex; align-items:center; gap:10px; padding:11px 12px;
+    color:var(--text); text-decoration:none; border-radius:10px;
+    background:transparent; border:1px solid transparent;
+  }
+  .nav a.active{background:var(--bg-2); border-color:var(--line)}
+  .nav small{opacity:.65}
+
+  .content{padding:22px; min-width:0}
+
+  /* HEAD BAR */
+  .section-head{display:flex; align-items:center; justify-content:space-between; gap:12px; margin:4px 0 18px}
+  .section-head h2{margin:0; font-size:18px; letter-spacing:.3px}
+  .btn{
+    background:linear-gradient(180deg,#ffd559,#ffcb31); color:#1b1b1b; border:0; font-weight:700;
+    padding:10px 14px; border-radius:10px; cursor:pointer; box-shadow:var(--shadow)
+  }
+  .btn.secondary{background:#173046; color:#d6e7ff; border:1px solid #254660}
+
+  /* GRID / CARDS */
+  .grid{display:grid; gap:16px}
+  .grid.cols-4{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .grid.cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .grid.cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .grid.cols-1{grid-template-columns:1fr}
+
+  @media (max-width:1150px){ .grid.cols-4{grid-template-columns:repeat(2,1fr)} }
+  @media (max-width:760px){ .page{grid-template-columns:1fr} .sidebar{position:static;height:auto} .grid,[class*=cols-]{grid-template-columns:1fr} }
+
+  .card{
+    background:linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,0)) , var(--card);
+    border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow)
+  }
+  .card.pad{padding:16px}
+
+  .kpi{display:flex; flex-direction:column; gap:8px}
+  .kpi .label{font-size:12px; color:var(--muted)}
+  .kpi .value{font-weight:800; font-size:22px}
+  .sub{font-size:11px; color:var(--muted); margin-top:-2px}
+
+  table{width:100%; border-collapse:separate; border-spacing:0; overflow:hidden; border-radius:12px; border:1px solid var(--line)}
+  thead th{background:#0f2b45; text-align:left; padding:11px 12px; font-size:12px; color:#c4d7ef; border-bottom:1px solid var(--line)}
+  tbody td{padding:10px 12px; border-bottom:1px solid var(--line)}
+  tbody tr:last-child td{border-bottom:0}
+  .muted{color:var(--muted)}
+  .money{color:var(--good); font-weight:700}
+  .badge{display:inline-block; padding:2px 8px; border-radius:999px; font-size:11px; border:1px solid var(--line); background:#14304a}
+
+  /* CPA account card */
+  .acct{display:grid; grid-template-columns:1fr auto; gap:10px}
+  .acct h3{margin:0 0 6px; font-size:20px}
+  .acct .stats{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px}
+  .kv{background:var(--card-2); border:1px solid var(--line); border-radius:10px; padding:10px}
+  .kv b{display:block; font-size:12px; color:var(--muted); margin-bottom:3px}
+  .kv span{font-weight:800}
+
+  .pill{padding:6px 9px; border-radius:999px; background:#103250; border:1px solid var(--line); font-size:12px}
+  .flex{display:flex; gap:10px; align-items:center}
   .right{margin-left:auto}
-  .btn{background:#12304b;border:1px solid rgba(47,181,255,.4);color:#cfeaff;padding:10px 12px;border-radius:10px;cursor:pointer}
-  .btn:hover{box-shadow:0 0 0 3px var(--ring)}
-  /* views */
-  .view{display:none}
-  .view.active{display:block}
-  @media(max-width:980px){.wrap{grid-template-columns:1fr}.side{position:sticky;top:0;z-index:5}.nav{display:grid;grid-template-columns:repeat(3,1fr)}}
+
+  .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;}
+  code.pretty{white-space:pre-wrap; display:block; background:#0e2236; border:1px solid var(--line); padding:14px; border-radius:10px}
+
+  /* empty */
+  .empty{padding:18px; text-align:center; color:var(--muted)}
 </style>
 </head>
 <body>
-<div class="wrap">
-  <!-- SIDEBAR -->
-  <aside class="side">
+<div class="page">
+  <aside class="sidebar">
     <div class="brand">
-      <img src="https://i.imgur.com/9Rr4kqP.png" alt="">
-      <b>THE EMPIRE</b>
+      <img src="https://i.imgur.com/2sGv2cH.png" alt="empire">
+      <span>THE EMPIRE</span>
     </div>
     <nav class="nav" id="nav">
-      <a href="#dashboard" data-view="dashboard" class="active"><span class="ico">🏠</span>Dashboard</a>
-      <a href="#accounts"  data-view="accounts"><span class="ico">👑</span>CPA Accounts</a>
-      <a href="#users"     data-view="users"><span class="ico">👥</span>Users</a>
-      <a href="#analytics" data-view="analytics"><span class="ico">📊</span>Analytics</a>
-      <a href="#wallet"    data-view="wallet"><span class="ico">💳</span>Payments/Wallet</a>
-      <a href="#monitor"   data-view="monitor"><span class="ico">📡</span>Monitoring</a>
-      <a href="#settings"  data-view="settings"><span class="ico">⚙️</span>Settings</a>
+      <a href="#dashboard" data-route="dashboard" class="active">🏠 Dashboard</a>
+      <a href="#cpa" data-route="cpa">👑 CPA Accounts</a>
+      <a href="#users" data-route="users">👥 Users</a>
+      <a href="#analytics" data-route="analytics">📊 Analytics</a>
+      <a href="#wallet" data-route="wallet">💳 Payments/Wallet</a>
+      <a href="#monitor" data-route="monitor">🛡️ Monitoring</a>
+      <a href="#settings" data-route="settings">⚙️ Settings</a>
     </nav>
   </aside>
 
-  <!-- MAIN -->
-  <main class="main">
+  <main class="content">
     <!-- DASHBOARD -->
-    <section class="view active" id="view-dashboard">
-      <div class="header">
-        <h2>Supreme Command Dashboard</h2>
-        <span class="badge" id="commander-badge">SUPREME COMMANDER</span>
+    <section data-page="dashboard" style="display:block">
+      <div class="section-head"><h2>Supreme Command Dashboard</h2><span class="pill">SUPREME COMMANDER</span></div>
+      <div class="grid cols-4">
+        <div class="card pad kpi"><div class="label">Total Earnings</div><div class="value" id="dash-earn">$0.00</div><div class="sub muted">vs last 7d</div></div>
+        <div class="card pad kpi"><div class="label">Active Users</div><div class="value" id="dash-users">0</div><div class="sub muted"><span id="dash-users-diff">24h growth</span></div></div>
+        <div class="card pad kpi"><div class="label">Conversion Rate</div><div class="value" id="dash-cr">0.00%</div><div class="sub muted">industry leading</div></div>
+        <div class="card pad kpi"><div class="label">Total Clicks</div><div class="value" id="dash-clicks">0</div><div class="sub muted">daily average</div></div>
       </div>
 
-      <div class="grid g-4">
-        <div class="card pad kpi"><span class="muted">Total Earnings</span><b class="mono" id="kpi-earn">$0.00</b></div>
-        <div class="card pad kpi"><span class="muted">Active Users</span><b class="mono" id="kpi-users">0</b><span class="muted" id="kpi-users-sub">24h growth</span></div>
-        <div class="card pad kpi"><span class="muted">Conversion Rate</span><b class="mono" id="kpi-cr">0.00%</b><span class="muted">industry leading</span></div>
-        <div class="card pad kpi"><span class="muted">Total Clicks</span><b class="mono" id="kpi-clicks">0</b><span class="muted">daily average</span></div>
-      </div>
-
-      <div class="grid g-2" style="margin-top:14px">
-        <div class="card">
-          <h3>Daily Earnings</h3>
-          <div class="pad muted" id="sparkline">Awaiting data…</div>
+      <div class="grid cols-2" style="margin-top:16px">
+        <div class="card pad">
+          <h3 style="margin:0 0 10px">Daily Earnings</h3>
+          <div id="dash-earnings" class="empty">Awaiting data..</div>
         </div>
-        <div class="card">
-          <h3>Traffic Sources</h3>
-          <div class="pad muted" id="traffic-sources">Awaiting data…</div>
+        <div class="card pad">
+          <h3 style="margin:0 0 10px">Traffic Sources</h3>
+          <div id="dash-sources" class="empty">Awaiting data..</div>
         </div>
       </div>
 
-      <div class="card" style="margin-top:14px">
-        <h3>By Geo (Top)</h3>
-        <div class="pad">
-          <table id="tbl-geo">
-            <thead><tr><th>Country</th><th>Clicks</th><th>Leads</th><th>Earnings ($)</th></tr></thead>
-            <tbody><tr><td colspan="4" class="muted">No data</td></tr></tbody>
-          </table>
-        </div>
+      <div class="card pad" style="margin-top:16px">
+        <h3 style="margin:0 0 10px">By Geo (Top)</h3>
+        <table>
+          <thead><tr><th>Country</th><th>Clicks</th><th>Leads</th><th>Earnings ($)</th></tr></thead>
+          <tbody id="tbl-dash-geo"><tr><td colspan="4" class="muted">No data</td></tr></tbody>
+        </table>
       </div>
     </section>
 
-    <!-- ACCOUNTS -->
-    <section class="view" id="view-accounts">
-      <div class="header"><h2>CPA Accounts</h2><button class="btn" id="btn-add">+ Add New Account</button></div>
-      <div class="grid g-2" id="acc-grid"></div>
+    <!-- CPA ACCOUNTS -->
+    <section data-page="cpa" style="display:none">
+      <div class="section-head">
+        <h2>CPA Accounts Management</h2>
+        <button class="btn" id="btn-add-acct">+ Add New Account</button>
+      </div>
+      <div id="cpa-grid" class="grid cols-2"></div>
     </section>
 
     <!-- USERS -->
-    <section class="view" id="view-users">
-      <div class="header"><h2>Users</h2></div>
-      <div class="card">
-        <h3>Approved</h3>
-        <div class="pad">
-          <table id="tbl-users">
-            <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Authority</th><th>Status</th></tr></thead>
-            <tbody><tr><td colspan="5" class="muted">No users.</td></tr></tbody>
-          </table>
+    <section data-page="users" style="display:none">
+      <div class="section-head"><h2>Users Management</h2>
+        <div class="flex right">
+          <button class="btn secondary" data-users-tab="approved">Approved</button>
+          <button class="btn secondary" data-users-tab="pending">Pending</button>
+          <button class="btn secondary" data-users-tab="rejected">Rejected</button>
         </div>
+      </div>
+      <div class="card pad">
+        <table>
+          <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Authority</th></tr></thead>
+          <tbody id="tbl-users"><tr><td colspan="4" class="muted">No users.</td></tr></tbody>
+        </table>
       </div>
     </section>
 
     <!-- ANALYTICS -->
-    <section class="view" id="view-analytics">
-      <div class="header"><h2>Analytics</h2></div>
-      <div class="card">
-        <h3>Live Performance (last 2 min)</h3>
-        <div class="pad">
-          <table id="tbl-live">
-            <thead><tr><th>Time</th><th>Country</th><th>Offer</th><th>Device</th><th>Clicks</th><th>Conv.</th><th>Earnings</th></tr></thead>
-            <tbody><tr><td colspan="7" class="muted">Listening…</td></tr></tbody>
-          </table>
+    <section data-page="analytics" style="display:none">
+      <div class="section-head"><h2>Analytics & Reports</h2></div>
+
+      <div class="grid cols-2">
+        <div class="card pad">
+          <h3 style="margin:0 0 10px">Performance Overview (Jan–Jul 2025)</h3>
+          <div id="ana-overview" class="empty">Loading…</div>
+        </div>
+        <div class="card pad">
+          <h3 style="margin:0 0 10px">Geographic Distribution</h3>
+          <div id="ana-geo-dist" class="empty">Loading…</div>
         </div>
       </div>
 
-      <div class="card" style="margin-top:14px">
-        <h3>Live by Geo (rolling)</h3>
-        <div class="pad">
-          <table id="tbl-live-geo">
+      <div class="grid cols-2" style="margin-top:16px">
+        <div class="card pad">
+          <h3 style="margin:0 0 10px">Live Performance Data (last 2 min)</h3>
+          <table>
+            <thead><tr><th>Time</th><th>Country</th><th>Offer</th><th>Clicks</th><th>Conv.</th><th>Earnings</th></tr></thead>
+            <tbody id="tbl-live-perf"><tr><td colspan="6" class="muted">Waiting for stream…</td></tr></tbody>
+          </table>
+        </div>
+        <div class="card pad">
+          <h3 style="margin:0 0 10px">Live by GEO (rolling)</h3>
+          <table>
             <thead><tr><th>Country</th><th>Clicks</th><th>Conv.</th><th>Earnings</th></tr></thead>
-            <tbody><tr><td colspan="4" class="muted">Listening…</td></tr></tbody>
+            <tbody id="tbl-live-geo"><tr><td colspan="4" class="muted">Waiting for stream…</td></tr></tbody>
           </table>
         </div>
       </div>
     </section>
 
     <!-- WALLET -->
-    <section class="view" id="view-wallet">
-      <div class="header"><h2>Wallet</h2></div>
-      <div class="grid g-3">
-        <div class="card pad kpi"><span class="muted">Balance</span><b class="mono" id="wallet-bal">$0.00</b></div>
-        <div class="card pad kpi"><span class="muted">Last Payout</span><b class="mono" id="wallet-last">—</b></div>
-        <div class="card pad kpi"><span class="muted">Status</span><span class="pill ok" id="wallet-status">OK</span></div>
+    <section data-page="wallet" style="display:none">
+      <div class="section-head"><h2>Wallet</h2></div>
+      <div class="grid cols-3">
+        <div class="card pad kpi"><div class="label">Balance</div><div class="value" id="wal-balance">$0.00</div></div>
+        <div class="card pad kpi"><div class="label">Pending Payout</div><div class="value" id="wal-pending">$0.00</div></div>
+        <div class="card pad kpi"><div class="label">Last Payout</div><div class="value" id="wal-last">$0.00</div></div>
       </div>
-      <div class="card" style="margin-top:14px">
-        <h3>Transactions</h3>
-        <div class="pad">
-          <table id="tbl-tx">
+      <div class="grid cols-2" style="margin-top:16px">
+        <div class="card pad">
+          <h3 style="margin:0 0 10px">Transaction History</h3>
+          <table>
             <thead><tr><th>Date</th><th>Method</th><th>Amount ($)</th><th>Status</th></tr></thead>
-            <tbody><tr><td colspan="4" class="muted">No transactions.</td></tr></tbody>
+            <tbody id="tbl-wallet"><tr><td colspan="4" class="muted">No transactions.</td></tr></tbody>
           </table>
+        </div>
+        <div class="card pad">
+          <h3 style="margin:0 0 10px">Request Withdrawal</h3>
+          <div class="muted" style="font-size:13px">This panel is a placeholder; tie it to your GAS endpoint if you want to submit requests.</div>
         </div>
       </div>
     </section>
 
-    <!-- MONITOR -->
-    <section class="view" id="view-monitor">
-      <div class="header"><h2>Monitoring</h2></div>
-      <div class="grid g-3">
-        <div class="card pad"><div class="muted">Intelligent Alert System</div><div id="box-alerts" class="mono" style="font-size:22px">0</div></div>
-        <div class="card pad"><div class="muted">Predictive Maintenance</div><div id="box-maint" class="mono" style="font-size:22px">—</div></div>
-        <div class="card pad"><div class="muted">System Health</div><div id="box-health" class="mono" style="font-size:22px">—</div></div>
+    <!-- MONITORING -->
+    <section data-page="monitor" style="display:none">
+      <div class="section-head"><h2>Monitoring</h2></div>
+      <div class="grid cols-3">
+        <div class="card pad kpi"><div class="label">Alerts</div><div class="value" id="box-alerts">—</div></div>
+        <div class="card pad kpi"><div class="label">Maintenance</div><div class="value" id="box-maint">—</div></div>
+        <div class="card pad kpi"><div class="label">System Health</div><div class="value" id="box-health">—</div></div>
       </div>
-      <div class="card" style="margin-top:14px">
-        <h3>Events</h3>
-        <div class="pad">
-          <table id="tbl-monitor">
-            <thead><tr><th>Time</th><th>Type</th><th>Message</th></tr></thead>
-            <tbody><tr><td colspan="3" class="muted">No events.</td></tr></tbody>
-          </table>
-        </div>
+      <div class="card pad" style="margin-top:16px">
+        <h3 style="margin:0 0 10px">Events Stream</h3>
+        <table>
+          <thead><tr><th>Time</th><th>Type</th><th>Message</th></tr></thead>
+          <tbody id="tbl-monitor"><tr><td colspan="3" class="muted">No events.</td></tr></tbody>
+        </table>
       </div>
     </section>
 
     <!-- SETTINGS -->
-    <section class="view" id="view-settings">
-      <div class="header"><h2>Settings</h2></div>
-      <div class="card"><h3>Current Config</h3><pre class="pad" id="settings-json" style="white-space:pre-wrap;overflow:auto"></pre></div>
+    <section data-page="settings" style="display:none">
+      <div class="section-head"><h2>Settings</h2></div>
+      <div class="card pad">
+        <h3 style="margin:0 0 10px">Live Config</h3>
+        <code id="pretty" class="pretty mono">{ … }</code>
+      </div>
     </section>
   </main>
 </div>
 
 <script>
-/* ==== CONFIG ==== */
-const GAS = "https://script.google.com/macros/s/AKfycbwZVlGMvYonfCNdQlwPHiqqgOVC80_HsyktSYmqmQPBKmRrlzg_yo4lKz_Mmu85B7eY/exec"; // <-- REPLACE with your script.google.com/webapp URL
+/* ========= CONFIG ========= */
+const GAS = "https://script.google.com/macros/s/AKfycbwZVlGMvYonfCNdQlwPHiqqgOVC80_HsyktSYmqmQPBKmRrlzg_yo4lKz_Mmu85B7eY/exec";
+const POLL_FAST = 5000;   // live metrics
+const cache = Object.create(null);
 
-/* ==== HELPERS ==== */
-const $ = (q,el=document)=>el.querySelector(q);
-const $$ = (q,el=document)=>[...el.querySelectorAll(q)];
-const fmtUsd = n => Number(n||0).toLocaleString(undefined,{style:'currency',currency:'USD',maximumFractionDigits:2});
-const safe = v => v ?? '';
+const $ = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+const page = name => document.querySelector(`[data-page="${name}"]`);
 
-async function api(params){
-  const url = GAS + (GAS.includes('?')?'&':'?') + new URLSearchParams(params).toString();
-  const r = await fetch(url,{cache:'no-store'});
-  if(!r.ok) throw new Error(r.status+" "+r.statusText);
+const get = async (url, opt={})=>{
+  const u = new URL(url);
+  u.searchParams.set('_t', Date.now()); // bust cache
+  const r = await fetch(u, {cache:'no-store', ...opt});
+  if(!r.ok) throw new Error('HTTP '+r.status);
   return r.json();
+};
+const api = (action, params={})=>{
+  const u = new URL(GAS);
+  u.searchParams.set('action', action);
+  Object.entries(params).forEach(([k,v])=>u.searchParams.set(k,v));
+  return get(u);
+};
+const dollars = n => Number(n||0).toLocaleString(undefined,{style:'currency',currency:'USD'});
+
+/* ========= ROUTER ========= */
+function show(route){
+  $$('.nav a').forEach(a=>a.classList.toggle('active', a.dataset.route===route));
+  $$('[data-page]').forEach(s=>s.style.display = (s.dataset.page===route)?'block':'none');
+
+  if(route==='dashboard') initDashboard();
+  if(route==='cpa')       initCpa();
+  if(route==='users')     initUsers(currentUsersTab);
+  if(route==='analytics') initAnalytics();
+  if(route==='wallet')    initWallet();
+  if(route==='monitor')   initMonitor();
+  if(route==='settings')  initSettings();
 }
+window.addEventListener('hashchange', ()=>{
+  const r = location.hash.replace('#','')||'dashboard';
+  show(r);
+});
+$('#nav').addEventListener('click', e=>{
+  if(e.target.closest('a')){
+    const r = e.target.closest('a').dataset.route;
+    location.hash = '#'+r;
+  }
+});
 
-/* ==== ROUTER ==== */
-function activate(view){
-  // sidebar active
-  $$('#nav a').forEach(a=>a.classList.toggle('active',a.dataset.view===view));
-  // view panels
-  $$('.view').forEach(v=>v.classList.toggle('active',v.id==='view-'+view));
-  // lazy init
-  const fn = ({
-    dashboard:initDashboard,
-    accounts:initAccounts,
-    users:initUsers,
-    analytics:initAnalytics,
-    wallet:initWallet,
-    monitor:initMonitor,
-    settings:initSettings
-  })[view];
-  if(fn) fn();
-}
-function handleHash(){ activate(location.hash.replace('#','')||'dashboard'); }
-window.addEventListener('hashchange',handleHash);
-
-/* ==== VIEWS ==== */
-let bootDone=false, liveTimer=null;
-
+/* ========= DASHBOARD ========= */
 async function initDashboard(){
   try{
-    const j = await api({action:'overview'});
-    $('#kpi-earn').textContent  = fmtUsd(j.earnings);
-    $('#kpi-users').textContent = safe(j.users);
-    $('#kpi-cr').textContent    = (j.conversionRate??0)+'%';
-    $('#kpi-clicks').textContent= safe(j.clicks);
-    // geo
-    const tb = $('#tbl-geo tbody'); tb.innerHTML='';
-    (j.byGeo||[]).forEach(r=>{
-      const tr = document.createElement('tr');
-      tr.innerHTML = `<td>${safe(r.country)}</td><td class="mono">${safe(r.clicks)}</td><td class="mono">${safe(r.leads)}</td><td class="mono">${fmtUsd(r.earnings)}</td>`;
+    const j = await api('overview');
+    $('#dash-earn').textContent   = dollars(j.earnings||0);
+    $('#dash-users').textContent  = j.activeUsers||0;
+    $('#dash-cr').textContent     = ((j.convRate||0)*1).toFixed(2)+'%';
+    $('#dash-clicks').textContent = j.clicks||0;
+
+    const geo = j.byGeo||[];
+    const tb = $('#tbl-dash-geo'); tb.innerHTML='';
+    if(!geo.length){ tb.innerHTML='<tr><td colspan="4" class="muted">No data</td></tr>'; }
+    geo.forEach(g=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML=`<td>${g.country||''}</td><td>${g.clicks||0}</td><td>${g.leads||0}</td><td class="money">${dollars(g.earnings||0)}</td>`;
       tb.appendChild(tr);
     });
-    if(!tb.children.length) tb.innerHTML = `<tr><td colspan="4" class="muted">No data</td></tr>`;
+
+    $('#dash-earnings').textContent = j.earningsChart ? 'Chart ready' : 'Awaiting data..';
+    $('#dash-sources').textContent  = j.sources ? 'Chart ready' : 'Awaiting data..';
   }catch(e){
     console.error(e);
   }
 }
 
-async function initAccounts(){
+/* ========= CPA ACCOUNTS ========= */
+async function initCpa(){
+  const wrap = $('#cpa-grid'); wrap.innerHTML='';
   try{
-    const j = await api({action:'accounts'});
-    const grid = $('#acc-grid'); grid.innerHTML='';
-    (j.accounts||[]).forEach(a=>{
+    const rows = await api('cpaAccounts'); // from Sheet tab: CPA_Accounts_Metrics
+    if(!rows.length){ wrap.innerHTML = `<div class="card pad empty">No CPA accounts yet.</div>`; return; }
+
+    rows.forEach(r=>{
       const card = document.createElement('div');
       card.className='card pad';
       card.innerHTML = `
-        <div class="flex"><b style="font-size:18px">${safe(a.account||a.id)}</b>
-          <span class="right pill ok">${safe(a.status)||'ACTIVE'}</span>
-        </div>
-        <div class="muted" style="margin-top:6px">Network</div>
-        <div style="font-weight:600">${safe(a.network||'CPA Grip')}</div>
-        <div class="grid g-3" style="margin-top:10px">
-          <div><div class="muted">Active Offers</div><div class="mono">${safe(a.active_offers||a.offers)||0}</div></div>
-          <div><div class="muted">Clicks</div><div class="mono">${safe(a.clicks)||0}</div></div>
-          <div><div class="muted">Revenue</div><div class="mono">${fmtUsd(a.revenue)}</div></div>
-        </div>
-      `;
-      grid.appendChild(card);
+        <div class="acct">
+          <div>
+            <h3>${r.account||r.id||'—'}</h3>
+            <div class="muted" style="margin-bottom:10px">Network <b style="color:#fff">${r.network||'—'}</b> · <span class="badge">${r.status||'ACTIVE'}</span></div>
+            <div class="stats">
+              <div class="kv"><b>Active Offers</b><span>${(r.active_offers||r.offers)||0}</span></div>
+              <div class="kv"><b>Revenue</b><span class="money">${dollars(r.revenue||0)}</span></div>
+              <div class="kv"><b>Clicks</b><span>${r.clicks||0}</span></div>
+              <div class="kv"><b>Conversion</b><span>${(r.conversion||0)}%</span></div>
+            </div>
+          </div>
+          <div class="right flex">
+            <span class="pill mono">${r.domain||'no-domain'}</span>
+            <button class="btn secondary">View Details</button>
+          </div>
+        </div>`;
+      wrap.appendChild(card);
     });
-  }catch(e){ console.error(e); }
-}
-
-async function initUsers(){
-  try{
-    const j = await api({action:'users'});
-    const tb = $('#tbl-users tbody'); tb.innerHTML='';
-    (j.approved||j.users||[]).forEach(u=>{
-      const tr = document.createElement('tr');
-      tr.innerHTML = `<td>${safe(u.name)}</td><td>${safe(u.email)}</td><td>${safe(u.phone)}</td><td>${safe(u.authority||'1x User')}</td><td><span class="pill ok">Active</span></td>`;
-      tb.appendChild(tr);
-    });
-    if(!tb.children.length) tb.innerHTML = `<tr><td colspan="5" class="muted">No users.</td></tr>`;
-  }catch(e){ console.error(e); }
-}
-
-async function initAnalytics(){
-  // start fast polling once (shared timer)
-  if(liveTimer) return;
-  const tick = async ()=>{
-    try{
-      const j = await api({action:'live'});
-      // Live performance stream
-      const tb = $('#tbl-live tbody'); if(tb) {
-        tb.innerHTML='';
-        (j.live||[]).forEach(r=>{
-          const tr=document.createElement('tr');
-          tr.innerHTML=`<td class="mono">${safe(r.time)}</td><td>${safe(r.country)}</td><td>${safe(r.offer)}</td><td>${safe(r.device)}</td><td class="mono">${safe(r.clicks)||0}</td><td class="mono">${safe(r.conversions||r.leads)||0}</td><td class="mono">${fmtUsd(r.earnings)}</td>`;
-          tb.appendChild(tr);
-        });
-        if(!tb.children.length) tb.innerHTML = `<tr><td colspan="7" class="muted">Listening…</td></tr>`;
-      }
-      // Rolling by Geo
-      const tg = $('#tbl-live-geo tbody'); if(tg){
-        tg.innerHTML='';
-        (j.byGeo||[]).forEach(r=>{
-          const tr=document.createElement('tr');
-          tr.innerHTML=`<td>${safe(r.country)}</td><td class="mono">${safe(r.clicks)||0}</td><td class="mono">${safe(r.conversions||r.leads)||0}</td><td class="mono">${fmtUsd(r.earnings)}</td>`;
-          tg.appendChild(tr);
-        });
-        if(!tg.children.length) tg.innerHTML = `<tr><td colspan="4" class="muted">Listening…</td></tr>`;
-      }
-      // mirror KPIs to dashboard if visible
-      if($('#view-dashboard').classList.contains('active')){
-        $('#kpi-earn').textContent  = fmtUsd(j.kpis?.earnings);
-        $('#kpi-clicks').textContent= j.kpis?.clicks ?? $('#kpi-clicks').textContent;
-        $('#kpi-cr').textContent    = (j.kpis?.cr ?? '0.00')+'%';
-      }
-    }catch(e){ console.warn('live tick',e.message); }
-  };
-  await tick();
-  liveTimer = setInterval(tick, 3000); // tight polling (3s)
-}
-
-async function initWallet(){
-  try{
-    const j = await api({action:'wallet'});
-    $('#wallet-bal').textContent  = fmtUsd(j.balance);
-    $('#wallet-last').textContent = safe(j.lastPayout)||'—';
-    const tb = $('#tbl-tx tbody'); tb.innerHTML='';
-    (j.tx||[]).forEach(t=>{
-      const tr=document.createElement('tr');
-      tr.innerHTML = `<td>${safe(t.date)}</td><td>${safe(t.method)}</td><td class="mono">${fmtUsd(t.amount)}</td><td>${safe(t.status)}</td>`;
-      tb.appendChild(tr);
-    });
-    if(!tb.children.length) tb.innerHTML = `<tr><td colspan="4" class="muted">No transactions.</td></tr>`;
-  }catch(e){ console.error(e); }
-}
-
-async function initMonitor(){
-  try{
-    const j = await api({action:'monitoring'});
-    $('#box-alerts').textContent = j.alerts ?? 0;
-    $('#box-maint').textContent  = j.maintenance ?? '—';
-    $('#box-health').textContent = j.health ?? '—';
-    const tb = $('#tbl-monitor tbody'); tb.innerHTML='';
-    (j.events||[]).forEach(ev=>{
-      const tr=document.createElement('tr');
-      tr.innerHTML=`<td class="mono">${safe(ev.time)}</td><td>${safe(ev.type)}</td><td>${safe(ev.message)}</td>`;
-      tb.appendChild(tr);
-    });
-    if(!tb.children.length) tb.innerHTML = `<tr><td colspan="3" class="muted">No events.</td></tr>`;
-  }catch(e){ console.error(e); }
-}
-
-async function initSettings(){
-  try{
-    const j = await api({action:'config'});
-    $('#settings-json').textContent = JSON.stringify(j,null,2);
-    $('#commander-badge').textContent = (j.commander_name||'SUPREME COMMANDER').replaceAll('_',' ');
   }catch(e){
-    $('#settings-json').textContent = 'Unable to load config: '+e.message;
+    wrap.innerHTML = `<div class="card pad empty">Failed to load accounts.</div>`;
+  }
+
+  // Add Account modal (lightweight placeholder)
+  $('#btn-add-acct').onclick = ()=> alert('“Add New Account” opens here. Hook to GAS write when ready.');
+}
+
+/* ========= USERS ========= */
+let currentUsersTab = 'approved';
+$$('[data-users-tab]').forEach(b=>b.addEventListener('click',()=>{
+  currentUsersTab = b.dataset.usersTab; initUsers(currentUsersTab);
+}));
+
+async function initUsers(tab='approved'){
+  const tb = $('#tbl-users'); tb.innerHTML = '';
+  try{
+    const j = await api('users',{status:tab}); // Sheet: Onboarding
+    if(!j.length){ tb.innerHTML = `<tr><td colspan="4" class="muted">No ${tab} users.</td></tr>`; return; }
+    j.forEach(u=>{
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${u.name||'—'}</td><td>${u.email||''}</td><td>${u.phone||''}</td><td>${u.authority||'1x User'}</td>`;
+      tb.appendChild(tr);
+    });
+  }catch(e){
+    tb.innerHTML = `<tr><td colspan="4" class="muted">Failed to load users.</td></tr>`;
   }
 }
 
-/* ==== BOOT ==== */
-window.addEventListener('DOMContentLoaded',()=>{
-  // allow clicking the whole left nav (works on mobile)
-  $$('#nav a').forEach(a=>a.addEventListener('click',ev=>{
-    ev.preventDefault(); location.hash = a.getAttribute('href');
-  }));
-  handleHash();            // show first view
-  initAnalytics();         // start live polling early (even off-tab)
-  bootDone=true;
+/* ========= ANALYTICS ========= */
+let liveTimer=null, liveGeo={}, liveRows=[];
+async function initAnalytics(){
+  // static blocks
+  try{
+    const base = await api('analytics'); // Sheet tab: Analytics
+    $('#ana-overview').textContent = base.overview ? 'Chart ready' : 'Loading…';
+    $('#ana-geo-dist').textContent = base.geo ? 'Chart ready' : 'Loading…';
+  }catch(e){ /* noop */ }
+
+  // live stream every 5s
+  if(liveTimer) clearInterval(liveTimer);
+  liveTimer = setInterval(pullLive, POLL_FAST);
+  await pullLive();
+}
+async function pullLive(){
+  try{
+    const j = await api('live'); // returns array of events {time,country,offer,clicks,conv,earnings}
+    // keep last ~24 rows (~2 minutes if 5s chunk)
+    (j||[]).forEach(ev=>{
+      liveRows.push(ev);
+      liveGeo[ev.country] = liveGeo[ev.country] || {country:ev.country, clicks:0, conv:0, earnings:0};
+      liveGeo[ev.country].clicks  += (ev.clicks||0);
+      liveGeo[ev.country].conv    += (ev.conv||0);
+      liveGeo[ev.country].earnings+= (ev.earnings||0);
+    });
+    liveRows = liveRows.slice(-24);
+
+    const tb = $('#tbl-live-perf'); tb.innerHTML='';
+    if(!liveRows.length){ tb.innerHTML='<tr><td colspan="6" class="muted">Waiting for stream…</td></tr>'; }
+    liveRows.slice().reverse().forEach(r=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML = `<td class="mono">${r.time||''}</td><td>${r.country||''}</td><td>${r.offer||''}</td><td>${r.clicks||0}</td><td>${r.conv||0}</td><td class="money">${dollars(r.earnings||0)}</td>`;
+      tb.appendChild(tr);
+    });
+
+    const tb2 = $('#tbl-live-geo'); tb2.innerHTML='';
+    const arr = Object.values(liveGeo).sort((a,b)=>b.earnings-a.earnings).slice(0,10);
+    if(!arr.length){ tb2.innerHTML='<tr><td colspan="4" class="muted">Waiting for stream…</td></tr>'; }
+    arr.forEach(g=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML = `<td>${g.country}</td><td>${g.clicks}</td><td>${g.conv}</td><td class="money">${dollars(g.earnings)}</td>`;
+      tb2.appendChild(tr);
+    });
+  }catch(e){
+    // silent to keep UI smooth
+  }
+}
+
+/* ========= WALLET ========= */
+async function initWallet(){
+  try{
+    const j = await api('wallet');
+    $('#wal-balance').textContent = dollars(j.balance||0);
+    $('#wal-pending').textContent = dollars(j.pending||0);
+    $('#wal-last').textContent    = dollars(j.last||0);
+    const tb = $('#tbl-wallet'); tb.innerHTML='';
+    (j.tx||[]).forEach(t=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML=`<td>${t.date||''}</td><td>${t.method||''}</td><td class="money">${dollars(t.amount||0)}</td><td>${t.status||''}</td>`;
+      tb.appendChild(tr);
+    });
+    if(!tb.children.length) tb.innerHTML = `<tr><td colspan="4" class="muted">No transactions.</td></tr>`;
+  }catch(e){ /* noop */ }
+}
+
+/* ========= MONITORING ========= */
+async function initMonitor(){
+  const tb = $('#tbl-monitor'); tb.innerHTML='';
+  try{
+    const j = await api('monitoring');
+    $('#box-alerts').textContent = (j.alerts||0)+'';
+    $('#box-maint').textContent  = (j.maintenance||'None');
+    $('#box-health').textContent = (j.health||'OK');
+
+    (j.events||[]).forEach(ev=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML=`<td class="mono">${ev.time||''}</td><td>${ev.type||''}</td><td>${ev.message||''}</td>`;
+      tb.appendChild(tr);
+    });
+    if(!tb.children.length) tb.innerHTML = `<tr><td colspan="3" class="muted">No events.</td></tr>`;
+  }catch(e){
+    tb.innerHTML = `<tr><td colspan="3" class="muted">Failed to load.</td></tr>`;
+  }
+}
+
+/* ========= SETTINGS ========= */
+async function initSettings(){
+  try{
+    const j = await api('config');
+    $('#pretty').textContent = JSON.stringify(j, null, 2);
+  }catch(e){
+    $('#pretty').textContent = 'Failed to load config';
+  }
+}
+
+/* ========= BOOT ========= */
+window.addEventListener('DOMContentLoaded', ()=>{
+  const r = (location.hash||'#dashboard').replace('#','');
+  show(r);
 });
 </script>
 </body>

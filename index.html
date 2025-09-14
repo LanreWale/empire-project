@@ -3,483 +3,487 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>THE EMPIRE — Command Dashboard</title>
-<link rel="icon" href="assets/brand/favicon.png" type="image/png"/>
+<title>THE EMPIRE — Supreme Command</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <style>
   :root{
-    --bg:#0c131c; --panel:#0f1824; --ink:#e9eef6; --muted:#8ea3c5;
-    --brand:#f2c230; --line:#1f2b3f; --ink-strong:#ffffff;
+    --bg1:#07162a; --bg2:#0f2c54; --panel:#0a1f3d; --line:#17345f;
+    --ink:#e7f0ff; --muted:#9fb7d6; --accent:#f2c230; --good:#21c985; --warn:#ff7a1a; --bad:#f64e60;
   }
   *{box-sizing:border-box}
-  html,body{height:100%;background:var(--bg);color:var(--ink);font:14px/1.55 Inter,system-ui,Segoe UI,Roboto,Arial}
-  .app{display:grid;grid-template-columns:240px 1fr;min-height:100vh}
+  html,body{height:100%;margin:0;background:linear-gradient(135deg,var(--bg1),var(--bg2));color:var(--ink);font:14px/1.55 Inter,system-ui,Segoe UI,Roboto,Arial}
+  .app{display:grid;grid-template-columns:260px 1fr;min-height:100vh}
   /* Sidebar */
-  .side{background:#0a1119;border-right:1px solid var(--line);padding:14px 10px}
-  .brand{display:flex;align-items:center;gap:8px;padding:10px;margin-bottom:6px}
-  .brand img{width:22px;height:22px}
-  .brand .t1{font-weight:900;letter-spacing:.6px}
-  .nav{display:flex;flex-direction:column;gap:6px;margin-top:6px}
-  .nav button{all:unset;cursor:pointer;padding:9px 12px;border-radius:10px;color:var(--muted)}
-  .nav button.active,.nav button:hover{background:var(--panel);color:var(--ink-strong);border:1px solid var(--line)}
+  .side{background:rgba(7,16,30,.6);backdrop-filter:blur(8px);border-right:1px solid var(--line);padding:18px 14px}
+  .brand{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+  .brand img{width:28px;height:28px}
+  .brand h2{margin:0;font-size:16px;letter-spacing:.8px;font-weight:900}
+  .nav{display:flex;flex-direction:column;gap:6px}
+  .nav button{all:unset;cursor:pointer;padding:10px 12px;border-radius:10px;color:var(--muted);display:flex;align-items:center;gap:10px}
+  .nav button.active,.nav button:hover{background:var(--panel);color:var(--ink);border:1px solid var(--line)}
+  .nav .ic{width:18px;text-align:center;opacity:.9}
   /* Main */
-  main{padding:18px}
-  h1{font-size:18px;letter-spacing:.6px;margin:0 0 10px}
-  .hero{background:url('assets/brand/welcome_banner.jpg') center/cover no-repeat;min-height:84px;border-radius:12px;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:24px;letter-spacing:1.5px}
-  .kpis{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0}
-  .kpi{background:var(--panel);border:1px solid var(--line);padding:10px 12px;border-radius:10px;min-width:120px}
+  main{padding:20px 18px}
+  h1{font-size:18px;letter-spacing:.7px;margin:0 0 12px;font-weight:900}
+  .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:14px}
+  .span-12{grid-column:span 12}.span-8{grid-column:span 8}.span-6{grid-column:span 6}.span-4{grid-column:span 4}.span-3{grid-column:span 3}
+  .card{background:linear-gradient(180deg,rgba(15,44,84,.9),rgba(10,31,61,.95));border:1px solid var(--line);border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+  .card .hd{padding:12px 14px;border-bottom:1px solid var(--line);color:var(--muted);font-weight:600;letter-spacing:.3px}
+  .card .bd{padding:14px}
+  .hero{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:linear-gradient(90deg,rgba(15,44,84,.8),rgba(20,74,130,.35));border:1px solid var(--line);border-radius:14px;margin-bottom:12px}
+  .hero .t{font-size:22px;font-weight:900;letter-spacing:1.2px}
+  .kpis{display:grid;grid-template-columns:repeat(12,1fr);gap:12px}
+  .kpi{grid-column:span 3;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px}
   .kpi .lab{color:var(--muted);font-size:12px}
-  .kpi .val{font-weight:800;font-size:18px}
-  .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:12px}
-  .span-12{grid-column:span 12}.span-6{grid-column:span 6}.span-4{grid-column:span 4}.span-3{grid-column:span 3}
-  .panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px}
-  .panel h3{margin:0 0 10px 0;font-size:13px;color:var(--muted);letter-spacing:.3px}
+  .kpi .val{font-size:22px;font-weight:900}
+  .kpi .sub{color:var(--good);font-size:12px}
   table{width:100%;border-collapse:collapse}
-  th,td{padding:8px;border-bottom:1px solid var(--line);text-align:left}
+  th,td{padding:9px;border-bottom:1px solid var(--line);text-align:left}
   th{color:var(--muted);font-weight:600}
-  .muted{color:var(--muted)} .note{padding:10px;border-radius:8px}
-  .note.err{background:#2b1114;border:1px solid #541015}
-  .hidden{display:none}
-  /* CPA Cards */
-  .cpa-card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px}
-  .cpa-acct{font-weight:900;font-size:20px;margin-bottom:8px}
-  .row{display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px solid var(--line)}
+  .muted{color:var(--muted)}
+  .money{color:#68ffc4;font-weight:900}
+  .badge{display:inline-block;padding:3px 8px;border-radius:999px;font-size:11px;border:1px solid var(--line);background:rgba(32,186,132,.15);color:#6affca}
+  .btn{all:unset;cursor:pointer;padding:10px 12px;border-radius:10px;background:linear-gradient(180deg,#ffd356,#f2c230);color:#12223d;font-weight:800;border:1px solid #e3b11a;box-shadow:0 6px 16px rgba(0,0,0,.25)}
+  .btn.ghost{background:transparent;color:var(--ink);border-color:var(--line)}
+  .btn.small{padding:6px 10px;border-radius:8px;font-weight:700}
+  .cta-fab{position:fixed;right:22px;bottom:22px;z-index:50}
+  /* CPA cards */
+  .cpa-card{padding:0}
+  .cpa-top{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border-bottom:1px solid var(--line)}
+  .cpa-id{font-size:18px;font-weight:900}
+  .cpa-rows{padding:8px 14px 14px}
+  .row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px dashed rgba(255,255,255,.06)}
   .row:last-child{border-bottom:none}
   .row .lab{color:var(--muted)}
   .row .val{font-weight:800}
-  .row .money{font-weight:900}
-  .row .perc{font-weight:900}
-  .row-head{display:flex;align-items:center;justify-content:space-between;margin:6px 0 12px}
-  .btn{all:unset;cursor:pointer;background:#172235;border:1px solid var(--line);padding:8px 10px;border-radius:8px}
-  .btn:hover{filter:brightness(1.1)}
-  /* Modal (CPA add) */
-  .emp-modal{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
-  .emp-modal.hidden{display:none}
-  .emp-modal__backdrop{position:absolute;inset:0;background:rgba(0,0,0,.55)}
-  .emp-modal__panel{position:relative;z-index:2;background:var(--panel);border:1px solid var(--line);border-radius:12px;min-width:320px;max-width:520px;width:92%;padding:0;box-shadow:0 15px 40px rgba(0,0,0,.45)}
-  .emp-modal__header{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-bottom:1px solid var(--line)}
-  .emp-modal__title{font-weight:800}
-  .emp-modal__close{all:unset;cursor:pointer;font-size:20px;line-height:1;padding:4px 8px}
-  .emp-modal__body{padding:12px}
-  .emp-modal__footer{display:flex;gap:8px;justify-content:flex-end;margin-top:10px}
-  .emp-field{display:flex;flex-direction:column;gap:6px;margin:10px 0}
-  .emp-label{color:var(--muted);font-size:12px}
-  .emp-input{all:unset;background:#0b121b;border:1px solid var(--line);padding:10px;border-radius:8px}
-  .emp-btn{all:unset;cursor:pointer;background:#1e293b;border:1px solid var(--line);padding:8px 12px;border-radius:8px}
-  .emp-btn-primary{background:#2b3a55;border-color:#2b3a55}
-  @media(max-width:1024px){ .grid{grid-template-columns:repeat(6,1fr)} .span-6{grid-column:span 6} .span-4{grid-column:span 6} .span-3{grid-column:span 3} }
-  @media(max-width:680px){ .app{grid-template-columns:1fr} .side{position:sticky;top:0;z-index:2} }
+  .card-actions{display:flex;justify-content:flex-end;padding:10px 14px;border-top:1px solid var(--line)}
+  /* Modal */
+  .modal{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
+  .modal.hidden{display:none}
+  .backdrop{position:absolute;inset:0;background:rgba(0,0,0,.65)}
+  .panel{position:relative;z-index:2;background:var(--panel);border:1px solid var(--line);border-radius:14px;min-width:340px;max-width:560px;width:92%;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+  .panel .ph{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid var(--line)}
+  .panel .pb{padding:14px}
+  .field{display:flex;flex-direction:column;gap:6px;margin:10px 0}
+  .label{color:var(--muted);font-size:12px}
+  .input,select{all:unset;background:#09213f;border:1px solid var(--line);padding:10px;border-radius:10px}
+  .pf{display:flex;gap:10px;justify-content:flex-end;margin-top:12px}
+  /* Responsive */
+  @media(max-width:1200px){ .kpi{grid-column:span 6} .span-4{grid-column:span 6} .span-3{grid-column:span 6} .span-8{grid-column:span 12} }
+  @media(max-width:800px){ .app{grid-template-columns:1fr} .cta-fab{right:14px;bottom:14px} }
 </style>
 </head>
 <body>
 <div class="app">
   <!-- Sidebar -->
   <aside class="side">
-    <div class="brand">
-      <img src="assets/brand/empire-logo.png" alt="The Empire"/>
-      <div class="t1">THE EMPIRE</div>
-    </div>
+    <div class="brand"><img src="assets/brand/empire-logo.png" alt=""><h2>THE EMPIRE</h2></div>
     <div class="nav">
-      <button class="active" data-tab="dashboard">Overview</button>
-      <button data-tab="cpa">CPA Accounts</button>
-      <button data-tab="users">Users</button>
-      <button data-tab="analytics">Analytics</button>
-      <button data-tab="wallet">Wallet</button>
-      <button data-tab="monitoring">Monitoring</button>
-      <button data-tab="settings">Settings</button>
+      <button class="active" data-tab="dash"><span class="ic">🏠</span>Dashboard</button>
+      <button data-tab="cpa"><span class="ic">👑</span>CPA Accounts</button>
+      <button data-tab="users"><span class="ic">👥</span>Users</button>
+      <button data-tab="analytics"><span class="ic">📈</span>Analytics</button>
+      <button data-tab="wallet"><span class="ic">💳</span>Payments/Wallet</button>
+      <button data-tab="monitor"><span class="ic">🛰️</span>Monitoring</button>
+      <button data-tab="settings"><span class="ic">⚙️</span>Settings</button>
     </div>
   </aside>
 
   <!-- Main -->
   <main>
-    <!-- OVERVIEW -->
-    <section id="view-dashboard" class="view">
-      <h1>COMMAND DASHBOARD</h1>
-      <div class="hero">WELCOME TO THE EMPIRE</div>
+    <!-- DASHBOARD -->
+    <section id="v-dash" class="view">
+      <div class="hero">
+        <div class="t">Supreme Command Dashboard</div>
+        <div class="badge" id="u-title">SUPREME COMMANDER</div>
+      </div>
 
       <div class="kpis">
-        <div class="kpi"><div class="lab">Earnings</div><div class="val" id="kpi-earn">$0.00</div></div>
-        <div class="kpi"><div class="lab">Leads</div><div class="val" id="kpi-leads">0</div></div>
-        <div class="kpi"><div class="lab">Clicks</div><div class="val" id="kpi-clicks">0</div></div>
-        <div class="kpi"><div class="lab">EPC</div><div class="val" id="kpi-epc">$0.00</div></div>
-        <div class="kpi"><div class="lab">CPA</div><div class="val" id="kpi-cpa">$0.00</div></div>
-        <div class="kpi"><div class="lab">RPM</div><div class="val" id="kpi-rpm">$0.00</div></div>
-        <div class="kpi"><div class="lab">Conv. Rate</div><div class="val" id="kpi-cr">0.00%</div></div>
+        <div class="kpi"><div class="lab">Total Earnings</div><div id="kpi-earn" class="val">$0.00</div><div class="sub" id="kpi-earn-sub"></div></div>
+        <div class="kpi"><div class="lab">Active Users</div><div id="kpi-users" class="val">0</div><div class="sub">24h growth</div></div>
+        <div class="kpi"><div class="lab">Conversion Rate</div><div id="kpi-cr" class="val">0.00%</div><div class="sub">industry leading</div></div>
+        <div class="kpi"><div class="lab">Total Clicks</div><div id="kpi-clicks" class="val">0</div><div class="sub">daily average</div></div>
       </div>
 
-      <div class="grid">
-        <div class="panel span-6">
-          <h3>BY GEO</h3>
-          <table id="tbl-geo"><thead><tr><th>Country</th><th>Earnings ($)</th></tr></thead><tbody><tr><td colspan="2" class="muted">No data</td></tr></tbody></table>
+      <div class="grid" style="margin-top:12px">
+        <div class="card span-8">
+          <div class="hd">Daily Earnings</div>
+          <div class="bd"><canvas id="chart-daily" height="120"></canvas></div>
         </div>
-        <div class="panel span-6">
-          <h3>BY DEVICE</h3>
-          <table id="tbl-device"><thead><tr><th>Device</th><th>Earnings ($)</th></tr></thead><tbody><tr><td colspan="2" class="muted">No data</td></tr></tbody></table>
+        <div class="card span-4">
+          <div class="hd">Traffic Sources</div>
+          <div class="bd"><canvas id="chart-traffic" height="180"></canvas></div>
         </div>
-        <div class="panel span-6">
-          <h3>BY OFFER TYPE</h3>
-          <table id="tbl-offer"><thead><tr><th>Offer Type</th><th>Earnings ($)</th></tr></thead><tbody><tr><td colspan="2" class="muted">No data</td></tr></tbody></table>
-        </div>
-        <div class="panel span-6">
-          <h3>BY DAY</h3>
-          <table id="tbl-day"><thead><tr><th>Date</th><th>Earnings ($)</th></tr></thead><tbody><tr><td colspan="2" class="muted">No data</td></tr></tbody></table>
+
+        <div class="card span-12">
+          <div class="hd">By Geo (Top)</div>
+          <div class="bd">
+            <table id="tbl-geo"><thead><tr><th>Country</th><th>Clicks</th><th>Leads</th><th>Earnings ($)</th></tr></thead><tbody><tr><td colspan="4" class="muted">No data</td></tr></tbody></table>
+          </div>
         </div>
       </div>
-      <div id="ovrErr" class="note err hidden">Failed to load overview.</div>
     </section>
 
     <!-- CPA -->
-    <section id="view-cpa" class="view hidden">
-      <div class="row-head">
-        <h1>CPA ACCOUNTS</h1>
-        <button id="btn-open-cpa" class="btn">+ Add New Account</button>
-      </div>
+    <section id="v-cpa" class="view" hidden>
+      <h1>CPA Accounts Management</h1>
       <div id="cpaGrid" class="grid"></div>
+      <button id="fab-add" class="btn cta-fab">+ Add New Account</button>
     </section>
 
     <!-- USERS -->
-    <section id="view-users" class="view hidden">
-      <div class="row-head"><h1>USERS</h1></div>
-      <table id="tbl-users"><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Authority</th></tr></thead><tbody></tbody></table>
+    <section id="v-users" class="view" hidden>
+      <h1>Users Management</h1>
+      <div class="grid">
+        <div class="card span-8">
+          <div class="hd">Active Users</div>
+          <div class="bd">
+            <table id="tbl-users"><thead><tr><th>Username</th><th>Authority</th><th>Status</th><th>Earnings</th></tr></thead><tbody></tbody></table>
+          </div>
+        </div>
+        <div class="card span-4">
+          <div class="hd">Invite Link Management</div>
+          <div class="bd">
+            <div class="muted" style="margin-bottom:8px">Share a one-time invite link. Only works if role is SUPREME_COMMANDER.</div>
+            <div id="invite-url" style="word-break:break-all;background:#09213f;border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:10px">—</div>
+            <div style="display:flex;gap:10px">
+              <button class="btn small" id="btn-copy">Copy</button>
+              <a class="btn small ghost" id="btn-open" target="_blank">Open</a>
+            </div>
+          </div>
+        </div>
+      </div>
     </section>
 
     <!-- ANALYTICS -->
-    <section id="view-analytics" class="view hidden">
-      <h1>ANALYTICS</h1>
-      <table id="tbl-analytics"><thead><tr><th>Metric</th><th>Value</th></tr></thead><tbody></tbody></table>
-
-      <div id="emp-live" class="grid" style="margin-top:12px">
-        <div class="panel span-6">
-          <h3>LIVE PERFORMANCE (last <span id="live-window-min">2</span> min)</h3>
-          <table id="tbl-live"><thead><tr><th>Time</th><th>Country</th><th>Offer</th><th>Clicks</th><th>Conv.</th><th>Earnings</th></tr></thead><tbody></tbody></table>
+    <section id="v-analytics" class="view" hidden>
+      <h1>Analytics & Reports</h1>
+      <div class="grid">
+        <div class="card span-8">
+          <div class="hd">Performance Overview (Jan–Jul 2025)</div>
+          <div class="bd"><canvas id="chart-bars" height="120"></canvas></div>
         </div>
-        <div class="panel span-6">
-          <h3>LIVE BY GEO (rolling)</h3>
-          <table id="tbl-live-geo"><thead><tr><th>Country</th><th>Clicks</th><th>Conv.</th><th>Earnings</th></tr></thead><tbody></tbody></table>
+        <div class="card span-4">
+          <div class="hd">Geographic Distribution</div>
+          <div class="bd"><canvas id="chart-pie" height="180"></canvas></div>
+        </div>
+
+        <div class="card span-12">
+          <div class="hd">Live Performance Data (last <span id="live-min">2</span> min)</div>
+          <div class="bd">
+            <table id="tbl-live"><thead><tr><th>Date & Time</th><th>Country</th><th>Offer</th><th>Clicks</th><th>Leads</th><th>Earnings ($)</th></tr></thead><tbody></tbody></table>
+          </div>
+        </div>
+        <div class="card span-12">
+          <div class="hd">LIVE by GEO (rolling)</div>
+          <div class="bd">
+            <table id="tbl-live-geo"><thead><tr><th>Country</th><th>Clicks</th><th>Leads</th><th>Earnings ($)</th></tr></thead><tbody></tbody></table>
+          </div>
         </div>
       </div>
     </section>
 
     <!-- WALLET -->
-    <section id="view-wallet" class="view hidden">
-      <h1>WALLET</h1>
-      <div class="kpis">
-        <div class="kpi"><div class="lab">Balance</div><div class="val" id="wallet-balance">$0.00</div></div>
+    <section id="v-wallet" class="view" hidden>
+      <h1>Payments / Wallet</h1>
+      <div class="kpis" style="margin-bottom:12px">
+        <div class="kpi"><div class="lab">Balance</div><div id="wallet-balance" class="val">$0.00</div></div>
       </div>
       <div id="walletList" class="grid"></div>
     </section>
 
     <!-- MONITORING -->
-    <section id="view-monitoring" class="view hidden">
-      <h1>MONITORING</h1>
-      <table id="tbl-monitor"><thead><tr><th>Time</th><th>Type</th><th>Message</th></tr></thead><tbody></tbody></table>
+    <section id="v-monitor" class="view" hidden>
+      <h1>Performance Monitoring</h1>
+      <div class="grid">
+        <div class="card span-4"><div class="hd">Intelligent Alert System</div><div class="bd" id="box-alerts">No alerts.</div></div>
+        <div class="card span-4"><div class="hd">Predictive Maintenance</div><div class="bd" id="box-maint">No tasks scheduled.</div></div>
+        <div class="card span-4"><div class="hd">System Health Monitor</div><div class="bd" id="box-health">—</div></div>
+        <div class="card span-12">
+          <div class="hd">Event Stream</div>
+          <div class="bd"><table id="tbl-monitor"><thead><tr><th>Time</th><th>Type</th><th>Message</th></tr></thead><tbody></tbody></table></div>
+        </div>
+      </div>
     </section>
 
     <!-- SETTINGS -->
-    <section id="view-settings" class="view hidden">
-      <h1>SETTINGS</h1>
-      <pre id="cfgDump" class="panel" style="white-space:pre-wrap"></pre>
+    <section id="v-settings" class="view" hidden>
+      <h1>Settings</h1>
+      <div class="card"><div class="bd"><pre id="cfgDump" style="white-space:pre-wrap;margin:0"></pre></div></div>
     </section>
   </main>
 </div>
 
-<!-- CPA MODAL -->
-<div id="emp-cpa-modal" class="emp-modal hidden" aria-hidden="true">
-  <div class="emp-modal__backdrop" data-close="true"></div>
-  <div class="emp-modal__panel" role="dialog" aria-modal="true">
-    <div class="emp-modal__header">
-      <div class="emp-modal__title">Add New CPA Account</div>
-      <button class="emp-modal__close" data-close="true" aria-label="Close">×</button>
+<!-- ADD CPA MODAL -->
+<div id="cpa-modal" class="modal hidden" aria-hidden="true">
+  <div class="backdrop" data-close="1"></div>
+  <div class="panel" role="dialog" aria-modal="true">
+    <div class="ph"><div style="font-weight:800">Add New CPA Account</div><button class="btn small ghost" data-close="1">✕</button></div>
+    <div class="pb">
+      <form id="cpa-form">
+        <div class="field"><label class="label">Account Name</label><input class="input" name="AccountName" placeholder="Enter account name" required></div>
+        <div class="field"><label class="label">Network</label>
+          <select name="Network" required>
+            <option value="">Select Network</option>
+            <option>CPA Grip</option><option>CPAlead</option><option>AdWork Media</option><option>OGAds</option>
+          </select>
+        </div>
+        <div class="field"><label class="label">Account ID</label><input class="input" name="AccountID" placeholder="Enter account ID" required></div>
+        <div class="pf">
+          <button class="btn small ghost" type="button" data-close="1">Cancel</button>
+          <button class="btn small" type="submit">+ Add Account</button>
+        </div>
+      </form>
     </div>
-    <form id="emp-cpa-form" class="emp-modal__body">
-      <div class="emp-field"><label class="emp-label">Account Name</label><input class="emp-input" name="AccountName" required/></div>
-      <div class="emp-field"><label class="emp-label">Network</label>
-        <select class="emp-input" name="Network" required>
-          <option value="">Select Network</option>
-          <option value="CPA Grip">CPA Grip</option><option value="CPAlead">CPAlead</option>
-          <option value="AdWork Media">AdWork Media</option><option value="OGAds">OGAds</option>
-        </select>
-      </div>
-      <div class="emp-field"><label class="emp-label">Account ID</label><input class="emp-input" name="AccountID" required/></div>
-      <div class="emp-modal__footer">
-        <button type="button" class="emp-btn" data-close="true">Cancel</button>
-        <button type="submit" class="emp-btn emp-btn-primary">+ Add Account</button>
-      </div>
-    </form>
   </div>
 </div>
 
 <script>
-  /* ===== GAS URL ===== */
-  const GAS_BASE = "https://script.google.com/macros/s/AKfycbwZVlGMvYonfCNdQlwPHiqqgOVC80_HsyktSYmqmQPBKmRrlzg_yo4lKz_Mmu85B7eY/exec";
-  const api = (action) => GAS_BASE + (GAS_BASE.includes("?") ? "&" : "?") + "action=" + encodeURIComponent(action);
+/* ========= CONFIG ========= */
+const GAS = "https://script.google.com/macros/s/AKfycbwZVlGMvYonfCNdQlwPHiqqgOVC80_HsyktSYmqmQPBKmRrlzg_yo4lKz_Mmu85B7eY/exec";
+const a = (path) => GAS + (GAS.includes("?")?"&":"?") + path;
 
-  /* ===== utils ===== */
-  const $  = (id)=>document.getElementById(id);
-  const esc= (s)=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-  const num= (n)=>(+n||0).toLocaleString();
-  const usd= (n)=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(+(+n||0).toFixed(2));
-  const deMoney = (v)=> typeof v==='number' ? v : parseFloat(String(v).replace(/[^0-9.\-]/g,'')) || 0;
-  async function jget(u){const r=await fetch(u,{cache:'no-store',headers:{'Accept':'application/json'}});if(!r.ok)throw new Error(r.status+" "+r.statusText);return r.json();}
-  async function jpost(u,b){const r=await fetch(u,{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify(b)});if(!r.ok)throw new Error(r.status+" "+r.statusText);return r.json();}
-  function showError(el,msg){el.classList.remove('hidden');el.textContent=msg;}
+/* ========= UTILS ========= */
+const $ = (id)=>document.getElementById(id);
+const pick=(o,keys,d='')=>{for(const k of keys){if(o&&o[k]!=null&&o[k]!=='')return o[k]}return d}
+const arr=(j)=>Array.isArray(j)?j: (Array.isArray(j?.items)?j.items:(Array.isArray(j?.data)?j.data:(Array.isArray(j?.rows)?j.rows:[])));
+const deMoney = (v)=> typeof v==='number'?v: parseFloat(String(v).replace(/[^0-9.\-]/g,''))||0;
+const usd=(n)=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(+(+n||0).toFixed(2));
+const num=(n)=>(+n||0).toLocaleString();
+const conv=(v)=>{ if(v==null) return '0.0%'; const s=String(v); if(s.endsWith('%')) return s; const f=parseFloat(s)||0; return (f>1&&f<=100?f:(f*100)).toFixed(1)+'%'; }
+async function get(u){const r=await fetch(u,{cache:'no-store'}); if(!r.ok) throw new Error(r.statusText); return r.json();}
+async function post(u,b){const r=await fetch(u,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)}); if(!r.ok) throw new Error(r.statusText); return r.json();}
 
-  // percent fix
-  function formatConv(val){
-    if (val == null) return '—';
-    if (typeof val === 'string') {
-      const s = val.trim();
-      if (s.endsWith('%')) return s;
-      const f = parseFloat(s);
-      if (!isFinite(f)) return s;
-      if (f>1 && f<=100) return f.toFixed(1)+'%';
-      return (f*100).toFixed(1)+'%';
-    }
-    const n = +val || 0;
-    if (n>1 && n<=100) return n.toFixed(1)+'%';
-    return (n*100).toFixed(1)+'%';
-  }
+/* ========= NAV ========= */
+function show(tab){
+  document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));
+  document.querySelectorAll('section.view').forEach(s=>s.hidden=true);
+  $('#v-'+tab).hidden=false;
+  stopLive();
+  if(tab==='dash') initDash();
+  if(tab==='cpa') initCPA();
+  if(tab==='users') initUsers();
+  if(tab==='analytics'){ initAnalytics(); startLive(); }
+  if(tab==='wallet') initWallet();
+  if(tab==='monitor') initMonitor();
+  if(tab==='settings') initSettings();
+}
+document.querySelectorAll('.nav button').forEach(btn=>btn.onclick=()=>{location.hash=btn.dataset.tab; show(btn.dataset.tab);});
 
-  /* normalize helpers for variable API keys */
-  const pick = (o,keys,def='')=>{
-    for(const k of keys){ if(o && o[k]!=null && o[k]!=='' ) return o[k]; }
-    return def;
-  };
-  const arr = (j)=> Array.isArray(j) ? j
-             : Array.isArray(j?.items) ? j.items
-             : Array.isArray(j?.data)  ? j.data
-             : Array.isArray(j?.rows)  ? j.rows : [];
-
-  /* ===== router ===== */
-  function showTab(key){
-    document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.tab===key));
-    document.querySelectorAll('.view').forEach(v=>v.classList.add('hidden'));
-    const v=$('view-'+key); if(v) v.classList.remove('hidden');
-
-    stopLiveLoop();
-    if(key==='dashboard') loadOverview();
-    if(key==='cpa'){ loadCpa(); attachCpaModalWiring(); }
-    if(key==='users') loadUsers();
-    if(key==='analytics'){ loadAnalytics(); startLiveLoop(); }
-    if(key==='wallet') loadWallet();
-    if(key==='monitoring') loadMonitoring();
-    if(key==='settings') loadSettings();
-  }
-  document.querySelectorAll('.nav button').forEach(b=>b.addEventListener('click',()=>{location.hash=b.dataset.tab;showTab(b.dataset.tab);}))
-
-  /* ===== Overview ===== */
-  async function loadOverview(){
-    try{
-      const j = await jget(api("overview"));
-      const t = j.totals || {};
-      const tp = j.totalsPretty || {};
-      $('kpi-earn').textContent = tp.earningsUsd ? usd(tp.earningsUsd) : usd(deMoney(t.earnings));
-      $('kpi-leads').textContent= num(pick(t,['leads','conversions','totalLeads'],0));
-      $('kpi-clicks').textContent=num(pick(t,['clicks','totalClicks'],0));
-      $('kpi-epc').textContent  = tp.epcUsd ? usd(tp.epcUsd) : usd(deMoney(pick(t,['epc'],0)));
-      $('kpi-cpa').textContent  = tp.cpaUsd ? usd(tp.cpaUsd) : usd(deMoney(pick(t,['cpa'],0)));
-      $('kpi-rpm').textContent  = tp.rpmUsd ? usd(tp.rpmUsd) : usd(deMoney(pick(t,['rpm'],0)));
-      $('kpi-cr').textContent   = tp.conversionRatePct || formatConv(pick(t,['conversionRate','cr'],0));
-
-      const fillObj=(tbody,obj)=>{
-        tbody.innerHTML='';
-        Object.entries(obj||{}).forEach(([k,v])=>{
-          const tr=document.createElement('tr');
-          tr.innerHTML=`<td>${esc(k)}</td><td>${usd(deMoney(v))}</td>`;
-          tbody.appendChild(tr);
-        });
-        if(!tbody.children.length) tbody.innerHTML=`<tr><td colspan="2" class="muted">No data</td></tr>`;
-      };
-      fillObj(document.querySelector('#tbl-geo tbody'), j.geo);
-      fillObj(document.querySelector('#tbl-device tbody'), j.devices);
-      fillObj(document.querySelector('#tbl-offer tbody'), j.offerTypes);
-
-      const dayBody=document.querySelector('#tbl-day tbody'); dayBody.innerHTML='';
-      const byDay = Array.isArray(j.byDay) ? j.byDay
-                  : Object.entries(j.byDay||{}).map(([d,v])=>({t:d,earnings:v}));
-      byDay.forEach(r=>{
-        const tr=document.createElement('tr');
-        tr.innerHTML=`<td>${esc(r.t||r.date||'')}</td><td>${usd(deMoney(r.earnings||r.value))}</td>`;
-        dayBody.appendChild(tr);
-      });
-      if(!dayBody.children.length) dayBody.innerHTML=`<tr><td colspan="2" class="muted">No data</td></tr>`;
-
-      $('ovrErr').classList.add('hidden');
-    }catch(e){
-      showError($('ovrErr'),`Failed to load overview: ${e.message}`);
-    }
-  }
-
-  /* ===== CPA ===== */
-  function attachCpaModalWiring(){
-    const openBtn=$('btn-open-cpa'); const modal=$('emp-cpa-modal');
-    if(openBtn && modal && !openBtn.dataset.wired){
-      openBtn.dataset.wired='1';
-      openBtn.onclick=()=>{modal.classList.remove('hidden');modal.setAttribute('aria-hidden','false');};
-      modal.querySelectorAll('[data-close]').forEach(el=>el.onclick=()=>{modal.classList.add('hidden');modal.setAttribute('aria-hidden','true');});
-      const form=$('emp-cpa-form');
-      form.addEventListener('submit',async(ev)=>{
-        ev.preventDefault();
-        const fd=new FormData(form);
-        const payload={ action:'addcpa',
-          account:(fd.get('AccountID')||'').toString().trim(),
-          network:(fd.get('Network')||'').toString().trim(),
-          domain:'' };
-        if(!payload.account || !payload.network){ alert('Please fill Account ID and Network'); return; }
-        try{ const res=await jpost(GAS_BASE,payload);
-          if(!res.ok){ alert(res.error||'Failed to add'); return; }
-          modal.classList.add('hidden'); form.reset(); loadCpa();
-        }catch(err){ alert('Add failed: '+err.message); }
-      });
-    }
-  }
-
-  function normalizeAccount(acc){
-    // tolerate sheet-like and api-like names
-    const account = pick(acc, ['account','Account','Account ID','id','ID']);
-    const network = pick(acc, ['network','Network']);
-    const offers  = +pick(acc, ['activeOffers','ActiveOffers','Active Offers','offers'], 0);
-    const revenue = deMoney(pick(acc, ['revenue','Revenue','$ Revenue','Revenue ($)'], 0));
-    const clicks  = +pick(acc, ['clicks','Clicks'], 0);
-    const convRaw = pick(acc, ['conversionRate','ConversionRate','Conversion (%)','conversion','Conversion'], 0);
-    return {account,network,offers,revenue,clicks,conv:formatConv(convRaw)};
-  }
-
-  async function loadCpa(){
-    const grid=$('cpaGrid'); grid.innerHTML='';
-    try{
-      const j=await jget(api("cpa"));
-      const rows = arr(j);
-      rows.forEach(r=>{
-        const acc = normalizeAccount(r);
-        const card=document.createElement('div'); card.className='cpa-card span-4';
-        card.innerHTML = `
-          <div class="cpa-acct">${esc(acc.account||'—')}</div>
-          <div class="row"><div class="lab">Network</div><div class="val">${esc(acc.network||'—')}</div></div>
-          <div class="row"><div class="lab">Active Offers</div><div class="val">${num(acc.offers)}</div></div>
-          <div class="row"><div class="lab">Revenue</div><div class="money">${usd(acc.revenue)}</div></div>
-          <div class="row"><div class="lab">Clicks</div><div class="val">${num(acc.clicks)}</div></div>
-          <div class="row"><div class="lab">Conversion</div><div class="perc">${acc.conv}</div></div>`;
-        grid.appendChild(card);
-      });
-      if(!grid.children.length) grid.innerHTML=`<div class="note err">No CPA accounts returned.</div>`;
-    }catch(e){
-      grid.innerHTML=`<div class="note err">Failed to load CPA: ${esc(e.message)}</div>`;
-    }
-  }
-
-  /* ===== Users ===== */
-  async function loadUsers(){
-    const body=document.querySelector('#tbl-users tbody'); body.innerHTML='';
-    try{
-      const j=await jget(api("users"));
-      const rows = arr(j).length ? arr(j)
-                 : Array.isArray(j.users) ? j.users
-                 : Array.isArray(j.approved) ? j.approved : [];
-      const seen=new Set();
-      rows.forEach(u=>{
-        const email=String(pick(u,['email','Email'],'')).trim().toLowerCase();
-        if(!email || seen.has(email)) return; seen.add(email);
-        const tr=document.createElement('tr');
-        tr.innerHTML=`<td>${esc(pick(u,['name','Name'],'').trim())}</td>
-                      <td>${esc(email)}</td>
-                      <td>${esc(pick(u,['phone','Phone'],''))}</td>
-                      <td>${esc(pick(u,['authority','Authority'],'').toString())}</td>`;
-        body.appendChild(tr);
-      });
-      if(!body.children.length) body.innerHTML=`<tr><td colspan="4" class="muted">No users.</td></tr>`;
-    }catch(e){
-      body.innerHTML=`<tr><td colspan="4">Failed to load users.</td></tr>`;
-    }
-  }
-
-  /* ===== Analytics (summary) ===== */
-  async function loadAnalytics(){
-    const body=document.querySelector('#tbl-analytics tbody'); body.innerHTML='';
-    try{
-      const j=await jget(api("analytics"));
-      const rows = arr(j);
-      if(rows.length && rows[0].metric!==undefined){
-        rows.forEach(r=>{const tr=document.createElement('tr');tr.innerHTML=`<td>${esc(r.metric||'')}</td><td>${esc(r.value||'')}</td>`;body.appendChild(tr);});
-      }else if(j.totals){ Object.entries(j.totals).forEach(([k,v])=>{const tr=document.createElement('tr');tr.innerHTML=`<td>${esc(k)}</td><td>${esc(v)}</td>`;body.appendChild(tr);}); }
-      if(!body.children.length) body.innerHTML=`<tr><td colspan="2" class="muted">No analytics rows.</td></tr>`;
-    }catch(e){
-      body.innerHTML=`<tr><td colspan="2">Failed to load analytics.</td></tr>`;
-    }
-  }
-
-  /* ===== Live Analytics ===== */
-  let LIVE_TIMER=null;
-  const LIVE_WINDOW_SEC=120, LIVE_POLL_MS=3000;
-  function stopLiveLoop(){ if(LIVE_TIMER){clearInterval(LIVE_TIMER);LIVE_TIMER=null;} }
-  async function fetchLiveAnalytics(){ return jget(api(`analytics&live=1&windowSec=${LIVE_WINDOW_SEC}&limit=50`)); }
-  function renderLiveAnalytics(j){
-    const min=Math.max(1,Math.round(LIVE_WINDOW_SEC/60)); $('live-window-min').textContent=String(min);
-    const body=$('#tbl-live tbody'); body.innerHTML='';
-    (j.live||[]).forEach(ev=>{
+/* ========= DASH ========= */
+let chartDaily, chartTraffic;
+async function initDash(){
+  try{
+    const j=await get(a("action=overview"));
+    const t=j.totals||{};
+    $('#kpi-earn').textContent = usd(deMoney(pick(t,['earnings','earningsUsd'],0)));
+    $('#kpi-earn-sub').textContent = pick(j,['deltaEarn','delta'],'↑ 0.0% from last week');
+    $('#kpi-users').textContent=num(pick(t,['activeUsers','users'],0));
+    $('#kpi-cr').textContent=conv(pick(t,['conversionRate','cr'],0));
+    $('#kpi-clicks').textContent=num(pick(t,['clicks'],0));
+    // Geo top
+    const geoBody=$('#tbl-geo tbody'); geoBody.innerHTML='';
+    (j.geoTop||[]).forEach(r=>{
       const tr=document.createElement('tr');
-      tr.innerHTML=`<td>${esc(ev.time||'')}</td><td>${esc(ev.country||'')}</td><td>${esc(ev.offer||'')}</td>
-                    <td>${num(ev.clicks||0)}</td><td>${num(ev.conversions||0)}</td><td>${usd(deMoney(ev.earnings||0))}</td>`;
-      body.appendChild(tr);
+      tr.innerHTML=`<td>${r.country||''}</td><td>${num(r.clicks||0)}</td><td>${num(r.leads||0)}</td><td class="money">${usd(deMoney(r.earnings||0))}</td>`;
+      geoBody.appendChild(tr);
     });
-    if(!body.children.length) body.innerHTML=`<tr><td colspan="6" class="muted">No live events yet.</td></tr>`;
-    const geoBody=$('#tbl-live-geo tbody'); geoBody.innerHTML='';
-    const agg=j.liveAgg||{};
-    Object.keys(agg).map(k=>({country:k,...agg[k]}))
-      .sort((a,b)=>(deMoney(b.earnings||0)-deMoney(a.earnings||0)))
-      .forEach(r=>{
-        const tr=document.createElement('tr');
-        tr.innerHTML=`<td>${esc(r.country||'')}</td><td>${num(r.clicks||0)}</td><td>${num(r.conversions||0)}</td><td>${usd(deMoney(r.earnings||0))}</td>`;
-        geoBody.appendChild(tr);
-      });
-    if(!geoBody.children.length) geoBody.innerHTML=`<tr><td colspan="4" class="muted">No geo activity in window.</td></tr>`;
-  }
-  function startLiveLoop(){
-    stopLiveLoop();
-    const tick=async()=>{ try{ const j=await fetchLiveAnalytics(); if(j&&j.ok!==false) renderLiveAnalytics(j);}catch(e){} };
-    tick(); LIVE_TIMER=setInterval(tick,LIVE_POLL_MS);
-  }
+    if(!geoBody.children.length) geoBody.innerHTML=`<tr><td colspan="4" class="muted">No data</td></tr>`;
+    // Charts
+    const daily = j.daily || [{label:'Mon',value:0}];
+    chartDaily?.destroy();
+    chartDaily = new Chart($('#chart-daily'),{
+      type:'line',
+      data:{labels:daily.map(d=>d.label), datasets:[{label:'Daily Earnings', data:daily.map(d=>deMoney(d.value)), tension:.35, borderWidth:3, pointRadius:3}]},
+      options:{plugins:{legend:{display:false}}, scales:{x:{grid:{color:'rgba(255,255,255,.06)'}},y:{grid:{color:'rgba(255,255,255,.06)'}}}}
+    });
+    const traffic=j.traffic||[{label:'Direct',value:1}];
+    chartTraffic?.destroy();
+    chartTraffic = new Chart($('#chart-traffic'),{
+      type:'doughnut',
+      data:{labels:traffic.map(d=>d.label),datasets:[{data:traffic.map(d=>d.value)}]},
+      options:{plugins:{legend:{position:'bottom'}}}
+    });
+  }catch(e){ /* silent */ }
+}
 
-  /* ===== Wallet ===== */
-  async function loadWallet(){
-    const list=$('walletList'); list.innerHTML='';
+/* ========= CPA ========= */
+function normalizeAccount(r){
+  return {
+    account: pick(r,['account','Account','Account ID','ID']),
+    network: pick(r,['network','Network']),
+    offers: +pick(r,['activeOffers','Active Offers','offers'],0),
+    revenue: deMoney(pick(r,['revenue','Revenue','Revenue ($)'],0)),
+    clicks: +pick(r,['clicks','Clicks'],0),
+    conv: conv(pick(r,['conversionRate','Conversion (%)','conversion'],0)),
+    status: pick(r,['status','Status'],'ACTIVE')
+  };
+}
+async function initCPA(){
+  const grid=$('#cpaGrid'); grid.innerHTML='';
+  try{
+    const j=await get(a("action=cpa"));
+    const rows=arr(j);
+    rows.forEach(r=>{
+      const x=normalizeAccount(r);
+      const el=document.createElement('div'); el.className='card cpa-card span-4';
+      el.innerHTML=`
+        <div class="cpa-top"><div class="cpa-id">CPA ${x.account||'—'}</div><div class="badge">${x.status}</div></div>
+        <div class="cpa-rows">
+          <div class="row"><div class="lab">Network</div><div class="val">${x.network||'—'}</div></div>
+          <div class="row"><div class="lab">Active Offers</div><div class="val">${num(x.offers)}</div></div>
+          <div class="row"><div class="lab">Revenue</div><div class="val money">${usd(x.revenue)}</div></div>
+          <div class="row"><div class="lab">Clicks</div><div class="val">${num(x.clicks)}</div></div>
+          <div class="row"><div class="lab">Conversion</div><div class="val">${x.conv}</div></div>
+        </div>
+        <div class="card-actions"><button class="btn small ghost">View Details</button></div>`;
+      grid.appendChild(el);
+    });
+    if(!grid.children.length) grid.innerHTML=`<div class="card span-12"><div class="bd muted">No CPA accounts.</div></div>`;
+  }catch(e){
+    grid.innerHTML=`<div class="card span-12"><div class="bd">Failed to load CPA.</div></div>`;
+  }
+}
+
+/* CPA modal */
+(function(){
+  const fab=$('fab-add'), modal=$('cpa-modal');
+  fab.onclick=()=>{ modal.classList.remove('hidden'); modal.setAttribute('aria-hidden','false'); }
+  modal.querySelectorAll('[data-close]').forEach(x=>x.onclick=()=>{ modal.classList.add('hidden'); modal.setAttribute('aria-hidden','true'); });
+  $('cpa-form').addEventListener('submit',async(ev)=>{
+    ev.preventDefault();
+    const fd=new FormData(ev.target);
+    const payload={ action:'addcpa', account:(fd.get('AccountID')||'').trim(), network:(fd.get('Network')||'').trim(), name:(fd.get('AccountName')||'').trim() };
+    if(!payload.account || !payload.network){ alert('Please fill Account ID and Network'); return; }
+    try{ const r=await post(GAS,payload); if(r.ok){ modal.classList.add('hidden'); ev.target.reset(); initCPA(); } else alert(r.error||'Failed'); }
+    catch(e){ alert('Add failed: '+e.message); }
+  });
+})();
+
+/* ========= USERS ========= */
+async function initUsers(){
+  const tb=$('#tbl-users tbody'); tb.innerHTML='';
+  try{
+    const j=await get(a("action=users"));
+    (arr(j).length?arr(j):(j.users||[])).forEach(u=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML=`<td>${pick(u,['name','username','Username'],'USER')}</td>
+                    <td>${pick(u,['authority','Authority'],'1x User')}</td>
+                    <td>ACTIVE</td>
+                    <td class="money">${usd(deMoney(pick(u,['earnings'],0)))}</td>`;
+      tb.appendChild(tr);
+    });
+    if(!tb.children.length) tb.innerHTML=`<tr><td colspan="4" class="muted">No users.</td></tr>`;
+    // invite
+    const cfg=await get(a("action=config"));
+    const base=pick(cfg,['invite_base'],location.origin+'/');
+    const url=base + (base.endsWith('/')?'':'/') + 'join';
+    $('invite-url').textContent=url;
+    $('btn-open').href=url;
+    $('btn-copy').onclick=()=>{navigator.clipboard.writeText(url); $('btn-copy').textContent='Copied'; setTimeout(()=>$('btn-copy').textContent='Copy',1200);}
+  }catch(e){ tb.innerHTML=`<tr><td colspan="4">Failed to load users.</td></tr>`; }
+}
+
+/* ========= ANALYTICS ========= */
+let liveTimer=null, LIVE_WINDOW=120, POLL=3000;
+function stopLive(){ if(liveTimer){ clearInterval(liveTimer); liveTimer=null; } }
+function startLive(){
+  const tick = async()=>{
     try{
-      const j=await jget(api("wallet"));
-      $('wallet-balance').textContent=usd(deMoney(j.balance||0));
-      (j.history||[]).forEach(tx=>{
-        const card=document.createElement('div'); card.className='panel span-6';
-        card.innerHTML=`<div style="display:flex;justify-content:space-between;gap:10px">
-          <div><div class="muted">${esc(tx.date||'')}</div><div>${esc(tx.method||'')}</div></div>
-          <div style="text-align:right"><div style="font-weight:900">${usd(deMoney(tx.amount||0))}</div><div class="muted">${esc(tx.status||'COMPLETED')}</div></div>
-        </div>`;
-        list.appendChild(card);
-      });
-      if(!list.children.length) list.innerHTML=`<div class="note err">No transactions.</div>`;
-    }catch(e){ list.innerHTML=`<div class="note err">Failed to load wallet.</div>`; }
-  }
+      const j=await get(a(`action=analytics&live=1&windowSec=${LIVE_WINDOW}&limit=50`));
+      renderLive(j);
+    }catch(e){}
+  };
+  $('live-min').textContent=Math.max(1,Math.round(LIVE_WINDOW/60));
+  tick(); liveTimer=setInterval(tick,POLL);
+}
+function renderLive(j){
+  const body=$('#tbl-live tbody'); body.innerHTML='';
+  (j.live||[]).forEach(ev=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${ev.time||''}</td><td>${ev.country||''}</td><td>${ev.offer||''}</td>
+                  <td>${num(ev.clicks||0)}</td><td>${num(ev.conversions||0)}</td><td class="money">${usd(deMoney(ev.earnings||0))}</td>`;
+    body.appendChild(tr);
+  });
+  if(!body.children.length) body.innerHTML=`<tr><td colspan="6" class="muted">No live events.</td></tr>`;
+  const geo=$('#tbl-live-geo tbody'); geo.innerHTML='';
+  Object.entries(j.liveAgg||{}).map(([k,v])=>({country:k,...v}))
+    .sort((a,b)=>deMoney(b.earnings||0)-deMoney(a.earnings||0))
+    .forEach(r=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML=`<td>${r.country}</td><td>${num(r.clicks||0)}</td><td>${num(r.conversions||0)}</td><td class="money">${usd(deMoney(r.earnings||0))}</td>`;
+      geo.appendChild(tr);
+    });
+  if(!geo.children.length) geo.innerHTML=`<tr><td colspan="4" class="muted">No geo activity.</td></tr>`;
+}
+let chartBars, chartPie;
+async function initAnalytics(){
+  try{
+    const j=await get(a("action=analytics"));
+    // Bars (monthly earnings)
+    const months = j.months || [{m:'Jan',v:0}];
+    chartBars?.destroy();
+    chartBars = new Chart($('#chart-bars'),{
+      type:'bar',
+      data:{labels:months.map(x=>x.m),datasets:[{label:'Monthly Earnings ($)',data:months.map(x=>deMoney(x.v))}]},
+      options:{plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(255,255,255,.06)'}},y:{grid:{color:'rgba(255,255,255,.06)'}}}}
+    });
+    // Pie (geo share)
+    const geo = j.geoShare || [{label:'USA',value:1}];
+    chartPie?.destroy();
+    chartPie = new Chart($('#chart-pie'),{
+      type:'pie',
+      data:{labels:geo.map(g=>g.label),datasets:[{data:geo.map(g=>g.value)}]},
+      options:{plugins:{legend:{position:'right'}}}
+    });
+  }catch(e){/* ignore */}
+}
 
-  /* ===== Monitoring ===== */
-  async function loadMonitoring(){
-    const body=$('#tbl-monitor tbody'); body.innerHTML='';
-    try{
-      const j=await jget(api("monitoring"));
-      (j.events||[]).forEach(ev=>{
-        const tr=document.createElement('tr');
-        tr.innerHTML=`<td>${esc(ev.time||'')}</td><td>${esc(ev.type||'')}</td><td>${esc(ev.msg||'')}</td>`;
-        body.appendChild(tr);
-      });
-      if(!body.children.length) body.innerHTML=`<tr><td colspan="3" class="muted">No events.</td></tr>`;
-    }catch(e){ body.innerHTML=`<tr><td colspan="3">Failed to load events.</td></tr>`; }
-  }
+/* ========= WALLET ========= */
+async function initWallet(){
+  const list=$('#walletList'); list.innerHTML='';
+  try{
+    const j=await get(a("action=wallet"));
+    $('#wallet-balance').textContent=usd(deMoney(j.balance||0));
+    (j.history||[]).forEach(tx=>{
+      const card=document.createElement('div'); card.className='card span-6';
+      card.innerHTML=`<div class="bd" style="display:flex;justify-content:space-between">
+        <div><div class="muted">${tx.date||''}</div><div>${tx.method||''}</div></div>
+        <div style="text-align:right"><div class="money" style="font-size:18px">${usd(deMoney(tx.amount||0))}</div><div class="muted">${tx.status||'COMPLETED'}</div></div>
+      </div>`;
+      list.appendChild(card);
+    });
+    if(!list.children.length) list.innerHTML=`<div class="card span-12"><div class="bd muted">No transactions.</div></div>`;
+  }catch(e){ list.innerHTML=`<div class="card span-12"><div class="bd">Failed to load wallet.</div></div>`; }
+}
 
-  /* ===== Settings ===== */
-  async function loadSettings(){
-    try{ const j=await jget(api("config")); $('cfgDump').textContent=JSON.stringify(j,null,2); }
-    catch(e){ $('cfgDump').textContent='Failed to load config.'; }
-  }
+/* ========= MONITORING ========= */
+async function initMonitor(){
+  const tb=$('#tbl-monitor tbody'); tb.innerHTML='';
+  try{
+    const j=await get(a("action=monitoring"));
+    // tiles
+    $('#box-alerts').textContent = (j.alerts&&j.alerts.length)? `${j.alerts.length} active` : 'No alerts.';
+    $('#box-maint').textContent  = j.maintenance || 'No tasks scheduled.';
+    $('#box-health').textContent = j.health || 'OK';
+    // stream
+    (j.events||[]).forEach(ev=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML=`<td>${ev.time||''}</td><td>${ev.type||''}</td><td>${ev.msg||''}</td>`;
+      tb.appendChild(tr);
+    });
+    if(!tb.children.length) tb.innerHTML=`<tr><td colspan="3" class="muted">No events.</td></tr>`;
+  }catch(e){ tb.innerHTML=`<tr><td colspan="3">Failed to load events.</td></tr>`; }
+}
 
-  /* ===== init ===== */
-  window.addEventListener('DOMContentLoaded',()=>{const h=(location.hash||'#dashboard').replace('#','');showTab(h);});
-  window.addEventListener('hashchange',()=>{const h=(location.hash||'#dashboard').replace('#','');showTab(h);});
+/* ========= SETTINGS ========= */
+async function initSettings(){ try{ const j=await get(a("action=config")); $('#cfgDump').textContent=JSON.stringify(j,null,2); } catch(e){ $('#cfgDump').textContent='Failed to load config'; } }
+
+/* ========= INIT ========= */
+window.addEventListener('DOMContentLoaded',()=>{ const t=(location.hash||'#dash').slice(1); show(t); });
+window.addEventListener('hashchange',()=>{ const t=(location.hash||'#dash').slice(1); show(t); });
 </script>
 </body>
-</html> 
+</html>

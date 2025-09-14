@@ -459,31 +459,48 @@ async function initWallet(){
   }catch(e){ list.innerHTML=`<div class="card span-12"><div class="bd">Failed to load wallet.</div></div>`; }
 }
 
-/* ========= MONITORING ========= */
-async function initMonitor(){
-  const tb=$('#tbl-monitor tbody'); tb.innerHTML='';
-  try{
-    const j=await get(a("action=monitoring"));
-    // tiles
-    $('#box-alerts').textContent = (j.alerts&&j.alerts.length)? `${j.alerts.length} active` : 'No alerts.';
-    $('#box-maint').textContent  = j.maintenance || 'No tasks scheduled.';
-    $('#box-health').textContent = j.health || 'OK';
-    // stream
-    (j.events||[]).forEach(ev=>{
-      const tr=document.createElement('tr');
-      tr.innerHTML=`<td>${ev.time||''}</td><td>${ev.type||''}</td><td>${ev.msg||''}</td>`;
-      tb.appendChild(tr);
-    });
-    if(!tb.children.length) tb.innerHTML=`<tr><td colspan="3" class="muted">No events.</td></tr>`;
-  }catch(e){ tb.innerHTML=`<tr><td colspan="3">Failed to load events.</td></tr>`; }
+<!-- ========== SCRIPTS ========== -->
+<script>
+async function fetchLiveData(){
+  try {
+    const res = await fetch("https://script.google.com/macros/s/YOUR_GAS_DEPLOY_URL/exec?action=live");
+    const j = await res.json();
+
+    // Populate Overview stats
+    if(j.overview){
+      $('#totalEarnings').textContent = j.overview.earnings;
+      $('#activeUsers').textContent   = j.overview.users;
+      $('#conversionRate').textContent= j.overview.conversionRate;
+      $('#totalClicks').textContent   = j.overview.clicks;
+    }
+
+    // Populate Analytics Live Performance Data
+    if(j.live){
+      const tb = $('#tbl-live tbody'); 
+      tb.innerHTML = '';
+      j.live.forEach(row=>{
+        const tr=document.createElement('tr');
+        tr.innerHTML = `
+          <td>${row.time||''}</td>
+          <td>${row.country||''}</td>
+          <td>${row.offer||''}</td>
+          <td>${row.device||''}</td>
+          <td>${row.clicks||0}</td>
+          <td>${row.leads||0}</td>
+          <td>${row.earnings||0}</td>
+        `;
+        tb.appendChild(tr);
+      });
+    }
+
+  }catch(e){
+    console.error("Live fetch error", e);
+  }
 }
 
-/* ========= SETTINGS ========= */
-async function initSettings(){ try{ const j=await get(a("action=config")); $('#cfgDump').textContent=JSON.stringify(j,null,2); } catch(e){ $('#cfgDump').textContent='Failed to load config'; } }
-
-/* ========= INIT ========= */
-window.addEventListener('DOMContentLoaded',()=>{ const t=(location.hash||'#dash').slice(1); show(t); });
-window.addEventListener('hashchange',()=>{ const t=(location.hash||'#dash').slice(1); show(t); });
+// refresh faster: every 3s
+setInterval(fetchLiveData, 3000);
+window.addEventListener('DOMContentLoaded', fetchLiveData);
 </script>
 </body>
 </html>

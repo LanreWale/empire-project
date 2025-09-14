@@ -39,7 +39,7 @@
   .muted{color:var(--muted)} .note{padding:10px;border-radius:8px}
   .note.err{background:#2b1114;border:1px solid #541015}
   .hidden{display:none}
-  /* CPA Cards — match screenshot: big account number + labeled rows */
+  /* CPA Cards */
   .cpa-card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px}
   .cpa-acct{font-weight:900;font-size:20px;margin-bottom:8px}
   .row{display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px solid var(--line)}
@@ -214,29 +214,40 @@
   const api = (action) => GAS_BASE + (GAS_BASE.includes("?") ? "&" : "?") + "action=" + encodeURIComponent(action);
 
   /* ===== utils ===== */
-  const $ = (id)=>document.getElementById(id);
-  const esc = (s)=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-  const num = (n)=>(+n||0).toLocaleString();
-  const usd = (n)=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(+(+n||0).toFixed(2));
+  const $  = (id)=>document.getElementById(id);
+  const esc= (s)=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  const num= (n)=>(+n||0).toLocaleString();
+  const usd= (n)=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(+(+n||0).toFixed(2));
+  const deMoney = (v)=> typeof v==='number' ? v : parseFloat(String(v).replace(/[^0-9.\-]/g,'')) || 0;
   async function jget(u){const r=await fetch(u,{cache:'no-store',headers:{'Accept':'application/json'}});if(!r.ok)throw new Error(r.status+" "+r.statusText);return r.json();}
   async function jpost(u,b){const r=await fetch(u,{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify(b)});if(!r.ok)throw new Error(r.status+" "+r.statusText);return r.json();}
   function showError(el,msg){el.classList.remove('hidden');el.textContent=msg;}
 
-  // critical fix: format conversion percent exactly once
+  // percent fix
   function formatConv(val){
     if (val == null) return '—';
     if (typeof val === 'string') {
       const s = val.trim();
-      if (s.endsWith('%')) return s;              // already formatted like "57.3%"
+      if (s.endsWith('%')) return s;
       const f = parseFloat(s);
       if (!isFinite(f)) return s;
-      if (f>1 && f<=100) return f.toFixed(1)+'%'; // sheet already in percent (57.3)
-      return (f*100).toFixed(1)+'%';              // fraction (0.573)
+      if (f>1 && f<=100) return f.toFixed(1)+'%';
+      return (f*100).toFixed(1)+'%';
     }
     const n = +val || 0;
     if (n>1 && n<=100) return n.toFixed(1)+'%';
     return (n*100).toFixed(1)+'%';
   }
+
+  /* normalize helpers for variable API keys */
+  const pick = (o,keys,def='')=>{
+    for(const k of keys){ if(o && o[k]!=null && o[k]!=='' ) return o[k]; }
+    return def;
+  };
+  const arr = (j)=> Array.isArray(j) ? j
+             : Array.isArray(j?.items) ? j.items
+             : Array.isArray(j?.data)  ? j.data
+             : Array.isArray(j?.rows)  ? j.rows : [];
 
   /* ===== router ===== */
   function showTab(key){
@@ -261,19 +272,19 @@
       const j = await jget(api("overview"));
       const t = j.totals || {};
       const tp = j.totalsPretty || {};
-      $('kpi-earn').textContent = tp.earningsUsd ? usd(tp.earningsUsd) : usd(t.earnings||0);
-      $('kpi-leads').textContent= num(t.leads||0);
-      $('kpi-clicks').textContent=num(t.clicks||0);
-      $('kpi-epc').textContent  = tp.epcUsd ? usd(tp.epcUsd) : usd(t.epc||0);
-      $('kpi-cpa').textContent  = tp.cpaUsd ? usd(tp.cpaUsd) : usd(t.cpa||0);
-      $('kpi-rpm').textContent  = tp.rpmUsd ? usd(tp.rpmUsd) : usd(t.rpm||0);
-      $('kpi-cr').textContent   = tp.conversionRatePct || formatConv(t.conversionRate ?? 0);
+      $('kpi-earn').textContent = tp.earningsUsd ? usd(tp.earningsUsd) : usd(deMoney(t.earnings));
+      $('kpi-leads').textContent= num(pick(t,['leads','conversions','totalLeads'],0));
+      $('kpi-clicks').textContent=num(pick(t,['clicks','totalClicks'],0));
+      $('kpi-epc').textContent  = tp.epcUsd ? usd(tp.epcUsd) : usd(deMoney(pick(t,['epc'],0)));
+      $('kpi-cpa').textContent  = tp.cpaUsd ? usd(tp.cpaUsd) : usd(deMoney(pick(t,['cpa'],0)));
+      $('kpi-rpm').textContent  = tp.rpmUsd ? usd(tp.rpmUsd) : usd(deMoney(pick(t,['rpm'],0)));
+      $('kpi-cr').textContent   = tp.conversionRatePct || formatConv(pick(t,['conversionRate','cr'],0));
 
       const fillObj=(tbody,obj)=>{
         tbody.innerHTML='';
         Object.entries(obj||{}).forEach(([k,v])=>{
           const tr=document.createElement('tr');
-          tr.innerHTML=`<td>${esc(k)}</td><td>${usd(v)}</td>`;
+          tr.innerHTML=`<td>${esc(k)}</td><td>${usd(deMoney(v))}</td>`;
           tbody.appendChild(tr);
         });
         if(!tbody.children.length) tbody.innerHTML=`<tr><td colspan="2" class="muted">No data</td></tr>`;
@@ -287,7 +298,7 @@
                   : Object.entries(j.byDay||{}).map(([d,v])=>({t:d,earnings:v}));
       byDay.forEach(r=>{
         const tr=document.createElement('tr');
-        tr.innerHTML=`<td>${esc(r.t||r.date||'')}</td><td>${usd(r.earnings||r.value||0)}</td>`;
+        tr.innerHTML=`<td>${esc(r.t||r.date||'')}</td><td>${usd(deMoney(r.earnings||r.value))}</td>`;
         dayBody.appendChild(tr);
       });
       if(!dayBody.children.length) dayBody.innerHTML=`<tr><td colspan="2" class="muted">No data</td></tr>`;
@@ -309,15 +320,12 @@
       form.addEventListener('submit',async(ev)=>{
         ev.preventDefault();
         const fd=new FormData(form);
-        const payload={
-          action:'addcpa',
+        const payload={ action:'addcpa',
           account:(fd.get('AccountID')||'').toString().trim(),
           network:(fd.get('Network')||'').toString().trim(),
-          domain:'',
-        };
+          domain:'' };
         if(!payload.account || !payload.network){ alert('Please fill Account ID and Network'); return; }
-        try{
-          const res=await jpost(GAS_BASE,payload);
+        try{ const res=await jpost(GAS_BASE,payload);
           if(!res.ok){ alert(res.error||'Failed to add'); return; }
           modal.classList.add('hidden'); form.reset(); loadCpa();
         }catch(err){ alert('Add failed: '+err.message); }
@@ -325,20 +333,32 @@
     }
   }
 
+  function normalizeAccount(acc){
+    // tolerate sheet-like and api-like names
+    const account = pick(acc, ['account','Account','Account ID','id','ID']);
+    const network = pick(acc, ['network','Network']);
+    const offers  = +pick(acc, ['activeOffers','ActiveOffers','Active Offers','offers'], 0);
+    const revenue = deMoney(pick(acc, ['revenue','Revenue','$ Revenue','Revenue ($)'], 0));
+    const clicks  = +pick(acc, ['clicks','Clicks'], 0);
+    const convRaw = pick(acc, ['conversionRate','ConversionRate','Conversion (%)','conversion','Conversion'], 0);
+    return {account,network,offers,revenue,clicks,conv:formatConv(convRaw)};
+  }
+
   async function loadCpa(){
     const grid=$('cpaGrid'); grid.innerHTML='';
     try{
       const j=await jget(api("cpa"));
-      (j.items||[]).forEach(acc=>{
+      const rows = arr(j);
+      rows.forEach(r=>{
+        const acc = normalizeAccount(r);
         const card=document.createElement('div'); card.className='cpa-card span-4';
-        const conv = formatConv(acc.conversionRate ?? acc.conversion);
         card.innerHTML = `
-          <div class="cpa-acct">${esc(acc.account||acc.name||'—')}</div>
+          <div class="cpa-acct">${esc(acc.account||'—')}</div>
           <div class="row"><div class="lab">Network</div><div class="val">${esc(acc.network||'—')}</div></div>
-          <div class="row"><div class="lab">Active Offers</div><div class="val">${num(acc.activeOffers??acc.offers??0)}</div></div>
-          <div class="row"><div class="lab">Revenue</div><div class="money">${usd(acc.revenue||0)}</div></div>
-          <div class="row"><div class="lab">Clicks</div><div class="val">${num(acc.clicks||0)}</div></div>
-          <div class="row"><div class="lab">Conversion</div><div class="perc">${conv}</div></div>`;
+          <div class="row"><div class="lab">Active Offers</div><div class="val">${num(acc.offers)}</div></div>
+          <div class="row"><div class="lab">Revenue</div><div class="money">${usd(acc.revenue)}</div></div>
+          <div class="row"><div class="lab">Clicks</div><div class="val">${num(acc.clicks)}</div></div>
+          <div class="row"><div class="lab">Conversion</div><div class="perc">${acc.conv}</div></div>`;
         grid.appendChild(card);
       });
       if(!grid.children.length) grid.innerHTML=`<div class="note err">No CPA accounts returned.</div>`;
@@ -352,12 +372,18 @@
     const body=document.querySelector('#tbl-users tbody'); body.innerHTML='';
     try{
       const j=await jget(api("users"));
+      const rows = arr(j).length ? arr(j)
+                 : Array.isArray(j.users) ? j.users
+                 : Array.isArray(j.approved) ? j.approved : [];
       const seen=new Set();
-      (j.items||[]).forEach(u=>{
-        const email=String(u.email||'').trim().toLowerCase();
+      rows.forEach(u=>{
+        const email=String(pick(u,['email','Email'],'')).trim().toLowerCase();
         if(!email || seen.has(email)) return; seen.add(email);
         const tr=document.createElement('tr');
-        tr.innerHTML=`<td>${esc(u.name||'')}</td><td>${esc(email)}</td><td>${esc(u.phone||'')}</td><td>${esc(u.authority||'')}</td>`;
+        tr.innerHTML=`<td>${esc(pick(u,['name','Name'],'').trim())}</td>
+                      <td>${esc(email)}</td>
+                      <td>${esc(pick(u,['phone','Phone'],''))}</td>
+                      <td>${esc(pick(u,['authority','Authority'],'').toString())}</td>`;
         body.appendChild(tr);
       });
       if(!body.children.length) body.innerHTML=`<tr><td colspan="4" class="muted">No users.</td></tr>`;
@@ -371,8 +397,9 @@
     const body=document.querySelector('#tbl-analytics tbody'); body.innerHTML='';
     try{
       const j=await jget(api("analytics"));
-      if(Array.isArray(j.items)&&j.items.length&&j.items[0].metric!==undefined){
-        j.items.forEach(r=>{const tr=document.createElement('tr');tr.innerHTML=`<td>${esc(r.metric||'')}</td><td>${esc(r.value||'')}</td>`;body.appendChild(tr);});
+      const rows = arr(j);
+      if(rows.length && rows[0].metric!==undefined){
+        rows.forEach(r=>{const tr=document.createElement('tr');tr.innerHTML=`<td>${esc(r.metric||'')}</td><td>${esc(r.value||'')}</td>`;body.appendChild(tr);});
       }else if(j.totals){ Object.entries(j.totals).forEach(([k,v])=>{const tr=document.createElement('tr');tr.innerHTML=`<td>${esc(k)}</td><td>${esc(v)}</td>`;body.appendChild(tr);}); }
       if(!body.children.length) body.innerHTML=`<tr><td colspan="2" class="muted">No analytics rows.</td></tr>`;
     }catch(e){
@@ -391,17 +418,17 @@
     (j.live||[]).forEach(ev=>{
       const tr=document.createElement('tr');
       tr.innerHTML=`<td>${esc(ev.time||'')}</td><td>${esc(ev.country||'')}</td><td>${esc(ev.offer||'')}</td>
-                    <td>${num(ev.clicks||0)}</td><td>${num(ev.conversions||0)}</td><td>${usd(ev.earnings||0)}</td>`;
+                    <td>${num(ev.clicks||0)}</td><td>${num(ev.conversions||0)}</td><td>${usd(deMoney(ev.earnings||0))}</td>`;
       body.appendChild(tr);
     });
     if(!body.children.length) body.innerHTML=`<tr><td colspan="6" class="muted">No live events yet.</td></tr>`;
     const geoBody=$('#tbl-live-geo tbody'); geoBody.innerHTML='';
     const agg=j.liveAgg||{};
     Object.keys(agg).map(k=>({country:k,...agg[k]}))
-      .sort((a,b)=>(b.earnings||0)-(a.earnings||0))
+      .sort((a,b)=>(deMoney(b.earnings||0)-deMoney(a.earnings||0)))
       .forEach(r=>{
         const tr=document.createElement('tr');
-        tr.innerHTML=`<td>${esc(r.country||'')}</td><td>${num(r.clicks||0)}</td><td>${num(r.conversions||0)}</td><td>${usd(r.earnings||0)}</td>`;
+        tr.innerHTML=`<td>${esc(r.country||'')}</td><td>${num(r.clicks||0)}</td><td>${num(r.conversions||0)}</td><td>${usd(deMoney(r.earnings||0))}</td>`;
         geoBody.appendChild(tr);
       });
     if(!geoBody.children.length) geoBody.innerHTML=`<tr><td colspan="4" class="muted">No geo activity in window.</td></tr>`;
@@ -417,12 +444,12 @@
     const list=$('walletList'); list.innerHTML='';
     try{
       const j=await jget(api("wallet"));
-      $('wallet-balance').textContent=usd(j.balance||0);
+      $('wallet-balance').textContent=usd(deMoney(j.balance||0));
       (j.history||[]).forEach(tx=>{
         const card=document.createElement('div'); card.className='panel span-6';
         card.innerHTML=`<div style="display:flex;justify-content:space-between;gap:10px">
           <div><div class="muted">${esc(tx.date||'')}</div><div>${esc(tx.method||'')}</div></div>
-          <div style="text-align:right"><div style="font-weight:900">${usd(tx.amount||0)}</div><div class="muted">${esc(tx.status||'COMPLETED')}</div></div>
+          <div style="text-align:right"><div style="font-weight:900">${usd(deMoney(tx.amount||0))}</div><div class="muted">${esc(tx.status||'COMPLETED')}</div></div>
         </div>`;
         list.appendChild(card);
       });
@@ -455,4 +482,4 @@
   window.addEventListener('hashchange',()=>{const h=(location.hash||'#dashboard').replace('#','');showTab(h);});
 </script>
 </body>
-</html>
+</html> 

@@ -1,455 +1,215 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>THE EMPIRE · Minimal Probe</title>
+<style>
+  :root{--bg:#0e1b28;--card:#14263a;--line:#224057;--text:#eaf2ff;--muted:#89a2bf;--good:#1dd1a1;--bad:#ff6b6b}
+  *{box-sizing:border-box}html,body{height:100%}body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 system-ui,Inter,Segoe UI,Roboto}
+  .wrap{max-width:1100px;margin:24px auto;padding:0 16px}
+  h1{font-size:20px;margin:0 0 12px}
+  .grid{display:grid;gap:12px;grid-template-columns:1fr 1fr}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px}
+  .kpi{display:flex;gap:10px;flex-wrap:wrap}
+  .kpi div{background:#102233;border:1px solid var(--line);border-radius:10px;padding:10px;min-width:160px}
+  .muted{color:var(--muted)} .money{color:var(--good);font-weight:700}
+  table{width:100%;border-collapse:separate;border-spacing:0;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  th,td{padding:9px 10px;border-bottom:1px solid var(--line)} thead th{background:#0f2b45;text-align:left}
+  tbody tr:last-child td{border-bottom:0}
+  #log{white-space:pre-wrap;background:#2a1013;border:1px solid #5a1a22;color:#ffd2d2;border-radius:10px;padding:10px}
+  .ok{color:#9cffc7} .btn{padding:8px 10px;border:1px solid var(--line);background:#0f2336;color:var(--text);border-radius:8px;cursor:pointer}
+  .pill{display:inline-block;padding:2px 8px;border:1px solid var(--line);border-radius:999px;background:#10314f}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>THE EMPIRE · Minimal Probe <span id="status" class="pill">booting…</span></h1>
+
+  <div class="grid">
+    <div class="card">
+      <h3>Overview</h3>
+      <div class="kpi">
+        <div><div class="muted">Total Earnings</div><div id="ov-earn">$0.00</div></div>
+        <div><div class="muted">Total Clicks</div><div id="ov-clicks">0</div></div>
+        <div><div class="muted">Conversion</div><div id="ov-cr">0%</div></div>
+        <div><div class="muted">Active Users</div><div id="ov-users">0</div></div>
+      </div>
+      <h4 style="margin:12px 0 6px">By Geo (Top)</h4>
+      <table>
+        <thead><tr><th>Country</th><th>Clicks</th><th>Leads</th><th>Earnings</th></tr></thead>
+        <tbody id="tbl-geo"><tr><td colspan="4" class="muted">Loading…</td></tr></tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <h3>CPA Accounts</h3>
+      <table>
+        <thead><tr><th>Account</th><th>Network</th><th>Revenue</th><th>Conv.</th></tr></thead>
+        <tbody id="tbl-cpa"><tr><td colspan="4" class="muted">Loading…</td></tr></tbody>
+      </table>
+      <div style="margin-top:8px"><button id="btn-add" class="btn">Test “Add New Account” Call</button> <span class="muted">(dry-run)</span></div>
+    </div>
+
+    <div class="card">
+      <h3>Users (counts)</h3>
+      <div id="users-counts" class="muted">Loading…</div>
+      <table style="margin-top:8px">
+        <thead><tr><th>Name</th><th>Email</th><th>Status</th></tr></thead>
+        <tbody id="tbl-users"><tr><td colspan="3" class="muted">Loading…</td></tr></tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <h3>Wallet & Monitoring</h3>
+      <div class="kpi">
+        <div><div class="muted">Balance</div><div id="w-bal">$0.00</div></div>
+        <div><div class="muted">Pending</div><div id="w-pend">$0.00</div></div>
+        <div><div class="muted">Last Payout</div><div id="w-last">$0.00</div></div>
+      </div>
+      <h4 style="margin:12px 0 6px">Monitor Snapshot</h4>
+      <div>Alerts: <b id="m-alerts">0</b> · Maintenance: <b id="m-maint">—</b> · Health: <b id="m-health">OK</b></div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:12px">
+    <h3>Error Log</h3>
+    <div id="log">(empty)</div>
+  </div>
+
+</div>
+
 <script>
-/* =========================
-   UNIVERSAL, NULL-SAFE FRONTEND
-   ========================= */
-
-/* --- CONFIG --- */
+/* ---------- CONFIG ---------- */
 const GAS = "https://script.google.com/macros/s/AKfycbwZVlGMvYonfCNdQlwPHiqqgOVC80_HsyktSYmqmQPBKmRrlzg_yo4lKz_Mmu85B7eY/exec";
-const POLL_FAST = 5000;
 
-/* --- DOM helpers (null-safe) --- */
-const $  = s => document.querySelector(s);
-const $$ = s => Array.from(document.querySelectorAll(s));
-const setText = (sel, val) => { const el=$(sel); if(el) el.textContent = val; };
-const setHTML = (sel, val) => { const el=$(sel); if(el) el.innerHTML  = val; };
+/* ---------- UTIL ---------- */
+const $ = s => document.querySelector(s);
 const dollars = n => Number(n||0).toLocaleString(undefined,{style:'currency',currency:'USD'});
 const percent = n => (Number(n||0)).toFixed(2) + '%';
-const mono = v => (v==null ? '' : String(v));
+const log = (msg,isErr=false)=>{ const el=$("#log"); if(!el) return; el.textContent += (isErr?'[ERR] ':'[INFO] ') + msg + "\n"; };
+const safeJSON = v => { try{ return JSON.stringify(v,null,2); }catch{ return String(v); } };
 
-/* --- fetch helpers --- */
-const get = async (url, opt={})=>{
-  const u = new URL(url);
-  u.searchParams.set('_t', Date.now()); // cache bust
-  const r = await fetch(u, {cache:'no-store', ...opt});
-  if(!r.ok) throw new Error('HTTP '+r.status);
-  return r.json();
-};
-const api = (action, params={})=>{
+/* ---------- FETCH ---------- */
+async function api(action, params={}){
   const u = new URL(GAS);
   u.searchParams.set('action', action);
   Object.entries(params).forEach(([k,v])=>u.searchParams.set(k, v));
-  return get(u);
-};
-const apiWrite = async (action, payload={})=>{
-  const url = new URL(GAS);
-  url.searchParams.set('action', action);
-  try{
-    const res = await fetch(url, {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify(payload)
-    });
-    if(!res.ok) throw new Error('HTTP '+res.status);
-    return res.json();
-  }catch(e){
-    // GET fallback
-    Object.entries(payload||{}).forEach(([k,v])=>url.searchParams.set(k, typeof v==='object'?JSON.stringify(v):String(v)));
-    const res = await fetch(url, {cache:'no-store'});
-    if(!res.ok) throw new Error('HTTP '+res.status);
-    return res.json();
-  }
-};
-
-/* --- normalizers --- */
-const arr = (maybe) => {
-  if (Array.isArray(maybe)) return maybe;
-  if (maybe && Array.isArray(maybe.items)) return maybe.items;
-  if (maybe && Array.isArray(maybe.rows))  return maybe.rows;
-  if (maybe && Array.isArray(maybe.data))  return maybe.data;
-  return [];
-};
-const obj = (maybe) => (maybe && typeof maybe === 'object') ? maybe : {};
-const normDomain = d=> String(d||'').trim().replace(/^https?:\/\//,'').replace(/\/.*$/,'');
-
-/* =========================
-   ROUTER (safe)
-   ========================= */
-function show(route){
-  $$('.nav a').forEach(a=>a.classList.toggle('active', a.dataset.route===route));
-  $$('[data-page]').forEach(s=>s.style.display = (s.dataset.page===route)?'block':'none');
-
-  // lazy init
-  try{
-    if(route==='dashboard') initDashboard();
-    if(route==='cpa')       initCpa();
-    if(route==='users')     initUsers(currentUsersTab);
-    if(route==='analytics') initAnalytics();
-    if(route==='wallet')    initWallet();
-    if(route==='monitor')   initMonitor();
-    if(route==='settings')  initSettings();
-  }catch(err){
-    console.error('Init error for', route, err);
-  }
+  const r = await fetch(u, {cache:'no-store'});
+  if(!r.ok) throw new Error('HTTP '+r.status+' for '+action);
+  return r.json();
 }
-window.addEventListener('hashchange', ()=>{
-  const r = location.hash.replace('#','')||'dashboard'; show(r);
+
+/* ---------- PAGE FILLERS ---------- */
+async function loadOverview(){
+  const j = await api('overview');
+  log('overview: ' + safeJSON(j));
+  const t = j.totals || j || {};
+  $('#ov-earn').textContent   = dollars(t.earnings||0);
+  $('#ov-clicks').textContent = t.clicks||0;
+  $('#ov-cr').textContent     = percent( (t.conversionRate!=null)?t.conversionRate:(t.leads&&t.clicks?(t.leads/t.clicks*100):0) );
+
+  const geoMap = j.geo || {};
+  const clicksMap = j.geoClicks || {};
+  const leadsMap  = j.geoLeads  || {};
+  const rows = Object.keys(geoMap).map(k=>({
+    country:k,
+    earn:Number(geoMap[k]||0),
+    clicks:Number(clicksMap[k]||0),
+    leads:Number(leadsMap[k]||0)
+  })).sort((a,b)=>b.earn-a.earn).slice(0,10);
+  const tb = $('#tbl-geo'); tb.innerHTML='';
+  if(!rows.length){ tb.innerHTML = '<tr><td colspan="4" class="muted">No data</td></tr>'; }
+  rows.forEach(r=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML = `<td>${r.country}</td><td>${r.clicks}</td><td>${r.leads}</td><td class="money">${dollars(r.earn)}</td>`;
+    tb.appendChild(tr);
+  });
+}
+
+async function loadCpa(){
+  const j = await api('cpa');
+  log('cpa: ' + safeJSON(j));
+  const items = Array.isArray(j)? j : (Array.isArray(j.items)? j.items : []);
+  const tb = $('#tbl-cpa'); tb.innerHTML='';
+  if(!items.length){ tb.innerHTML = '<tr><td colspan="4" class="muted">No CPA accounts.</td></tr>'; return; }
+  items.forEach(r=>{
+    const account = r.account || r.accountid || '—';
+    const network = r.network || '—';
+    const rev     = r.revenue || 0;
+    const crRaw   = r.conversionRate!=null? r.conversionRate : r.conversionrate;
+    const cr      = (crRaw>1?crRaw:crRaw*100)||0;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${account}</td><td>${network}</td><td class="money">${dollars(rev)}</td><td>${cr.toFixed(2)}%</td>`;
+    tb.appendChild(tr);
+  });
+}
+
+async function loadUsers(){
+  const j = await api('users');
+  log('users: ' + safeJSON(j));
+  const list = Array.isArray(j)? j : (Array.isArray(j.items)? j.items : []);
+  const counts = {APPROVED:0,PENDING:0,REJECTED:0};
+  list.forEach(u=>{ counts[String(u.status||'APPROVED').toUpperCase()]++ });
+  $('#users-counts').innerHTML = `Approved: <b class="ok">${counts.APPROVED}</b> · Pending: <b>${counts.PENDING}</b> · Rejected: <b>${counts.REJECTED}</b>`;
+
+  const tb = $('#tbl-users'); tb.innerHTML='';
+  list.slice(0,10).forEach(u=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML = `<td>${u.name||'—'}</td><td>${u.email||''}</td><td>${u.status||'APPROVED'}</td>`;
+    tb.appendChild(tr);
+  });
+  if(!tb.children.length) tb.innerHTML = '<tr><td colspan="3" class="muted">No users</td></tr>';
+}
+
+async function loadWalletMonitor(){
+  const w = await api('wallet');  log('wallet: ' + safeJSON(w));
+  const m = await api('monitoring'); log('monitoring: ' + safeJSON(m));
+
+  $('#w-bal').textContent  = dollars((w||{}).balance||0);
+  const hist = (w && Array.isArray(w.history)) ? w.history : (Array.isArray(w)?w:[]);
+  const pend = hist.filter(t=>String(t.status||'').toUpperCase()==='PENDING').reduce((s,t)=>s+Number(t.amount||0),0);
+  $('#w-pend').textContent = dollars(pend);
+  const last = hist.filter(t=>String(t.status||'').toUpperCase()==='COMPLETED').slice(-1)[0];
+  $('#w-last').textContent = dollars(last?last.amount:0);
+
+  $('#m-alerts').textContent = (m && m.events)? m.events.length : (Array.isArray(m)? m.length : 0);
+  $('#m-maint').textContent  = (m && m.maintenance) || '—';
+  $('#m-health').textContent = (m && m.health) || 'OK';
+}
+
+/* ---------- ADD TEST ---------- */
+document.getElementById('btn-add').addEventListener('click', async ()=>{
+  try{
+    const payload = {account:'TEST', network:'CPA Grip', domain:'example.com', status:'ACTIVE'};
+    const res = await fetch(GAS+'?action=cpaCreate', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    const j = await res.json().catch(()=>({}));
+    log('cpaCreate response: ' + safeJSON(j));
+    alert('Request sent. See Error Log box for response.');
+  }catch(e){ log('cpaCreate failed: '+e.message,true); }
 });
-const nav = $('#nav');
-if(nav){
-  nav.addEventListener('click', e=>{
-    const a = e.target.closest('a[data-route]');
-    if(a){ location.hash = '#'+a.dataset.route; }
-  });
-}
 
-/* =========================
-   DASHBOARD
-   ========================= */
-function drawMiniLine(el, points){
-  if(!el) return;
-  if(!Array.isArray(points) || !points.length){ el.innerHTML = '<div class="empty">Chart ready</div>'; return; }
-  // tiny inline SVG
-  const w=el.clientWidth||320, h=120, p=12;
-  const xs = points.map((d,i)=>i);
-  const ys = points.map(d=>Number(d||0));
-  const min = Math.min(...ys), max=Math.max(...ys)||1;
-  const x = i => p + i*( (w-2*p)/Math.max(1, xs.length-1) );
-  const y = v => h - p - ( (v-min)/(max-min||1) )*(h-2*p);
-  let d='M'+x(0)+','+y(ys[0]);
-  for(let i=1;i<ys.length;i++) d += ' L'+x(i)+','+y(ys[i]);
-  el.innerHTML =
-   `<svg viewBox="0 0 ${w} ${h}" width="100%" height="${h}">
-      <path d="${d}" fill="none" stroke="rgba(255,213,89,.9)" stroke-width="2"/>
-    </svg>`;
-}
-function drawDonut(el, map){
-  if(!el) return;
-  const entries = Object.entries(map||{});
-  if(!entries.length){ el.innerHTML = '<div class="empty">Chart ready</div>'; return; }
-  const total = entries.reduce((s, [,v])=>s+Number(v||0),0)||1;
-  let acc=0;
-  const segs = entries.map(([k,v])=>{
-    const a0 = acc/total * 2*Math.PI; acc += Number(v||0);
-    const a1 = acc/total * 2*Math.PI;
-    const r=40, cx=50, cy=50;
-    const x0=cx+r*Math.cos(a0), y0=cy+r*Math.sin(a0);
-    const x1=cx+r*Math.cos(a1), y1=cy+r*Math.sin(a1);
-    const large = (a1-a0) > Math.PI ? 1 : 0;
-    return `<path d="M ${cx} ${cy} L ${x0} ${y0} A ${r} ${r} 0 ${large} 1 ${x1} ${y1} Z" opacity=".9"></path>`;
-  }).join('');
-  el.innerHTML = `<svg viewBox="0 0 100 100" width="100%" height="120">${segs}</svg>`;
-}
-
-async function initDashboard(){
+/* ---------- BOOT ---------- */
+(async function boot(){
   try{
-    const [ov, us] = await Promise.all([
-      api('overview'),
-      api('users') // get all, we’ll count statuses
+    $('#status').textContent='loading…';
+    await Promise.all([
+      loadOverview(),
+      loadCpa(),
+      loadUsers(),
+      loadWalletMonitor()
     ]);
-
-    const t = ov && ov.totals ? ov.totals : (ov||{});
-    setText('#dash-earn',   dollars(t.earnings||0));
-    setText('#dash-clicks', mono(t.clicks||0));
-
-    const cr = (t.conversionRate!=null) ? Number(t.conversionRate)
-              : (t.leads && t.clicks ? (t.leads/t.clicks*100) : 0);
-    setText('#dash-cr', percent(cr));
-
-    const users = arr(us);
-    const approvedCt = users.filter(u => String(u.status||'APPROVED').toUpperCase()==='APPROVED').length;
-    setText('#dash-users', approvedCt);
-    setText('#dash-users-diff','24h growth');
-
-    // charts
-    drawMiniLine($('#dash-earnings'), arr(ov.byDay).map(d=>Number(d.earnings||0)));
-    drawDonut($('#dash-sources'), ov.offerTypes||{});
-
-    // Geo table
-    const tb = $('#tbl-dash-geo'); if(tb){ tb.innerHTML='';
-      const geoMap = ov.geo||{};
-      const rows = Object.keys(geoMap).map(k=>({
-        country:k,
-        earnings:Number(geoMap[k]||0),
-        // if your backend ships clicks/leads by geo, accept them:
-        clicks: ov.geoClicks && ov.geoClicks[k] != null ? Number(ov.geoClicks[k]) : 0,
-        leads:  ov.geoLeads  && ov.geoLeads[k]  != null ? Number(ov.geoLeads[k])  : 0,
-      }))
-      .sort((a,b)=>b.earnings-a.earnings).slice(0,10);
-
-      if(!rows.length){ tb.innerHTML='<tr><td colspan="4" class="muted">No data</td></tr>'; }
-      rows.forEach(g=>{
-        const tr=document.createElement('tr');
-        tr.innerHTML=`<td>${g.country}</td><td>${g.clicks}</td><td>${g.leads}</td><td class="money">${dollars(g.earnings)}</td>`;
-        tb.appendChild(tr);
-      });
-    }
+    $('#status').textContent='OK';
   }catch(e){
-    console.error('dashboard', e);
+    $('#status').textContent='ERROR';
+    log(e.stack||e.message||String(e), true);
   }
-}
-
-/* =========================
-   CPA ACCOUNTS  (uses your renamed headers)
-   ========================= */
-async function initCpa(){
-  const wrap = $('#cpa-grid'); if(wrap) wrap.innerHTML='';
-  try{
-    const resp = await api('cpa');         // {ok:true, items:[...]} or array
-    const items = arr(resp);
-    if(!items.length){
-      if(wrap) wrap.innerHTML = `<div class="card pad empty">No CPA accounts yet.</div>`;
-      return;
-    }
-
-    items.forEach(r=>{
-      // accept either old keys or your new lowercase keys
-      const row = {
-        account   : r.account || r.accountid,
-        network   : r.network,
-        domain    : r.domain,
-        preferred : r.preferredOffer || r.preferredoffer,
-        active    : r.activeOffers   || r.activeoffers,
-        revenue   : r.revenue,
-        clicks    : r.clicks,
-        convRate  : r.conversionRate || r.conversionrate, // can be % or 0-1
-        status    : r.status || 'ACTIVE',
-      };
-      const convPct = (row.convRate>1 ? row.convRate : row.convRate*100) || 0;
-
-      const card = document.createElement('div');
-      card.className='card pad';
-      card.innerHTML = `
-        <div class="acct">
-          <div>
-            <h3>${mono(row.account)}</h3>
-            <div class="muted" style="margin-bottom:10px">
-              Network <b style="color:#fff">${mono(row.network)}</b>
-              · <span class="badge">${mono(row.status)}</span>
-            </div>
-            <div class="stats">
-              <div class="kv"><b>Preferred</b><span>${mono(row.preferred)}</span></div>
-              <div class="kv"><b>Active Offers</b><span>${mono(row.active)||0}</span></div>
-              <div class="kv"><b>Revenue</b><span class="money">${dollars(row.revenue||0)}</span></div>
-              <div class="kv"><b>Clicks</b><span>${mono(row.clicks)||0}</span></div>
-              <div class="kv"><b>Conversion</b><span>${percent(convPct)}</span></div>
-            </div>
-          </div>
-          <div class="right flex">
-            <span class="pill mono">${mono(row.domain)||'no-domain'}</span>
-            <button class="btn secondary" data-view-acct="${mono(row.account)}">View Details</button>
-          </div>
-        </div>`;
-      if(wrap) wrap.appendChild(card);
-    });
-  }catch(e){
-    console.error('cpa', e);
-    if(wrap) wrap.innerHTML = `<div class="card pad empty">Failed to load accounts.</div>`;
-  }
-}
-
-/* Add New Account modal wiring (kept safe) */
-(function wireCpaModal(){
-  const mdl = $('#mdl-cpa'); if(!mdl) return;
-  const openMdl  = ()=> mdl.classList.add('open');
-  const closeMdl = ()=> mdl.classList.remove('open');
-
-  const addBtn = $('#btn-add-acct'); if(addBtn) addBtn.addEventListener('click', openMdl);
-  mdl.addEventListener('click', e=>{ if(e.target && e.target.hasAttribute('data-close')) closeMdl(); });
-
-  const saveBtn = $('#btn-save-acct');
-  if(saveBtn) saveBtn.addEventListener('click', async ()=>{
-    const err = $('#f-error'); if(err) { err.style.display='none'; err.textContent=''; }
-    const v = {
-      account : ($('#f-account')?.value||'').trim(),
-      network : ($('#f-network')?.value||'').trim(),
-      domain  : normDomain($('#f-domain')?.value||''),
-      status  : ($('#f-status')?.value||'ACTIVE'),
-      apiKey  : ($('#f-key')?.value||'').trim(),
-      webhook : ($('#f-webhook')?.value||'').trim()
-    };
-    if(!v.account || !v.network){
-      if(err){ err.textContent = 'Account Name and Network are required.'; err.style.display='block'; }
-      return;
-    }
-    try{
-      const res = await apiWrite('cpaCreate', v); // upsert in GAS
-      if(!res || res.ok!==true) throw new Error('create failed');
-      closeMdl();
-      await initCpa();
-    }catch(e){
-      if(err){ err.textContent = 'Could not save account. Please try again.'; err.style.display='block'; }
-    }
-  });
 })();
 
-/* =========================
-   USERS
-   ========================= */
-let currentUsersTab = 'APPROVED';
-$$('[data-users-tab]').forEach(b=>b.addEventListener('click',()=>{
-  $$('[data-users-tab]').forEach(x=>x.classList.toggle('active', x===b));
-  currentUsersTab = b.dataset.usersTab;
-  initUsers(currentUsersTab);
-}));
-async function initUsers(tab='APPROVED'){
-  const tb = $('#tbl-users'); if(!tb) return; tb.innerHTML = '';
-  try{
-    const resp = await api('users');
-    const all  = arr(resp?.items || resp);
-    const filtered = all.filter(u => String(u.status||'APPROVED').toUpperCase()===tab);
-
-    if(!filtered.length){ tb.innerHTML = `<tr><td colspan="4" class="muted">No ${tab.toLowerCase()} users.</td></tr>`; return; }
-    filtered.forEach(u=>{
-      const tr = document.createElement('tr');
-      tr.innerHTML = `<td>${mono(u.name)}</td><td>${mono(u.email)}</td><td>${mono(u.phone)}</td><td>${mono(u.authority)||'1x User'}</td>`;
-      tb.appendChild(tr);
-    });
-  }catch(e){
-    console.error('users', e);
-    tb.innerHTML = `<tr><td colspan="4" class="muted">Failed to load users.</td></tr>`;
-  }
-}
-
-/* =========================
-   ANALYTICS (base + live)
-   ========================= */
-let liveTimer=null, liveRows=[];
-async function initAnalytics(){
-  // Base (overview blocks)
-  try{
-    const base = await api('analytics');
-    const items = arr(base) || arr(base?.items);
-    setHTML('#ana-overview', items.length ? 'Chart ready' : 'Loading…');
-    setHTML('#ana-geo-dist','Chart ready');
-  }catch{ setHTML('#ana-overview','Loading…'); setHTML('#ana-geo-dist','Loading…'); }
-
-  // Live
-  if(liveTimer) clearInterval(liveTimer);
-  liveRows = [];
-  liveTimer = setInterval(pullLive, POLL_FAST);
-  await pullLive();
-}
-async function pullLive(){
-  try{
-    const j = await api('analytics', { live:1, limit:24, windowSec:120 });
-    const events = arr(j?.live) || arr(j);
-
-    // Keep only last 24
-    liveRows = liveRows.concat(events).slice(-24);
-
-    // Live table
-    const tb = $('#tbl-live-perf'); if(tb){ tb.innerHTML='';
-      if(!liveRows.length){
-        tb.innerHTML='<tr><td colspan="6" class="muted">Waiting for stream…</td></tr>';
-      }else{
-        liveRows.slice().reverse().forEach(r=>{
-          const tr=document.createElement('tr');
-          tr.innerHTML =
-            `<td class="mono">${mono(r.time)}</td><td>${mono(r.country)}</td><td>${mono(r.offer)}</td>`+
-            `<td>${mono(r.clicks)||0}</td><td>${mono(r.conversions||r.conv)||0}</td><td class="money">${dollars(r.earnings||0)}</td>`;
-          tb.appendChild(tr);
-        });
-      }
-    }
-
-    // Live by GEO — recomputed each poll
-    const byGeo = {};
-    events.forEach(ev=>{
-      const k = ev.country || 'Unknown';
-      if(!byGeo[k]) byGeo[k] = {country:k, clicks:0, conv:0, earnings:0};
-      byGeo[k].clicks   += Number(ev.clicks||0);
-      byGeo[k].conv     += Number(ev.conversions||ev.conv||0);
-      byGeo[k].earnings += Number(ev.earnings||0);
-    });
-
-    const tb2 = $('#tbl-live-geo'); if(tb2){ tb2.innerHTML='';
-      const arrGeo = Object.values(byGeo).sort((a,b)=>b.earnings-a.earnings).slice(0,10);
-      if(!arrGeo.length){
-        tb2.innerHTML='<tr><td colspan="4" class="muted">Waiting for stream…</td></tr>';
-      }else{
-        arrGeo.forEach(g=>{
-          const tr=document.createElement('tr');
-          tr.innerHTML = `<td>${g.country}</td><td>${g.clicks}</td><td>${g.conv}</td><td class="money">${dollars(g.earnings)}</td>`;
-          tb2.appendChild(tr);
-        });
-      }
-    }
-  }catch(e){ console.warn('live analytics pull failed', e); }
-}
-
-/* =========================
-   WALLET
-   ========================= */
-async function initWallet(){
-  try{
-    const w = obj(await api('wallet'));
-    const hist = arr(w.history) || arr(w);
-    setText('#wal-balance', dollars(w.balance||0));
-
-    const pendingAmt = hist.filter(t=>String(t.status||'').toUpperCase()==='PENDING')
-                           .reduce((s,t)=>s+Number(t.amount||0),0);
-    setText('#wal-pending', dollars(pendingAmt));
-
-    const lastPaid = hist.filter(t=>String(t.status||'').toUpperCase()==='COMPLETED').slice(-1)[0];
-    setText('#wal-last', dollars(lastPaid ? lastPaid.amount : 0));
-
-    const tb = $('#tbl-wallet'); if(tb){ tb.innerHTML='';
-      hist.slice().reverse().forEach(t=>{
-        const tr=document.createElement('tr');
-        tr.innerHTML=`<td>${mono(t.date)}</td><td>${mono(t.method)}</td><td class="money">${dollars(t.amount||0)}</td><td>${mono(t.status)}</td>`;
-        tb.appendChild(tr);
-      });
-      if(!tb.children.length) tb.innerHTML = `<tr><td colspan="4" class="muted">No transactions.</td></tr>`;
-    }
-  }catch(e){
-    console.error('wallet', e);
-    const tb = $('#tbl-wallet'); if(tb) tb.innerHTML = `<tr><td colspan="4" class="muted">Failed to load.</td></tr>`;
-  }
-}
-
-/* =========================
-   MONITORING
-   ========================= */
-async function initMonitor(){
-  const tb = $('#tbl-monitor'); if(tb) tb.innerHTML='';
-  try{
-    const m = obj(await api('monitoring'));
-    const events = arr(m.events) || arr(m);
-
-    setText('#box-alerts', String(events.length||0));
-    setText('#box-maint', mono(m.maintenance) || '—');
-    setText('#box-health', mono(m.health) || 'OK');
-
-    if(tb){
-      if(!events.length){
-        tb.innerHTML = `<tr><td colspan="3" class="muted">No events.</td></tr>`;
-      }else{
-        events.forEach(ev=>{
-          const tr=document.createElement('tr');
-          tr.innerHTML=`<td class="mono">${mono(ev.time)}</td><td>${mono(ev.type)}</td><td>${mono(ev.msg||ev.message)}</td>`;
-          tb.appendChild(tr);
-        });
-      }
-    }
-  }catch(e){
-    console.error('monitor', e);
-    if(tb) tb.innerHTML = `<tr><td colspan="3" class="muted">Failed to load.</td></tr>`;
-  }
-}
-
-/* =========================
-   SETTINGS
-   ========================= */
-async function initSettings(){
-  try{
-    const j = await api('config');
-    const pretty = v => { try{ return JSON.stringify(v, null, 2); }catch{ return String(v); } };
-    setText('#pretty', pretty(j));
-  }catch(e){
-    setText('#pretty', 'Failed to load config');
-  }
-}
-
-/* =========================
-   BOOT + GLOBAL GUARD
-   ========================= */
-window.addEventListener('DOMContentLoaded', ()=>{
-  const r = (location.hash||'#dashboard').replace('#','');
-  show(r);
-});
-
-// fail safe: don’t white-screen
-window.addEventListener('error', (e)=>{
-  console.error('Global error', e.error || e.message);
+/* Surfacing ANY runtime error on page */
+window.addEventListener('error', e=>{
+  log((e.error && e.error.stack) ? e.error.stack : (e.message||'Unknown error'), true);
 });
 </script>
+</body>
+</html>

@@ -1,288 +1,16 @@
-<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>THE EMPIRE · Command Center</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<style>
-  :root{
-    --bg-0:#0d1a27; --bg-1:#0f2233; --bg-2:#122a3f; --bg-3:#0b1825;
-    --card:#0f2233; --card-2:#132a42; --muted:#7c97b5; --text:#eaf2ff; --accent:#ffd559;
-    --good:#1dd1a1; --warn:#ffb142; --bad:#ff6b6b; --line:#173046;
-    --shadow:0 6px 24px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.02);
-    --radius:14px;
-  }
-  *{box-sizing:border-box}
-  html,body{height:100%}
-  body{
-    margin:0; font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial;
-    color:var(--text); background:
-      radial-gradient(1200px 1200px at 120% -10%, #163b5c 0%, transparent 60%) fixed,
-      radial-gradient(1000px 1000px at -10% 120%, #0c2338 0%, transparent 60%) fixed,
-      var(--bg-0);
-  }
-
-  .page{display:grid; grid-template-columns:260px 1fr; gap:0; min-height:100vh}
-  .sidebar{
-    background:linear-gradient(180deg,#0d1a27 0%, #0b1825 100%);
-    border-right:1px solid var(--line); padding:18px 12px; position:sticky; top:0; height:100vh;
-  }
-  .brand{display:flex; align-items:center; gap:10px; padding:8px 10px 18px}
-  .brand img{width:28px;height:28px}
-  .brand span{font-weight:800; letter-spacing:.6px}
-  .nav{display:flex; flex-direction:column; gap:6px; margin-top:6px}
-  .nav a{
-    display:flex; align-items:center; gap:10px; padding:11px 12px;
-    color:var(--text); text-decoration:none; border-radius:10px;
-    background:transparent; border:1px solid transparent;
-  }
-  .nav a.active{background:var(--bg-2); border-color:var(--line)}
-  .content{padding:22px; min-width:0}
-
-  .section-head{display:flex; align-items:center; justify-content:space-between; gap:12px; margin:4px 0 18px}
-  .section-head h2{margin:0; font-size:18px; letter-spacing:.3px}
-  .btn{background:linear-gradient(180deg,#ffd559,#ffcb31); color:#1b1b1b; border:0; font-weight:700;
-       padding:10px 14px; border-radius:10px; cursor:pointer; box-shadow:var(--shadow)}
-  .btn.secondary{background:#173046; color:#d6e7ff; border:1px solid #254660}
-  .btn.secondary.active{background:#103b66; border-color:#3a85ff}
-
-  .grid{display:grid; gap:16px}
-  .grid.cols-4{grid-template-columns:repeat(4,minmax(0,1fr))}
-  .grid.cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}
-  .grid.cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .grid.cols-1{grid-template-columns:1fr}
-  @media (max-width:1150px){ .grid.cols-4{grid-template-columns:repeat(2,1fr)} }
-  @media (max-width:760px){ .page{grid-template-columns:1fr} .sidebar{position:static;height:auto} .grid,[class*=cols-]{grid-template-columns:1fr} }
-
-  .card{background:linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,0)) , var(--card);
-        border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow)}
-  .card.pad{padding:16px}
-
-  .kpi{display:flex; flex-direction:column; gap:8px}
-  .kpi .label{font-size:12px; color:var(--muted)}
-  .kpi .value{font-weight:800; font-size:22px}
-  .sub{font-size:11px; color:var(--muted); margin-top:-2px}
-
-  table{width:100%; border-collapse:separate; border-spacing:0; overflow:hidden; border-radius:12px; border:1px solid var(--line)}
-  thead th{background:#0f2b45; text-align:left; padding:11px 12px; font-size:12px; color:#c4d7ef; border-bottom:1px solid var(--line)}
-  tbody td{padding:10px 12px; border-bottom:1px solid var(--line)}
-  tbody tr:last-child td{border-bottom:0}
-  .muted{color:var(--muted)}
-  .money{color:var(--good); font-weight:700}
-  .badge{display:inline-block; padding:2px 8px; border-radius:999px; font-size:11px; border:1px solid var(--line); background:#14304a}
-  .pill{padding:6px 9px; border-radius:999px; background:#103250; border:1px solid var(--line); font-size:12px}
-  .flex{display:flex; gap:10px; align-items:center}
-  .right{margin-left:auto}
-  .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;}
-  code.pretty{white-space:pre-wrap; display:block; background:#0e2236; border:1px solid var(--line); padding:14px; border-radius:10px}
-  .empty{padding:18px; text-align:center; color:var(--muted)}
-
-  /* Modal */
-  .modal{position:fixed; inset:0; display:none; align-items:center; justify-content:center; z-index:50}
-  .modal.open{display:flex}
-  .modal .scrim{position:absolute; inset:0; background:rgba(6,16,26,.6); backdrop-filter: blur(2px)}
-  .modal .panel{position:relative; width:min(680px,92vw); background:var(--card);
-    border:1px solid var(--line); border-radius:16px; box-shadow:var(--shadow); padding:18px;}
-  .form-grid{display:grid; grid-template-columns:1fr 1fr; gap:12px}
-  .form-grid .full{grid-column:1 / -1}
-  .input{display:flex; flex-direction:column; gap:6px}
-  .input label{font-size:12px; color:var(--muted)}
-  .input input,.input select{background:#0e2236; color:var(--text); border:1px solid #24445e;
-    border-radius:10px; padding:10px 12px; outline:none;}
-  .input input:focus,.input select:focus{border-color:#3a85ff}
-  .modal .footer{display:flex; gap:10px; justify-content:flex-end; margin-top:14px}
-  .bad{color:var(--bad); font-size:12px}
-</style>
-</head>
-<body>
-<div class="page">
-  <aside class="sidebar">
-    <div class="brand">
-      <img src="https://i.imgur.com/2sGv2cH.png" alt="empire">
-      <span>THE EMPIRE</span>
-    </div>
-    <nav class="nav" id="nav">
-      <a href="#dashboard" data-route="dashboard" class="active">🏠 Dashboard</a>
-      <a href="#cpa" data-route="cpa">👑 CPA Accounts</a>
-      <a href="#users" data-route="users">👥 Users</a>
-      <a href="#analytics" data-route="analytics">📊 Analytics</a>
-      <a href="#wallet" data-route="wallet">💳 Payments/Wallet</a>
-      <a href="#monitor" data-route="monitor">🛡️ Monitoring</a>
-      <a href="#settings" data-route="settings">⚙️ Settings</a>
-    </nav>
-  </aside>
-
-  <main class="content">
-    <!-- DASHBOARD -->
-    <section data-page="dashboard" style="display:block">
-      <div class="section-head"><h2>Supreme Command Dashboard</h2><span class="pill">SUPREME COMMANDER</span></div>
-      <div class="grid cols-4">
-        <div class="card pad kpi"><div class="label">Total Earnings</div><div class="value" id="dash-earn">$0.00</div><div class="sub muted">vs last 7d</div></div>
-        <div class="card pad kpi"><div class="label">Total Clicks</div><div class="value" id="dash-clicks">0</div><div class="sub muted">daily average</div></div>
-        <div class="card pad kpi"><div class="label">Conversion Rate</div><div class="value" id="dash-cr">0.00%</div><div class="sub muted">industry leading</div></div>
-        <div class="card pad kpi"><div class="label">Active Users</div><div class="value" id="dash-users">0</div><div class="sub muted"><span id="dash-users-diff">24h growth</span></div></div>
-      </div>
-
-      <div class="grid cols-2" style="margin-top:16px">
-        <div class="card pad">
-          <h3 style="margin:0 0 10px">Daily Earnings</h3>
-          <div id="dash-earnings" class="empty">Loading…</div>
-        </div>
-        <div class="card pad">
-          <h3 style="margin:0 0 10px">Traffic Sources</h3>
-          <div id="dash-sources" class="empty">Loading…</div>
-        </div>
-      </div>
-
-      <div class="card pad" style="margin-top:16px">
-        <h3 style="margin:0 0 10px">By Geo (Top)</h3>
-        <table>
-          <thead><tr><th>Country</th><th>Clicks</th><th>Leads</th><th>Earnings ($)</th></tr></thead>
-          <tbody id="tbl-dash-geo"><tr><td colspan="4" class="muted">No data</td></tr></tbody>
-        </table>
-      </div>
-    </section>
-
-    <!-- CPA ACCOUNTS -->
-    <section data-page="cpa" style="display:none">
-      <div class="section-head">
-        <h2>CPA Accounts</h2>
-        <button class="btn" id="btn-add-acct">+ Add New Account</button>
-      </div>
-      <div id="cpa-grid" class="grid cols-2"></div>
-    </section>
-
-    <!-- ADD NEW ACCOUNT MODAL -->
-    <div id="mdl-cpa" class="modal" aria-hidden="true">
-      <div class="scrim" data-close></div>
-      <div class="panel">
-        <h3 style="margin:0 0 12px">Add New CPA Account</h3>
-        <div class="form-grid">
-          <div class="input"><label>Account ID *</label><input id="f-account" placeholder="e.g. 2288690"/></div>
-          <div class="input"><label>Network *</label><input id="f-network" placeholder="e.g. CPA Grip"/></div>
-          <div class="input"><label>Domain</label><input id="f-domain" placeholder="offers.example.com"/></div>
-          <div class="input"><label>Status</label><select id="f-status">
-            <option value="ACTIVE" selected>ACTIVE</option><option value="PAUSED">PAUSED</option><option value="DISABLED">DISABLED</option></select></div>
-          <div class="input full"><label>API Key / Token</label><input id="f-key" placeholder="(optional) stored in GAS"/></div>
-          <div class="input full"><label>Webhook URL</label><input id="f-webhook" placeholder="https://.../postback"/></div>
-        </div>
-        <div id="f-error" class="bad" style="display:none"></div>
-        <div class="footer">
-          <button class="btn secondary" data-close>Cancel</button>
-          <button class="btn" id="btn-save-acct">Save Account</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- USERS -->
-    <section data-page="users" style="display:none">
-      <div class="section-head"><h2>Users Management</h2>
-        <div class="flex right">
-          <button class="btn secondary active" data-users-tab="APPROVED">Approved</button>
-          <button class="btn secondary" data-users-tab="PENDING">Pending</button>
-          <button class="btn secondary" data-users-tab="REJECTED">Rejected</button>
-        </div>
-      </div>
-      <div class="card pad">
-        <table>
-          <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Authority</th></tr></thead>
-          <tbody id="tbl-users"><tr><td colspan="4" class="muted">No users.</td></tr></tbody>
-        </table>
-      </div>
-    </section>
-
-    <!-- ANALYTICS -->
-    <section data-page="analytics" style="display:none">
-      <div class="section-head"><h2>Analytics</h2></div>
-      <div class="grid cols-2">
-        <div class="card pad">
-          <h3 style="margin:0 0 10px">Performance Overview (Jan–Jul 2025)</h3>
-          <div id="ana-overview" class="empty">Loading…</div>
-        </div>
-        <div class="card pad">
-          <h3 style="margin:0 0 10px">Geographic Distribution</h3>
-          <div id="ana-geo-dist" class="empty">Loading…</div>
-        </div>
-      </div>
-      <div class="grid cols-2" style="margin-top:16px">
-        <div class="card pad">
-          <h3 style="margin:0 0 10px">Live Performance Data (last 2 min)</h3>
-          <table>
-            <thead><tr><th>Time</th><th>Country</th><th>Offer</th><th>Clicks</th><th>Conv.</th><th>Earnings</th></tr></thead>
-            <tbody id="tbl-live-perf"><tr><td colspan="6" class="muted">Waiting for stream…</td></tr></tbody>
-          </table>
-        </div>
-        <div class="card pad">
-          <h3 style="margin:0 0 10px">Live by GEO (rolling)</h3>
-          <table>
-            <thead><tr><th>Country</th><th>Clicks</th><th>Conv.</th><th>Earnings</th></tr></thead>
-            <tbody id="tbl-live-geo"><tr><td colspan="4" class="muted">Waiting for stream…</td></tr></tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-
-    <!-- WALLET -->
-    <section data-page="wallet" style="display:none">
-      <div class="section-head"><h2>Wallet</h2></div>
-      <div class="grid cols-3">
-        <div class="card pad kpi"><div class="label">Balance</div><div class="value" id="wal-balance">$0.00</div></div>
-        <div class="card pad kpi"><div class="label">Pending Payout</div><div class="value" id="wal-pending">$0.00</div></div>
-        <div class="card pad kpi"><div class="label">Last Payout</div><div class="value" id="wal-last">$0.00</div></div>
-      </div>
-      <div class="grid cols-2" style="margin-top:16px">
-        <div class="card pad">
-          <h3 style="margin:0 0 10px">Transaction History</h3>
-          <table>
-            <thead><tr><th>Date</th><th>Method</th><th>Amount ($)</th><th>Status</th></tr></thead>
-            <tbody id="tbl-wallet"><tr><td colspan="4" class="muted">No transactions.</td></tr></tbody>
-          </table>
-        </div>
-        <div class="card pad">
-          <h3 style="margin:0 0 10px">Request Withdrawal</h3>
-          <div class="muted" style="font-size:13px">Hook this to your GAS endpoint to submit payout requests.</div>
-        </div>
-      </div>
-    </section>
-
-    <!-- MONITORING -->
-    <section data-page="monitor" style="display:none">
-      <div class="section-head"><h2>Monitoring</h2></div>
-      <div class="grid cols-3">
-        <div class="card pad kpi"><div class="label">Alerts</div><div class="value" id="box-alerts">—</div></div>
-        <div class="card pad kpi"><div class="label">Maintenance</div><div class="value" id="box-maint">—</div></div>
-        <div class="card pad kpi"><div class="label">System Health</div><div class="value" id="box-health">—</div></div>
-      </div>
-      <div class="card pad" style="margin-top:16px">
-        <h3 style="margin:0 0 10px">Events Stream</h3>
-        <table>
-          <thead><tr><th>Time</th><th>Type</th><th>Message</th></tr></thead>
-          <tbody id="tbl-monitor"><tr><td colspan="3" class="muted">No events.</td></tr></tbody>
-        </table>
-      </div>
-    </section>
-
-    <!-- SETTINGS -->
-    <section data-page="settings" style="display:none">
-      <div class="section-head"><h2>Settings</h2></div>
-      <div class="card pad"><h3 style="margin:0 0 10px">Live Config</h3>
-        <code id="pretty" class="pretty mono">{ … }</code>
-      </div>
-    </section>
-  </main>
-</div>
-
 <script>
 /* ========= CONFIG ========= */
 const GAS = "https://script.google.com/macros/s/AKfycbwZVlGMvYonfCNdQlwPHiqqgOVC80_HsyktSYmqmQPBKmRrlzg_yo4lKz_Mmu85B7eY/exec";
 const POLL_FAST = 5000;
-const $ = s => document.querySelector(s);
+
+/* ========= SHORTCUTS ========= */
+const $  = s => document.querySelector(s);
 const $$ = s => Array.from(document.querySelectorAll(s));
 const dollars = n => Number(n||0).toLocaleString(undefined,{style:'currency',currency:'USD'});
+const toNum = v => (v==null ? 0 : Number(String(v).replace(/[$,]/g,'')) || 0);
+const normDomain = d=> String(d||'').trim().replace(/^https?:\/\//,'').replace(/\/.*$/,'');
 
-/* GET helper */
+/* ========= FETCH HELPERS ========= */
 const get = async (url, opt={})=>{
   const u = new URL(url);
   u.searchParams.set('_t', Date.now());
@@ -290,11 +18,10 @@ const get = async (url, opt={})=>{
   if(!r.ok) throw new Error('HTTP '+r.status);
   return r.json();
 };
-/* API helpers */
 const api = (action, params={})=>{
   const u = new URL(GAS);
   u.searchParams.set('action', action);
-  Object.entries(params||{}).forEach(([k,v])=>u.searchParams.set(k, v));
+  Object.entries(params).forEach(([k,v])=>u.searchParams.set(k, v));
   return get(u);
 };
 const apiWrite = async (action, payload={})=>{
@@ -302,7 +29,9 @@ const apiWrite = async (action, payload={})=>{
   url.searchParams.set('action', action);
   try{
     const res = await fetch(url, {
-      method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload||{})
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(payload)
     });
     if(!res.ok) throw new Error('HTTP '+res.status);
     return res.json();
@@ -314,7 +43,7 @@ const apiWrite = async (action, payload={})=>{
   }
 };
 
-/* helpers */
+/* ========= NORMALIZERS & UTIL ========= */
 const arr = (maybe) => {
   if (Array.isArray(maybe)) return maybe;
   if (maybe && Array.isArray(maybe.items)) return maybe.items;
@@ -323,33 +52,41 @@ const arr = (maybe) => {
   return [];
 };
 const obj = (maybe) => (maybe && typeof maybe === 'object') ? maybe : {};
-const pick = (o, ...keys) => keys.reduce((v,k)=> v ?? o?.[k], undefined);
-const normDomain = d=> String(d||'').trim().replace(/^https?:\/\//,'').replace(/\/.*$/,'');
 
-/* Tiny SVG helpers (no libs) */
-const sparkline = (values=[], w=520, h=120)=>{
-  if(!values.length) return '<div class="empty">No data</div>';
+/* tolerant read: pick the first existing key among aliases */
+const pick = (o, keys, dft=undefined)=>{
+  for(const k of keys){
+    if (o && o[k] != null) return o[k];
+  }
+  return dft;
+};
+
+/* ========= TINY SVG CHARTS (no libs) ========= */
+const sparkline = (values = [], w = 520, h = 120) => {
+  if (!values.length) return '<div class="empty">No data</div>';
   const max = Math.max(...values), min = Math.min(...values);
-  const xs = values.map((_,i)=> i/(values.length-1||1));
-  const pts = values.map((v,i)=>{
-    const x = 12 + xs[i]*(w-24);
-    const y = h-12 - (max===min?0.5:(v-min)/(max-min))*(h-24);
+  const xs = values.map((_, i) => (values.length === 1 ? 0.5 : i / (values.length - 1)));
+  const pts = values.map((v, i) => {
+    const x = 12 + xs[i] * (w - 24);
+    const y = h - 12 - (max === min ? 0.5 : (v - min) / (max - min)) * (h - 24);
     return `${x},${y}`;
   }).join(' ');
   return `<svg viewBox="0 0 ${w} ${h}" width="100%" height="${h}">
-    <polyline fill="none" stroke="currentColor" stroke-width="2" points="${pts}" opacity="0.9"/>
+    <polyline points="${pts}" fill="none" stroke="#ffd559" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
   </svg>`;
 };
-const barlist = (entries=[], w=520, h=140)=>{
-  if(!entries.length) return '<div class="empty">No data</div>';
-  const pad=8, bw = (w-2*pad)/entries.length-8;
-  const max = Math.max(...entries.map(e=>e.v||0), 1);
-  const bars = entries.map((e,i)=>{
-    const x = pad + i*(bw+8);
-    const bh = ((e.v||0)/max)*(h-40);
-    const y = h-20 - bh;
-    return `<g><rect x="${x}" y="${y}" width="${bw}" height="${bh}" rx="6" ry="6" fill="currentColor" opacity="0.7"></rect>
-      <text x="${x+bw/2}" y="${h-6}" font-size="10" text-anchor="middle" fill="#c4d7ef">${e.k}</text></g>`;
+const barlist = (entries = [], w = 520, h = 160) => {
+  if (!entries.length) return '<div class="empty">No data</div>';
+  const pad = 8, gap = 10, bw = (w - 2 * pad - gap * (entries.length - 1)) / entries.length;
+  const max = Math.max(...entries.map(e => e.v || 0), 1);
+  const bars = entries.map((e, i) => {
+    const x = pad + i * (bw + gap);
+    const bh = ((e.v || 0) / max) * (h - 40);
+    const y = h - 20 - bh;
+    return `<g>
+      <rect x="${x}" y="${y}" width="${bw}" height="${bh}" rx="6" ry="6" fill="#59a6ff"/>
+      <text x="${x + bw / 2}" y="${h - 6}" font-size="10" text-anchor="middle" fill="#c4d7ef">${e.k}</text>
+    </g>`;
   }).join('');
   return `<svg viewBox="0 0 ${w} ${h}" width="100%" height="${h}">${bars}</svg>`;
 };
@@ -380,58 +117,77 @@ $('#nav').addEventListener('click', e=>{
 /* ========= DASHBOARD ========= */
 async function initDashboard(){
   try{
-    const [ov, allUsers, ana] = await Promise.all([
+    const [ov, us, ana] = await Promise.all([
       api('overview'),
-      api('users'),            // always pull all; filter client-side
+      api('users'),
       api('analytics')
     ]);
 
-    const t = ov && ov.totals ? ov.totals : (ov||{});
-    $('#dash-earn').textContent   = dollars(t.earnings||0);
-    $('#dash-clicks').textContent = t.clicks||0;
-    const cr = (t.conversionRate!=null) ? Number(t.conversionRate)
-              : (t.leads && t.clicks ? (t.leads/t.clicks*100) : 0);
-    $('#dash-cr').textContent = Number(cr||0).toFixed(2) + '%';
+    // KPIs
+    const t = ov?.totals || ov || {};
+    $('#dash-earn').textContent   = dollars(toNum(pick(t,['earnings','revenue','totalEarnings'],0)));
+    $('#dash-clicks').textContent = toNum(pick(t,['clicks','totalClicks'],0));
+    const leads = toNum(pick(t,['leads','conversions'],0));
+    const cr = (t.conversionRate != null)
+      ? Number(t.conversionRate)
+      : ($('#dash-clicks').textContent ? (leads / Number($('#dash-clicks').textContent) * 100) : 0);
+    $('#dash-cr').textContent = `${Number(cr||0).toFixed(2)}%`;
 
-    const users = arr(allUsers);
+    const users = arr(us);
     const active = users.filter(u => String(u.status||'APPROVED').toUpperCase()==='APPROVED').length;
     $('#dash-users').textContent = active;
+    $('#dash-users-diff').textContent = '24h growth';
 
-    // sparkline from overview.byDay
+    // Daily earnings chart
     const byDay = Array.isArray(ov?.byDay) ? ov.byDay : [];
-    const dayVals = byDay.map(d=> Number(d.earnings||d.value||0));
-    $('#dash-earnings').innerHTML = sparkline(dayVals);
-
-    // traffic sources from overview.offerTypes (simple bars)
-    const src = ov?.offerTypes || {};
-    const entries = Object.keys(src).map(k=>({k, v:Number(src[k]||0)}));
-    $('#dash-sources').innerHTML = barlist(entries);
-
-    // By Geo
-    const tb = $('#tbl-dash-geo'); tb.innerHTML='';
-    let rows = [];
-    const items = arr(ana?.items||ana);
-    if(items.length){
-      rows = items.map(x=>({
-        country: x.country || x.value || '—',
-        clicks : Number(x.clicks||0),
-        leads  : Number(x.leads||x.conversions||0),
-        earnings: Number(x.earnings||0)
-      }));
-    }else{
-      const geoMap = ov?.geo || {};
-      const clicksMap = ov?.geoClicks || {};
-      const leadsMap  = ov?.geoLeads  || {};
-      rows = Object.keys(geoMap).map(k=>({
-        country:k, clicks:Number(clicksMap[k]||0), leads:Number(leadsMap[k]||0), earnings:Number(geoMap[k]||0)
-      }));
+    const dayVals = byDay.map(d => toNum(d.earnings ?? d.value));
+    if (dayVals.length) {
+      $('#dash-earnings').innerHTML = sparkline(dayVals);
+    } else {
+      const live = arr(ana?.live) || [];
+      const buckets = {};
+      live.forEach(e=>{
+        const k = (e.time||'').slice(0,16);
+        buckets[k] = (buckets[k]||0) + toNum(e.earnings);
+      });
+      const vals = Object.keys(buckets).sort().map(k=>buckets[k]);
+      $('#dash-earnings').innerHTML = vals.length ? sparkline(vals) : '<div class="empty">No data</div>';
     }
-    rows.sort((a,b)=>b.earnings-a.earnings).slice(0,10).forEach(g=>{
-      const tr=document.createElement('tr');
-      tr.innerHTML=`<td>${g.country}</td><td>${g.clicks}</td><td>${g.leads}</td><td class="money">${dollars(g.earnings)}</td>`;
-      tb.appendChild(tr);
+
+    // Traffic sources (from overview.offerTypes)
+    const src = ov?.offerTypes || {};
+    const entries = Object.keys(src).map(k => ({ k, v: toNum(src[k]) }));
+    $('#dash-sources').innerHTML = entries.length ? barlist(entries) : '<div class="empty">No data</div>';
+
+    // By Geo (Clicks, Leads, Earnings)
+    const geoEarn = ov?.geo || {};
+    const geoAgg = {};
+    (arr(ana?.items) || []).forEach(it=>{
+      const country = it.country || it.value || 'Unknown';
+      const clicks  = toNum(it.clicks);
+      const conv    = toNum(it.leads ?? it.conversions ?? it.conv);
+      const earn    = toNum(it.earnings);
+      if (!geoAgg[country]) geoAgg[country] = {country, clicks:0, leads:0, earnings:0};
+      geoAgg[country].clicks   += clicks;
+      geoAgg[country].leads    += conv;
+      geoAgg[country].earnings += earn;
     });
-    if(!tb.children.length){ tb.innerHTML='<tr><td colspan="4" class="muted">No data</td></tr>'; }
+    Object.keys(geoEarn).forEach(k=>{
+      if (!geoAgg[k]) geoAgg[k] = {country:k, clicks:0, leads:0, earnings:0};
+      geoAgg[k].earnings = toNum(geoEarn[k]);
+    });
+
+    const tb = $('#tbl-dash-geo'); tb.innerHTML='';
+    const rows = Object.values(geoAgg).sort((a,b)=>b.earnings-a.earnings).slice(0,10);
+    if (!rows.length) {
+      tb.innerHTML = '<tr><td colspan="4" class="muted">No data</td></tr>';
+    } else {
+      rows.forEach(g=>{
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${g.country}</td><td>${g.clicks}</td><td>${g.leads}</td><td class="money">${dollars(g.earnings)}</td>`;
+        tb.appendChild(tr);
+      });
+    }
   }catch(e){
     console.error(e);
   }
@@ -442,38 +198,42 @@ async function initCpa(){
   const wrap = $('#cpa-grid'); wrap.innerHTML='';
   try{
     const resp = await api('cpa');
-    const items = arr(resp?.items||resp);
-    if(!items.length){ wrap.innerHTML = `<div class="card pad empty">No CPA accounts.</div>`; return; }
+    // accept both {items:[...]} and [...]
+    const raw = arr(resp);
+    // map both old headers (account, activeOffers, conversionRate…) and new lowercase headers (accountid, activeoffers, conversionrate…)
+    const items = raw.map(r=>{
+      const account = String(pick(r,['account','accountid'],'')).trim();
+      const network = pick(r,['network'],'');
+      const domain  = pick(r,['domain'],'');
+      const status  = String(pick(r,['status'],'ACTIVE')).toUpperCase();
+      const activeOffers = toNum(pick(r,['activeOffers','activeoffers'],0));
+      const revenue = toNum(pick(r,['revenue'],0));
+      const clicks  = toNum(pick(r,['clicks'],0));
+      let conv      = pick(r,['conversionRate','conversionrate'],0);
+      conv = Number(conv); conv = conv > 1 ? conv : conv * 100; // ratio or %
+      return {account, network, domain, status, activeOffers, revenue, clicks, conv};
+    });
+
+    if(!items.length){ wrap.innerHTML = `<div class="card pad empty">No CPA accounts yet.</div>`; return; }
 
     items.forEach(r=>{
-      const account        = pick(r,'account','accountid');
-      const network        = pick(r,'network');
-      const domain         = pick(r,'domain');
-      const preferredOffer = pick(r,'preferredOffer','preferredoffer');
-      const activeOffers   = pick(r,'activeOffers','activeoffers');
-      const revenue        = Number(pick(r,'revenue')||0);
-      const clicks         = Number(pick(r,'clicks')||0);
-      let conv             = pick(r,'conversionRate','conversionrate');
-      conv = (conv!=null) ? Number(conv) : 0;
-      const convPct        = conv>1 ? conv : conv*100;
-      const status         = pick(r,'status') || 'ACTIVE';
-
       const card = document.createElement('div');
       card.className='card pad';
       card.innerHTML = `
         <div class="acct">
           <div>
-            <h3>${account||'—'} <span class="badge">${preferredOffer||''}</span></h3>
-            <div class="muted" style="margin-bottom:10px">Network <b style="color:#fff">${network||'—'}</b> · <span class="badge">${status}</span></div>
+            <h3>${r.account||'—'}</h3>
+            <div class="muted" style="margin-bottom:10px">Network <b style="color:#fff">${r.network||'—'}</b> · <span class="badge">${r.status}</span></div>
             <div class="stats">
-              <div class="kv"><b>Active Offers</b><span>${activeOffers||0}</span></div>
-              <div class="kv"><b>Revenue</b><span class="money">${dollars(revenue)}</span></div>
-              <div class="kv"><b>Clicks</b><span>${clicks}</span></div>
-              <div class="kv"><b>Conversion</b><span>${convPct.toFixed(2)}%</span></div>
+              <div class="kv"><b>Active Offers</b><span>${r.activeOffers}</span></div>
+              <div class="kv"><b>Revenue</b><span class="money">${dollars(r.revenue)}</span></div>
+              <div class="kv"><b>Clicks</b><span>${r.clicks}</span></div>
+              <div class="kv"><b>Conversion</b><span>${r.conv.toFixed(2)}%</span></div>
             </div>
           </div>
           <div class="right flex">
-            <span class="pill mono">${domain||'no-domain'}</span>
+            <span class="pill mono">${r.domain||'no-domain'}</span>
+            <button class="btn secondary" data-view-acct="${r.account}">View Details</button>
           </div>
         </div>`;
       wrap.appendChild(card);
@@ -484,12 +244,12 @@ async function initCpa(){
   }
 }
 
-/* Add New Account modal wiring (restored) */
+/* Add New Account modal wiring (requires #mdl-cpa HTML block present) */
 const mdl = document.getElementById('mdl-cpa');
-const openMdl  = ()=> mdl.classList.add('open');
-const closeMdl = ()=> mdl.classList.remove('open');
+const openMdl  = ()=> mdl && mdl.classList.add('open');
+const closeMdl = ()=> mdl && mdl.classList.remove('open');
 document.getElementById('btn-add-acct')?.addEventListener('click', openMdl);
-mdl.addEventListener('click', e=>{ if(e.target.hasAttribute('data-close')) closeMdl(); });
+mdl?.addEventListener('click', e=>{ if(e.target.hasAttribute('data-close')) closeMdl(); });
 document.getElementById('btn-save-acct')?.addEventListener('click', async ()=>{
   const err = document.getElementById('f-error');
   const v = {
@@ -501,7 +261,7 @@ document.getElementById('btn-save-acct')?.addEventListener('click', async ()=>{
     webhook : document.getElementById('f-webhook').value.trim()
   };
   if(!v.account || !v.network){
-    err.textContent = 'Account ID and Network are required.'; err.style.display='block'; return;
+    err.textContent = 'Account Name and Network are required.'; err.style.display='block'; return;
   }
   err.style.display='none';
   try{
@@ -524,15 +284,16 @@ userTabBtns.forEach(b=>b.addEventListener('click',()=>{
 async function initUsers(tab='APPROVED'){
   const tb = $('#tbl-users'); tb.innerHTML = '';
   try{
-    const all = arr(await api('users')); // ALWAYS pull all; normalize + filter locally
-    const items = all.map(u=>({
-      name: u.name, email: u.email, phone: u.phone,
-      authority: pick(u,'authority') || '1x User',
-      status: String(pick(u,'status')||'APPROVED').toUpperCase()
-    })).filter(u=>u.status===tab);
-
-    if(!items.length){ tb.innerHTML = `<tr><td colspan="4" class="muted">No ${tab.toLowerCase()} users.</td></tr>`; return; }
-    items.forEach(u=>{
+    // ask backend with status hint
+    const resp = await api('users', {status: tab});
+    let list = arr(resp?.items || resp);
+    // fallback: filter locally if backend returns all
+    if (!list.length) {
+      const all  = arr(resp?.items || resp);
+      list = all.filter(u => String(u.status||'APPROVED').toUpperCase()===tab);
+    }
+    if(!list.length){ tb.innerHTML = `<tr><td colspan="4" class="muted">No ${tab.toLowerCase()} users.</td></tr>`; return; }
+    list.forEach(u=>{
       const tr = document.createElement('tr');
       tr.innerHTML = `<td>${u.name||'—'}</td><td>${u.email||''}</td><td>${u.phone||''}</td><td>${u.authority||'1x User'}</td>`;
       tb.appendChild(tr);
@@ -547,12 +308,22 @@ let liveTimer=null, liveRows=[];
 async function initAnalytics(){
   try{
     const base = await api('analytics');
-    const items = arr(base?.items||base);
-    $('#ana-overview').innerHTML = items.length ? barlist(items.map(i=>({k:i.country||i.value||'—', v:Number(i.earnings||0)}))) : 'No data';
-    $('#ana-geo-dist').innerHTML = items.length ? barlist(items.map(i=>({k:i.country||i.value||'—', v:Number(i.clicks||0)}))) : 'No data';
+    const baseItems = arr(base) || arr(base?.items);
+    // Overview chart: treat base items as {metric:date,value:number} or any series-like shape
+    const seriesVals = baseItems.map(x=>toNum(x.value ?? x.earnings ?? x.clicks ?? 0));
+    $('#ana-overview').innerHTML = seriesVals.length ? sparkline(seriesVals) : '<div class="empty">No data</div>';
+    // Geo distribution (bar chart proxy: top 6 countries by clicks if present, else by value)
+    const geoBucket = {};
+    baseItems.forEach(x=>{
+      const k = x.country || x.value || x.metric || '—';
+      const v = toNum(x.clicks ?? x.earnings ?? x.value ?? 0);
+      geoBucket[k] = (geoBucket[k]||0) + v;
+    });
+    const tops = Object.entries(geoBucket).map(([k,v])=>({k, v})).sort((a,b)=>b.v-a.v).slice(0,6);
+    $('#ana-geo-dist').innerHTML = tops.length ? barlist(tops) : '<div class="empty">No data</div>';
   }catch(e){
-    $('#ana-overview').textContent = 'Loading…';
-    $('#ana-geo-dist').textContent = 'Loading…';
+    $('#ana-overview').innerHTML = '<div class="empty">No data</div>';
+    $('#ana-geo-dist').innerHTML = '<div class="empty">No data</div>';
   }
 
   if(liveTimer) clearInterval(liveTimer);
@@ -564,30 +335,30 @@ async function pullLive(){
   try{
     const j = await api('analytics', { live:1, limit:24, windowSec:120 });
     const events = arr(j?.live) || arr(j);
-    if(events.length){ liveRows = liveRows.concat(events).slice(-24); }
+    // keep window
+    liveRows = liveRows.concat(events).slice(-24);
 
     const tb = $('#tbl-live-perf'); tb.innerHTML='';
     if(!liveRows.length){
       tb.innerHTML='<tr><td colspan="6" class="muted">Waiting for stream…</td></tr>';
     }else{
       liveRows.slice().reverse().forEach(r=>{
-        const conv = r.conversions ?? r.conv ?? r.leads ?? 0;
         const tr=document.createElement('tr');
         tr.innerHTML =
           `<td class="mono">${r.time||''}</td><td>${r.country||''}</td><td>${r.offer||''}</td>`+
-          `<td>${r.clicks||0}</td><td>${conv}</td><td class="money">${dollars(r.earnings||0)}</td>`;
+          `<td>${toNum(r.clicks)}</td><td>${toNum(r.leads ?? r.conversions ?? r.conv)}</td><td class="money">${dollars(toNum(r.earnings))}</td>`;
         tb.appendChild(tr);
       });
     }
 
-    // Live by GEO — recompute fresh each poll
+    // recompute geo each poll from the newest payload only
     const byGeo = {};
     events.forEach(ev=>{
       const k = ev.country || 'Unknown';
       if(!byGeo[k]) byGeo[k] = {country:k, clicks:0, conv:0, earnings:0};
-      byGeo[k].clicks   += Number(ev.clicks||0);
-      byGeo[k].conv     += Number(ev.conversions ?? ev.conv ?? ev.leads ?? 0);
-      byGeo[k].earnings += Number(ev.earnings||0);
+      byGeo[k].clicks   += toNum(ev.clicks);
+      byGeo[k].conv     += toNum(ev.leads ?? ev.conversions ?? ev.conv);
+      byGeo[k].earnings += toNum(ev.earnings);
     });
 
     const tb2 = $('#tbl-live-geo'); tb2.innerHTML='';
@@ -609,17 +380,20 @@ async function initWallet(){
   try{
     const w = obj(await api('wallet'));
     const hist = arr(w.history) || arr(w);
-    $('#wal-balance').textContent = dollars(w.balance||0);
+
+    $('#wal-balance').textContent = dollars(toNum(w.balance));
+
     const pendingAmt = hist.filter(t=>String(t.status||'').toUpperCase()==='PENDING')
-                           .reduce((s,t)=>s+Number(t.amount||0),0);
+                           .reduce((s,t)=>s+toNum(t.amount),0);
     $('#wal-pending').textContent = dollars(pendingAmt);
+
     const lastPaid = hist.filter(t=>String(t.status||'').toUpperCase()==='COMPLETED').slice(-1)[0];
-    $('#wal-last').textContent = dollars(lastPaid ? lastPaid.amount : 0);
+    $('#wal-last').textContent = dollars(lastPaid ? toNum(lastPaid.amount) : 0);
 
     const tb = $('#tbl-wallet'); tb.innerHTML='';
     hist.slice().reverse().forEach(t=>{
       const tr=document.createElement('tr');
-      tr.innerHTML=`<td>${t.date||''}</td><td>${t.method||''}</td><td class="money">${dollars(t.amount||0)}</td><td>${t.status||''}</td>`;
+      tr.innerHTML=`<td>${t.date||''}</td><td>${t.method||''}</td><td class="money">${dollars(toNum(t.amount))}</td><td>${t.status||''}</td>`;
       tb.appendChild(tr);
     });
     if(!tb.children.length) tb.innerHTML = `<tr><td colspan="4" class="muted">No transactions.</td></tr>`;
@@ -635,6 +409,7 @@ async function initMonitor(){
   try{
     const m = obj(await api('monitoring'));
     const events = arr(m.events) || arr(m);
+
     $('#box-alerts').textContent = events.length;
     $('#box-maint').textContent  = m.maintenance || '—';
     $('#box-health').textContent = m.health || 'OK';
@@ -670,5 +445,3 @@ window.addEventListener('DOMContentLoaded', ()=>{
   show(r);
 });
 </script>
-</body>
-</html>

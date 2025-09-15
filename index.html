@@ -24,6 +24,7 @@
       var(--bg-0);
   }
 
+  /* LAYOUT */
   .page{display:grid; grid-template-columns:260px 1fr; gap:0; min-height:100vh}
   .sidebar{
     background:linear-gradient(180deg,#0d1a27 0%, #0b1825 100%);
@@ -43,6 +44,7 @@
 
   .content{padding:22px; min-width:0}
 
+  /* HEAD BAR */
   .section-head{display:flex; align-items:center; justify-content:space-between; gap:12px; margin:4px 0 18px}
   .section-head h2{margin:0; font-size:18px; letter-spacing:.3px}
   .btn{
@@ -50,7 +52,9 @@
     padding:10px 14px; border-radius:10px; cursor:pointer; box-shadow:var(--shadow)
   }
   .btn.secondary{background:#173046; color:#d6e7ff; border:1px solid #254660}
+  .btn.secondary.active{background:#103b66; border-color:#3a85ff}
 
+  /* GRID / CARDS */
   .grid{display:grid; gap:16px}
   .grid.cols-4{grid-template-columns:repeat(4,minmax(0,1fr))}
   .grid.cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}
@@ -59,8 +63,10 @@
   @media (max-width:1150px){ .grid.cols-4{grid-template-columns:repeat(2,1fr)} }
   @media (max-width:760px){ .page{grid-template-columns:1fr} .sidebar{position:static;height:auto} .grid,[class*=cols-]{grid-template-columns:1fr} }
 
-  .card{background:linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,0)) , var(--card);
-    border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow)}
+  .card{
+    background:linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,0)) , var(--card);
+    border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow)
+  }
   .card.pad{padding:16px}
 
   .kpi{display:flex; flex-direction:column; gap:8px}
@@ -75,18 +81,44 @@
   .muted{color:var(--muted)}
   .money{color:var(--good); font-weight:700}
   .badge{display:inline-block; padding:2px 8px; border-radius:999px; font-size:11px; border:1px solid var(--line); background:#14304a}
+
+  /* CPA account card */
   .acct{display:grid; grid-template-columns:1fr auto; gap:10px}
   .acct h3{margin:0 0 6px; font-size:20px}
   .acct .stats{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px}
   .kv{background:var(--card-2); border:1px solid var(--line); border-radius:10px; padding:10px}
   .kv b{display:block; font-size:12px; color:var(--muted); margin-bottom:3px}
   .kv span{font-weight:800}
+
   .pill{padding:6px 9px; border-radius:999px; background:#103250; border:1px solid var(--line); font-size:12px}
   .flex{display:flex; gap:10px; align-items:center}
   .right{margin-left:auto}
+
   .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;}
   code.pretty{white-space:pre-wrap; display:block; background:#0e2236; border:1px solid var(--line); padding:14px; border-radius:10px}
+
+  /* empty */
   .empty{padding:18px; text-align:center; color:var(--muted)}
+
+  /* --- Add New Account Modal --- */
+  .modal{position:fixed; inset:0; display:none; align-items:center; justify-content:center; z-index:50}
+  .modal.open{display:flex}
+  .modal .scrim{position:absolute; inset:0; background:rgba(6,16,26,.6); backdrop-filter: blur(2px)}
+  .modal .panel{
+    position:relative; width:min(680px,92vw); background:var(--card);
+    border:1px solid var(--line); border-radius:16px; box-shadow:var(--shadow); padding:18px;
+  }
+  .form-grid{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+  .form-grid .full{grid-column:1 / -1}
+  .input{display:flex; flex-direction:column; gap:6px}
+  .input label{font-size:12px; color:var(--muted)}
+  .input input,.input select,.input textarea{
+    background:#0e2236; color:var(--text); border:1px solid #24445e; border-radius:10px; padding:10px 12px;
+    outline:none;
+  }
+  .input input:focus,.input select:focus,.input textarea:focus{border-color:#3a85ff}
+  .modal .footer{display:flex; gap:10px; justify-content:flex-end; margin-top:14px}
+  .bad{color:var(--bad); font-size:12px}
 </style>
 </head>
 <body>
@@ -147,11 +179,44 @@
       <div id="cpa-grid" class="grid cols-2"></div>
     </section>
 
+    <!-- ADD NEW ACCOUNT MODAL -->
+    <div id="mdl-cpa" class="modal" aria-hidden="true">
+      <div class="scrim" data-close></div>
+      <div class="panel">
+        <h3 style="margin:0 0 12px">Add New CPA Account</h3>
+        <div class="form-grid">
+          <div class="input"><label>Account Name *</label><input id="f-account" placeholder="e.g. 2288690 / Main Grip"/></div>
+          <div class="input"><label>Network *</label><input id="f-network" placeholder="e.g. CPA Grip"/></div>
+
+          <div class="input"><label>Domain</label><input id="f-domain" placeholder="offers.example.com"/></div>
+          <div class="input">
+            <label>Status</label>
+            <select id="f-status">
+              <option value="ACTIVE" selected>ACTIVE</option>
+              <option value="PAUSED">PAUSED</option>
+              <option value="DISABLED">DISABLED</option>
+            </select>
+          </div>
+
+          <div class="input full"><label>API Key / Token</label><input id="f-key" placeholder="(optional) stored in GAS"/></div>
+          <div class="input"><label>Webhook URL</label><input id="f-webhook" placeholder="https://.../postback"/></div>
+          <div class="input"><label>Contact Phone</label><input id="f-phone" placeholder="+2348030000000"/></div>
+
+          <div class="input full"><label>Notes</label><textarea id="f-notes" rows="3" placeholder="Any setup specifics…"></textarea></div>
+          <div class="input full bad" id="f-error" style="display:none"></div>
+        </div>
+        <div class="footer">
+          <button class="btn secondary" data-close>Cancel</button>
+          <button class="btn" id="btn-save-acct">Save Account</button>
+        </div>
+      </div>
+    </div>
+
     <!-- USERS -->
     <section data-page="users" style="display:none">
       <div class="section-head"><h2>Users Management</h2>
         <div class="flex right">
-          <button class="btn secondary" data-users-tab="APPROVED">Approved</button>
+          <button class="btn secondary active" data-users-tab="APPROVED">Approved</button>
           <button class="btn secondary" data-users-tab="PENDING">Pending</button>
           <button class="btn secondary" data-users-tab="REJECTED">Rejected</button>
         </div>
@@ -159,7 +224,7 @@
       <div class="card pad">
         <table>
           <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Authority</th></tr></thead>
-        <tbody id="tbl-users"><tr><td colspan="4" class="muted">No users.</td></tr></tbody>
+          <tbody id="tbl-users"><tr><td colspan="4" class="muted">No users.</td></tr></tbody>
         </table>
       </div>
     </section>
@@ -256,6 +321,7 @@ const $ = s => document.querySelector(s);
 const $$ = s => Array.from(document.querySelectorAll(s));
 const dollars = n => Number(n||0).toLocaleString(undefined,{style:'currency',currency:'USD'});
 
+/* GET helper */
 const get = async (url, opt={})=>{
   const u = new URL(url);
   u.searchParams.set('_t', Date.now()); // cache-bust
@@ -263,11 +329,41 @@ const get = async (url, opt={})=>{
   if(!r.ok) throw new Error('HTTP '+r.status);
   return r.json();
 };
+/* API helpers */
 const api = (action, params={})=>{
   const u = new URL(GAS);
   u.searchParams.set('action', action);
   Object.entries(params).forEach(([k,v])=>u.searchParams.set(k, v));
   return get(u);
+};
+/* POST (with GET fallback) for writes */
+const apiWrite = async (action, payload={})=>{
+  const url = new URL(GAS);
+  url.searchParams.set('action', action);
+  try{
+    const res = await fetch(url, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(payload)
+    });
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    return res.json();
+  }catch(e){
+    Object.entries(payload||{}).forEach(([k,v])=>url.searchParams.set(k, typeof v==='object'?JSON.stringify(v):String(v)));
+    const res = await fetch(url, {cache:'no-store'});
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    return res.json();
+  }
+};
+/* normalizers */
+const normDomain = d=> String(d||'').trim().replace(/^https?:\/\//,'').replace(/\/.*$/,'');
+const normPhone  = p=>{
+  const s = String(p||'').trim();
+  if(!s) return '';
+  if(/^\+\d{6,15}$/.test(s)) return s;
+  const digits = s.replace(/\D+/g,'');
+  if(!digits) return '';
+  return digits.startsWith('0') ? '+234'+digits.slice(1) : (digits.startsWith('234') ? '+'+digits : '+'+digits);
 };
 
 /* ========= ROUTER ========= */
@@ -306,8 +402,8 @@ async function initDashboard(){
     const cr = (t.conversionRate!=null) ? Number(t.conversionRate) : (t.leads && t.clicks ? (t.leads/t.clicks*100) : 0);
     $('#dash-cr').textContent = Number(cr||0).toFixed(2) + '%';
 
-    const users = (us && us.items) ? us.items : [];
-    const active = users.filter(u => String(u.status||'APPROVED').toUpperCase()==='APPROVED').length;
+    const items = (us && us.items) ? us.items : [];
+    const active = items.filter(u => String(u.status||'APPROVED').toUpperCase()==='APPROVED').length;
     $('#dash-users').textContent = active;
     $('#dash-users-diff').textContent = '24h growth';
 
@@ -346,7 +442,7 @@ async function initCpa(){
         <div class="acct">
           <div>
             <h3>${r.account||'—'}</h3>
-            <div class="muted" style="margin-bottom:10px">Network <b style="color:#fff">${r.network||'—'}</b> · <span class="badge">ACTIVE</span></div>
+            <div class="muted" style="margin-bottom:10px">Network <b style="color:#fff">${r.network||'—'}</b> · <span class="badge">${r.status||'ACTIVE'}</span></div>
             <div class="stats">
               <div class="kv"><b>Active Offers</b><span>${r.activeOffers||0}</span></div>
               <div class="kv"><b>Revenue</b><span class="money">${dollars(r.revenue||0)}</span></div>
@@ -365,11 +461,44 @@ async function initCpa(){
     wrap.innerHTML = `<div class="card pad empty">Failed to load accounts.</div>`;
   }
 }
-$('#btn-add-acct')?.addEventListener('click', ()=> alert('“Add New Account” opens here. Hook to GAS write when ready.'));
+
+/* Add New Account modal wiring */
+const mdl = document.getElementById('mdl-cpa');
+const openMdl  = ()=> mdl.classList.add('open');
+const closeMdl = ()=> mdl.classList.remove('open');
+document.getElementById('btn-add-acct')?.addEventListener('click', openMdl);
+mdl.addEventListener('click', e=>{ if(e.target.hasAttribute('data-close')) closeMdl(); });
+document.getElementById('btn-save-acct')?.addEventListener('click', async ()=>{
+  const err = document.getElementById('f-error');
+  const v = {
+    account : document.getElementById('f-account').value.trim(),
+    network : document.getElementById('f-network').value.trim(),
+    domain  : normDomain(document.getElementById('f-domain').value),
+    status  : document.getElementById('f-status').value,
+    apiKey  : document.getElementById('f-key').value.trim(),
+    webhook : document.getElementById('f-webhook').value.trim(),
+    phone   : normPhone(document.getElementById('f-phone').value),
+    notes   : document.getElementById('f-notes').value.trim()
+  };
+  if(!v.account || !v.network){
+    err.textContent = 'Account Name and Network are required.'; err.style.display='block'; return;
+  }
+  err.style.display='none';
+  try{
+    const res = await apiWrite('cpaCreate', v); // GAS: upsert to CPA sheet; return {ok:true}
+    if(!res || res.ok!==true) throw new Error('Create failed');
+    closeMdl();
+    await initCpa();
+  }catch(e){
+    err.textContent = 'Could not save account. Please try again.'; err.style.display='block';
+  }
+});
 
 /* ========= USERS ========= */
 let currentUsersTab = 'APPROVED';
-$$('[data-users-tab]').forEach(b=>b.addEventListener('click',()=>{
+const userTabBtns = $$('[data-users-tab]');
+userTabBtns.forEach(b=>b.addEventListener('click',()=>{
+  userTabBtns.forEach(x=>x.classList.toggle('active', x===b));
   currentUsersTab = b.dataset.usersTab; initUsers(currentUsersTab);
 }));
 async function initUsers(tab='APPROVED'){
@@ -393,7 +522,7 @@ async function initUsers(tab='APPROVED'){
 let liveTimer=null, liveGeo={}, liveRows=[];
 async function initAnalytics(){
   try{
-    const base = await api('analytics'); // returns {items:[...]} but we only need presence
+    const base = await api('analytics'); // returns {items:[...]} presence
     $('#ana-overview').textContent = (base && base.items && base.items.length) ? 'Chart ready' : 'Loading…';
     $('#ana-geo-dist').textContent = 'Chart ready';
   }catch(e){ /* noop */ }
@@ -406,7 +535,6 @@ async function pullLive(){
   try{
     const j = await api('analytics', { live:1, limit:24, windowSec:120 });
     const events = j.live || [];
-    // aggregate rolling
     events.forEach(ev=>{
       liveRows.push(ev);
       const k = ev.country || 'Unknown';

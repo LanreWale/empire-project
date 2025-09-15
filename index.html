@@ -184,11 +184,23 @@
       <div class="scrim" data-close></div>
       <div class="panel">
         <h3 style="margin:0 0 12px">Add New CPA Account</h3>
-        <div class="form-grid">
-          <div class="input"><label>Account Name *</label><input id="f-account" placeholder="e.g. 2288690 / Main Grip"/></div>
-          <div class="input"><label>Network *</label><input id="f-network" placeholder="e.g. CPA Grip"/></div>
 
-          <div class="input"><label>Domain</label><input id="f-domain" placeholder="offers.example.com"/></div>
+        <div class="form-grid">
+          <div class="input">
+            <label>Account Name *</label>
+            <input id="f-account" placeholder="e.g. 2288690 / Main Grip"/>
+          </div>
+
+          <div class="input">
+            <label>Network *</label>
+            <input id="f-network" placeholder="e.g. CPA Grip"/>
+          </div>
+
+          <div class="input">
+            <label>Domain</label>
+            <input id="f-domain" placeholder="offers.example.com"/>
+          </div>
+
           <div class="input">
             <label>Status</label>
             <select id="f-status">
@@ -198,9 +210,19 @@
             </select>
           </div>
 
-          <div class="input full"><label>API Key / Token</label><input id="f-key" placeholder="(optional) stored in GAS"/></div>
-          <div class="input"><label>Webhook URL</label><input id="f-webhook" placeholder="https://.../postback"/></div>
-          <div class="input full"> 
+          <div class="input full">
+            <label>API Key / Token</label>
+            <input id="f-key" placeholder="(optional) stored in GAS"/>
+          </div>
+
+          <div class="input">
+            <label>Webhook URL</label>
+            <input id="f-webhook" placeholder="https://.../postback"/>
+          </div>
+        </div>
+
+        <div id="f-error" class="bad" style="display:none"></div>
+
         <div class="footer">
           <button class="btn secondary" data-close>Cancel</button>
           <button class="btn" id="btn-save-acct">Save Account</button>
@@ -351,16 +373,19 @@ const apiWrite = async (action, payload={})=>{
     return res.json();
   }
 };
+
+/* ---------- response normalizers ---------- */
+const arr = (maybe) => {
+  if (Array.isArray(maybe)) return maybe;
+  if (maybe && Array.isArray(maybe.items)) return maybe.items;
+  if (maybe && Array.isArray(maybe.rows))  return maybe.rows;
+  if (maybe && Array.isArray(maybe.data))  return maybe.data;
+  return [];
+};
+const obj = (maybe) => (maybe && typeof maybe === 'object') ? maybe : {};
+
 /* normalizers */
 const normDomain = d=> String(d||'').trim().replace(/^https?:\/\//,'').replace(/\/.*$/,'');
-const normPhone  = p=>{
-  const s = String(p||'').trim();
-  if(!s) return '';
-  if(/^\+\d{6,15}$/.test(s)) return s;
-  const digits = s.replace(/\D+/g,'');
-  if(!digits) return '';
-  return digits.startsWith('0') ? '+234'+digits.slice(1) : (digits.startsWith('234') ? '+'+digits : '+'+digits);
-};
 
 /* ========= ROUTER ========= */
 function show(route){
@@ -388,7 +413,6 @@ $('#nav').addEventListener('click', e=>{
 /* ========= DASHBOARD ========= */
 async function initDashboard(){
   try{
-    // Overview + Users (for active count)
     const [ov, us] = await Promise.all([ api('overview'), api('users') ]);
 
     const t = ov && ov.totals ? ov.totals : (ov||{});
@@ -398,12 +422,12 @@ async function initDashboard(){
     const cr = (t.conversionRate!=null) ? Number(t.conversionRate) : (t.leads && t.clicks ? (t.leads/t.clicks*100) : 0);
     $('#dash-cr').textContent = Number(cr||0).toFixed(2) + '%';
 
-    const items = (us && us.items) ? us.items : [];
-    const active = items.filter(u => String(u.status||'APPROVED').toUpperCase()==='APPROVED').length;
+    const users = arr(us);
+    const active = users.filter(u => String(u.status||'APPROVED').toUpperCase()==='APPROVED').length;
     $('#dash-users').textContent = active;
     $('#dash-users-diff').textContent = '24h growth';
 
-    // Top GEO table from earnings map
+    // Top GEO from earnings map
     const tb = $('#tbl-dash-geo'); tb.innerHTML='';
     const geoMap = ov && ov.geo ? ov.geo : {};
     const rows = Object.keys(geoMap).map(k=>({country:k, earnings:geoMap[k]}))
@@ -426,8 +450,8 @@ async function initDashboard(){
 async function initCpa(){
   const wrap = $('#cpa-grid'); wrap.innerHTML='';
   try{
-    const resp = await api('cpa'); // backend returns {ok, items:[...]}
-    const items = resp.items || [];
+    const resp = await api('cpa'); // backend returns {ok, items:[...]} or array
+    const items = arr(resp);
     if(!items.length){ wrap.innerHTML = `<div class="card pad empty">No CPA accounts yet.</div>`; return; }
 
     items.forEach(r=>{
@@ -438,7 +462,7 @@ async function initCpa(){
         <div class="acct">
           <div>
             <h3>${r.account||'—'}</h3>
-            <div class="muted" style="margin-bottom:10px">Network <b style="color:#fff">${r.network||'—'}</b> · <span class="badge">${r.status||'ACTIVE'}</span></div>
+            <div class="muted" style="margin-bottom:10px">Network <b style="color:#fff">${r.network||'—'}</b> · <span class="badge">${(r.status||'ACTIVE')}</span></div>
             <div class="stats">
               <div class="kv"><b>Active Offers</b><span>${r.activeOffers||0}</span></div>
               <div class="kv"><b>Revenue</b><span class="money">${dollars(r.revenue||0)}</span></div>
@@ -472,9 +496,7 @@ document.getElementById('btn-save-acct')?.addEventListener('click', async ()=>{
     domain  : normDomain(document.getElementById('f-domain').value),
     status  : document.getElementById('f-status').value,
     apiKey  : document.getElementById('f-key').value.trim(),
-    webhook : document.getElementById('f-webhook').value.trim(),
-    phone   : normPhone(document.getElementById('f-phone').value),
-    notes   : document.getElementById('f-notes').value.trim()
+    webhook : document.getElementById('f-webhook').value.trim()
   };
   if(!v.account || !v.network){
     err.textContent = 'Account Name and Network are required.'; err.style.display='block'; return;
@@ -500,9 +522,11 @@ userTabBtns.forEach(b=>b.addEventListener('click',()=>{
 async function initUsers(tab='APPROVED'){
   const tb = $('#tbl-users'); tb.innerHTML = '';
   try{
-    const j = await api('users');
-    const items = j.items || [];
-    const filtered = items.filter(u => String(u.status||'APPROVED').toUpperCase()===tab);
+    const resp = await api('users', {status: tab}); // if GAS respects status
+    const all  = arr(resp);
+    const filtered = all.length ? all
+      : arr(resp?.items||resp).filter(u => String(u.status||'APPROVED').toUpperCase()===tab);
+
     if(!filtered.length){ tb.innerHTML = `<tr><td colspan="4" class="muted">No ${tab.toLowerCase()} users.</td></tr>`; return; }
     filtered.forEach(u=>{
       const tr = document.createElement('tr');
@@ -518,23 +542,29 @@ async function initUsers(tab='APPROVED'){
 let liveTimer=null, liveGeo={}, liveRows=[];
 async function initAnalytics(){
   try{
-    const base = await api('analytics'); // returns {items:[...]} presence
-    $('#ana-overview').textContent = (base && base.items && base.items.length) ? 'Chart ready' : 'Loading…';
+    const base = await api('analytics');
+    const baseItems = arr(base) || arr(base?.items);
+    $('#ana-overview').textContent = baseItems.length ? 'Chart ready' : 'Loading…';
     $('#ana-geo-dist').textContent = 'Chart ready';
-  }catch(e){ /* noop */ }
+  }catch(e){
+    $('#ana-overview').textContent = 'Loading…';
+    $('#ana-geo-dist').textContent = 'Loading…';
+  }
 
   if(liveTimer) clearInterval(liveTimer);
+  liveGeo = {}; liveRows = [];
   liveTimer = setInterval(pullLive, POLL_FAST);
   await pullLive();
 }
 async function pullLive(){
   try{
     const j = await api('analytics', { live:1, limit:24, windowSec:120 });
-    const events = j.live || [];
+    const events = arr(j?.live) || arr(j);
+
     events.forEach(ev=>{
       liveRows.push(ev);
       const k = ev.country || 'Unknown';
-      liveGeo[k] = liveGeo[k] || {country:k, clicks:0, conv:0, earnings:0};
+      if(!liveGeo[k]) liveGeo[k] = {country:k, clicks:0, conv:0, earnings:0};
       liveGeo[k].clicks   += Number(ev.clicks||0);
       liveGeo[k].conv     += Number(ev.conversions||ev.conv||0);
       liveGeo[k].earnings += Number(ev.earnings||0);
@@ -542,61 +572,80 @@ async function pullLive(){
     liveRows = liveRows.slice(-24);
 
     const tb = $('#tbl-live-perf'); tb.innerHTML='';
-    if(!liveRows.length){ tb.innerHTML='<tr><td colspan="6" class="muted">Waiting for stream…</td></tr>'; }
-    liveRows.slice().reverse().forEach(r=>{
-      const tr=document.createElement('tr');
-      tr.innerHTML = `<td class="mono">${r.time||''}</td><td>${r.country||''}</td><td>${r.offer||''}</td><td>${r.clicks||0}</td><td>${r.conversions||r.conv||0}</td><td class="money">${dollars(r.earnings||0)}</td>`;
-      tb.appendChild(tr);
-    });
+    if(!liveRows.length){
+      tb.innerHTML='<tr><td colspan="6" class="muted">Waiting for stream…</td></tr>';
+    }else{
+      liveRows.slice().reverse().forEach(r=>{
+        const tr=document.createElement('tr');
+        tr.innerHTML =
+          `<td class="mono">${r.time||''}</td><td>${r.country||''}</td><td>${r.offer||''}</td>`+
+          `<td>${r.clicks||0}</td><td>${r.conversions||r.conv||0}</td><td class="money">${dollars(r.earnings||0)}</td>`;
+        tb.appendChild(tr);
+      });
+    }
 
     const tb2 = $('#tbl-live-geo'); tb2.innerHTML='';
-    const arr = Object.values(liveGeo).sort((a,b)=>b.earnings-a.earnings).slice(0,10);
-    if(!arr.length){ tb2.innerHTML='<tr><td colspan="4" class="muted">Waiting for stream…</td></tr>'; }
-    arr.forEach(g=>{
-      const tr=document.createElement('tr');
-      tr.innerHTML = `<td>${g.country}</td><td>${g.clicks}</td><td>${g.conv}</td><td class="money">${dollars(g.earnings)}</td>`;
-      tb2.appendChild(tr);
-    });
-  }catch(e){ /* silent */ }
+    const arrGeo = Object.values(liveGeo).sort((a,b)=>b.earnings-a.earnings).slice(0,10);
+    if(!arrGeo.length){
+      tb2.innerHTML='<tr><td colspan="4" class="muted">Waiting for stream…</td></tr>';
+    }else{
+      arrGeo.forEach(g=>{
+        const tr=document.createElement('tr');
+        tr.innerHTML = `<td>${g.country}</td><td>${g.clicks}</td><td>${g.conv}</td><td class="money">${dollars(g.earnings)}</td>`;
+        tb2.appendChild(tr);
+      });
+    }
+  }catch(e){ /* keep quiet */ }
 }
 
 /* ========= WALLET ========= */
 async function initWallet(){
   try{
-    const j = await api('wallet');  // {balance, history:[{date,method,amount,status}]}
-    $('#wal-balance').textContent = dollars(j.balance||0);
+    const w = obj(await api('wallet'));
+    const hist = arr(w.history) || arr(w);
 
-    const pendingAmt = (j.history||[]).filter(t=>String(t.status||'').toUpperCase()==='PENDING')
-                         .reduce((s,t)=>s+Number(t.amount||0),0);
+    $('#wal-balance').textContent = dollars(w.balance||0);
+
+    const pendingAmt = hist.filter(t=>String(t.status||'').toUpperCase()==='PENDING')
+                           .reduce((s,t)=>s+Number(t.amount||0),0);
     $('#wal-pending').textContent = dollars(pendingAmt);
 
-    const last = (j.history||[]).filter(t=>String(t.status||'').toUpperCase()==='COMPLETED').slice(-1)[0];
-    $('#wal-last').textContent = dollars(last ? last.amount : 0);
+    const lastPaid = hist.filter(t=>String(t.status||'').toUpperCase()==='COMPLETED').slice(-1)[0];
+    $('#wal-last').textContent = dollars(lastPaid ? lastPaid.amount : 0);
 
     const tb = $('#tbl-wallet'); tb.innerHTML='';
-    (j.history||[]).slice().reverse().forEach(t=>{
+    hist.slice().reverse().forEach(t=>{
       const tr=document.createElement('tr');
       tr.innerHTML=`<td>${t.date||''}</td><td>${t.method||''}</td><td class="money">${dollars(t.amount||0)}</td><td>${t.status||''}</td>`;
       tb.appendChild(tr);
     });
     if(!tb.children.length) tb.innerHTML = `<tr><td colspan="4" class="muted">No transactions.</td></tr>`;
-  }catch(e){ /* noop */ }
+  }catch(e){
+    const tb = $('#tbl-wallet');
+    if(tb) tb.innerHTML = `<tr><td colspan="4" class="muted">Failed to load.</td></tr>`;
+  }
 }
 
 /* ========= MONITORING ========= */
 async function initMonitor(){
   const tb = $('#tbl-monitor'); tb.innerHTML='';
   try{
-    const j = await api('monitoring'); // {events:[{time,type,msg}]}
-    $('#box-alerts').textContent = (j.events||[]).length;
-    $('#box-maint').textContent  = '—';
-    $('#box-health').textContent = 'OK';
-    (j.events||[]).forEach(ev=>{
+    const m = obj(await api('monitoring'));
+    const events = arr(m.events) || arr(m);
+
+    $('#box-alerts').textContent = events.length;
+    $('#box-maint').textContent  = m.maintenance || '—';
+    $('#box-health').textContent = m.health || 'OK';
+
+    if(!events.length){
+      tb.innerHTML = `<tr><td colspan="3" class="muted">No events.</td></tr>`;
+      return;
+    }
+    events.forEach(ev=>{
       const tr=document.createElement('tr');
       tr.innerHTML=`<td class="mono">${ev.time||''}</td><td>${ev.type||''}</td><td>${ev.msg||ev.message||''}</td>`;
       tb.appendChild(tr);
     });
-    if(!tb.children.length) tb.innerHTML = `<tr><td colspan="3" class="muted">No events.</td></tr>`;
   }catch(e){
     tb.innerHTML = `<tr><td colspan="3" class="muted">Failed to load.</td></tr>`;
   }
@@ -606,7 +655,8 @@ async function initMonitor(){
 async function initSettings(){
   try{
     const j = await api('config');
-    $('#pretty').textContent = JSON.stringify(j, null, 2);
+    const pretty = v => { try{ return JSON.stringify(v, null, 2); }catch{ return String(v); } };
+    $('#pretty').textContent = pretty(j);
   }catch(e){
     $('#pretty').textContent = 'Failed to load config';
   }

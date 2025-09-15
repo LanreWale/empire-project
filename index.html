@@ -6,23 +6,38 @@ const $ = s => document.querySelector(s);
 const $$ = s => Array.from(document.querySelectorAll(s));
 const dollars = n => Number(n||0).toLocaleString(undefined,{style:'currency',currency:'USD'});
 
+/* --- minimal error banner so blank pages show why --- */
+(function(){
+  function show(err, origin){
+    var d=document.createElement('div');
+    d.style.cssText="position:fixed;left:8px;right:8px;bottom:8px;z-index:99999;background:#2b1d1d;color:#ffd2d2;border:1px solid #7a3b3b;padding:10px;border-radius:8px;font:12px/1.4 ui-monospace,Menlo,Consolas,monospace;white-space:pre-wrap";
+    d.textContent = "[JS "+origin+"] " + (err && (err.message||err)) + (err && err.stack ? "\n" + err.stack : "");
+    document.body.appendChild(d);
+  }
+  window.addEventListener('error', e => show(e && (e.error||e.message),'error'));
+  window.addEventListener('unhandledrejection', e => show(e && (e.reason||e),'promise'));
+})();
+
 /* GET helper */
-const get = async (url, opt={})=>{
+const get = async (url, opt){
+  opt = opt || {};
   const u = new URL(url);
   u.searchParams.set('_t', Date.now()); // cache-bust
-  const r = await fetch(u, {cache:'no-store', ...opt});
+  const r = await fetch(u, Object.assign({cache:'no-store'}, opt));
   if(!r.ok) throw new Error('HTTP '+r.status);
   return r.json();
 };
 /* API helpers */
-const api = (action, params={})=>{
+const api = (action, params){
+  params = params || {};
   const u = new URL(GAS);
   u.searchParams.set('action', action);
-  Object.entries(params).forEach(([k,v])=>u.searchParams.set(k, v));
+  Object.keys(params).forEach(function(k){ u.searchParams.set(k, params[k]); });
   return get(u);
 };
 /* POST (with GET fallback) for writes */
-const apiWrite = async (action, payload={})=>{
+const apiWrite = async (action, payload){
+  payload = payload || {};
   const url = new URL(GAS);
   url.searchParams.set('action', action);
   try{
@@ -34,7 +49,10 @@ const apiWrite = async (action, payload={})=>{
     if(!res.ok) throw new Error('HTTP '+res.status);
     return res.json();
   }catch(e){
-    Object.entries(payload||{}).forEach(([k,v])=>url.searchParams.set(k, typeof v==='object'?JSON.stringify(v):String(v)));
+    Object.keys(payload).forEach(function(k){
+      const v = payload[k];
+      url.searchParams.set(k, (v && typeof v==='object') ? JSON.stringify(v) : String(v));
+    });
     const res = await fetch(url, {cache:'no-store'});
     if(!res.ok) throw new Error('HTTP '+res.status);
     return res.json();
@@ -42,22 +60,24 @@ const apiWrite = async (action, payload={})=>{
 };
 
 /* ---------- response normalizers ---------- */
-const arr = (maybe) => {
+function arr(maybe){
   if (Array.isArray(maybe)) return maybe;
   if (maybe && Array.isArray(maybe.items)) return maybe.items;
   if (maybe && Array.isArray(maybe.rows))  return maybe.rows;
   if (maybe && Array.isArray(maybe.data))  return maybe.data;
   return [];
-};
-const obj = (maybe) => (maybe && typeof maybe === 'object') ? maybe : {};
+}
+function obj(maybe){ return (maybe && typeof maybe === 'object') ? maybe : {}; }
 
 /* normalizers */
-const normDomain = d=> String(d||'').trim().replace(/^https?:\/\//,'').replace(/\/.*$/,'');
+function normDomain(d){
+  return String(d||'').trim().replace(/^https?:\/\//,'').replace(/\/.*$/,'');
+}
 
 /* ========= ROUTER ========= */
 function show(route){
-  $$('.nav a').forEach(a=>a.classList.toggle('active', a.dataset.route===route));
-  $$('[data-page]').forEach(s=>s.style.display = (s.dataset.page===route)?'block':'none');
+  $$('.nav a').forEach(function(a){ a.classList.toggle('active', a.dataset.route===route); });
+  $$('[data-page]').forEach(function(s){ s.style.display = (s.dataset.page===route)?'block':'none'; });
 
   if(route==='dashboard') initDashboard();
   if(route==='cpa')       initCpa();
@@ -67,12 +87,14 @@ function show(route){
   if(route==='monitor')   initMonitor();
   if(route==='settings')  initSettings();
 }
-window.addEventListener('hashchange', ()=>{
-  const r = location.hash.replace('#','')||'dashboard'; show(r);
+window.addEventListener('hashchange', function(){
+  const r = (location.hash||'#dashboard').replace('#','');
+  show(r||'dashboard');
 });
-$('#nav').addEventListener('click', e=>{
-  if(e.target.closest('a')){
-    const r = e.target.closest('a').dataset.route;
+$('#nav').addEventListener('click', function(e){
+  const a = e.target.closest && e.target.closest('a');
+  if(a){
+    const r = a.dataset.route;
     location.hash = '#'+r;
   }
 });
@@ -80,13 +102,15 @@ $('#nav').addEventListener('click', e=>{
 /* ========= DASHBOARD ========= */
 async function initDashboard(){
   try{
-    const [ov, us] = await Promise.all([ api('overview'), api('users', {status:'APPROVED'}) ]);
+    const responses = await Promise.all([ api('overview'), api('users', {status:'APPROVED'}) ]);
+    const ov = responses[0], us = responses[1];
 
-    const t = ov && ov.totals ? ov.totals : (ov||{});
+    const t = (ov && ov.totals) ? ov.totals : (ov||{});
     $('#dash-earn').textContent   = dollars(t.earnings||0);
     $('#dash-clicks').textContent = t.clicks||0;
 
-    const cr = (t.conversionRate!=null) ? Number(t.conversionRate) : (t.leads && t.clicks ? (t.leads/t.clicks*100) : 0);
+    const cr = (t.conversionRate!=null) ? Number(t.conversionRate)
+              : (t.leads && t.clicks ? (t.leads/t.clicks*100) : 0);
     $('#dash-cr').textContent = Number(cr||0).toFixed(2) + '%';
 
     const users = arr(us);
@@ -95,18 +119,19 @@ async function initDashboard(){
 
     // Top GEO from earnings map
     const tb = $('#tbl-dash-geo'); tb.innerHTML='';
-    const geoMap = ov && ov.geo ? ov.geo : {};
-    const rows = Object.keys(geoMap).map(k=>({country:k, earnings:geoMap[k]}))
-                  .sort((a,b)=>b.earnings-a.earnings).slice(0,10);
+    const geoMap = (ov && ov.geo) ? ov.geo : {};
+    const keys = Object.keys(geoMap||{});
+    const rows = keys.map(function(k){ return {country:k, earnings:geoMap[k]}; })
+                     .sort(function(a,b){ return b.earnings-a.earnings; }).slice(0,10);
     if(!rows.length){ tb.innerHTML='<tr><td colspan="4" class="muted">No data</td></tr>'; }
-    rows.forEach(g=>{
+    rows.forEach(function(g){
       const tr=document.createElement('tr');
-      tr.innerHTML=`<td>${g.country}</td><td>0</td><td>0</td><td class="money">${dollars(g.earnings)}</td>`;
+      tr.innerHTML='<td>'+g.country+'</td><td>0</td><td>0</td><td class="money">'+dollars(g.earnings)+'</td>';
       tb.appendChild(tr);
     });
 
-    $('#dash-earnings').textContent = ov.byDay && ov.byDay.length ? 'Chart ready' : 'Awaiting data..';
-    $('#dash-sources').textContent  = Object.keys(ov.offerTypes||{}).length ? 'Chart ready' : 'Awaiting data..';
+    $('#dash-earnings').textContent = (ov && ov.byDay && ov.byDay.length) ? 'Chart ready' : 'Awaiting data..';
+    $('#dash-sources').textContent  = (ov && ov.offerTypes && Object.keys(ov.offerTypes).length) ? 'Chart ready' : 'Awaiting data..';
   }catch(e){
     console.error(e);
   }
@@ -118,59 +143,61 @@ async function initCpa(){
   try{
     const resp = await api('cpa');
     const items = arr(resp);
-    if(!items.length){ wrap.innerHTML = `<div class="card pad empty">No CPA accounts yet.</div>`; return; }
+    if(!items.length){ wrap.innerHTML = '<div class="card pad empty">No CPA accounts yet.</div>'; return; }
 
-    items.forEach(r=>{
+    items.forEach(function(r){
       const card = document.createElement('div');
       card.className='card pad';
 
-      // conversion: accept either ratio (0-1) or percentage (>1)
-      let convPct = 0;
-      if (r.conversionRate != null) {
-        const v = Number(r.conversionRate);
+      // conversion: accept ratio (0-1) or percentage (>1)
+      var convPct = 0;
+      if (r && r.conversionRate != null) {
+        var v = Number(r.conversionRate);
         convPct = v > 1 ? v : v * 100;
       }
 
-      card.innerHTML = `
-        <div class="acct">
-          <div>
-            <h3>${r.account||'—'}</h3>
-            <div class="muted" style="margin-bottom:10px">Network <b style="color:#fff">${r.network||'—'}</b> · <span class="badge">${(r.status||'ACTIVE')}</span></div>
-            <div class="stats">
-              <div class="kv"><b>Active Offers</b><span>${r.activeOffers||0}</span></div>
-              <div class="kv"><b>Revenue</b><span class="money">${dollars(r.revenue||0)}</span></div>
-              <div class="kv"><b>Clicks</b><span>${r.clicks||0}</span></div>
-              <div class="kv"><b>Conversion</b><span>${convPct.toFixed(2)}%</span></div>
-            </div>
-          </div>
-          <div class="right flex">
-            <span class="pill mono">${r.domain||'no-domain'}</span>
-            <button class="btn secondary">View Details</button>
-          </div>
-        </div>`;
+      card.innerHTML =
+        '<div class="acct">'+
+          '<div>'+
+            '<h3>'+(r.account||'—')+'</h3>'+
+            '<div class="muted" style="margin-bottom:10px">Network <b style="color:#fff">'+(r.network||'—')+'</b> · <span class="badge">'+(r.status||'ACTIVE')+'</span></div>'+
+            '<div class="stats">'+
+              '<div class="kv"><b>Active Offers</b><span>'+(r.activeOffers||0)+'</span></div>'+
+              '<div class="kv"><b>Revenue</b><span class="money">'+dollars(r.revenue||0)+'</span></div>'+
+              '<div class="kv"><b>Clicks</b><span>'+(r.clicks||0)+'</span></div>'+
+              '<div class="kv"><b>Conversion</b><span>'+convPct.toFixed(2)+'%</span></div>'+
+            '</div>'+
+          '</div>'+
+          '<div class="right flex">'+
+            '<span class="pill mono">'+(r.domain||'no-domain')+'</span>'+
+            '<button class="btn secondary">View Details</button>'+
+          '</div>'+
+        '</div>';
       wrap.appendChild(card);
     });
   }catch(e){
     console.error(e);
-    wrap.innerHTML = `<div class="card pad empty">Failed to load accounts.</div>`;
+    wrap.innerHTML = '<div class="card pad empty">Failed to load accounts.</div>';
   }
 }
 
 /* Add New Account modal wiring */
-const mdl = document.getElementById('mdl-cpa');
-const openMdl  = ()=> mdl.classList.add('open');
-const closeMdl = ()=> mdl.classList.remove('open');
-document.getElementById('btn-add-acct')?.addEventListener('click', openMdl);
-mdl.addEventListener('click', e=>{ if(e.target.hasAttribute('data-close')) closeMdl(); });
-document.getElementById('btn-save-acct')?.addEventListener('click', async ()=>{
-  const err = document.getElementById('f-error');
-  const v = {
-    account : document.getElementById('f-account').value.trim(),
-    network : document.getElementById('f-network').value.trim(),
+var mdl = document.getElementById('mdl-cpa');
+var openMdl  = function(){ mdl.classList.add('open'); };
+var closeMdl = function(){ mdl.classList.remove('open'); };
+var addBtn = document.getElementById('btn-add-acct');
+if(addBtn) addBtn.addEventListener('click', openMdl);
+mdl.addEventListener('click', function(e){ if(e.target.hasAttribute && e.target.hasAttribute('data-close')) closeMdl(); });
+var saveBtn = document.getElementById('btn-save-acct');
+if(saveBtn) saveBtn.addEventListener('click', async function(){
+  var err = document.getElementById('f-error');
+  var v = {
+    account : (document.getElementById('f-account').value||'').trim(),
+    network : (document.getElementById('f-network').value||'').trim(),
     domain  : normDomain(document.getElementById('f-domain').value),
     status  : document.getElementById('f-status').value,
-    apiKey  : document.getElementById('f-key').value.trim(),
-    webhook : document.getElementById('f-webhook').value.trim()
+    apiKey  : (document.getElementById('f-key').value||'').trim(),
+    webhook : (document.getElementById('f-webhook').value||'').trim()
   };
   if(!v.account || !v.network){
     err.textContent = 'Account Name and Network are required.'; err.style.display='block'; return;
@@ -187,42 +214,44 @@ document.getElementById('btn-save-acct')?.addEventListener('click', async ()=>{
 });
 
 /* ========= USERS ========= */
-let currentUsersTab = 'APPROVED';
-const userTabBtns = $$('[data-users-tab]');
-userTabBtns.forEach(b=>b.addEventListener('click',()=>{
-  userTabBtns.forEach(x=>x.classList.toggle('active', x===b));
-  currentUsersTab = b.dataset.usersTab; initUsers(currentUsersTab);
-}));
-async function initUsers(tab='APPROVED'){
+var currentUsersTab = 'APPROVED';
+var userTabBtns = $$('[data-users-tab]');
+userTabBtns.forEach(function(b){
+  b.addEventListener('click', function(){
+    userTabBtns.forEach(function(x){ x.classList.toggle('active', x===b); });
+    currentUsersTab = b.dataset.usersTab; initUsers(currentUsersTab);
+  });
+});
+async function initUsers(tab){
+  tab = tab || 'APPROVED';
   const tb = $('#tbl-users'); tb.innerHTML = '';
   try{
-    // Ask GAS to filter, then trust the response's items
     const resp = await api('users', {status: tab});
-    let filtered = arr(resp?.items || resp);
+    var list = (resp && resp.items) ? resp.items : resp;
+    var filtered = arr(list);
 
-    // Fallback (in case GAS ignores status)
     if (!filtered.length) {
-      const ALL = arr(resp?.items || resp);
-      filtered = ALL.filter(u => String(u.status||'APPROVED').toUpperCase()===tab);
+      var ALL = arr(list);
+      filtered = ALL.filter(function(u){ return String(u.status||'APPROVED').toUpperCase()===tab; });
     }
 
-    if(!filtered.length){ tb.innerHTML = `<tr><td colspan="4" class="muted">No ${tab.toLowerCase()} users.</td></tr>`; return; }
-    filtered.forEach(u=>{
+    if(!filtered.length){ tb.innerHTML = '<tr><td colspan="4" class="muted">No '+tab.toLowerCase()+' users.</td></tr>'; return; }
+    filtered.forEach(function(u){
       const tr = document.createElement('tr');
-      tr.innerHTML = `<td>${u.name||'—'}</td><td>${u.email||''}</td><td>${u.phone||''}</td><td>${u.authority||'1x User'}</td>`;
+      tr.innerHTML = '<td>'+(u.name||'—')+'</td><td>'+(u.email||'')+'</td><td>'+(u.phone||'')+'</td><td>'+(u.authority||'1x User')+'</td>';
       tb.appendChild(tr);
     });
   }catch(e){
-    tb.innerHTML = `<tr><td colspan="4" class="muted">Failed to load users.</td></tr>`;
+    tb.innerHTML = '<tr><td colspan="4" class="muted">Failed to load users.</td></tr>';
   }
 }
 
 /* ========= ANALYTICS (base + live) ========= */
-let liveTimer=null, liveRows=[];
+var liveTimer=null, liveRows=[];
 async function initAnalytics(){
   try{
     const base = await api('analytics');
-    const baseItems = arr(base) || arr(base?.items);
+    const baseItems = arr((base && base.items) ? base.items : base);
     $('#ana-overview').textContent = baseItems.length ? 'Chart ready' : 'Loading…';
     $('#ana-geo-dist').textContent = 'Chart ready';
   }catch(e){
@@ -238,7 +267,8 @@ async function initAnalytics(){
 async function pullLive(){
   try{
     const j = await api('analytics', { live:1, limit:24, windowSec:120 });
-    const events = arr(j?.live) || arr(j);
+    var liveArr = (j && j.live) ? j.live : j;
+    const events = arr(liveArr);
 
     // Keep only the last 24 events for the table
     liveRows = liveRows.concat(events).slice(-24);
@@ -248,18 +278,18 @@ async function pullLive(){
     if(!liveRows.length){
       tb.innerHTML='<tr><td colspan="6" class="muted">Waiting for stream…</td></tr>';
     }else{
-      liveRows.slice().reverse().forEach(r=>{
+      liveRows.slice().reverse().forEach(function(r){
         const tr=document.createElement('tr');
         tr.innerHTML =
-          `<td class="mono">${r.time||''}</td><td>${r.country||''}</td><td>${r.offer||''}</td>`+
-          `<td>${r.clicks||0}</td><td>${r.conversions||r.conv||0}</td><td class="money">${dollars(r.earnings||0)}</td>`;
+          '<td class="mono">'+(r.time||'')+'</td><td>'+(r.country||'')+'</td><td>'+(r.offer||'')+'</td>'+
+          '<td>'+(r.clicks||0)+'</td><td>'+(r.conversions||r.conv||0)+'</td><td class="money">'+dollars(r.earnings||0)+'</td>';
         tb.appendChild(tr);
       });
     }
 
-    // Live by GEO (recompute fresh **each poll** to avoid ballooning)
+    // Live by GEO (recompute fresh **each poll**)
     const byGeo = {};
-    events.forEach(ev=>{
+    events.forEach(function(ev){
       const k = ev.country || 'Unknown';
       if(!byGeo[k]) byGeo[k] = {country:k, clicks:0, conv:0, earnings:0};
       byGeo[k].clicks   += Number(ev.clicks||0);
@@ -268,13 +298,14 @@ async function pullLive(){
     });
 
     const tb2 = $('#tbl-live-geo'); tb2.innerHTML='';
-    const arrGeo = Object.values(byGeo).sort((a,b)=>b.earnings-a.earnings).slice(0,10);
+    const arrGeo = Object.keys(byGeo).map(function(k){return byGeo[k];})
+      .sort(function(a,b){return b.earnings-a.earnings;}).slice(0,10);
     if(!arrGeo.length){
       tb2.innerHTML='<tr><td colspan="4" class="muted">Waiting for stream…</td></tr>';
     }else{
-      arrGeo.forEach(g=>{
+      arrGeo.forEach(function(g){
         const tr=document.createElement('tr');
-        tr.innerHTML = `<td>${g.country}</td><td>${g.clicks}</td><td>${g.conv}</td><td class="money">${dollars(g.earnings)}</td>`;
+        tr.innerHTML = '<td>'+g.country+'</td><td>'+g.clicks+'</td><td>'+g.conv+'</td><td class="money">'+dollars(g.earnings)+'</td>';
         tb2.appendChild(tr);
       });
     }
@@ -285,27 +316,28 @@ async function pullLive(){
 async function initWallet(){
   try{
     const w = obj(await api('wallet'));
-    const hist = arr(w.history) || arr(w);
+    const hist = arr(w.history ? w.history : w);
 
     $('#wal-balance').textContent = dollars(w.balance||0);
 
-    const pendingAmt = hist.filter(t=>String(t.status||'').toUpperCase()==='PENDING')
-                           .reduce((s,t)=>s+Number(t.amount||0),0);
+    const pendingAmt = hist.filter(function(t){ return String(t.status||'').toUpperCase()==='PENDING'; })
+                           .reduce(function(s,t){ return s+Number(t.amount||0); },0);
     $('#wal-pending').textContent = dollars(pendingAmt);
 
-    const lastPaid = hist.filter(t=>String(t.status||'').toUpperCase()==='COMPLETED').slice(-1)[0];
+    const paid = hist.filter(function(t){ return String(t.status||'').toUpperCase()==='COMPLETED'; });
+    const lastPaid = paid.length ? paid[paid.length-1] : null;
     $('#wal-last').textContent = dollars(lastPaid ? lastPaid.amount : 0);
 
     const tb = $('#tbl-wallet'); tb.innerHTML='';
-    hist.slice().reverse().forEach(t=>{
+    hist.slice().reverse().forEach(function(t){
       const tr=document.createElement('tr');
-      tr.innerHTML=`<td>${t.date||''}</td><td>${t.method||''}</td><td class="money">${dollars(t.amount||0)}</td><td>${t.status||''}</td>`;
+      tr.innerHTML='<td>'+ (t.date||'') +'</td><td>'+ (t.method||'') +'</td><td class="money">'+ dollars(t.amount||0) +'</td><td>'+ (t.status||'') +'</td>';
       tb.appendChild(tr);
     });
-    if(!tb.children.length) tb.innerHTML = `<tr><td colspan="4" class="muted">No transactions.</td></tr>`;
+    if(!tb.children.length) tb.innerHTML = '<tr><td colspan="4" class="muted">No transactions.</td></tr>';
   }catch(e){
     const tb = $('#tbl-wallet');
-    if(tb) tb.innerHTML = `<tr><td colspan="4" class="muted">Failed to load.</td></tr>`;
+    if(tb) tb.innerHTML = '<tr><td colspan="4" class="muted">Failed to load.</td></tr>';
   }
 }
 
@@ -314,23 +346,23 @@ async function initMonitor(){
   const tb = $('#tbl-monitor'); tb.innerHTML='';
   try{
     const m = obj(await api('monitoring'));
-    const events = arr(m.events) || arr(m);
+    const events = arr(m.events ? m.events : m);
 
     $('#box-alerts').textContent = events.length;
     $('#box-maint').textContent  = m.maintenance || '—';
     $('#box-health').textContent = m.health || 'OK';
 
     if(!events.length){
-      tb.innerHTML = `<tr><td colspan="3" class="muted">No events.</td></tr>`;
+      tb.innerHTML = '<tr><td colspan="3" class="muted">No events.</td></tr>';
       return;
     }
-    events.forEach(ev=>{
+    events.forEach(function(ev){
       const tr=document.createElement('tr');
-      tr.innerHTML=`<td class="mono">${ev.time||''}</td><td>${ev.type||''}</td><td>${ev.msg||ev.message||''}</td>`;
+      tr.innerHTML='<td class="mono">'+(ev.time||'')+'</td><td>'+(ev.type||'')+'</td><td>'+(ev.msg||ev.message||'')+'</td>';
       tb.appendChild(tr);
     });
   }catch(e){
-    tb.innerHTML = `<tr><td colspan="3" class="muted">Failed to load.</td></tr>`;
+    tb.innerHTML = '<tr><td colspan="3" class="muted">Failed to load.</td></tr>';
   }
 }
 
@@ -338,7 +370,7 @@ async function initMonitor(){
 async function initSettings(){
   try{
     const j = await api('config');
-    const pretty = v => { try{ return JSON.stringify(v, null, 2); }catch{ return String(v); } };
+    function pretty(v){ try{ return JSON.stringify(v, null, 2); }catch(e){ return String(v); } }
     $('#pretty').textContent = pretty(j);
   }catch(e){
     $('#pretty').textContent = 'Failed to load config';
@@ -346,8 +378,8 @@ async function initSettings(){
 }
 
 /* ========= BOOT ========= */
-window.addEventListener('DOMContentLoaded', ()=>{
-  const r = (location.hash||'#dashboard').replace('#','');
+window.addEventListener('DOMContentLoaded', function(){
+  const r = (location.hash||'#dashboard').replace('#','') || 'dashboard';
   show(r);
 });
 </script>

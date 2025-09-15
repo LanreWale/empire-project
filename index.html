@@ -1,19 +1,25 @@
 <script>
-/* ========= CONFIG ========= */
+/* =========================
+   UNIVERSAL, NULL-SAFE FRONTEND
+   ========================= */
+
+/* --- CONFIG --- */
 const GAS = "https://script.google.com/macros/s/AKfycbwZVlGMvYonfCNdQlwPHiqqgOVC80_HsyktSYmqmQPBKmRrlzg_yo4lKz_Mmu85B7eY/exec";
 const POLL_FAST = 5000;
 
-/* ========= SHORTCUTS ========= */
+/* --- DOM helpers (null-safe) --- */
 const $  = s => document.querySelector(s);
 const $$ = s => Array.from(document.querySelectorAll(s));
+const setText = (sel, val) => { const el=$(sel); if(el) el.textContent = val; };
+const setHTML = (sel, val) => { const el=$(sel); if(el) el.innerHTML  = val; };
 const dollars = n => Number(n||0).toLocaleString(undefined,{style:'currency',currency:'USD'});
-const toNum = v => (v==null ? 0 : Number(String(v).replace(/[$,]/g,'')) || 0);
-const normDomain = d=> String(d||'').trim().replace(/^https?:\/\//,'').replace(/\/.*$/,'');
+const percent = n => (Number(n||0)).toFixed(2) + '%';
+const mono = v => (v==null ? '' : String(v));
 
-/* ========= FETCH HELPERS ========= */
+/* --- fetch helpers --- */
 const get = async (url, opt={})=>{
   const u = new URL(url);
-  u.searchParams.set('_t', Date.now());
+  u.searchParams.set('_t', Date.now()); // cache bust
   const r = await fetch(u, {cache:'no-store', ...opt});
   if(!r.ok) throw new Error('HTTP '+r.status);
   return r.json();
@@ -36,6 +42,7 @@ const apiWrite = async (action, payload={})=>{
     if(!res.ok) throw new Error('HTTP '+res.status);
     return res.json();
   }catch(e){
+    // GET fallback
     Object.entries(payload||{}).forEach(([k,v])=>url.searchParams.set(k, typeof v==='object'?JSON.stringify(v):String(v)));
     const res = await fetch(url, {cache:'no-store'});
     if(!res.ok) throw new Error('HTTP '+res.status);
@@ -43,7 +50,7 @@ const apiWrite = async (action, payload={})=>{
   }
 };
 
-/* ========= NORMALIZERS & UTIL ========= */
+/* --- normalizers --- */
 const arr = (maybe) => {
   if (Array.isArray(maybe)) return maybe;
   if (maybe && Array.isArray(maybe.items)) return maybe.items;
@@ -52,280 +59,261 @@ const arr = (maybe) => {
   return [];
 };
 const obj = (maybe) => (maybe && typeof maybe === 'object') ? maybe : {};
+const normDomain = d=> String(d||'').trim().replace(/^https?:\/\//,'').replace(/\/.*$/,'');
 
-/* tolerant read: pick the first existing key among aliases */
-const pick = (o, keys, dft=undefined)=>{
-  for(const k of keys){
-    if (o && o[k] != null) return o[k];
-  }
-  return dft;
-};
-
-/* ========= TINY SVG CHARTS (no libs) ========= */
-const sparkline = (values = [], w = 520, h = 120) => {
-  if (!values.length) return '<div class="empty">No data</div>';
-  const max = Math.max(...values), min = Math.min(...values);
-  const xs = values.map((_, i) => (values.length === 1 ? 0.5 : i / (values.length - 1)));
-  const pts = values.map((v, i) => {
-    const x = 12 + xs[i] * (w - 24);
-    const y = h - 12 - (max === min ? 0.5 : (v - min) / (max - min)) * (h - 24);
-    return `${x},${y}`;
-  }).join(' ');
-  return `<svg viewBox="0 0 ${w} ${h}" width="100%" height="${h}">
-    <polyline points="${pts}" fill="none" stroke="#ffd559" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-  </svg>`;
-};
-const barlist = (entries = [], w = 520, h = 160) => {
-  if (!entries.length) return '<div class="empty">No data</div>';
-  const pad = 8, gap = 10, bw = (w - 2 * pad - gap * (entries.length - 1)) / entries.length;
-  const max = Math.max(...entries.map(e => e.v || 0), 1);
-  const bars = entries.map((e, i) => {
-    const x = pad + i * (bw + gap);
-    const bh = ((e.v || 0) / max) * (h - 40);
-    const y = h - 20 - bh;
-    return `<g>
-      <rect x="${x}" y="${y}" width="${bw}" height="${bh}" rx="6" ry="6" fill="#59a6ff"/>
-      <text x="${x + bw / 2}" y="${h - 6}" font-size="10" text-anchor="middle" fill="#c4d7ef">${e.k}</text>
-    </g>`;
-  }).join('');
-  return `<svg viewBox="0 0 ${w} ${h}" width="100%" height="${h}">${bars}</svg>`;
-};
-
-/* ========= ROUTER ========= */
+/* =========================
+   ROUTER (safe)
+   ========================= */
 function show(route){
   $$('.nav a').forEach(a=>a.classList.toggle('active', a.dataset.route===route));
   $$('[data-page]').forEach(s=>s.style.display = (s.dataset.page===route)?'block':'none');
 
-  if(route==='dashboard') initDashboard();
-  if(route==='cpa')       initCpa();
-  if(route==='users')     initUsers(currentUsersTab);
-  if(route==='analytics') initAnalytics();
-  if(route==='wallet')    initWallet();
-  if(route==='monitor')   initMonitor();
-  if(route==='settings')  initSettings();
+  // lazy init
+  try{
+    if(route==='dashboard') initDashboard();
+    if(route==='cpa')       initCpa();
+    if(route==='users')     initUsers(currentUsersTab);
+    if(route==='analytics') initAnalytics();
+    if(route==='wallet')    initWallet();
+    if(route==='monitor')   initMonitor();
+    if(route==='settings')  initSettings();
+  }catch(err){
+    console.error('Init error for', route, err);
+  }
 }
 window.addEventListener('hashchange', ()=>{
   const r = location.hash.replace('#','')||'dashboard'; show(r);
 });
-$('#nav').addEventListener('click', e=>{
-  if(e.target.closest('a')){
-    const r = e.target.closest('a').dataset.route;
-    location.hash = '#'+r;
-  }
-});
+const nav = $('#nav');
+if(nav){
+  nav.addEventListener('click', e=>{
+    const a = e.target.closest('a[data-route]');
+    if(a){ location.hash = '#'+a.dataset.route; }
+  });
+}
 
-/* ========= DASHBOARD ========= */
+/* =========================
+   DASHBOARD
+   ========================= */
+function drawMiniLine(el, points){
+  if(!el) return;
+  if(!Array.isArray(points) || !points.length){ el.innerHTML = '<div class="empty">Chart ready</div>'; return; }
+  // tiny inline SVG
+  const w=el.clientWidth||320, h=120, p=12;
+  const xs = points.map((d,i)=>i);
+  const ys = points.map(d=>Number(d||0));
+  const min = Math.min(...ys), max=Math.max(...ys)||1;
+  const x = i => p + i*( (w-2*p)/Math.max(1, xs.length-1) );
+  const y = v => h - p - ( (v-min)/(max-min||1) )*(h-2*p);
+  let d='M'+x(0)+','+y(ys[0]);
+  for(let i=1;i<ys.length;i++) d += ' L'+x(i)+','+y(ys[i]);
+  el.innerHTML =
+   `<svg viewBox="0 0 ${w} ${h}" width="100%" height="${h}">
+      <path d="${d}" fill="none" stroke="rgba(255,213,89,.9)" stroke-width="2"/>
+    </svg>`;
+}
+function drawDonut(el, map){
+  if(!el) return;
+  const entries = Object.entries(map||{});
+  if(!entries.length){ el.innerHTML = '<div class="empty">Chart ready</div>'; return; }
+  const total = entries.reduce((s, [,v])=>s+Number(v||0),0)||1;
+  let acc=0;
+  const segs = entries.map(([k,v])=>{
+    const a0 = acc/total * 2*Math.PI; acc += Number(v||0);
+    const a1 = acc/total * 2*Math.PI;
+    const r=40, cx=50, cy=50;
+    const x0=cx+r*Math.cos(a0), y0=cy+r*Math.sin(a0);
+    const x1=cx+r*Math.cos(a1), y1=cy+r*Math.sin(a1);
+    const large = (a1-a0) > Math.PI ? 1 : 0;
+    return `<path d="M ${cx} ${cy} L ${x0} ${y0} A ${r} ${r} 0 ${large} 1 ${x1} ${y1} Z" opacity=".9"></path>`;
+  }).join('');
+  el.innerHTML = `<svg viewBox="0 0 100 100" width="100%" height="120">${segs}</svg>`;
+}
+
 async function initDashboard(){
   try{
-    const [ov, us, ana] = await Promise.all([
+    const [ov, us] = await Promise.all([
       api('overview'),
-      api('users'),
-      api('analytics')
+      api('users') // get all, we’ll count statuses
     ]);
 
-    // KPIs
-    const t = ov?.totals || ov || {};
-    $('#dash-earn').textContent   = dollars(toNum(pick(t,['earnings','revenue','totalEarnings'],0)));
-    $('#dash-clicks').textContent = toNum(pick(t,['clicks','totalClicks'],0));
-    const leads = toNum(pick(t,['leads','conversions'],0));
-    const cr = (t.conversionRate != null)
-      ? Number(t.conversionRate)
-      : ($('#dash-clicks').textContent ? (leads / Number($('#dash-clicks').textContent) * 100) : 0);
-    $('#dash-cr').textContent = `${Number(cr||0).toFixed(2)}%`;
+    const t = ov && ov.totals ? ov.totals : (ov||{});
+    setText('#dash-earn',   dollars(t.earnings||0));
+    setText('#dash-clicks', mono(t.clicks||0));
+
+    const cr = (t.conversionRate!=null) ? Number(t.conversionRate)
+              : (t.leads && t.clicks ? (t.leads/t.clicks*100) : 0);
+    setText('#dash-cr', percent(cr));
 
     const users = arr(us);
-    const active = users.filter(u => String(u.status||'APPROVED').toUpperCase()==='APPROVED').length;
-    $('#dash-users').textContent = active;
-    $('#dash-users-diff').textContent = '24h growth';
+    const approvedCt = users.filter(u => String(u.status||'APPROVED').toUpperCase()==='APPROVED').length;
+    setText('#dash-users', approvedCt);
+    setText('#dash-users-diff','24h growth');
 
-    // Daily earnings chart
-    const byDay = Array.isArray(ov?.byDay) ? ov.byDay : [];
-    const dayVals = byDay.map(d => toNum(d.earnings ?? d.value));
-    if (dayVals.length) {
-      $('#dash-earnings').innerHTML = sparkline(dayVals);
-    } else {
-      const live = arr(ana?.live) || [];
-      const buckets = {};
-      live.forEach(e=>{
-        const k = (e.time||'').slice(0,16);
-        buckets[k] = (buckets[k]||0) + toNum(e.earnings);
-      });
-      const vals = Object.keys(buckets).sort().map(k=>buckets[k]);
-      $('#dash-earnings').innerHTML = vals.length ? sparkline(vals) : '<div class="empty">No data</div>';
-    }
+    // charts
+    drawMiniLine($('#dash-earnings'), arr(ov.byDay).map(d=>Number(d.earnings||0)));
+    drawDonut($('#dash-sources'), ov.offerTypes||{});
 
-    // Traffic sources (from overview.offerTypes)
-    const src = ov?.offerTypes || {};
-    const entries = Object.keys(src).map(k => ({ k, v: toNum(src[k]) }));
-    $('#dash-sources').innerHTML = entries.length ? barlist(entries) : '<div class="empty">No data</div>';
+    // Geo table
+    const tb = $('#tbl-dash-geo'); if(tb){ tb.innerHTML='';
+      const geoMap = ov.geo||{};
+      const rows = Object.keys(geoMap).map(k=>({
+        country:k,
+        earnings:Number(geoMap[k]||0),
+        // if your backend ships clicks/leads by geo, accept them:
+        clicks: ov.geoClicks && ov.geoClicks[k] != null ? Number(ov.geoClicks[k]) : 0,
+        leads:  ov.geoLeads  && ov.geoLeads[k]  != null ? Number(ov.geoLeads[k])  : 0,
+      }))
+      .sort((a,b)=>b.earnings-a.earnings).slice(0,10);
 
-    // By Geo (Clicks, Leads, Earnings)
-    const geoEarn = ov?.geo || {};
-    const geoAgg = {};
-    (arr(ana?.items) || []).forEach(it=>{
-      const country = it.country || it.value || 'Unknown';
-      const clicks  = toNum(it.clicks);
-      const conv    = toNum(it.leads ?? it.conversions ?? it.conv);
-      const earn    = toNum(it.earnings);
-      if (!geoAgg[country]) geoAgg[country] = {country, clicks:0, leads:0, earnings:0};
-      geoAgg[country].clicks   += clicks;
-      geoAgg[country].leads    += conv;
-      geoAgg[country].earnings += earn;
-    });
-    Object.keys(geoEarn).forEach(k=>{
-      if (!geoAgg[k]) geoAgg[k] = {country:k, clicks:0, leads:0, earnings:0};
-      geoAgg[k].earnings = toNum(geoEarn[k]);
-    });
-
-    const tb = $('#tbl-dash-geo'); tb.innerHTML='';
-    const rows = Object.values(geoAgg).sort((a,b)=>b.earnings-a.earnings).slice(0,10);
-    if (!rows.length) {
-      tb.innerHTML = '<tr><td colspan="4" class="muted">No data</td></tr>';
-    } else {
+      if(!rows.length){ tb.innerHTML='<tr><td colspan="4" class="muted">No data</td></tr>'; }
       rows.forEach(g=>{
-        const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${g.country}</td><td>${g.clicks}</td><td>${g.leads}</td><td class="money">${dollars(g.earnings)}</td>`;
+        const tr=document.createElement('tr');
+        tr.innerHTML=`<td>${g.country}</td><td>${g.clicks}</td><td>${g.leads}</td><td class="money">${dollars(g.earnings)}</td>`;
         tb.appendChild(tr);
       });
     }
   }catch(e){
-    console.error(e);
+    console.error('dashboard', e);
   }
 }
 
-/* ========= CPA ACCOUNTS ========= */
+/* =========================
+   CPA ACCOUNTS  (uses your renamed headers)
+   ========================= */
 async function initCpa(){
-  const wrap = $('#cpa-grid'); wrap.innerHTML='';
+  const wrap = $('#cpa-grid'); if(wrap) wrap.innerHTML='';
   try{
-    const resp = await api('cpa');
-    // accept both {items:[...]} and [...]
-    const raw = arr(resp);
-    // map both old headers (account, activeOffers, conversionRate…) and new lowercase headers (accountid, activeoffers, conversionrate…)
-    const items = raw.map(r=>{
-      const account = String(pick(r,['account','accountid'],'')).trim();
-      const network = pick(r,['network'],'');
-      const domain  = pick(r,['domain'],'');
-      const status  = String(pick(r,['status'],'ACTIVE')).toUpperCase();
-      const activeOffers = toNum(pick(r,['activeOffers','activeoffers'],0));
-      const revenue = toNum(pick(r,['revenue'],0));
-      const clicks  = toNum(pick(r,['clicks'],0));
-      let conv      = pick(r,['conversionRate','conversionrate'],0);
-      conv = Number(conv); conv = conv > 1 ? conv : conv * 100; // ratio or %
-      return {account, network, domain, status, activeOffers, revenue, clicks, conv};
-    });
-
-    if(!items.length){ wrap.innerHTML = `<div class="card pad empty">No CPA accounts yet.</div>`; return; }
+    const resp = await api('cpa');         // {ok:true, items:[...]} or array
+    const items = arr(resp);
+    if(!items.length){
+      if(wrap) wrap.innerHTML = `<div class="card pad empty">No CPA accounts yet.</div>`;
+      return;
+    }
 
     items.forEach(r=>{
+      // accept either old keys or your new lowercase keys
+      const row = {
+        account   : r.account || r.accountid,
+        network   : r.network,
+        domain    : r.domain,
+        preferred : r.preferredOffer || r.preferredoffer,
+        active    : r.activeOffers   || r.activeoffers,
+        revenue   : r.revenue,
+        clicks    : r.clicks,
+        convRate  : r.conversionRate || r.conversionrate, // can be % or 0-1
+        status    : r.status || 'ACTIVE',
+      };
+      const convPct = (row.convRate>1 ? row.convRate : row.convRate*100) || 0;
+
       const card = document.createElement('div');
       card.className='card pad';
       card.innerHTML = `
         <div class="acct">
           <div>
-            <h3>${r.account||'—'}</h3>
-            <div class="muted" style="margin-bottom:10px">Network <b style="color:#fff">${r.network||'—'}</b> · <span class="badge">${r.status}</span></div>
+            <h3>${mono(row.account)}</h3>
+            <div class="muted" style="margin-bottom:10px">
+              Network <b style="color:#fff">${mono(row.network)}</b>
+              · <span class="badge">${mono(row.status)}</span>
+            </div>
             <div class="stats">
-              <div class="kv"><b>Active Offers</b><span>${r.activeOffers}</span></div>
-              <div class="kv"><b>Revenue</b><span class="money">${dollars(r.revenue)}</span></div>
-              <div class="kv"><b>Clicks</b><span>${r.clicks}</span></div>
-              <div class="kv"><b>Conversion</b><span>${r.conv.toFixed(2)}%</span></div>
+              <div class="kv"><b>Preferred</b><span>${mono(row.preferred)}</span></div>
+              <div class="kv"><b>Active Offers</b><span>${mono(row.active)||0}</span></div>
+              <div class="kv"><b>Revenue</b><span class="money">${dollars(row.revenue||0)}</span></div>
+              <div class="kv"><b>Clicks</b><span>${mono(row.clicks)||0}</span></div>
+              <div class="kv"><b>Conversion</b><span>${percent(convPct)}</span></div>
             </div>
           </div>
           <div class="right flex">
-            <span class="pill mono">${r.domain||'no-domain'}</span>
-            <button class="btn secondary" data-view-acct="${r.account}">View Details</button>
+            <span class="pill mono">${mono(row.domain)||'no-domain'}</span>
+            <button class="btn secondary" data-view-acct="${mono(row.account)}">View Details</button>
           </div>
         </div>`;
-      wrap.appendChild(card);
+      if(wrap) wrap.appendChild(card);
     });
   }catch(e){
-    console.error(e);
-    wrap.innerHTML = `<div class="card pad empty">Failed to load accounts.</div>`;
+    console.error('cpa', e);
+    if(wrap) wrap.innerHTML = `<div class="card pad empty">Failed to load accounts.</div>`;
   }
 }
 
-/* Add New Account modal wiring (requires #mdl-cpa HTML block present) */
-const mdl = document.getElementById('mdl-cpa');
-const openMdl  = ()=> mdl && mdl.classList.add('open');
-const closeMdl = ()=> mdl && mdl.classList.remove('open');
-document.getElementById('btn-add-acct')?.addEventListener('click', openMdl);
-mdl?.addEventListener('click', e=>{ if(e.target.hasAttribute('data-close')) closeMdl(); });
-document.getElementById('btn-save-acct')?.addEventListener('click', async ()=>{
-  const err = document.getElementById('f-error');
-  const v = {
-    account : document.getElementById('f-account').value.trim(),
-    network : document.getElementById('f-network').value.trim(),
-    domain  : normDomain(document.getElementById('f-domain').value),
-    status  : document.getElementById('f-status').value,
-    apiKey  : document.getElementById('f-key').value.trim(),
-    webhook : document.getElementById('f-webhook').value.trim()
-  };
-  if(!v.account || !v.network){
-    err.textContent = 'Account Name and Network are required.'; err.style.display='block'; return;
-  }
-  err.style.display='none';
-  try{
-    const res = await apiWrite('cpaCreate', v);
-    if(!res || res.ok!==true) throw new Error('Create failed');
-    closeMdl();
-    await initCpa();
-  }catch(e){
-    err.textContent = 'Could not save account. Please try again.'; err.style.display='block';
-  }
-});
+/* Add New Account modal wiring (kept safe) */
+(function wireCpaModal(){
+  const mdl = $('#mdl-cpa'); if(!mdl) return;
+  const openMdl  = ()=> mdl.classList.add('open');
+  const closeMdl = ()=> mdl.classList.remove('open');
 
-/* ========= USERS ========= */
+  const addBtn = $('#btn-add-acct'); if(addBtn) addBtn.addEventListener('click', openMdl);
+  mdl.addEventListener('click', e=>{ if(e.target && e.target.hasAttribute('data-close')) closeMdl(); });
+
+  const saveBtn = $('#btn-save-acct');
+  if(saveBtn) saveBtn.addEventListener('click', async ()=>{
+    const err = $('#f-error'); if(err) { err.style.display='none'; err.textContent=''; }
+    const v = {
+      account : ($('#f-account')?.value||'').trim(),
+      network : ($('#f-network')?.value||'').trim(),
+      domain  : normDomain($('#f-domain')?.value||''),
+      status  : ($('#f-status')?.value||'ACTIVE'),
+      apiKey  : ($('#f-key')?.value||'').trim(),
+      webhook : ($('#f-webhook')?.value||'').trim()
+    };
+    if(!v.account || !v.network){
+      if(err){ err.textContent = 'Account Name and Network are required.'; err.style.display='block'; }
+      return;
+    }
+    try{
+      const res = await apiWrite('cpaCreate', v); // upsert in GAS
+      if(!res || res.ok!==true) throw new Error('create failed');
+      closeMdl();
+      await initCpa();
+    }catch(e){
+      if(err){ err.textContent = 'Could not save account. Please try again.'; err.style.display='block'; }
+    }
+  });
+})();
+
+/* =========================
+   USERS
+   ========================= */
 let currentUsersTab = 'APPROVED';
-const userTabBtns = $$('[data-users-tab]');
-userTabBtns.forEach(b=>b.addEventListener('click',()=>{
-  userTabBtns.forEach(x=>x.classList.toggle('active', x===b));
-  currentUsersTab = b.dataset.usersTab; initUsers(currentUsersTab);
+$$('[data-users-tab]').forEach(b=>b.addEventListener('click',()=>{
+  $$('[data-users-tab]').forEach(x=>x.classList.toggle('active', x===b));
+  currentUsersTab = b.dataset.usersTab;
+  initUsers(currentUsersTab);
 }));
 async function initUsers(tab='APPROVED'){
-  const tb = $('#tbl-users'); tb.innerHTML = '';
+  const tb = $('#tbl-users'); if(!tb) return; tb.innerHTML = '';
   try{
-    // ask backend with status hint
-    const resp = await api('users', {status: tab});
-    let list = arr(resp?.items || resp);
-    // fallback: filter locally if backend returns all
-    if (!list.length) {
-      const all  = arr(resp?.items || resp);
-      list = all.filter(u => String(u.status||'APPROVED').toUpperCase()===tab);
-    }
-    if(!list.length){ tb.innerHTML = `<tr><td colspan="4" class="muted">No ${tab.toLowerCase()} users.</td></tr>`; return; }
-    list.forEach(u=>{
+    const resp = await api('users');
+    const all  = arr(resp?.items || resp);
+    const filtered = all.filter(u => String(u.status||'APPROVED').toUpperCase()===tab);
+
+    if(!filtered.length){ tb.innerHTML = `<tr><td colspan="4" class="muted">No ${tab.toLowerCase()} users.</td></tr>`; return; }
+    filtered.forEach(u=>{
       const tr = document.createElement('tr');
-      tr.innerHTML = `<td>${u.name||'—'}</td><td>${u.email||''}</td><td>${u.phone||''}</td><td>${u.authority||'1x User'}</td>`;
+      tr.innerHTML = `<td>${mono(u.name)}</td><td>${mono(u.email)}</td><td>${mono(u.phone)}</td><td>${mono(u.authority)||'1x User'}</td>`;
       tb.appendChild(tr);
     });
   }catch(e){
+    console.error('users', e);
     tb.innerHTML = `<tr><td colspan="4" class="muted">Failed to load users.</td></tr>`;
   }
 }
 
-/* ========= ANALYTICS (base + live) ========= */
+/* =========================
+   ANALYTICS (base + live)
+   ========================= */
 let liveTimer=null, liveRows=[];
 async function initAnalytics(){
+  // Base (overview blocks)
   try{
     const base = await api('analytics');
-    const baseItems = arr(base) || arr(base?.items);
-    // Overview chart: treat base items as {metric:date,value:number} or any series-like shape
-    const seriesVals = baseItems.map(x=>toNum(x.value ?? x.earnings ?? x.clicks ?? 0));
-    $('#ana-overview').innerHTML = seriesVals.length ? sparkline(seriesVals) : '<div class="empty">No data</div>';
-    // Geo distribution (bar chart proxy: top 6 countries by clicks if present, else by value)
-    const geoBucket = {};
-    baseItems.forEach(x=>{
-      const k = x.country || x.value || x.metric || '—';
-      const v = toNum(x.clicks ?? x.earnings ?? x.value ?? 0);
-      geoBucket[k] = (geoBucket[k]||0) + v;
-    });
-    const tops = Object.entries(geoBucket).map(([k,v])=>({k, v})).sort((a,b)=>b.v-a.v).slice(0,6);
-    $('#ana-geo-dist').innerHTML = tops.length ? barlist(tops) : '<div class="empty">No data</div>';
-  }catch(e){
-    $('#ana-overview').innerHTML = '<div class="empty">No data</div>';
-    $('#ana-geo-dist').innerHTML = '<div class="empty">No data</div>';
-  }
+    const items = arr(base) || arr(base?.items);
+    setHTML('#ana-overview', items.length ? 'Chart ready' : 'Loading…');
+    setHTML('#ana-geo-dist','Chart ready');
+  }catch{ setHTML('#ana-overview','Loading…'); setHTML('#ana-geo-dist','Loading…'); }
 
+  // Live
   if(liveTimer) clearInterval(liveTimer);
   liveRows = [];
   liveTimer = setInterval(pullLive, POLL_FAST);
@@ -335,113 +323,133 @@ async function pullLive(){
   try{
     const j = await api('analytics', { live:1, limit:24, windowSec:120 });
     const events = arr(j?.live) || arr(j);
-    // keep window
+
+    // Keep only last 24
     liveRows = liveRows.concat(events).slice(-24);
 
-    const tb = $('#tbl-live-perf'); tb.innerHTML='';
-    if(!liveRows.length){
-      tb.innerHTML='<tr><td colspan="6" class="muted">Waiting for stream…</td></tr>';
-    }else{
-      liveRows.slice().reverse().forEach(r=>{
-        const tr=document.createElement('tr');
-        tr.innerHTML =
-          `<td class="mono">${r.time||''}</td><td>${r.country||''}</td><td>${r.offer||''}</td>`+
-          `<td>${toNum(r.clicks)}</td><td>${toNum(r.leads ?? r.conversions ?? r.conv)}</td><td class="money">${dollars(toNum(r.earnings))}</td>`;
-        tb.appendChild(tr);
-      });
+    // Live table
+    const tb = $('#tbl-live-perf'); if(tb){ tb.innerHTML='';
+      if(!liveRows.length){
+        tb.innerHTML='<tr><td colspan="6" class="muted">Waiting for stream…</td></tr>';
+      }else{
+        liveRows.slice().reverse().forEach(r=>{
+          const tr=document.createElement('tr');
+          tr.innerHTML =
+            `<td class="mono">${mono(r.time)}</td><td>${mono(r.country)}</td><td>${mono(r.offer)}</td>`+
+            `<td>${mono(r.clicks)||0}</td><td>${mono(r.conversions||r.conv)||0}</td><td class="money">${dollars(r.earnings||0)}</td>`;
+          tb.appendChild(tr);
+        });
+      }
     }
 
-    // recompute geo each poll from the newest payload only
+    // Live by GEO — recomputed each poll
     const byGeo = {};
     events.forEach(ev=>{
       const k = ev.country || 'Unknown';
       if(!byGeo[k]) byGeo[k] = {country:k, clicks:0, conv:0, earnings:0};
-      byGeo[k].clicks   += toNum(ev.clicks);
-      byGeo[k].conv     += toNum(ev.leads ?? ev.conversions ?? ev.conv);
-      byGeo[k].earnings += toNum(ev.earnings);
+      byGeo[k].clicks   += Number(ev.clicks||0);
+      byGeo[k].conv     += Number(ev.conversions||ev.conv||0);
+      byGeo[k].earnings += Number(ev.earnings||0);
     });
 
-    const tb2 = $('#tbl-live-geo'); tb2.innerHTML='';
-    const arrGeo = Object.values(byGeo).sort((a,b)=>b.earnings-a.earnings).slice(0,10);
-    if(!arrGeo.length){
-      tb2.innerHTML='<tr><td colspan="4" class="muted">Waiting for stream…</td></tr>';
-    }else{
-      arrGeo.forEach(g=>{
-        const tr=document.createElement('tr');
-        tr.innerHTML = `<td>${g.country}</td><td>${g.clicks}</td><td>${g.conv}</td><td class="money">${dollars(g.earnings)}</td>`;
-        tb2.appendChild(tr);
-      });
+    const tb2 = $('#tbl-live-geo'); if(tb2){ tb2.innerHTML='';
+      const arrGeo = Object.values(byGeo).sort((a,b)=>b.earnings-a.earnings).slice(0,10);
+      if(!arrGeo.length){
+        tb2.innerHTML='<tr><td colspan="4" class="muted">Waiting for stream…</td></tr>';
+      }else{
+        arrGeo.forEach(g=>{
+          const tr=document.createElement('tr');
+          tr.innerHTML = `<td>${g.country}</td><td>${g.clicks}</td><td>${g.conv}</td><td class="money">${dollars(g.earnings)}</td>`;
+          tb2.appendChild(tr);
+        });
+      }
     }
-  }catch(e){ /* silent */ }
+  }catch(e){ console.warn('live analytics pull failed', e); }
 }
 
-/* ========= WALLET ========= */
+/* =========================
+   WALLET
+   ========================= */
 async function initWallet(){
   try{
     const w = obj(await api('wallet'));
     const hist = arr(w.history) || arr(w);
-
-    $('#wal-balance').textContent = dollars(toNum(w.balance));
+    setText('#wal-balance', dollars(w.balance||0));
 
     const pendingAmt = hist.filter(t=>String(t.status||'').toUpperCase()==='PENDING')
-                           .reduce((s,t)=>s+toNum(t.amount),0);
-    $('#wal-pending').textContent = dollars(pendingAmt);
+                           .reduce((s,t)=>s+Number(t.amount||0),0);
+    setText('#wal-pending', dollars(pendingAmt));
 
     const lastPaid = hist.filter(t=>String(t.status||'').toUpperCase()==='COMPLETED').slice(-1)[0];
-    $('#wal-last').textContent = dollars(lastPaid ? toNum(lastPaid.amount) : 0);
+    setText('#wal-last', dollars(lastPaid ? lastPaid.amount : 0));
 
-    const tb = $('#tbl-wallet'); tb.innerHTML='';
-    hist.slice().reverse().forEach(t=>{
-      const tr=document.createElement('tr');
-      tr.innerHTML=`<td>${t.date||''}</td><td>${t.method||''}</td><td class="money">${dollars(toNum(t.amount))}</td><td>${t.status||''}</td>`;
-      tb.appendChild(tr);
-    });
-    if(!tb.children.length) tb.innerHTML = `<tr><td colspan="4" class="muted">No transactions.</td></tr>`;
+    const tb = $('#tbl-wallet'); if(tb){ tb.innerHTML='';
+      hist.slice().reverse().forEach(t=>{
+        const tr=document.createElement('tr');
+        tr.innerHTML=`<td>${mono(t.date)}</td><td>${mono(t.method)}</td><td class="money">${dollars(t.amount||0)}</td><td>${mono(t.status)}</td>`;
+        tb.appendChild(tr);
+      });
+      if(!tb.children.length) tb.innerHTML = `<tr><td colspan="4" class="muted">No transactions.</td></tr>`;
+    }
   }catch(e){
-    const tb = $('#tbl-wallet');
-    if(tb) tb.innerHTML = `<tr><td colspan="4" class="muted">Failed to load.</td></tr>`;
+    console.error('wallet', e);
+    const tb = $('#tbl-wallet'); if(tb) tb.innerHTML = `<tr><td colspan="4" class="muted">Failed to load.</td></tr>`;
   }
 }
 
-/* ========= MONITORING ========= */
+/* =========================
+   MONITORING
+   ========================= */
 async function initMonitor(){
-  const tb = $('#tbl-monitor'); tb.innerHTML='';
+  const tb = $('#tbl-monitor'); if(tb) tb.innerHTML='';
   try{
     const m = obj(await api('monitoring'));
     const events = arr(m.events) || arr(m);
 
-    $('#box-alerts').textContent = events.length;
-    $('#box-maint').textContent  = m.maintenance || '—';
-    $('#box-health').textContent = m.health || 'OK';
+    setText('#box-alerts', String(events.length||0));
+    setText('#box-maint', mono(m.maintenance) || '—');
+    setText('#box-health', mono(m.health) || 'OK');
 
-    if(!events.length){
-      tb.innerHTML = `<tr><td colspan="3" class="muted">No events.</td></tr>`;
-      return;
+    if(tb){
+      if(!events.length){
+        tb.innerHTML = `<tr><td colspan="3" class="muted">No events.</td></tr>`;
+      }else{
+        events.forEach(ev=>{
+          const tr=document.createElement('tr');
+          tr.innerHTML=`<td class="mono">${mono(ev.time)}</td><td>${mono(ev.type)}</td><td>${mono(ev.msg||ev.message)}</td>`;
+          tb.appendChild(tr);
+        });
+      }
     }
-    events.forEach(ev=>{
-      const tr=document.createElement('tr');
-      tr.innerHTML=`<td class="mono">${ev.time||''}</td><td>${ev.type||''}</td><td>${ev.msg||ev.message||''}</td>`;
-      tb.appendChild(tr);
-    });
   }catch(e){
-    tb.innerHTML = `<tr><td colspan="3" class="muted">Failed to load.</td></tr>`;
+    console.error('monitor', e);
+    if(tb) tb.innerHTML = `<tr><td colspan="3" class="muted">Failed to load.</td></tr>`;
   }
 }
 
-/* ========= SETTINGS ========= */
+/* =========================
+   SETTINGS
+   ========================= */
 async function initSettings(){
   try{
     const j = await api('config');
     const pretty = v => { try{ return JSON.stringify(v, null, 2); }catch{ return String(v); } };
-    $('#pretty').textContent = pretty(j);
+    setText('#pretty', pretty(j));
   }catch(e){
-    $('#pretty').textContent = 'Failed to load config';
+    setText('#pretty', 'Failed to load config');
   }
 }
 
-/* ========= BOOT ========= */
+/* =========================
+   BOOT + GLOBAL GUARD
+   ========================= */
 window.addEventListener('DOMContentLoaded', ()=>{
   const r = (location.hash||'#dashboard').replace('#','');
   show(r);
+});
+
+// fail safe: don’t white-screen
+window.addEventListener('error', (e)=>{
+  console.error('Global error', e.error || e.message);
 });
 </script>

@@ -342,7 +342,7 @@ const dollars = n => Number(n||0).toLocaleString(undefined,{style:'currency',cur
 /* GET helper */
 const get = async (url, opt={})=>{
   const u = new URL(url);
-  u.searchParams.set('_t', Date.now()); // cache-bust
+  u.searchParams.set('_t', Date.now());
   const r = await fetch(u, {cache:'no-store', ...opt});
   if(!r.ok) throw new Error('HTTP '+r.status);
   return r.json();
@@ -427,17 +427,32 @@ async function initDashboard(){
     $('#dash-users').textContent = active;
     $('#dash-users-diff').textContent = '24h growth';
 
-    // Top GEO from earnings map
+    // ---- Top GEO table using geoDetail (clicks/leads/earnings) ----
     const tb = $('#tbl-dash-geo'); tb.innerHTML='';
-    const geoMap = ov && ov.geo ? ov.geo : {};
-    const rows = Object.keys(geoMap).map(k=>({country:k, earnings:geoMap[k]}))
-                  .sort((a,b)=>b.earnings-a.earnings).slice(0,10);
-    if(!rows.length){ tb.innerHTML='<tr><td colspan="4" class="muted">No data</td></tr>'; }
-    rows.forEach(g=>{
-      const tr=document.createElement('tr');
-      tr.innerHTML=`<td>${g.country}</td><td>0</td><td>0</td><td class="money">${dollars(g.earnings)}</td>`;
-      tb.appendChild(tr);
-    });
+    const geoDetail = (ov && ov.geoDetail) ? ov.geoDetail : {};
+    const rows = Object.keys(geoDetail)
+      .map(country => ({
+        country,
+        clicks:   Math.round(geoDetail[country].clicks || 0),
+        leads:    Math.round(geoDetail[country].leads  || 0),
+        earnings: Number(geoDetail[country].earnings || 0)
+      }))
+      .sort((a,b)=> b.earnings - a.earnings)
+      .slice(0, 10);
+
+    if(!rows.length){
+      tb.innerHTML = '<tr><td colspan="4" class="muted">No data</td></tr>';
+    } else {
+      rows.forEach(g=>{
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${g.country}</td>
+          <td>${g.clicks}</td>
+          <td>${g.leads}</td>
+          <td class="money">${dollars(g.earnings)}</td>`;
+        tb.appendChild(tr);
+      });
+    }
 
     $('#dash-earnings').textContent = ov.byDay && ov.byDay.length ? 'Chart ready' : 'Awaiting data..';
     $('#dash-sources').textContent  = Object.keys(ov.offerTypes||{}).length ? 'Chart ready' : 'Awaiting data..';
@@ -503,7 +518,7 @@ document.getElementById('btn-save-acct')?.addEventListener('click', async ()=>{
   }
   err.style.display='none';
   try{
-    const res = await apiWrite('cpaCreate', v); // GAS: upsert to CPA sheet; return {ok:true}
+    const res = await apiWrite('cpaCreate', v);
     if(!res || res.ok!==true) throw new Error('Create failed');
     closeMdl();
     await initCpa();
@@ -522,7 +537,7 @@ userTabBtns.forEach(b=>b.addEventListener('click',()=>{
 async function initUsers(tab='APPROVED'){
   const tb = $('#tbl-users'); tb.innerHTML = '';
   try{
-    const resp = await api('users', {status: tab}); // if GAS respects status
+    const resp = await api('users', {status: tab});
     const all  = arr(resp);
     const filtered = all.length ? all
       : arr(resp?.items||resp).filter(u => String(u.status||'APPROVED').toUpperCase()===tab);

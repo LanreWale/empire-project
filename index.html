@@ -9,18 +9,19 @@ const dollars = n => Number(n||0).toLocaleString(undefined,{style:'currency',cur
 /* --- minimal error banner so blank pages show why --- */
 (function(){
   function show(err, origin){
-    var d=document.createElement('div');
-    d.style.cssText="position:fixed;left:8px;right:8px;bottom:8px;z-index:99999;background:#2b1d1d;color:#ffd2d2;border:1px solid #7a3b3b;padding:10px;border-radius:8px;font:12px/1.4 ui-monospace,Menlo,Consolas,monospace;white-space:pre-wrap";
-    d.textContent = "[JS "+origin+"] " + (err && (err.message||err)) + (err && err.stack ? "\n" + err.stack : "");
-    document.body.appendChild(d);
+    try{
+      var d=document.createElement('div');
+      d.style.cssText="position:fixed;left:8px;right:8px;bottom:8px;z-index:99999;background:#2b1d1d;color:#ffd2d2;border:1px solid #7a3b3b;padding:10px;border-radius:8px;font:12px/1.4 ui-monospace,Menlo,Consolas,monospace;white-space:pre-wrap";
+      d.textContent = "[JS "+origin+"] " + (err && (err.message||err)) + (err && err.stack ? "\n" + err.stack : "");
+      document.body.appendChild(d);
+    }catch(_){}
   }
   window.addEventListener('error', e => show(e && (e.error||e.message),'error'));
   window.addEventListener('unhandledrejection', e => show(e && (e.reason||e),'promise'));
 })();
 
 /* GET helper */
-const get = async (url, opt){
-  opt = opt || {};
+const get = async (url, opt={})=>{
   const u = new URL(url);
   u.searchParams.set('_t', Date.now()); // cache-bust
   const r = await fetch(u, Object.assign({cache:'no-store'}, opt));
@@ -28,16 +29,14 @@ const get = async (url, opt){
   return r.json();
 };
 /* API helpers */
-const api = (action, params){
-  params = params || {};
+const api = (action, params={})=>{
   const u = new URL(GAS);
   u.searchParams.set('action', action);
-  Object.keys(params).forEach(function(k){ u.searchParams.set(k, params[k]); });
+  Object.keys(params).forEach(k=>u.searchParams.set(k, params[k]));
   return get(u);
 };
 /* POST (with GET fallback) for writes */
-const apiWrite = async (action, payload){
-  payload = payload || {};
+const apiWrite = async (action, payload={})=>{
   const url = new URL(GAS);
   url.searchParams.set('action', action);
   try{
@@ -49,7 +48,7 @@ const apiWrite = async (action, payload){
     if(!res.ok) throw new Error('HTTP '+res.status);
     return res.json();
   }catch(e){
-    Object.keys(payload).forEach(function(k){
+    Object.keys(payload).forEach(k=>{
       const v = payload[k];
       url.searchParams.set(k, (v && typeof v==='object') ? JSON.stringify(v) : String(v));
     });
@@ -76,8 +75,8 @@ function normDomain(d){
 
 /* ========= ROUTER ========= */
 function show(route){
-  $$('.nav a').forEach(function(a){ a.classList.toggle('active', a.dataset.route===route); });
-  $$('[data-page]').forEach(function(s){ s.style.display = (s.dataset.page===route)?'block':'none'; });
+  $$('.nav a').forEach(a=>a.classList.toggle('active', a.dataset.route===route));
+  $$('[data-page]').forEach(s=>s.style.display = (s.dataset.page===route)?'block':'none');
 
   if(route==='dashboard') initDashboard();
   if(route==='cpa')       initCpa();
@@ -87,23 +86,22 @@ function show(route){
   if(route==='monitor')   initMonitor();
   if(route==='settings')  initSettings();
 }
-window.addEventListener('hashchange', function(){
-  const r = (location.hash||'#dashboard').replace('#','');
-  show(r||'dashboard');
+window.addEventListener('hashchange', ()=>{
+  const r = (location.hash||'#dashboard').replace('#','') || 'dashboard';
+  show(r);
 });
-$('#nav').addEventListener('click', function(e){
-  const a = e.target.closest && e.target.closest('a');
-  if(a){
-    const r = a.dataset.route;
-    location.hash = '#'+r;
-  }
-});
+const navEl = $('#nav');
+if (navEl) {
+  navEl.addEventListener('click', e=>{
+    const a = e.target.closest && e.target.closest('a');
+    if(a){ location.hash = '#'+a.dataset.route; }
+  });
+}
 
 /* ========= DASHBOARD ========= */
 async function initDashboard(){
   try{
-    const responses = await Promise.all([ api('overview'), api('users', {status:'APPROVED'}) ]);
-    const ov = responses[0], us = responses[1];
+    const [ov, us] = await Promise.all([ api('overview'), api('users', {status:'APPROVED'}) ]);
 
     const t = (ov && ov.totals) ? ov.totals : (ov||{});
     $('#dash-earn').textContent   = dollars(t.earnings||0);
@@ -121,10 +119,10 @@ async function initDashboard(){
     const tb = $('#tbl-dash-geo'); tb.innerHTML='';
     const geoMap = (ov && ov.geo) ? ov.geo : {};
     const keys = Object.keys(geoMap||{});
-    const rows = keys.map(function(k){ return {country:k, earnings:geoMap[k]}; })
-                     .sort(function(a,b){ return b.earnings-a.earnings; }).slice(0,10);
+    const rows = keys.map(k=>({country:k, earnings:geoMap[k]}))
+                     .sort((a,b)=>b.earnings-a.earnings).slice(0,10);
     if(!rows.length){ tb.innerHTML='<tr><td colspan="4" class="muted">No data</td></tr>'; }
-    rows.forEach(function(g){
+    rows.forEach(g=>{
       const tr=document.createElement('tr');
       tr.innerHTML='<td>'+g.country+'</td><td>0</td><td>0</td><td class="money">'+dollars(g.earnings)+'</td>';
       tb.appendChild(tr);
@@ -133,6 +131,7 @@ async function initDashboard(){
     $('#dash-earnings').textContent = (ov && ov.byDay && ov.byDay.length) ? 'Chart ready' : 'Awaiting data..';
     $('#dash-sources').textContent  = (ov && ov.offerTypes && Object.keys(ov.offerTypes).length) ? 'Chart ready' : 'Awaiting data..';
   }catch(e){
+    // error banner will show it
     console.error(e);
   }
 }
@@ -145,7 +144,7 @@ async function initCpa(){
     const items = arr(resp);
     if(!items.length){ wrap.innerHTML = '<div class="card pad empty">No CPA accounts yet.</div>'; return; }
 
-    items.forEach(function(r){
+    items.forEach(r=>{
       const card = document.createElement('div');
       card.className='card pad';
 
@@ -160,7 +159,8 @@ async function initCpa(){
         '<div class="acct">'+
           '<div>'+
             '<h3>'+(r.account||'—')+'</h3>'+
-            '<div class="muted" style="margin-bottom:10px">Network <b style="color:#fff">'+(r.network||'—')+'</b> · <span class="badge">'+(r.status||'ACTIVE')+'</span></div>'+
+            '<div class="muted" style="margin-bottom:10px">Network <b style="color:#fff">'+(r.network||'—')+
+            '</b> · <span class="badge">'+(r.status||'ACTIVE')+'</span></div>'+
             '<div class="stats">'+
               '<div class="kv"><b>Active Offers</b><span>'+(r.activeOffers||0)+'</span></div>'+
               '<div class="kv"><b>Revenue</b><span class="money">'+dollars(r.revenue||0)+'</span></div>'+
@@ -187,7 +187,9 @@ var openMdl  = function(){ mdl.classList.add('open'); };
 var closeMdl = function(){ mdl.classList.remove('open'); };
 var addBtn = document.getElementById('btn-add-acct');
 if(addBtn) addBtn.addEventListener('click', openMdl);
-mdl.addEventListener('click', function(e){ if(e.target.hasAttribute && e.target.hasAttribute('data-close')) closeMdl(); });
+if(mdl) mdl.addEventListener('click', function(e){
+  if(e.target && e.target.hasAttribute && e.target.hasAttribute('data-close')) closeMdl();
+});
 var saveBtn = document.getElementById('btn-save-acct');
 if(saveBtn) saveBtn.addEventListener('click', async function(){
   var err = document.getElementById('f-error');
@@ -287,7 +289,7 @@ async function pullLive(){
       });
     }
 
-    // Live by GEO (recompute fresh **each poll**)
+    // Live by GEO (recompute fresh each poll)
     const byGeo = {};
     events.forEach(function(ev){
       const k = ev.country || 'Unknown';
@@ -298,7 +300,7 @@ async function pullLive(){
     });
 
     const tb2 = $('#tbl-live-geo'); tb2.innerHTML='';
-    const arrGeo = Object.keys(byGeo).map(function(k){return byGeo[k];})
+    const arrGeo = Object.keys(byGeo).map(k=>byGeo[k])
       .sort(function(a,b){return b.earnings-a.earnings;}).slice(0,10);
     if(!arrGeo.length){
       tb2.innerHTML='<tr><td colspan="4" class="muted">Waiting for stream…</td></tr>';
@@ -378,7 +380,7 @@ async function initSettings(){
 }
 
 /* ========= BOOT ========= */
-window.addEventListener('DOMContentLoaded', function(){
+window.addEventListener('DOMContentLoaded', ()=>{
   const r = (location.hash||'#dashboard').replace('#','') || 'dashboard';
   show(r);
 });

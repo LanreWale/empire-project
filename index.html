@@ -1,409 +1,392 @@
 <script>
-/* ========= CONFIG ========= */
-const GAS = "https://script.google.com/macros/s/AKfycbwZVlGMvYonfCNdQlwPHiqqgOVC80_HsyktSYmqmQPBKmRrlzg_yo4lKz_Mmu85B7eY/exec";
-const POLL_FAST = 5000;
+/* Defensive app bootstrap + API helpers
+   Replace previous script with this whole block.
+   This is designed to never crash the page and to show useful errors.
+*/
 
-const $  = s => document.querySelector(s);
-const $$ = s => Array.from(document.querySelectorAll(s));
-const num = v => Number(v ?? 0);
-const dollars = n => Number(n||0).toLocaleString(undefined,{style:'currency',currency:'USD'});
+(function(){
+  // show JS errors visibly
+  window.addEventListener('error', function(e){
+    try{
+      const p = document.createElement('pre');
+      p.style.cssText = 'position:fixed;left:8px;right:8px;bottom:8px;top:8px;z-index:99999;background:#2b0d0d;color:#fff;padding:10px;overflow:auto;white-space:pre-wrap';
+      p.textContent = '[JS ERROR] ' + (e && (e.message || e.error && e.error.message) || String(e));
+      document.body.appendChild(p);
+    }catch(_){}
+    console.error('PAGE ERROR', e);
+  }, true);
 
-/* GET helper */
-const get = async (url, opt={})=>{
-  const u = new URL(url);
-  u.searchParams.set('_t', Date.now()); // cache-bust
-  const r = await fetch(u, {cache:'no-store', ...opt});
-  if(!r.ok) throw new Error('HTTP '+r.status);
-  return r.json();
-};
-/* API helpers */
-const api = (action, params={})=>{
-  const u = new URL(GAS);
-  u.searchParams.set('action', action);
-  Object.entries(params).forEach(([k,v])=>u.searchParams.set(k, v));
-  return get(u);
-};
-/* POST (with GET fallback) for writes */
-const apiWrite = async (action, payload={})=>{
-  const url = new URL(GAS);
-  url.searchParams.set('action', action);
-  try{
-    const res = await fetch(url, {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify(payload)
+  // small helper to show debug messages
+  function showDebug(msg){
+    try{
+      let box = document.getElementById('__debug_box__');
+      if(!box){
+        box = document.createElement('pre');
+        box.id = '__debug_box__';
+        box.style.cssText='position:fixed;right:8px;bottom:8px;z-index:99998;background:#001a; color:#fff; padding:8px; max-width:40vw; max-height:50vh; overflow:auto; font-size:12px';
+        document.body.appendChild(box);
+      }
+      box.textContent += msg + '\n';
+    }catch(e){console.log(msg);}
+  }
+
+  // Config
+  const GAS = "https://script.google.com/macros/s/AKfycbwZVlGMvYonfCNdQlwPHiqqgOVC80_HsyktSYmqmQPBKmRrlzg_yo4lKz_Mmu85B7eY/exec";
+  const POLL_FAST = 5000;
+
+  // Safe DOM helpers
+  const $ = sel => {
+    try { return document.querySelector(sel); }
+    catch { return null; }
+  };
+  const $$ = sel => {
+    try { return Array.from(document.querySelectorAll(sel)); }
+    catch { return []; }
+  };
+
+  // safe text helper
+  const dollars = n => {
+    try { return Number(n||0).toLocaleString(undefined,{style:'currency',currency:'USD'}); }
+    catch { return '$0.00'; }
+  };
+
+  // Safe fetch GET json
+  async function get(url, opt={}){
+    try{
+      const u = new URL(url);
+      u.searchParams.set('_t', Date.now());
+      const r = await fetch(u, {cache:'no-store', ...opt});
+      if(!r.ok){
+        const text = await r.text().catch(()=>String(r.status));
+        throw new Error('HTTP '+r.status+': '+text.slice(0,200));
+      }
+      return await r.json();
+    }catch(e){
+      showDebug('GET ERROR: ' + (e && e.message));
+      throw e;
+    }
+  }
+
+  // API wrapper (GET)
+  function api(action, params={}){
+    try{
+      const u = new URL(GAS);
+      u.searchParams.set('action', action);
+      Object.entries(params||{}).forEach(([k,v]) => u.searchParams.set(k, typeof v === 'object' ? JSON.stringify(v) : String(v)));
+      return get(u.toString());
+    }catch(e){
+      return Promise.reject(e);
+    }
+  }
+
+  // POST with GET fallback (keeps previous behavior)
+  async function apiWrite(action, payload={}){
+    try{
+      const url = new URL(GAS);
+      url.searchParams.set('action', action);
+      const res = await fetch(url.toString(), {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify(payload)
+      });
+      if(!res.ok){
+        const t = await res.text().catch(()=>String(res.status));
+        throw new Error('HTTP ' + res.status + ': ' + t.slice(0,200));
+      }
+      return await res.json();
+    }catch(e){
+      // fallback GET
+      try{
+        const url = new URL(GAS);
+        url.searchParams.set('action', action);
+        Object.entries(payload||{}).forEach(([k,v])=> url.searchParams.set(k, typeof v === 'object' ? JSON.stringify(v) : String(v)));
+        return get(url.toString());
+      }catch(err){
+        throw err;
+      }
+    }
+  }
+
+  /* ---------- harmless normalizers ---------- */
+  const arr = maybe => {
+    if(!maybe) return [];
+    if(Array.isArray(maybe)) return maybe;
+    if(maybe.items && Array.isArray(maybe.items)) return maybe.items;
+    if(maybe.rows && Array.isArray(maybe.rows)) return maybe.rows;
+    if(maybe.data && Array.isArray(maybe.data)) return maybe.data;
+    return [];
+  };
+  const obj = maybe => (maybe && typeof maybe === 'object') ? maybe : {};
+  const normDomain = d => String(d||'').trim().replace(/^https?:\/\//,'').replace(/\/.*$/,'');
+
+  /* ========= ROUTER + safe show ========= */
+  function safeToggleActive(route){
+    try{
+      $$('.nav a').forEach(a => a.classList.toggle('active', a.dataset && a.dataset.route === route));
+      $$('[data-page]').forEach(s => {
+        try{ s.style.display = (s.dataset && s.dataset.page === route) ? 'block' : 'none'; }catch(e){}
+      });
+    }catch(e){ console.warn('toggleActive failed', e); }
+  }
+
+  async function show(route){
+    safeToggleActive(route);
+    // call pages if they exist
+    try{ if(route==='dashboard') await initDashboard(); }catch(e){ showDebug('dashboard: '+e.message); }
+    try{ if(route==='cpa') await initCpa(); }catch(e){ showDebug('cpa: '+e.message); }
+    try{ if(route==='users') await initUsers(currentUsersTab); }catch(e){ showDebug('users: '+e.message); }
+    try{ if(route==='analytics') await initAnalytics(); }catch(e){ showDebug('analytics: '+e.message); }
+    try{ if(route==='wallet') await initWallet(); }catch(e){ showDebug('wallet: '+e.message); }
+    try{ if(route==='monitor') await initMonitor(); }catch(e){ showDebug('monitor: '+e.message); }
+    try{ if(route==='settings') await initSettings(); }catch(e){ showDebug('settings: '+e.message); }
+  }
+
+  // guard nav click
+  const navEl = document.getElementById('nav');
+  if(navEl){
+    navEl.addEventListener('click', e=>{
+      const anchor = e.target.closest && e.target.closest('a');
+      if(anchor && anchor.dataset && anchor.dataset.route){
+        location.hash = '#'+anchor.dataset.route;
+      }
     });
-    if(!res.ok) throw new Error('HTTP '+res.status);
-    return res.json();
-  }catch(e){
-    Object.entries(payload||{}).forEach(([k,v])=>url.searchParams.set(k, typeof v==='object'?JSON.stringify(v):String(v)));
-    const res = await fetch(url, {cache:'no-store'});
-    if(!res.ok) throw new Error('HTTP '+res.status);
-    return res.json();
+  } else {
+    showDebug('Notice: #nav not found. Navigation clicks disabled.');
   }
-};
 
-/* ---------- response normalizers ---------- */
-const arr = (maybe) => {
-  if (Array.isArray(maybe)) return maybe;
-  if (maybe && Array.isArray(maybe.items)) return maybe.items;
-  if (maybe && Array.isArray(maybe.rows))  return maybe.rows;
-  if (maybe && Array.isArray(maybe.data))  return maybe.data;
-  return [];
-};
-const obj = (maybe) => (maybe && typeof maybe === 'object') ? maybe : {};
-const normDomain = d=> String(d||'').trim().replace(/^https?:\/\//,'').replace(/\/.*$/,'');
+  window.addEventListener('hashchange', ()=>{
+    const r = (location.hash||'#dashboard').replace('#','');
+    show(r).catch(e=>console.error(e));
+  });
 
-/* ========= MINI CHART RENDERERS (no libs) ========= */
-function renderSparkline(el, values=[]){
-  const boxW = 520, boxH = 120, pad=10;
-  if(!values.length){ el.textContent='No data'; return; }
-  const xs = values.map((_,i)=>i);
-  const min = Math.min(...values), max = Math.max(...values);
-  const scaleX = i => pad + (i/(values.length-1))*(boxW-2*pad);
-  const scaleY = v => pad + (boxH-2*pad) * (1 - (max===min?0.5:(v-min)/(max-min)));
-  const d = values.map((v,i)=> (i?'L':'M') + scaleX(i) + ' ' + scaleY(v)).join(' ');
-  el.innerHTML =
-    `<svg viewBox="0 0 ${boxW} ${boxH}" width="100%" height="110">
-       <rect x="0" y="0" width="${boxW}" height="${boxH}" rx="10" fill="rgba(255,255,255,.04)"/>
-       <path d="${d}" fill="none" stroke="#7db3ff" stroke-width="3" stroke-linecap="round"/>
-     </svg>`;
-}
+  /* ========= DASHBOARD ========= */
+  async function initDashboard(){
+    const dashEarn = $('#dash-earn'); const dashClicks = $('#dash-clicks'); const dashCr = $('#dash-cr');
+    const dashUsers = $('#dash-users'); const dashUsersDiff = $('#dash-users-diff');
+    const tblGeo = $('#tbl-dash-geo');
 
-function renderDonut(el, map={}){
-  const entries = Object.entries(map||{}).filter(([,v])=>num(v)>0);
-  if(!entries.length){ el.textContent='No data'; return; }
-  const total = entries.reduce((s,[,v])=>s+num(v),0);
-  const size = 140, c=size/2, r=48, stroke=18, C=2*Math.PI*r;
-  let acc = 0;
-  const segs = entries.map(([k,v],i)=>{
-    const val = num(v);
-    const frac = val/total;
-    const len = C*frac;
-    const off = C*acc*-1; // counter-clockwise offset
-    acc += frac;
-    // simple palette
-    const hue = Math.round((i/entries.length)*280);
-    return `<circle cx="${c}" cy="${c}" r="${r}"
-              fill="none" stroke="hsl(${hue} 70% 60%)" stroke-width="${stroke}"
-              stroke-dasharray="${len} ${C-len}" stroke-dashoffset="${off}"/>`;
-  }).join('');
-  el.innerHTML =
-    `<div style="display:flex;align-items:center;gap:16px">
-       <svg viewBox="0 0 ${size} ${size}" width="160" height="140">
-         <circle cx="${c}" cy="${c}" r="${r}" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="${stroke}"/>
-         ${segs}
-         <text x="${c}" y="${c}" text-anchor="middle" dominant-baseline="middle"
-               font-size="12" fill="#cfe2ff">${total.toLocaleString()}</text>
-       </svg>
-       <div style="font-size:12px;line-height:1.5;color:#cfe2ff">
-         ${entries.map(([k,v],i)=>{
-           const hue = Math.round((i/entries.length)*280);
-           return `<div style="display:flex;align-items:center;gap:8px">
-                     <span style="width:10px;height:10px;border-radius:2px;background:hsl(${hue} 70% 60%)"></span>
-                     <span style="min-width:88px;opacity:.9">${k}</span>
-                     <b style="color:#fff">${v.toLocaleString()}</b>
-                   </div>`;
-         }).join('')}
-       </div>
-     </div>`;
-}
+    if(!dashEarn || !dashClicks || !dashCr || !dashUsers || !tblGeo){
+      showDebug('Dashboard DOM nodes missing; will still attempt to fetch data but cannot render certain elements.');
+    }
+    try{
+      const [ov, us] = await Promise.all([ api('overview'), api('users', {status:'APPROVED'}) ]);
+      const t = (ov && ov.totals) ? ov.totals : (ov||{});
+      if(dashEarn) dashEarn.textContent = dollars(t.earnings||0);
+      if(dashClicks) dashClicks.textContent = t.clicks||0;
+      const cr = (t.conversionRate!=null) ? Number(t.conversionRate) : (t.leads && t.clicks ? (t.leads/t.clicks*100) : 0);
+      if(dashCr) dashCr.textContent = Number(cr||0).toFixed(2) + '%';
 
-/* ========= ROUTER ========= */
-function show(route){
-  $$('.nav a').forEach(a=>a.classList.toggle('active', a.dataset.route===route));
-  $$('[data-page]').forEach(s=>s.style.display = (s.dataset.page===route)?'block':'none');
+      const users = arr(us);
+      if(dashUsers) dashUsers.textContent = users.length;
+      if(dashUsersDiff) dashUsersDiff.textContent = '24h growth';
 
-  if(route==='dashboard') initDashboard();
-  if(route==='cpa')       initCpa();
-  if(route==='users')     initUsers(currentUsersTab);
-  if(route==='analytics') initAnalytics();
-  if(route==='wallet')    initWallet();
-  if(route==='monitor')   initMonitor();
-  if(route==='settings')  initSettings();
-}
-window.addEventListener('hashchange', ()=>{
-  const r = location.hash.replace('#','')||'dashboard'; show(r);
-});
-$('#nav').addEventListener('click', e=>{
-  if(e.target.closest('a')){
-    const r = e.target.closest('a').dataset.route;
-    location.hash = '#'+r;
+      // geo table
+      if(tblGeo){
+        tblGeo.innerHTML = '';
+        const geoMap = ov && ov.geo ? ov.geo : {};
+        const rows = Object.keys(geoMap).map(k=>({country:k, earnings:geoMap[k]}))
+                      .sort((a,b)=>b.earnings-a.earnings).slice(0,10);
+        if(!rows.length){ tblGeo.innerHTML='<tr><td colspan="4" class="muted">No data</td></tr>'; }
+        else rows.forEach(g=>{
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<td>${g.country}</td><td>0</td><td>0</td><td class="money">${dollars(g.earnings)}</td>`;
+          tblGeo.appendChild(tr);
+        });
+      }
+    }catch(e){
+      showDebug('initDashboard error: ' + (e && e.message));
+      console.error(e);
+    }
   }
-});
 
-/* ========= DASHBOARD ========= */
-async function initDashboard(){
+  /* ========= CPA ========= */
+  async function initCpa(){
+    const wrap = $('#cpa-grid');
+    if(!wrap){ showDebug('cpa-grid not found'); return; }
+    wrap.innerHTML = '';
+    try{
+      const resp = await api('cpa');
+      const items = arr(resp);
+      if(!items.length){ wrap.innerHTML = `<div class="card pad empty">No CPA accounts yet.</div>`; return; }
+      items.forEach(r=>{
+        const convPct = (r.conversionRate != null) ? (Number(r.conversionRate) > 1 ? Number(r.conversionRate) : Number(r.conversionRate)*100) : 0;
+        const card = document.createElement('div');
+        card.className='card pad';
+        card.innerHTML = `
+          <div class="acct">
+            <div>
+              <h3>${r.account||'—'}</h3>
+              <div class="muted" style="margin-bottom:10px">Network <b style="color:#fff">${r.network||'—'}</b> · <span class="badge">${(r.status||'ACTIVE')}</span></div>
+              <div class="stats">
+                <div class="kv"><b>Active Offers</b><span>${r.activeOffers||0}</span></div>
+                <div class="kv"><b>Revenue</b><span class="money">${dollars(r.revenue||0)}</span></div>
+                <div class="kv"><b>Clicks</b><span>${r.clicks||0}</span></div>
+                <div class="kv"><b>Conversion</b><span>${convPct.toFixed(2)}%</span></div>
+              </div>
+            </div>
+            <div class="right flex">
+              <span class="pill mono">${r.domain||'no-domain'}</span>
+              <button class="btn secondary">View Details</button>
+            </div>
+          </div>`;
+        wrap.appendChild(card);
+      });
+    }catch(e){
+      wrap.innerHTML = `<div class="card pad empty">Failed to load accounts.</div>`;
+      showDebug('initCpa error: ' + (e && e.message));
+    }
+  }
+
+  /* ========= USERS ========= */
+  let currentUsersTab = 'APPROVED';
   try{
-    const [ov, us] = await Promise.all([ api('overview'), api('users', {status:'APPROVED'}) ]);
+    const userBtns = $$('[data-users-tab]');
+    userBtns.forEach(b=>b.addEventListener('click', ()=>{
+      userBtns.forEach(x=>x.classList.toggle('active', x===b));
+      currentUsersTab = b.dataset.usersTab;
+      initUsers(currentUsersTab);
+    }));
+  }catch(e){ /* ignore if no controls */ }
 
-    const t = ov?.totals || ov || {};
-    $('#dash-earn').textContent   = dollars(t.earnings||0);
-    $('#dash-clicks').textContent = (t.clicks||0).toLocaleString();
-
-    const cr = (t.conversionRate!=null) ? Number(t.conversionRate)
-              : (t.leads && t.clicks ? (t.leads/t.clicks*100) : 0);
-    $('#dash-cr').textContent = Number(cr||0).toFixed(2) + '%';
-
-    const activeUsers = arr(us).length;
-    $('#dash-users').textContent = activeUsers;
-    $('#dash-users-diff').textContent = '24h growth';
-
-    /* --- By Geo (Clicks/Leads/Earnings) --- */
-    const tb = $('#tbl-dash-geo'); tb.innerHTML='';
-    const geoEarn    = obj(ov?.geo);         // { "USA": 24572.28, ... }
-    const geoClicks  = obj(ov?.geoClicks);   // { "USA": 3086, ... }   (optional)
-    const geoLeads   = obj(ov?.geoLeads);    // { "USA": 588,  ... }   (optional)
-    const geoDetails = obj(ov?.geoDetails);  // { "USA":{clicks,leads,earnings}, ... } (optional)
-
-    const countries = new Set([
-      ...Object.keys(geoEarn||{}),
-      ...Object.keys(geoClicks||{}),
-      ...Object.keys(geoLeads||{}),
-      ...Object.keys(geoDetails||{}),
-    ]);
-
-    const rows = [...countries].map(c=>{
-      const det = geoDetails[c] || {};
-      const clicks = det.clicks ?? geoClicks[c] ?? 0;
-      const leads  = det.leads  ?? geoLeads[c]  ?? 0;
-      const earn   = num(det.earnings ?? geoEarn[c] ?? 0);
-      return { country:c, clicks:num(clicks), leads:num(leads), earnings:earn };
-    }).sort((a,b)=>b.earnings-a.earnings).slice(0,10);
-
-    if(!rows.length){
-      tb.innerHTML = '<tr><td colspan="4" class="muted">No data</td></tr>';
-    }else{
-      rows.forEach(g=>{
-        const tr=document.createElement('tr');
-        tr.innerHTML =
-          `<td>${g.country}</td>`+
-          `<td>${g.clicks.toLocaleString()}</td>`+
-          `<td>${g.leads.toLocaleString()}</td>`+
-          `<td class="money">${dollars(g.earnings)}</td>`;
+  async function initUsers(tab='APPROVED'){
+    const tb = $('#tbl-users');
+    if(!tb){ showDebug('tbl-users not found'); return; }
+    tb.innerHTML = '';
+    try{
+      const resp = await api('users', {status: tab});
+      let filtered = arr(resp?.items || resp);
+      if(!filtered.length){
+        const ALL = arr(resp?.items || resp);
+        filtered = ALL.filter(u => String(u.status||'APPROVED').toUpperCase() === tab);
+      }
+      if(!filtered.length){ tb.innerHTML = `<tr><td colspan="4" class="muted">No ${tab.toLowerCase()} users.</td></tr>`; return; }
+      filtered.forEach(u=>{
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${u.name||'—'}</td><td>${u.email||''}</td><td>${u.phone||''}</td><td>${u.authority||'1x User'}</td>`;
         tb.appendChild(tr);
       });
+    }catch(e){
+      tb.innerHTML = `<tr><td colspan="4" class="muted">Failed to load users.</td></tr>`;
+      showDebug('initUsers error: ' + (e && e.message));
     }
-
-    /* --- Daily Earnings sparkline --- */
-    const dailySeries = (ov?.byDay && ov.byDay.length)
-      ? ov.byDay.map(x => num(x.earnings ?? x.value ?? x.amount ?? 0))
-      : [];
-    renderSparkline($('#dash-earnings'), dailySeries);
-
-    /* --- Traffic Sources donut --- */
-    renderDonut($('#dash-sources'), ov?.offerTypes || ov?.sources || {});
-  }catch(e){
-    console.error(e);
   }
-}
 
-/* ========= CPA ACCOUNTS ========= */
-async function initCpa(){
-  const wrap = $('#cpa-grid'); if(!wrap) return; wrap.innerHTML='';
-  try{
-    const resp = await api('cpa');
-    const items = arr(resp);
-    if(!items.length){ wrap.innerHTML = `<div class="card pad empty">No CPA accounts yet.</div>`; return; }
+  /* ========= Analytics (live) ========= */
+  let liveTimer = null, liveRows = [];
+  async function initAnalytics(){
+    try{
+      const base = await api('analytics');
+      const baseItems = arr(base) || arr(base?.items);
+      const ovEl = $('#ana-overview'); if(ovEl) ovEl.textContent = baseItems.length ? 'Chart ready' : 'Loading…';
+      const geoEl = $('#ana-geo-dist'); if(geoEl) geoEl.textContent = 'Chart ready';
+    }catch(e){
+      showDebug('initAnalytics base fetch: ' + (e && e.message));
+    }
+    if(liveTimer) clearInterval(liveTimer);
+    liveRows = [];
+    liveTimer = setInterval(pullLive, POLL_FAST);
+    await pullLive();
+  }
+  async function pullLive(){
+    try{
+      const j = await api('analytics', { live:1, limit:24, windowSec:120 });
+      const events = arr(j?.live) || arr(j);
+      liveRows = liveRows.concat(events).slice(-24);
 
-    items.forEach(r=>{
-      const card = document.createElement('div');
-      card.className='card pad';
-
-      let convPct = 0;
-      if (r.conversionRate != null) {
-        const v = Number(r.conversionRate);
-        convPct = v > 1 ? v : v * 100;
+      // update live-perf
+      const tb = $('#tbl-live-perf'); if(tb){
+        tb.innerHTML='';
+        if(!liveRows.length) tb.innerHTML='<tr><td colspan="6" class="muted">Waiting for stream…</td></tr>';
+        else liveRows.slice().reverse().forEach(r=>{
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<td class="mono">${r.time||''}</td><td>${r.country||''}</td><td>${r.offer||''}</td><td>${r.clicks||0}</td><td>${r.conversions||r.conv||0}</td><td class="money">${dollars(r.earnings||0)}</td>`;
+          tb.appendChild(tr);
+        });
       }
 
-      card.innerHTML = `
-        <div class="acct">
-          <div>
-            <h3>${r.account||r.accountid||'—'}</h3>
-            <div class="muted" style="margin-bottom:10px">
-              Network <b style="color:#fff">${r.network||'—'}</b> ·
-              <span class="badge">${(r.status||'ACTIVE')}</span>
-            </div>
-            <div class="stats">
-              <div class="kv"><b>Active Offers</b><span>${r.activeOffers||r.activeoffers||0}</span></div>
-              <div class="kv"><b>Revenue</b><span class="money">${dollars(r.revenue||0)}</span></div>
-              <div class="kv"><b>Clicks</b><span>${r.clicks||0}</span></div>
-              <div class="kv"><b>Conversion</b><span>${convPct.toFixed(2)}%</span></div>
-            </div>
-          </div>
-          <div class="right flex">
-            <span class="pill mono">${r.domain||'no-domain'}</span>
-            <button class="btn secondary" disabled>View Details</button>
-          </div>
-        </div>`;
-      wrap.appendChild(card);
-    });
-  }catch(e){
-    wrap.innerHTML = `<div class="card pad empty">Failed to load accounts.</div>`;
-  }
-}
-
-/* ========= USERS ========= */
-let currentUsersTab = 'APPROVED';
-const userTabBtns = $$('[data-users-tab]');
-userTabBtns.forEach(b=>b.addEventListener('click',()=>{
-  userTabBtns.forEach(x=>x.classList.toggle('active', x===b));
-  currentUsersTab = b.dataset.usersTab; initUsers(currentUsersTab);
-}));
-async function initUsers(tab='APPROVED'){
-  const tb = $('#tbl-users'); if(!tb) return; tb.innerHTML = '';
-  try{
-    const resp = await api('users', {status: tab});
-    let filtered = arr(resp?.items || resp);
-    if (!filtered.length) {
-      const ALL = arr(resp?.items || resp);
-      filtered = ALL.filter(u => String(u.status||'APPROVED').toUpperCase()===tab);
-    }
-    if(!filtered.length){ tb.innerHTML = `<tr><td colspan="4" class="muted">No ${tab.toLowerCase()} users.</td></tr>`; return; }
-    filtered.forEach(u=>{
-      const tr = document.createElement('tr');
-      tr.innerHTML = `<td>${u.name||'—'}</td><td>${u.email||''}</td><td>${u.phone||''}</td><td>${u.authority||'1x User'}</td>`;
-      tb.appendChild(tr);
-    });
-  }catch(e){
-    tb.innerHTML = `<tr><td colspan="4" class="muted">Failed to load users.</td></tr>`;
-  }
-}
-
-/* ========= ANALYTICS (base + live) ========= */
-let liveTimer=null, liveRows=[];
-async function initAnalytics(){
-  try{
-    const base = await api('analytics');
-    const baseItems = arr(base) || arr(base?.items);
-    $('#ana-overview').textContent = baseItems.length ? 'Chart ready' : 'Loading…';
-    $('#ana-geo-dist').textContent = 'Chart ready';
-  }catch(e){
-    $('#ana-overview').textContent = 'Loading…';
-    $('#ana-geo-dist').textContent = 'Loading…';
-  }
-  if(liveTimer) clearInterval(liveTimer);
-  liveRows = [];
-  liveTimer = setInterval(pullLive, POLL_FAST);
-  await pullLive();
-}
-async function pullLive(){
-  try{
-    const j = await api('analytics', { live:1, limit:24, windowSec:120 });
-    const events = arr(j?.live) || arr(j);
-    liveRows = liveRows.concat(events).slice(-24);
-
-    const tb = $('#tbl-live-perf'); if(!tb) return; tb.innerHTML='';
-    if(!liveRows.length){
-      tb.innerHTML='<tr><td colspan="6" class="muted">Waiting for stream…</td></tr>';
-    }else{
-      liveRows.slice().reverse().forEach(r=>{
-        const tr=document.createElement('tr');
-        tr.innerHTML =
-          `<td class="mono">${r.time||''}</td><td>${r.country||''}</td><td>${r.offer||''}</td>`+
-          `<td>${r.clicks||0}</td><td>${r.conversions||r.conv||0}</td><td class="money">${dollars(r.earnings||0)}</td>`;
-        tb.appendChild(tr);
+      // by geo
+      const byGeo = {};
+      events.forEach(ev=>{
+        const k = ev.country || 'Unknown';
+        if(!byGeo[k]) byGeo[k] = {country:k, clicks:0, conv:0, earnings:0};
+        byGeo[k].clicks += Number(ev.clicks||0);
+        byGeo[k].conv   += Number(ev.conversions||ev.conv||0);
+        byGeo[k].earnings += Number(ev.earnings||0);
       });
+      const tb2 = $('#tbl-live-geo'); if(tb2){
+        tb2.innerHTML='';
+        const arrGeo = Object.values(byGeo).sort((a,b)=>b.earnings-a.earnings).slice(0,10);
+        if(!arrGeo.length) tb2.innerHTML='<tr><td colspan="4" class="muted">Waiting for stream…</td></tr>';
+        else arrGeo.forEach(g=>{
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<td>${g.country}</td><td>${g.clicks}</td><td>${g.conv}</td><td class="money">${dollars(g.earnings)}</td>`;
+          tb2.appendChild(tr);
+        });
+      }
+    }catch(e){
+      showDebug('pullLive failed: ' + (e && e.message));
     }
+  }
 
-    const byGeo = {};
-    events.forEach(ev=>{
-      const k = ev.country || 'Unknown';
-      if(!byGeo[k]) byGeo[k] = {country:k, clicks:0, conv:0, earnings:0};
-      byGeo[k].clicks   += Number(ev.clicks||0);
-      byGeo[k].conv     += Number(ev.conversions||ev.conv||0);
-      byGeo[k].earnings += Number(ev.earnings||0);
-    });
-
-    const tb2 = $('#tbl-live-geo'); if(!tb2) return; tb2.innerHTML='';
-    const arrGeo = Object.values(byGeo).sort((a,b)=>b.earnings-a.earnings).slice(0,10);
-    if(!arrGeo.length){
-      tb2.innerHTML='<tr><td colspan="4" class="muted">Waiting for stream…</td></tr>';
-    }else{
-      arrGeo.forEach(g=>{
-        const tr=document.createElement('tr');
-        tr.innerHTML = `<td>${g.country}</td><td>${g.clicks}</td><td>${g.conv}</td><td class="money">${dollars(g.earnings)}</td>`;
-        tb2.appendChild(tr);
-      });
-    }
-  }catch(e){ /* silent */ }
-}
-
-/* ========= WALLET ========= */
-async function initWallet(){
-  try{
-    const w = obj(await api('wallet'));
+  /* ========= Wallet ========= */
+  async function initWallet(){
+    const w = obj(await api('wallet').catch(e=>{ showDebug('wallet fetch failed: '+e.message); return {}; }));
     const hist = arr(w.history) || arr(w);
-
-    $('#wal-balance').textContent = dollars(w.balance||0);
-
-    const pendingAmt = hist.filter(t=>String(t.status||'').toUpperCase()==='PENDING')
-                           .reduce((s,t)=>s+Number(t.amount||0),0);
-    $('#wal-pending').textContent = dollars(pendingAmt);
-
-    const lastPaid = hist.filter(t=>String(t.status||'').toUpperCase()==='COMPLETED').slice(-1)[0];
-    $('#wal-last').textContent = dollars(lastPaid ? lastPaid.amount : 0);
-
-    const tb = $('#tbl-wallet'); tb.innerHTML='';
-    hist.slice().reverse().forEach(t=>{
-      const tr=document.createElement('tr');
-      tr.innerHTML=`<td>${t.date||''}</td><td>${t.method||''}</td><td class="money">${dollars(t.amount||0)}</td><td>${t.status||''}</td>`;
-      tb.appendChild(tr);
-    });
-    if(!tb.children.length) tb.innerHTML = `<tr><td colspan="4" class="muted">No transactions.</td></tr>`;
-  }catch(e){
-    const tb = $('#tbl-wallet');
-    if(tb) tb.innerHTML = `<tr><td colspan="4" class="muted">Failed to load.</td></tr>`;
-  }
-}
-
-/* ========= MONITORING ========= */
-async function initMonitor(){
-  const tb = $('#tbl-monitor'); if(!tb) return; tb.innerHTML='';
-  try{
-    const m = obj(await api('monitoring'));
-    const events = arr(m.events) || arr(m);
-
-    $('#box-alerts').textContent = events.length;
-    $('#box-maint').textContent  = m.maintenance || '—';
-    $('#box-health').textContent = m.health || 'OK';
-
-    if(!events.length){
-      tb.innerHTML = `<tr><td colspan="3" class="muted">No events.</td></tr>`;
-      return;
+    const walBal = $('#wal-balance'); const walPending = $('#wal-pending'); const walLast = $('#wal-last'); const tbl = $('#tbl-wallet');
+    if(walBal) walBal.textContent = dollars(w.balance||0);
+    if(walPending) walPending.textContent = dollars(hist.filter(t=>String(t.status||'').toUpperCase()==='PENDING').reduce((s,t)=>s+Number(t.amount||0),0));
+    if(walLast) walLast.textContent = dollars((hist.filter(t=>String(t.status||'').toUpperCase()==='COMPLETED').slice(-1)[0]||{}).amount||0);
+    if(tbl){
+      tbl.innerHTML='';
+      hist.slice().reverse().forEach(t=>{
+        const tr=document.createElement('tr');
+        tr.innerHTML=`<td>${t.date||''}</td><td>${t.method||''}</td><td class="money">${dollars(t.amount||0)}</td><td>${t.status||''}</td>`;
+        tbl.appendChild(tr);
+      });
+      if(!tbl.children.length) tbl.innerHTML = `<tr><td colspan="4" class="muted">No transactions.</td></tr>`;
     }
-    events.forEach(ev=>{
+  }
+
+  /* ========= Monitoring ========= */
+  async function initMonitor(){
+    const tb = $('#tbl-monitor'); if(!tb){ showDebug('tbl-monitor missing'); return; }
+    tb.innerHTML = '';
+    const m = obj(await api('monitoring').catch(e=>{ showDebug('monitoring fetch failed: '+e.message); return {}; }));
+    const events = arr(m.events) || arr(m);
+    $('#box-alerts')?.textContent = events.length || '0';
+    $('#box-maint')?.textContent = m.maintenance || '—';
+    $('#box-health')?.textContent = m.health || 'OK';
+    if(!events.length) tb.innerHTML = `<tr><td colspan="3" class="muted">No events.</td></tr>`;
+    else events.forEach(ev=>{
       const tr=document.createElement('tr');
       tr.innerHTML=`<td class="mono">${ev.time||''}</td><td>${ev.type||''}</td><td>${ev.msg||ev.message||''}</td>`;
       tb.appendChild(tr);
     });
-  }catch(e){
-    tb.innerHTML = `<tr><td colspan="3" class="muted">Failed to load.</td></tr>`;
   }
-}
 
-/* ========= SETTINGS ========= */
-async function initSettings(){
-  try{
-    const j = await api('config');
-    const pretty = v => { try{ return JSON.stringify(v, null, 2); }catch{ return String(v); } };
-    $('#pretty').textContent = pretty(j);
-  }catch(e){
-    $('#pretty').textContent = 'Failed to load config';
+  /* ========= Settings ========= */
+  async function initSettings(){
+    const j = await api('config').catch(e=>{ showDebug('config fetch failed: '+e.message); return {}; });
+    const pretty = v => { try{ return JSON.stringify(v,null,2); }catch{ return String(v); } };
+    const prettyEl = $('#pretty');
+    if(prettyEl) prettyEl.textContent = pretty(j);
   }
-}
 
-/* ========= BOOT ========= */
-window.addEventListener('DOMContentLoaded', ()=>{
-  const r = (location.hash||'#dashboard').replace('#','');
-  show(r);
-});
+  // boot
+  window.addEventListener('DOMContentLoaded', ()=>{
+    const r = (location.hash||'#dashboard').replace('#','');
+    // final guard - ensure at least pages are visible if throw occurs
+    try{
+      show(r);
+    }catch(e){
+      console.error(e);
+      showDebug('Error during initial show: ' + (e && e.message));
+      // fall back: show all data-pages so user sees UI
+      $$('[data-page]').forEach(s=>s.style.display='block');
+    }
+  });
 
-/* ====== Toggle on-screen log with Shift+L (optional) ====== */
-window.addEventListener('keydown', (e)=>{
-  if(e.key.toLowerCase()==='l' && e.shiftKey){
-    const box = document.getElementById('log')?.closest('.card');
-    if (box) box.style.display = (box.style.display==='none'?'block':'none');
-  }
-});
+  // expose for debugging if needed
+  window.__APP = {api, apiWrite, showDebug, show};
+})();
 </script>

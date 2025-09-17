@@ -23,21 +23,35 @@
       radial-gradient(1000px 1000px at -10% 120%, #0c2338 0%, transparent 60%) fixed,
       var(--bg-0);
   }
+
   .page{display:grid; grid-template-columns:260px 1fr; gap:0; min-height:100vh}
-  .sidebar{background:linear-gradient(180deg,#0d1a27 0%, #0b1825 100%); border-right:1px solid var(--line); padding:18px 12px; position:sticky; top:0; height:100vh;}
+  .sidebar{
+    background:linear-gradient(180deg,#0d1a27 0%, #0b1825 100%);
+    border-right:1px solid var(--line); padding:18px 12px; position:sticky; top:0; height:100vh;
+  }
   .brand{display:flex; align-items:center; gap:10px; padding:8px 10px 18px}
   .brand img{width:28px;height:28px}
   .brand span{font-weight:800; letter-spacing:.6px}
   .nav{display:flex; flex-direction:column; gap:6px; margin-top:6px}
-  .nav a{display:flex; align-items:center; gap:10px; padding:11px 12px; color:var(--text); text-decoration:none; border-radius:10px; background:transparent; border:1px solid transparent;}
+  .nav a{
+    display:flex; align-items:center; gap:10px; padding:11px 12px;
+    color:var(--text); text-decoration:none; border-radius:10px;
+    background:transparent; border:1px solid transparent;
+  }
   .nav a.active{background:var(--bg-2); border-color:var(--line)}
   .nav small{opacity:.65}
+
   .content{padding:22px; min-width:0}
+
   .section-head{display:flex; align-items:center; justify-content:space-between; gap:12px; margin:4px 0 18px}
   .section-head h2{margin:0; font-size:18px; letter-spacing:.3px}
-  .btn{background:linear-gradient(180deg,#ffd559,#ffcb31); color:#1b1b1b; border:0; font-weight:700; padding:10px 14px; border-radius:10px; cursor:pointer; box-shadow:var(--shadow)}
+  .btn{
+    background:linear-gradient(180deg,#ffd559,#ffcb31); color:#1b1b1b; border:0; font-weight:700;
+    padding:10px 14px; border-radius:10px; cursor:pointer; box-shadow:var(--shadow)
+  }
   .btn.secondary{background:#173046; color:#d6e7ff; border:1px solid #254660}
   .btn.secondary.active{background:#103b66; border-color:#3a85ff}
+
   .grid{display:grid; gap:16px}
   .grid.cols-4{grid-template-columns:repeat(4,minmax(0,1fr))}
   .grid.cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}
@@ -45,12 +59,18 @@
   .grid.cols-1{grid-template-columns:1fr}
   @media (max-width:1150px){ .grid.cols-4{grid-template-columns:repeat(2,1fr)} }
   @media (max-width:760px){ .page{grid-template-columns:1fr} .sidebar{position:static;height:auto} .grid,[class*=cols-]{grid-template-columns:1fr} }
-  .card{background:linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,0)) , var(--card); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow)}
+
+  .card{
+    background:linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,0)) , var(--card);
+    border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow)
+  }
   .card.pad{padding:16px}
+
   .kpi{display:flex; flex-direction:column; gap:8px}
   .kpi .label{font-size:12px; color:var(--muted)}
   .kpi .value{font-weight:800; font-size:22px}
   .sub{font-size:11px; color:var(--muted); margin-top:-2px}
+
   table{width:100%; border-collapse:separate; border-spacing:0; overflow:hidden; border-radius:12px; border:1px solid var(--line)}
   thead th{background:#0f2b45; text-align:left; padding:11px 12px; font-size:12px; color:#c4d7ef; border-bottom:1px solid var(--line)}
   tbody td{padding:10px 12px; border-bottom:1px solid var(--line)}
@@ -58,21 +78,53 @@
   .muted{color:var(--muted)}
   .money{color:var(--good); font-weight:700}
   .badge{display:inline-block; padding:2px 8px; border-radius:999px; font-size:11px; border:1px solid var(--line); background:#14304a}
+
   .acct{display:grid; grid-template-columns:1fr auto; gap:10px}
   .acct h3{margin:0 0 6px; font-size:20px}
   .acct .stats{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px}
   .kv{background:var(--card-2); border:1px solid var(--line); border-radius:10px; padding:10px}
   .kv b{display:block; font-size:12px; color:var(--muted); margin-bottom:3px}
   .kv span{font-weight:800}
+
   .pill{padding:6px 9px; border-radius:999px; background:#103250; border:1px solid var(--line); font-size:12px}
   .flex{display:flex; gap:10px; align-items:center}
   .right{margin-left:auto}
+
   .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;}
   code.pretty{white-space:pre-wrap; display:block; background:#0e2236; border:1px solid var(--line); padding:14px; border-radius:10px}
+
   .empty{padding:18px; text-align:center; color:var(--muted)}
+
+  /* ---------- Charts: compact heights ---------- */
+  .chart{min-height:120px}
+  .chart svg{width:100%; height:160px; display:block}
+  @media (max-width:760px){
+    .chart svg{height:140px}
+  }
+
+  /* ---------- Modal (hidden by default) ---------- */
+  .modal{position:fixed; inset:0; display:none; align-items:center; justify-content:center; z-index:50}
+  .modal.open{display:flex}
+  .modal .scrim{position:absolute; inset:0; background:rgba(6,16,26,.6); backdrop-filter: blur(2px)}
+  .modal .panel{
+    position:relative; width:min(680px,92vw); background:var(--card);
+    border:1px solid var(--line); border-radius:16px; box-shadow:var(--shadow); padding:18px;
+  }
+  .form-grid{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+  .form-grid .full{grid-column:1 / -1}
+  .input{display:flex; flex-direction:column; gap:6px}
+  .input label{font-size:12px; color:var(--muted)}
+  .input input,.input select{
+    background:#0e2236; color:var(--text); border:1px solid #24445e; border-radius:10px; padding:10px 12px; outline:none;
+  }
+  .input input:focus,.input select:focus{border-color:#3a85ff}
+  .modal .footer{display:flex; gap:10px; justify-content:flex-end; margin-top:14px}
+  .bad{color:var(--bad); font-size:12px}
 </style>
 </head>
 <body>
+
+<!-- Crash box (always present so blank pages show errors) -->
 <pre id="fatal" style="display:none;white-space:pre-wrap;background:#140b0b;color:#ffdede;border:1px solid #522; padding:12px; border-radius:10px; margin:16px"></pre>
 
 <div class="page">
@@ -133,7 +185,7 @@
     </section>
 
     <!-- ADD NEW ACCOUNT MODAL -->
-    <div id="mdl-cpa" class="modal" aria-hidden="true">
+    <div id="mdl-cpa" class="modal" style="display:none" aria-hidden="true">
       <div class="scrim" data-close></div>
       <div class="panel">
         <h3 style="margin:0 0 12px">Add New CPA Account</h3>
@@ -149,7 +201,7 @@
               <option value="DISABLED">DISABLED</option>
             </select>
           </div>
-          <div class="input full"><label>API Key / Token</label><input id="f-key" placeholder="(optional) stored in GAS)"/></div>
+          <div class="input full"><label>API Key / Token</label><input id="f-key" placeholder="(optional) stored in GAS"/></div>
           <div class="input"><label>Webhook URL</label><input id="f-webhook" placeholder="https://.../postback"/></div>
         </div>
         <div id="f-error" class="bad" style="display:none"></div>
@@ -172,7 +224,7 @@
       <div class="card pad">
         <table>
           <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Authority</th></tr></thead>
-          <tbody id="tbl-users"><tr><td colspan="4" class="muted">No users.</td></tr></tbody>
+        <tbody id="tbl-users"><tr><td colspan="4" class="muted">No users.</td></tr></tbody>
         </table>
       </div>
     </section>
@@ -299,7 +351,7 @@ async function get(url, opt){
     var r = await fetch(u, Object.assign({cache:'no-store'}, opt));
     if(!r.ok) throw new Error('HTTP '+r.status);
     return r.json();
-  }catch(e){ console.error('[EMPIRE] GET failed:', e); return null; }
+  }catch(e){ console.error('GET failed:', e); return null; }
 }
 function api(action, params){
   params = params || {};
@@ -317,6 +369,7 @@ async function apiWrite(action, payload){
     if(!res.ok) throw new Error('HTTP '+res.status);
     return res.json();
   }catch(e){
+    // GET fallback
     Object.keys(payload).forEach(function(k){
       var v = payload[k];
       url.searchParams.set(k, (v && typeof v==='object')? JSON.stringify(v): String(v));
@@ -423,57 +476,64 @@ if(navEl){
 /* ========= DASHBOARD ========= */
 async function initDashboard(){
   try{
-    var ov = await api('overview');
-    var us = await api('users', {status:'APPROVED'});
+    var resOv = api('overview');
+    var resUs = api('users', {status:'APPROVED'});
+    var ov = await resOv, us = await resUs;
 
-    if(!ov || ov.ok===false){ throw new Error('overview not ok'); }
+    var t = (ov && ov.totals) ? ov.totals : (ov||{});
+    var el;
+    if((el=$('#dash-earn')))   el.textContent = dollars(t.earnings||0);
+    if((el=$('#dash-clicks'))) el.textContent = t.clicks||0;
+    var cr = (t && t.conversionRate!=null) ? Number(t.conversionRate) :
+             (t && t.leads && t.clicks ? (t.leads/t.clicks*100) : 0);
+    if((el=$('#dash-cr'))) el.textContent = Number(cr||0).toFixed(2)+'%';
 
-    var t = ov.totals || {};
-    $('#dash-earn').textContent   = dollars(t.earnings||0);
-    $('#dash-clicks').textContent = t.clicks||0;
-    var cr = (t.conversionRate!=null) ? Number(t.conversionRate) : (t.leads&&t.clicks?(t.leads/t.clicks*100):0);
-    $('#dash-cr').textContent = Number(cr||0).toFixed(2)+'%';
-    $('#dash-users').textContent = arr(us).length;
+    var users = arr(us);
+    if((el=$('#dash-users'))) el.textContent = users.length;
 
-    var byDay = arr(ov.byDay);
+    var byDay = arr(safeGet(ov,'byDay'));
     if(byDay.length){
       renderBarChart('#dash-earnings',
         byDay.map(function(d){return Number(d.earnings||0);}),
         byDay.map(function(d){return String(d.t||d.date||'');})
       );
     }else{
-      var host = $('#dash-earnings'); host.classList.add('empty'); host.textContent='No data';
+      var host = $('#dash-earnings'); if(host){ host.classList.add('empty'); host.textContent='No data'; }
     }
 
-    renderPieChart('#dash-sources', obj(ov.offerTypes));
+    renderPieChart('#dash-sources', obj(safeGet(ov,'offerTypes')));
 
     // By Geo
-    var tb = $('#tbl-dash-geo');
-    var thead = tb.closest('table').querySelector('thead');
-    tb.innerHTML='';
-    var byGeoArr = Array.isArray(ov.byGeo)? ov.byGeo : null;
+    var tableBody = document.getElementById('tbl-dash-geo');
+    var tableHead = tableBody && tableBody.closest('table') ? tableBody.closest('table').querySelector('thead') : null;
+    if(tableBody && tableHead){
+      var geoMap = obj(safeGet(ov,'geo'));
+      var entries = Object.keys(geoMap).map(function(k){ return {country:k, earnings:Number(geoMap[k])||0}; })
+        .sort(function(a,b){ return b.earnings-a.earnings; }).slice(0,10);
 
-    if(byGeoArr && byGeoArr.length){
-      thead.innerHTML = '<tr><th>Country</th><th>Clicks</th><th>Leads</th><th>Earnings ($)</th></tr>';
-      byGeoArr.sort(function(a,b){return Number(b.earnings||0)-Number(a.earnings||0);}).slice(0,10)
-        .forEach(function(g){
-          tb.insertAdjacentHTML('beforeend',
-            '<tr><td>'+g.country+'</td><td>'+(g.clicks||0)+'</td><td>'+(g.leads||0)+'</td><td class="money">'+dollars(g.earnings||0)+'</td></tr>');
+      var byGeoArr = Array.isArray(safeGet(ov,'byGeo')) ? ov.byGeo : [];
+      var hasCL = byGeoArr.some(function(x){ return (x && (x.clicks||x.leads)); });
+
+      tableHead.innerHTML = hasCL ? '<tr><th>Country</th><th>Clicks</th><th>Leads</th><th>Earnings ($)</th></tr>'
+                                  : '<tr><th>Country</th><th>Earnings ($)</th></tr>';
+
+      tableBody.innerHTML = '';
+      if(!entries.length){
+        tableBody.innerHTML = '<tr><td colspan="'+(hasCL?4:2)+'" class="muted">No data</td></tr>';
+      }else{
+        entries.forEach(function(g){
+          if(hasCL){
+            var m = byGeoArr.find(function(x){ return x && x.country===g.country; }) || {};
+            tableBody.insertAdjacentHTML('beforeend',
+              '<tr><td>'+g.country+'</td><td>'+(m.clicks||0)+'</td><td>'+(m.leads||0)+'</td><td class="money">'+dollars(g.earnings)+'</td></tr>');
+          }else{
+            tableBody.insertAdjacentHTML('beforeend',
+              '<tr><td>'+g.country+'</td><td class="money">'+dollars(g.earnings)+'</td></tr>');
+          }
         });
-    }else{
-      // fallback to earnings-only map
-      thead.innerHTML = '<tr><th>Country</th><th>Earnings ($)</th></tr>';
-      var geo = ov.geo||{};
-      var rows = Object.keys(geo).map(function(k){return {country:k, earnings:Number(geo[k])||0};})
-                 .sort(function(a,b){return b.earnings-a.earnings;}).slice(0,10);
-      if(!rows.length){ tb.innerHTML='<tr><td colspan="2" class="muted">No data</td></tr>'; }
-      rows.forEach(function(r){
-        tb.insertAdjacentHTML('beforeend','<tr><td>'+r.country+'</td><td class="money">'+dollars(r.earnings)+'</td></tr>');
-      });
+      }
     }
-  }catch(e){
-    console.error('[EMPIRE] dashboard error:', e);
-  }
+  }catch(e){ console.error(e); }
 }
 
 /* ========= CPA ACCOUNTS ========= */
@@ -485,34 +545,63 @@ async function initCpa(){
     var items = arr(resp);
     if(!items.length){ wrap.innerHTML = '<div class="card pad empty">No CPA accounts yet.</div>'; return; }
     items.forEach(function(r){
-      var convPct = 0;
-      if (r && r.conversionRate != null){ convPct = Number(r.conversionRate)*100; }
-      else if (r && r.conversionrate != null){ var v = Number(r.conversionrate); convPct = (v>1)? v : v*100; }
-
+      var convPct = 0, v;
+      if (r && r.conversionrate != null){ v = Number(r.conversionrate); convPct = v>1 ? v : v*100; }
+      else if (r && r.conversionRate != null){ v = Number(r.conversionRate); convPct = v>1 ? v : v*100; }
       var card = document.createElement('div');
       card.className='card pad';
       card.innerHTML =
         '<div class="acct">'+
           '<div>'+
-            '<h3>'+(r.accountid || r.account || '—')+'</h3>'+
+            '<h3>'+(r.account||r.accountid||'—')+'</h3>'+
             '<div class="muted" style="margin-bottom:10px">Network <b style="color:#fff">'+(r.network||'—')+
             '</b> · <span class="badge">'+(r.status||'ACTIVE')+'</span></div>'+
             '<div class="stats">'+
-              '<div class="kv"><b>Active Offers</b><span>'+(r.activeOffers||r.activeoffers||0)+'</span></div>'+
+              '<div class="kv"><b>Active Offers</b><span>'+(r.activeoffers||r.activeOffers||0)+'</span></div>'+
               '<div class="kv"><b>Revenue</b><span class="money">'+dollars(r.revenue||0)+'</span></div>'+
               '<div class="kv"><b>Clicks</b><span>'+(r.clicks||0)+'</span></div>'+
               '<div class="kv"><b>Conversion</b><span>'+convPct.toFixed(2)+'%</span></div>'+
-            '</div>'+
-          '</div>'+
+            </div>'+
+          </div>'+
           '<div class="right flex"><span class="pill mono">'+(r.domain||'no-domain')+'</span><button class="btn secondary">View Details</button></div>'+
         '</div>';
       wrap.appendChild(card);
     });
   }catch(e){
-    console.error('[EMPIRE] cpa error:', e);
+    console.error(e);
     wrap.innerHTML = '<div class="card pad empty">Failed to load accounts.</div>';
   }
 }
+
+/* Add New Account modal wiring */
+var mdl = document.getElementById('mdl-cpa');
+var openMdl  = function(){ mdl.style.display=''; mdl.classList.add('open'); };
+var closeMdl = function(){ mdl.classList.remove('open'); mdl.style.display='none'; };
+document.getElementById('btn-add-acct')?.addEventListener('click', openMdl);
+mdl?.addEventListener('click', function(e){ if(e.target.hasAttribute && e.target.hasAttribute('data-close')) closeMdl(); });
+document.getElementById('btn-save-acct')?.addEventListener('click', async function(){
+  var err = document.getElementById('f-error');
+  var v = {
+    account : document.getElementById('f-account').value.trim(),
+    network : document.getElementById('f-network').value.trim(),
+    domain  : normDomain(document.getElementById('f-domain').value),
+    status  : document.getElementById('f-status').value,
+    apiKey  : document.getElementById('f-key').value.trim(),
+    webhook : document.getElementById('f-webhook').value.trim()
+  };
+  if(!v.account || !v.network){
+    err.textContent = 'Account Name and Network are required.'; err.style.display='block'; return;
+  }
+  err.style.display='none';
+  try{
+    var res = await apiWrite('cpaCreate', v); // expect {ok:true}
+    if(!res || res.ok!==true) throw new Error('Create failed');
+    closeMdl();
+    await initCpa();
+  }catch(e){
+    err.textContent = 'Could not save account. Please try again.'; err.style.display='block';
+  }
+});
 
 /* ========= USERS ========= */
 var currentUsersTab = 'APPROVED';
@@ -551,7 +640,7 @@ async function initUsers(tab){
 var liveTimer=null, liveRows=[];
 async function initAnalytics(){
   try{
-    var base = await api('analytics'); // can be array or object with items/byDay/geo
+    var base = await api('analytics');
     var items = arr(base) || arr(safeGet(base,'items'));
 
     if(items.length){
@@ -565,7 +654,7 @@ async function initAnalytics(){
         base.byDay.map(function(d){return String(d.t||d.date||'');})
       );
     }else{
-      var host = $('#ana-overview'); host.classList.add('empty'); host.textContent='No data';
+      var host = $('#ana-overview'); if(host){ host.classList.add('empty'); host.textContent='No data'; }
     }
 
     renderPieChart('#ana-geo-dist', obj(safeGet(base,'geo')));
@@ -626,13 +715,14 @@ async function initWallet(){
   try{
     var w = obj(await api('wallet'));
     var hist = arr(w.history) || arr(w);
-    $('#wal-balance').textContent = dollars(w.balance||0);
+    var el;
+    if((el=$('#wal-balance'))) el.textContent = dollars(w.balance||0);
 
     var pendingAmt = hist.filter(function(t){return String(t.status||'').toUpperCase()==='PENDING';})
                          .reduce(function(s,t){return s+Number(t.amount||0);},0);
-    $('#wal-pending').textContent = dollars(pendingAmt);
+    if((el=$('#wal-pending'))) el.textContent = dollars(pendingAmt);
     var lastPaid = hist.filter(function(t){return String(t.status||'').toUpperCase()==='COMPLETED';}).slice(-1)[0];
-    $('#wal-last').textContent = dollars(lastPaid ? lastPaid.amount : 0);
+    if((el=$('#wal-last'))) el.textContent = dollars(lastPaid ? lastPaid.amount : 0);
 
     var tb = document.getElementById('tbl-wallet');
     if(tb){
@@ -655,20 +745,18 @@ async function initMonitor(){
   try{
     var m = obj(await api('monitoring'));
     var events = arr(m.events) || arr(m);
-    $('#box-alerts').textContent = events.length;
-    $('#box-maint').textContent  = m.maintenance || '—';
-    $('#box-health').textContent = m.health || 'OK';
+    var el;
+    if((el=$('#box-alerts'))) el.textContent = events.length;
+    if((el=$('#box-maint')))  el.textContent = m.maintenance || '—';
+    if((el=$('#box-health'))) el.textContent = m.health || 'OK';
 
     if(tb){
-      if(!events.length){
-        tb.innerHTML = '<tr><td colspan="3" class="muted">No events.</td></tr>';
-      }else{
-        events.forEach(function(ev){
-          var tr=document.createElement('tr');
-          tr.innerHTML='<td class="mono">'+(ev.time||'')+'</td><td>'+(ev.type||'')+'</td><td>'+(ev.msg||ev.message||'')+'</td>';
-          tb.appendChild(tr);
-        });
-      }
+      if(!events.length){ tb.innerHTML = '<tr><td colspan="3" class="muted">No events.</td></tr>'; return; }
+      events.forEach(function(ev){
+        var tr=document.createElement('tr');
+        tr.innerHTML='<td class="mono">'+(ev.time||'')+'</td><td>'+(ev.type||'')+'</td><td>'+(ev.msg||ev.message||'')+'</td>';
+        tb.appendChild(tr);
+      });
     }
   }catch(e){
     if(tb) tb.innerHTML = '<tr><td colspan="3" class="muted">Failed to load.</td></tr>';
@@ -688,7 +776,8 @@ async function initSettings(){
 /* ========= BOOT ========= */
 window.addEventListener('DOMContentLoaded', function(){
   try{
-    console.log('[EMPIRE] BOOT');
+    console.log('BOOT OK');
+    document.body.setAttribute('data-boot','ok');
     var r = (location.hash||'#dashboard').replace('#','');
     show(r);
   }catch(e){

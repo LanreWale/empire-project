@@ -1,22 +1,324 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>THE EMPIRE · Command Center</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-0:#0d1a27; --bg-1:#0f2233; --bg-2:#122a3f; --bg-3:#0b1825;
+    --card:#0f2233; --card-2:#132a42; --muted:#7c97b5; --text:#eaf2ff; --accent:#ffd559;
+    --good:#1dd1a1; --warn:#ffb142; --bad:#ff6b6b; --line:#173046;
+    --shadow:0 6px 24px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.02);
+    --radius:14px;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial;
+    color:var(--text); background:
+      radial-gradient(1200px 1200px at 120% -10%, #163b5c 0%, transparent 60%) fixed,
+      radial-gradient(1000px 1000px at -10% 120%, #0c2338 0%, transparent 60%) fixed,
+      var(--bg-0);
+  }
+
+  .page{display:grid; grid-template-columns:260px 1fr; gap:0; min-height:100vh}
+  .sidebar{
+    background:linear-gradient(180deg,#0d1a27 0%, #0b1825 100%);
+    border-right:1px solid var(--line); padding:18px 12px; position:sticky; top:0; height:100vh;
+  }
+  .brand{display:flex; align-items:center; gap:10px; padding:8px 10px 18px}
+  .brand img{width:28px;height:28px}
+  .brand span{font-weight:800; letter-spacing:.6px}
+  .nav{display:flex; flex-direction:column; gap:6px; margin-top:6px}
+  .nav a{
+    display:flex; align-items:center; gap:10px; padding:11px 12px;
+    color:var(--text); text-decoration:none; border-radius:10px;
+    background:transparent; border:1px solid transparent;
+  }
+  .nav a.active{background:var(--bg-2); border-color:var(--line)}
+  .nav small{opacity:.65}
+
+  .content{padding:22px; min-width:0}
+
+  .section-head{display:flex; align-items:center; justify-content:space-between; gap:12px; margin:4px 0 18px}
+  .section-head h2{margin:0; font-size:18px; letter-spacing:.3px}
+  .btn{
+    background:linear-gradient(180deg,#ffd559,#ffcb31); color:#1b1b1b; border:0; font-weight:700;
+    padding:10px 14px; border-radius:10px; cursor:pointer; box-shadow:var(--shadow)
+  }
+  .btn.secondary{background:#173046; color:#d6e7ff; border:1px solid #254660}
+  .btn.secondary.active{background:#103b66; border-color:#3a85ff}
+
+  .grid{display:grid; gap:16px}
+  .grid.cols-4{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .grid.cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .grid.cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .grid.cols-1{grid-template-columns:1fr}
+  @media (max-width:1150px){ .grid.cols-4{grid-template-columns:repeat(2,1fr)} }
+  @media (max-width:760px){ .page{grid-template-columns:1fr} .sidebar{position:static;height:auto} .grid,[class*=cols-]{grid-template-columns:1fr} }
+
+  .card{
+    background:linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,0)) , var(--card);
+    border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow)
+  }
+  .card.pad{padding:16px}
+
+  .kpi{display:flex; flex-direction:column; gap:8px}
+  .kpi .label{font-size:12px; color:var(--muted)}
+  .kpi .value{font-weight:800; font-size:22px}
+  .sub{font-size:11px; color:var(--muted); margin-top:-2px}
+
+  table{width:100%; border-collapse:separate; border-spacing:0; overflow:hidden; border-radius:12px; border:1px solid var(--line)}
+  thead th{background:#0f2b45; text-align:left; padding:11px 12px; font-size:12px; color:#c4d7ef; border-bottom:1px solid var(--line)}
+  tbody td{padding:10px 12px; border-bottom:1px solid var(--line)}
+  tbody tr:last-child td{border-bottom:0}
+  .muted{color:var(--muted)}
+  .money{color:var(--good); font-weight:700}
+  .badge{display:inline-block; padding:2px 8px; border-radius:999px; font-size:11px; border:1px solid var(--line); background:#14304a}
+
+  .acct{display:grid; grid-template-columns:1fr auto; gap:10px}
+  .acct h3{margin:0 0 6px; font-size:20px}
+  .acct .stats{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px}
+  .kv{background:var(--card-2); border:1px solid var(--line); border-radius:10px; padding:10px}
+  .kv b{display:block; font-size:12px; color:var(--muted); margin-bottom:3px}
+  .kv span{font-weight:800}
+
+  .pill{padding:6px 9px; border-radius:999px; background:#103250; border:1px solid var(--line); font-size:12px}
+  .flex{display:flex; gap:10px; align-items:center}
+  .right{margin-left:auto}
+
+  .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;}
+  code.pretty{white-space:pre-wrap; display:block; background:#0e2236; border:1px solid var(--line); padding:14px; border-radius:10px}
+
+  .empty{padding:18px; text-align:center; color:var(--muted)}
+
+  /* Modal */
+  .modal{position:fixed; inset:0; display:none; align-items:center; justify-content:center; z-index:50}
+  .modal.open{display:flex}
+  .modal .scrim{position:absolute; inset:0; background:rgba(6,16,26,.6); backdrop-filter: blur(2px)}
+  .modal .panel{
+    position:relative; width:min(680px,92vw); background:var(--card);
+    border:1px solid var(--line); border-radius:16px; box-shadow:var(--shadow); padding:18px;
+  }
+  .form-grid{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+  .form-grid .full{grid-column:1 / -1}
+  .input{display:flex; flex-direction:column; gap:6px}
+  .input label{font-size:12px; color:var(--muted)}
+  .input input,.input select{
+    background:#0e2236; color:var(--text); border:1px solid #24445e; border-radius:10px; padding:10px 12px; outline:none;
+  }
+  .input input:focus,.input select:focus{border-color:#3a85ff}
+  .modal .footer{display:flex; gap:10px; justify-content:flex-end; margin-top:14px}
+  .bad{color:var(--bad); font-size:12px}
+  /* chart svg */
+  .chart svg{width:100%; height:220px; display:block}
+</style>
+</head>
+<body>
+
+<!-- Crash box (always present so blank pages show errors) -->
+<pre id="fatal" style="display:none;white-space:pre-wrap;background:#140b0b;color:#ffdede;border:1px solid #522; padding:12px; border-radius:10px; margin:16px"></pre>
+
+<div class="page">
+  <aside class="sidebar">
+    <div class="brand">
+      <img src="https://i.imgur.com/2sGv2cH.png" alt="empire">
+      <span>THE EMPIRE</span>
+    </div>
+    <nav class="nav" id="nav">
+      <a href="#dashboard" data-route="dashboard" class="active">🏠 Dashboard</a>
+      <a href="#cpa" data-route="cpa">👑 CPA Accounts</a>
+      <a href="#users" data-route="users">👥 Users</a>
+      <a href="#analytics" data-route="analytics">📊 Analytics</a>
+      <a href="#wallet" data-route="wallet">💳 Payments/Wallet</a>
+      <a href="#monitor" data-route="monitor">🛡️ Monitoring</a>
+      <a href="#settings" data-route="settings">⚙️ Settings</a>
+    </nav>
+  </aside>
+
+  <main class="content">
+    <!-- DASHBOARD -->
+    <section data-page="dashboard" style="display:block">
+      <div class="section-head"><h2>Supreme Command Dashboard</h2><span class="pill">SUPREME COMMANDER</span></div>
+      <div class="grid cols-4">
+        <div class="card pad kpi"><div class="label">Total Earnings</div><div class="value" id="dash-earn">$0.00</div><div class="sub muted">vs last 7d</div></div>
+        <div class="card pad kpi"><div class="label">Active Users</div><div class="value" id="dash-users">0</div><div class="sub muted"><span id="dash-users-diff">24h growth</span></div></div>
+        <div class="card pad kpi"><div class="label">Conversion Rate</div><div class="value" id="dash-cr">0.00%</div><div class="sub muted">industry leading</div></div>
+        <div class="card pad kpi"><div class="label">Total Clicks</div><div class="value" id="dash-clicks">0</div><div class="sub muted">daily average</div></div>
+      </div>
+
+      <div class="grid cols-2" style="margin-top:16px">
+        <div class="card pad">
+          <h3 style="margin:0 0 10px">Daily Earnings</h3>
+          <div id="dash-earnings" class="chart empty">Awaiting data..</div>
+        </div>
+        <div class="card pad">
+          <h3 style="margin:0 0 10px">Traffic Sources</h3>
+          <div id="dash-sources" class="chart empty">Awaiting data..</div>
+        </div>
+      </div>
+
+      <div class="card pad" style="margin-top:16px">
+        <h3 style="margin:0 0 10px">By Geo (Top)</h3>
+        <table>
+          <thead><tr><th>Country</th><th>Clicks</th><th>Leads</th><th>Earnings ($)</th></tr></thead>
+          <tbody id="tbl-dash-geo"><tr><td colspan="4" class="muted">No data</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- CPA ACCOUNTS -->
+    <section data-page="cpa" style="display:none">
+      <div class="section-head">
+        <h2>CPA Accounts Management</h2>
+        <button class="btn" id="btn-add-acct">+ Add New Account</button>
+      </div>
+      <div id="cpa-grid" class="grid cols-2"></div>
+    </section>
+
+    <!-- ADD NEW ACCOUNT MODAL -->
+    <div id="mdl-cpa" class="modal" aria-hidden="true">
+      <div class="scrim" data-close></div>
+      <div class="panel">
+        <h3 style="margin:0 0 12px">Add New CPA Account</h3>
+        <div class="form-grid">
+          <div class="input"><label>Account Name *</label><input id="f-account" placeholder="e.g. 2288690 / Main Grip"/></div>
+          <div class="input"><label>Network *</label><input id="f-network" placeholder="e.g. CPA Grip"/></div>
+          <div class="input"><label>Domain</label><input id="f-domain" placeholder="offers.example.com"/></div>
+          <div class="input">
+            <label>Status</label>
+            <select id="f-status">
+              <option value="ACTIVE" selected>ACTIVE</option>
+              <option value="PAUSED">PAUSED</option>
+              <option value="DISABLED">DISABLED</option>
+            </select>
+          </div>
+          <div class="input full"><label>API Key / Token</label><input id="f-key" placeholder="(optional) stored in GAS"/></div>
+          <div class="input"><label>Webhook URL</label><input id="f-webhook" placeholder="https://.../postback"/></div>
+        </div>
+        <div id="f-error" class="bad" style="display:none"></div>
+        <div class="footer">
+          <button class="btn secondary" data-close>Cancel</button>
+          <button class="btn" id="btn-save-acct">Save Account</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- USERS -->
+    <section data-page="users" style="display:none">
+      <div class="section-head"><h2>Users Management</h2>
+        <div class="flex right">
+          <button class="btn secondary active" data-users-tab="APPROVED">Approved</button>
+          <button class="btn secondary" data-users-tab="PENDING">Pending</button>
+          <button class="btn secondary" data-users-tab="REJECTED">Rejected</button>
+        </div>
+      </div>
+      <div class="card pad">
+        <table>
+          <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Authority</th></tr></thead>
+        <tbody id="tbl-users"><tr><td colspan="4" class="muted">No users.</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ANALYTICS -->
+    <section data-page="analytics" style="display:none">
+      <div class="section-head"><h2>Analytics & Reports</h2></div>
+      <div class="grid cols-2">
+        <div class="card pad">
+          <h3 style="margin:0 0 10px">Performance Overview</h3>
+          <div id="ana-overview" class="chart empty">Loading…</div>
+        </div>
+        <div class="card pad">
+          <h3 style="margin:0 0 10px">Geographic Distribution</h3>
+          <div id="ana-geo-dist" class="chart empty">Loading…</div>
+        </div>
+      </div>
+
+      <div class="grid cols-2" style="margin-top:16px">
+        <div class="card pad">
+          <h3 style="margin:0 0 10px">Live Performance Data (last 2 min)</h3>
+          <table>
+            <thead><tr><th>Time</th><th>Country</th><th>Offer</th><th>Clicks</th><th>Conv.</th><th>Earnings</th></tr></thead>
+            <tbody id="tbl-live-perf"><tr><td colspan="6" class="muted">Waiting for stream…</td></tr></tbody>
+          </table>
+        </div>
+        <div class="card pad">
+          <h3 style="margin:0 0 10px">Live by GEO (rolling)</h3>
+          <table>
+            <thead><tr><th>Country</th><th>Clicks</th><th>Conv.</th><th>Earnings</th></tr></thead>
+            <tbody id="tbl-live-geo"><tr><td colspan="4" class="muted">Waiting for stream…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- WALLET -->
+    <section data-page="wallet" style="display:none">
+      <div class="section-head"><h2>Wallet</h2></div>
+      <div class="grid cols-3">
+        <div class="card pad kpi"><div class="label">Balance</div><div class="value" id="wal-balance">$0.00</div></div>
+        <div class="card pad kpi"><div class="label">Pending Payout</div><div class="value" id="wal-pending">$0.00</div></div>
+        <div class="card pad kpi"><div class="label">Last Payout</div><div class="value" id="wal-last">$0.00</div></div>
+      </div>
+      <div class="grid cols-2" style="margin-top:16px">
+        <div class="card pad">
+          <h3 style="margin:0 0 10px">Transaction History</h3>
+          <table>
+            <thead><tr><th>Date</th><th>Method</th><th>Amount ($)</th><th>Status</th></tr></thead>
+            <tbody id="tbl-wallet"><tr><td colspan="4" class="muted">No transactions.</td></tr></tbody>
+          </table>
+        </div>
+        <div class="card pad">
+          <h3 style="margin:0 0 10px">Request Withdrawal</h3>
+          <div class="muted" style="font-size:13px">Hook this to your GAS write endpoint.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- MONITORING -->
+    <section data-page="monitor" style="display:none">
+      <div class="section-head"><h2>Monitoring</h2></div>
+      <div class="grid cols-3">
+        <div class="card pad kpi"><div class="label">Alerts</div><div class="value" id="box-alerts">—</div></div>
+        <div class="card pad kpi"><div class="label">Maintenance</div><div class="value" id="box-maint">—</div></div>
+        <div class="card pad kpi"><div class="label">System Health</div><div class="value" id="box-health">—</div></div>
+      </div>
+      <div class="card pad" style="margin-top:16px">
+        <h3 style="margin:0 0 10px">Events Stream</h3>
+        <table>
+          <thead><tr><th>Time</th><th>Type</th><th>Message</th></tr></thead>
+          <tbody id="tbl-monitor"><tr><td colspan="3" class="muted">No events.</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section data-page="settings" style="display:none">
+      <div class="section-head"><h2>Settings</h2></div>
+      <div class="card pad">
+        <h3 style="margin:0 0 10px">Live Config</h3>
+        <code id="pretty" class="pretty mono">{ … }</code>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- ========= FRONTEND SCRIPT ========= -->
 <script>
 /* ========= FATAL GUARD ========= */
-(function(){
-  var fatalBox = document.createElement('pre');
-  fatalBox.id = 'fatal';
-  fatalBox.style.cssText = 'display:none;white-space:pre-wrap;background:#140b0b;color:#ffdede;border:1px solid #522; padding:12px; border-radius:10px; margin:16px';
-  document.addEventListener('DOMContentLoaded', function(){
-    document.body.appendChild(fatalBox);
-  });
-  window.onerror = function(msg, src, line, col, err){
-    try{
-      fatalBox.style.display = 'block';
-      fatalBox.textContent =
-        '[FATAL] ' + msg + '\n' +
-        (src?('at '+src+':'+line+':'+col+'\n'):'') +
-        (err && err.stack ? err.stack : '');
-    }catch(_){}
-  };
-})();
+window.onerror = function(msg, src, line, col, err){
+  var fatal = document.getElementById('fatal');
+  if(!fatal) return;
+  fatal.style.display = 'block';
+  fatal.textContent =
+    '[FATAL] ' + msg + '\n' +
+    (src?('at '+src+':'+line+':'+col+'\n'):'') +
+    (err && err.stack ? err.stack : '');
+};
 
 /* ========= CONFIG ========= */
 var GAS = "https://script.google.com/macros/s/AKfycbzFOP1BQCV47c-uRHw0mTs-WHKTSAblrjb9XmpUrVPIjhbQdtNRGAtEWFAkZMUVJ4Uc/exec";
@@ -254,7 +556,7 @@ async function initCpa(){
               '<div class="kv"><b>Revenue</b><span class="money">'+dollars(r.revenue||0)+'</span></div>'+
               '<div class="kv"><b>Clicks</b><span>'+(r.clicks||0)+'</span></div>'+
               '<div class="kv"><b>Conversion</b><span>'+convPct.toFixed(2)+'%</span></div>'+
-            '</div>'+
+            </div>'+
           '</div>'+
           '<div class="right flex"><span class="pill mono">'+(r.domain||'no-domain')+'</span><button class="btn secondary">View Details</button></div>'+
         '</div>';
@@ -266,11 +568,41 @@ async function initCpa(){
   }
 }
 
+/* Add New Account modal wiring */
+var mdl = document.getElementById('mdl-cpa');
+var openMdl  = function(){ mdl.classList.add('open'); };
+var closeMdl = function(){ mdl.classList.remove('open'); };
+document.getElementById('btn-add-acct')?.addEventListener('click', openMdl);
+mdl?.addEventListener('click', function(e){ if(e.target.hasAttribute && e.target.hasAttribute('data-close')) closeMdl(); });
+document.getElementById('btn-save-acct')?.addEventListener('click', async function(){
+  var err = document.getElementById('f-error');
+  var v = {
+    account : document.getElementById('f-account').value.trim(),
+    network : document.getElementById('f-network').value.trim(),
+    domain  : normDomain(document.getElementById('f-domain').value),
+    status  : document.getElementById('f-status').value,
+    apiKey  : document.getElementById('f-key').value.trim(),
+    webhook : document.getElementById('f-webhook').value.trim()
+  };
+  if(!v.account || !v.network){
+    err.textContent = 'Account Name and Network are required.'; err.style.display='block'; return;
+  }
+  err.style.display='none';
+  try{
+    var res = await apiWrite('cpaCreate', v); // expect {ok:true}
+    if(!res || res.ok!==true) throw new Error('Create failed');
+    closeMdl();
+    await initCpa();
+  }catch(e){
+    err.textContent = 'Could not save account. Please try again.'; err.style.display='block';
+  }
+});
+
 /* ========= USERS ========= */
 var currentUsersTab = 'APPROVED';
 var userTabBtns = $$('[data-users-tab]');
 userTabBtns.forEach(function(b){
-  b.addEventListener('click', function(){
+  b.addEventListener('click',function(){
     userTabBtns.forEach(function(x){ x.classList.toggle('active', x===b); });
     currentUsersTab = b.getAttribute('data-users-tab'); initUsers(currentUsersTab);
   });
@@ -282,10 +614,13 @@ async function initUsers(tab){
   try{
     var resp = await api('users', {status: tab});
     var filtered = arr(safeGet(resp,'items')) || arr(resp);
+
+    // Defensive fallback if backend doesn't filter
     if(!filtered.length){
       var ALL = arr(safeGet(resp,'items')) || arr(resp);
       filtered = ALL.filter(function(u){ return String(u.status||'APPROVED').toUpperCase()===tab.toUpperCase(); });
     }
+
     if(!filtered.length){ tb.innerHTML = '<tr><td colspan="4" class="muted">No '+tab.toLowerCase()+' users.</td></tr>'; return; }
     filtered.forEach(function(u){
       var tr = document.createElement('tr');
@@ -301,7 +636,7 @@ async function initUsers(tab){
 var liveTimer=null, liveRows=[];
 async function initAnalytics(){
   try{
-    var base = await api('analytics');
+    var base = await api('analytics'); // {overview, geo, items} or array
     var items = arr(base) || arr(safeGet(base,'items'));
 
     if(items.length){
@@ -335,8 +670,10 @@ async function pullLive(){
     var events = arr(safeGet(j,'live')) || arr(j);
     if(!events.length) return;
 
+    // keep last 24 rows
     liveRows = liveRows.concat(events).slice(-24);
 
+    // table
     var tb = document.getElementById('tbl-live-perf'); if(tb){
       tb.innerHTML='';
       liveRows.slice().reverse().forEach(function(r){
@@ -348,6 +685,7 @@ async function pullLive(){
       });
     }
 
+    // live by geo (rebuild from this batch)
     var byGeo = {};
     events.forEach(function(ev){
       var k = ev.country || 'Unknown';
@@ -404,7 +742,7 @@ async function initWallet(){
 async function initMonitor(){
   var tb = document.getElementById('tbl-monitor'); if(tb) tb.innerHTML='';
   try{
-    var m = obj(await api('monitoring'));
+    var m = obj(await api('monitoring')); // expect {events:[...], health, maintenance}
     var events = arr(m.events) || arr(m);
     var el;
     if((el=$('#box-alerts'))) el.textContent = events.length;
@@ -412,12 +750,15 @@ async function initMonitor(){
     if((el=$('#box-health'))) el.textContent = m.health || 'OK';
 
     if(tb){
-      if(!events.length){ tb.innerHTML = '<tr><td colspan="3" class="muted">No events.</td></tr>'; return; }
-      events.forEach(function(ev){
-        var tr=document.createElement('tr');
-        tr.innerHTML='<td class="mono">'+(ev.time||'')+'</td><td>'+(ev.type||'')+'</td><td>'+(ev.msg||ev.message||'')+'</td>';
-        tb.appendChild(tr);
-      });
+      if(!events.length){
+        tb.innerHTML = '<tr><td colspan="3" class="muted">No events.</td></tr>';
+      }else{
+        events.forEach(function(ev){
+          var tr=document.createElement('tr');
+          tr.innerHTML='<td class="mono">'+(ev.time||'')+'</td><td>'+(ev.type||'')+'</td><td>'+(ev.msg||ev.message||'')+'</td>';
+          tb.appendChild(tr);
+        });
+      }
     }
   }catch(e){
     if(tb) tb.innerHTML = '<tr><td colspan="3" class="muted">Failed to load.</td></tr>';
@@ -430,20 +771,23 @@ async function initSettings(){
     var j = await api('config');
     var pretty = document.getElementById('pretty'); if(pretty) pretty.textContent = JSON.stringify(j, null, 2);
   }catch(e){
-    var pretty2 = document.getElementById('pretty'); if(pretty2) pretty.textContent = 'Failed to load config';
+    var pretty2 = document.getElementById('pretty'); if(pretty2) pretty2.textContent = 'Failed to load config';
   }
 }
 
 /* ========= BOOT ========= */
 window.addEventListener('DOMContentLoaded', function(){
   try{
+    console.log('BOOT OK');
+    document.body.setAttribute('data-boot','ok');
     var r = (location.hash||'#dashboard').replace('#','');
     show(r);
   }catch(e){
-    // show crash visibly
     var fatal = document.getElementById('fatal');
     if(fatal){ fatal.style.display='block'; fatal.textContent = '[BOOT ERROR] '+(e&&e.stack?e.stack:String(e)); }
     console.error(e);
   }
 });
 </script>
+</body>
+</html>

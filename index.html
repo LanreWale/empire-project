@@ -1,310 +1,3 @@
-<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>THE EMPIRE · Command Center</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<style>
-  :root{
-    --bg-0:#0d1a27; --bg-1:#0f2233; --bg-2:#122a3f; --bg-3:#0b1825;
-    --card:#0f2233; --card-2:#132a42; --muted:#7c97b5; --text:#eaf2ff; --accent:#ffd559;
-    --good:#1dd1a1; --warn:#ffb142; --bad:#ff6b6b; --line:#173046;
-    --shadow:0 6px 24px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.02);
-    --radius:14px;
-  }
-  *{box-sizing:border-box}
-  html,body{height:100%}
-  body{
-    margin:0; font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial;
-    color:var(--text); background:
-      radial-gradient(1200px 1200px at 120% -10%, #163b5c 0%, transparent 60%) fixed,
-      radial-gradient(1000px 1000px at -10% 120%, #0c2338 0%, transparent 60%) fixed,
-      var(--bg-0);
-  }
-
-  .page{display:grid; grid-template-columns:260px 1fr; gap:0; min-height:100vh}
-  .sidebar{
-    background:linear-gradient(180deg,#0d1a27 0%, #0b1825 100%);
-    border-right:1px solid var(--line); padding:18px 12px; position:sticky; top:0; height:100vh;
-  }
-  .brand{display:flex; align-items:center; gap:10px; padding:8px 10px 18px}
-  .brand img{width:28px;height:28px}
-  .brand span{font-weight:800; letter-spacing:.6px}
-  .nav{display:flex; flex-direction:column; gap:6px; margin-top:6px}
-  .nav a{
-    display:flex; align-items:center; gap:10px; padding:11px 12px;
-    color:var(--text); text-decoration:none; border-radius:10px;
-    background:transparent; border:1px solid transparent;
-  }
-  .nav a.active{background:var(--bg-2); border-color:var(--line)}
-  .nav small{opacity:.65}
-
-  .content{padding:22px; min-width:0}
-
-  .section-head{display:flex; align-items:center; justify-content:space-between; gap:12px; margin:4px 0 18px}
-  .section-head h2{margin:0; font-size:18px; letter-spacing:.3px}
-  .btn{
-    background:linear-gradient(180deg,#ffd559,#ffcb31); color:#1b1b1b; border:0; font-weight:700;
-    padding:10px 14px; border-radius:10px; cursor:pointer; box-shadow:var(--shadow)
-  }
-  .btn.secondary{background:#173046; color:#d6e7ff; border:1px solid #254660}
-  .btn.secondary.active{background:#103b66; border-color:#3a85ff}
-
-  .grid{display:grid; gap:16px}
-  .grid.cols-4{grid-template-columns:repeat(4,minmax(0,1fr))}
-  .grid.cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}
-  .grid.cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .grid.cols-1{grid-template-columns:1fr}
-  @media (max-width:1150px){ .grid.cols-4{grid-template-columns:repeat(2,1fr)} }
-  @media (max-width:760px){ .page{grid-template-columns:1fr} .sidebar{position:static;height:auto} .grid,[class*=cols-]{grid-template-columns:1fr} }
-
-  .card{
-    background:linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,0)) , var(--card);
-    border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow)
-  }
-  .card.pad{padding:16px}
-
-  .kpi{display:flex; flex-direction:column; gap:8px}
-  .kpi .label{font-size:12px; color:var(--muted)}
-  .kpi .value{font-weight:800; font-size:22px}
-  .sub{font-size:11px; color:var(--muted); margin-top:-2px}
-
-  table{width:100%; border-collapse:separate; border-spacing:0; overflow:hidden; border-radius:12px; border:1px solid var(--line)}
-  thead th{background:#0f2b45; text-align:left; padding:11px 12px; font-size:12px; color:#c4d7ef; border-bottom:1px solid var(--line)}
-  tbody td{padding:10px 12px; border-bottom:1px solid var(--line)}
-  tbody tr:last-child td{border-bottom:0}
-  .muted{color:var(--muted)}
-  .money{color:var(--good); font-weight:700}
-  .badge{display:inline-block; padding:2px 8px; border-radius:999px; font-size:11px; border:1px solid var(--line); background:#14304a}
-
-  .acct{display:grid; grid-template-columns:1fr auto; gap:10px}
-  .acct h3{margin:0 0 6px; font-size:20px}
-  .acct .stats{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px}
-  .kv{background:var(--card-2); border:1px solid var(--line); border-radius:10px; padding:10px}
-  .kv b{display:block; font-size:12px; color:var(--muted); margin-bottom:3px}
-  .kv span{font-weight:800}
-
-  .pill{padding:6px 9px; border-radius:999px; background:#103250; border:1px solid var(--line); font-size:12px}
-  .flex{display:flex; gap:10px; align-items:center}
-  .right{margin-left:auto}
-
-  .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;}
-  code.pretty{white-space:pre-wrap; display:block; background:#0e2236; border:1px solid var(--line); padding:14px; border-radius:10px}
-
-  .empty{padding:18px; text-align:center; color:var(--muted)}
-
-  /* Modal */
-  .modal{position:fixed; inset:0; display:none; align-items:center; justify-content:center; z-index:50}
-  .modal.open{display:flex}
-  .modal .scrim{position:absolute; inset:0; background:rgba(6,16,26,.6); backdrop-filter: blur(2px)}
-  .modal .panel{
-    position:relative; width:min(680px,92vw); background:var(--card);
-    border:1px solid var(--line); border-radius:16px; box-shadow:var(--shadow); padding:18px;
-  }
-  .form-grid{display:grid; grid-template-columns:1fr 1fr; gap:12px}
-  .form-grid .full{grid-column:1 / -1}
-  .input{display:flex; flex-direction:column; gap:6px}
-  .input label{font-size:12px; color:var(--muted)}
-  .input input,.input select{
-    background:#0e2236; color:var(--text); border:1px solid #24445e; border-radius:10px; padding:10px 12px; outline:none;
-  }
-  .input input:focus,.input select:focus{border-color:#3a85ff}
-  .modal .footer{display:flex; gap:10px; justify-content:flex-end; margin-top:14px}
-  .bad{color:var(--bad); font-size:12px}
-
-  /* chart svg */
-  .chart svg{width:100%; height:220px; display:block}
-</style>
-</head>
-<body>
-<div class="page">
-  <aside class="sidebar">
-    <div class="brand">
-      <img src="https://i.imgur.com/2sGv2cH.png" alt="empire">
-      <span>THE EMPIRE</span>
-    </div>
-    <nav class="nav" id="nav">
-      <a href="#dashboard" data-route="dashboard" class="active">🏠 Dashboard</a>
-      <a href="#cpa" data-route="cpa">👑 CPA Accounts</a>
-      <a href="#users" data-route="users">👥 Users</a>
-      <a href="#analytics" data-route="analytics">📊 Analytics</a>
-      <a href="#wallet" data-route="wallet">💳 Payments/Wallet</a>
-      <a href="#monitor" data-route="monitor">🛡️ Monitoring</a>
-      <a href="#settings" data-route="settings">⚙️ Settings</a>
-    </nav>
-  </aside>
-
-  <main class="content">
-    <!-- DASHBOARD -->
-    <section data-page="dashboard" style="display:block">
-      <div class="section-head"><h2>Supreme Command Dashboard</h2><span class="pill">SUPREME COMMANDER</span></div>
-      <div class="grid cols-4">
-        <div class="card pad kpi"><div class="label">Total Earnings</div><div class="value" id="dash-earn">$0.00</div><div class="sub muted">vs last 7d</div></div>
-        <div class="card pad kpi"><div class="label">Active Users</div><div class="value" id="dash-users">0</div><div class="sub muted"><span id="dash-users-diff">24h growth</span></div></div>
-        <div class="card pad kpi"><div class="label">Conversion Rate</div><div class="value" id="dash-cr">0.00%</div><div class="sub muted">industry leading</div></div>
-                        <div class="card pad kpi"><div class="label">Total Clicks</div><div class="value" id="dash-clicks">0</div><div class="sub muted">daily average</div></div>
-      </div>
-
-      <div class="grid cols-2" style="margin-top:16px">
-        <div class="card pad">
-          <h3 style="margin:0 0 10px">Daily Earnings</h3>
-          <div id="dash-earnings" class="chart empty">Awaiting data..</div>
-        </div>
-        <div class="card pad">
-          <h3 style="margin:0 0 10px">Traffic Sources</h3>
-          <div id="dash-sources" class="chart empty">Awaiting data..</div>
-        </div>
-      </div>
-
-      <div class="card pad" style="margin-top:16px">
-        <h3 style="margin:0 0 10px">By Geo (Top)</h3>
-        <table>
-          <thead><tr><th>Country</th><th>Clicks</th><th>Leads</th><th>Earnings ($)</th></tr></thead>
-          <tbody id="tbl-dash-geo"><tr><td colspan="4" class="muted">No data</td></tr></tbody>
-        </table>
-      </div>
-    </section>
-
-    <!-- CPA ACCOUNTS -->
-    <section data-page="cpa" style="display:none">
-      <div class="section-head">
-        <h2>CPA Accounts Management</h2>
-        <button class="btn" id="btn-add-acct">+ Add New Account</button>
-      </div>
-      <div id="cpa-grid" class="grid cols-2"></div>
-    </section>
-
-    <!-- ADD NEW ACCOUNT MODAL -->
-    <div id="mdl-cpa" class="modal" aria-hidden="true">
-      <div class="scrim" data-close></div>
-      <div class="panel">
-        <h3 style="margin:0 0 12px">Add New CPA Account</h3>
-        <div class="form-grid">
-          <div class="input"><label>Account Name *</label><input id="f-account" placeholder="e.g. 2288690 / Main Grip"/></div>
-          <div class="input"><label>Network *</label><input id="f-network" placeholder="e.g. CPA Grip"/></div>
-          <div class="input"><label>Domain</label><input id="f-domain" placeholder="offers.example.com"/></div>
-          <div class="input">
-            <label>Status</label>
-            <select id="f-status">
-              <option value="ACTIVE" selected>ACTIVE</option>
-              <option value="PAUSED">PAUSED</option>
-              <option value="DISABLED">DISABLED</option>
-            </select>
-          </div>
-          <div class="input full"><label>API Key / Token</label><input id="f-key" placeholder="(optional) stored in GAS"/></div>
-          <div class="input"><label>Webhook URL</label><input id="f-webhook" placeholder="https://.../postback"/></div>
-        </div>
-        <div id="f-error" class="bad" style="display:none"></div>
-        <div class="footer">
-          <button class="btn secondary" data-close>Cancel</button>
-          <button class="btn" id="btn-save-acct">Save Account</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- USERS -->
-    <section data-page="users" style="display:none">
-      <div class="section-head"><h2>Users Management</h2>
-        <div class="flex right">
-          <button class="btn secondary active" data-users-tab="APPROVED">Approved</button>
-          <button class="btn secondary" data-users-tab="PENDING">Pending</button>
-          <button class="btn secondary" data-users-tab="REJECTED">Rejected</button>
-        </div>
-      </div>
-      <div class="card pad">
-        <table>
-          <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Authority</th></tr></thead>
-          <tbody id="tbl-users"><tr><td colspan="4" class="muted">No users.</td></tr></tbody>
-        </table>
-      </div>
-    </section>
-
-    <!-- ANALYTICS -->
-    <section data-page="analytics" style="display:none">
-      <div class="section-head"><h2>Analytics & Reports</h2></div>
-      <div class="grid cols-2">
-        <div class="card pad">
-          <h3 style="margin:0 0 10px">Performance Overview</h3>
-          <div id="ana-overview" class="chart empty">Loading…</div>
-        </div>
-        <div class="card pad">
-          <h3 style="margin:0 0 10px">Geographic Distribution</h3>
-          <div id="ana-geo-dist" class="chart empty">Loading…</div>
-        </div>
-      </div>
-
-      <div class="grid cols-2" style="margin-top:16px">
-        <div class="card pad">
-          <h3 style="margin:0 0 10px">Live Performance Data (last 2 min)</h3>
-          <table>
-            <thead><tr><th>Time</th><th>Country</th><th>Offer</th><th>Clicks</th><th>Conv.</th><th>Earnings</th></tr></thead>
-            <tbody id="tbl-live-perf"><tr><td colspan="6" class="muted">Waiting for stream…</td></tr></tbody>
-          </table>
-        </div>
-        <div class="card pad">
-          <h3 style="margin:0 0 10px">Live by GEO (rolling)</h3>
-          <table>
-            <thead><tr><th>Country</th><th>Clicks</th><th>Conv.</th><th>Earnings</th></tr></thead>
-            <tbody id="tbl-live-geo"><tr><td colspan="4" class="muted">Waiting for stream…</td></tr></tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-
-    <!-- WALLET -->
-    <section data-page="wallet" style="display:none">
-      <div class="section-head"><h2>Wallet</h2></div>
-      <div class="grid cols-3">
-        <div class="card pad kpi"><div class="label">Balance</div><div class="value" id="wal-balance">$0.00</div></div>
-        <div class="card pad kpi"><div class="label">Pending Payout</div><div class="value" id="wal-pending">$0.00</div></div>
-        <div class="card pad kpi"><div class="label">Last Payout</div><div class="value" id="wal-last">$0.00</div></div>
-      </div>
-      <div class="grid cols-2" style="margin-top:16px">
-        <div class="card pad">
-          <h3 style="margin:0 0 10px">Transaction History</h3>
-          <table>
-            <thead><tr><th>Date</th><th>Method</th><th>Amount ($)</th><th>Status</th></tr></thead>
-            <tbody id="tbl-wallet"><tr><td colspan="4" class="muted">No transactions.</td></tr></tbody>
-          </table>
-        </div>
-        <div class="card pad">
-          <h3 style="margin:0 0 10px">Request Withdrawal</h3>
-          <div class="muted" style="font-size:13px">Hook this to your GAS write endpoint.</div>
-        </div>
-      </div>
-    </section>
-
-    <!-- MONITORING -->
-    <section data-page="monitor" style="display:none">
-      <div class="section-head"><h2>Monitoring</h2></div>
-      <div class="grid cols-3">
-        <div class="card pad kpi"><div class="label">Alerts</div><div class="value" id="box-alerts">—</div></div>
-        <div class="card pad kpi"><div class="label">Maintenance</div><div class="value" id="box-maint">—</div></div>
-        <div class="card pad kpi"><div class="label">System Health</div><div class="value" id="box-health">—</div></div>
-      </div>
-      <div class="card pad" style="margin-top:16px">
-        <h3 style="margin:0 0 10px">Events Stream</h3>
-        <table>
-          <thead><tr><th>Time</th><th>Type</th><th>Message</th></tr></thead>
-          <tbody id="tbl-monitor"><tr><td colspan="3" class="muted">No events.</td></tr></tbody>
-        </table>
-      </div>
-    </section>
-
-    <!-- SETTINGS -->
-    <section data-page="settings" style="display:none">
-      <div class="section-head"><h2>Settings</h2></div>
-      <div class="card pad">
-        <h3 style="margin:0 0 10px">Live Config</h3>
-        <code id="pretty" class="pretty mono">{ … }</code>
-      </div>
-    </section>
-  </main>
-</div>
-
-<!-- ========= FRONTEND SCRIPT ========= -->
 <script>
 /* ========= CONFIG ========= */
 const GAS = "https://script.google.com/macros/s/AKfycbwZVlGMvYonfCNdQlwPHiqqgOVC80_HsyktSYmqmQPBKmRrlzg_yo4lKz_Mmu85B7eY/exec";
@@ -313,7 +6,7 @@ const $  = s => document.querySelector(s);
 const $$ = s => Array.from(document.querySelectorAll(s));
 const dollars = n => Number(n||0).toLocaleString(undefined,{style:'currency',currency:'USD'});
 
-/* GET helper (defensive) */
+/* ---------- fetch helpers ---------- */
 async function get(url, opt={}){
   try{
     const u = new URL(url);
@@ -321,11 +14,8 @@ async function get(url, opt={}){
     const r = await fetch(u, {cache:'no-store', ...opt});
     if(!r.ok) throw new Error('HTTP '+r.status);
     return r.json();
-  }catch(e){
-    console.error('GET failed:', e); return null;
-  }
+  }catch(e){ console.error('GET failed:', e); return null; }
 }
-/* API helpers */
 function api(action, params={}){
   const u = new URL(GAS);
   u.searchParams.set('action', action);
@@ -339,7 +29,7 @@ async function apiWrite(action, payload={}){
     const res = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
     if(!res.ok) throw new Error('HTTP '+res.status);
     return res.json();
-  }catch(e){
+  }catch{
     Object.entries(payload||{}).forEach(([k,v])=>url.searchParams.set(k, typeof v==='object'?JSON.stringify(v):String(v)));
     const res = await fetch(url, {cache:'no-store'});
     if(!res.ok) throw new Error('HTTP '+res.status);
@@ -347,48 +37,72 @@ async function apiWrite(action, payload={}){
   }
 }
 
-/* normalizers */
-const arr = (m)=> Array.isArray(m) ? m : (m&&Array.isArray(m.items)?m.items:(m&&Array.isArray(m.rows)?m.rows:(m&&Array.isArray(m.data)?m.data:[])));
+/* ---------- normalizers ---------- */
+const arr = (m)=> Array.isArray(m) ? m
+  : (m&&Array.isArray(m.items)?m.items
+  :(m&&Array.isArray(m.rows)?m.rows
+  :(m&&Array.isArray(m.data)?m.data:[])));
 const obj = (m)=> (m && typeof m==='object')? m : {};
 const normDomain = d=> String(d||'').trim().replace(/^https?:\/\//,'').replace(/\/.*$/,'');
 
-/* tiny chart helpers (SVG) */
+/* ---------- flexible getters + live fallbacks ---------- */
+const firstVal = (o, keys, fallback=null) => {
+  for (const k of keys) if (o && o[k] != null) return o[k];
+  return fallback;
+};
+async function liveGeoSnapshot(windowMin=60){
+  const j = await api('analytics', { live:1, windowSec: windowMin*60, limit: 500 });
+  const events = arr(j?.live) || arr(j);
+  const byGeo = {};
+  events.forEach(ev=>{
+    const c = ev.country || 'Unknown';
+    if(!byGeo[c]) byGeo[c] = {country:c, clicks:0, leads:0, earnings:0};
+    byGeo[c].clicks   += Number(ev.clicks||0);
+    byGeo[c].leads    += Number(ev.conversions||ev.conv||0);
+    byGeo[c].earnings += Number(ev.earnings||0);
+  });
+  return byGeo;
+}
+async function liveSourcesSnapshot(windowMin=60){
+  const j = await api('analytics', { live:1, windowSec: windowMin*60, limit: 500 });
+  const events = arr(j?.live) || arr(j);
+  const map = {};
+  events.forEach(ev=>{
+    const key = ev.source || ev.channel || ev.offerType || 'Other';
+    map[key] = (map[key]||0) + Number(ev.earnings||0);
+  });
+  return map;
+}
+
+/* ---------- tiny SVG chart helpers ---------- */
 function renderBarChart(el, series=[], labels=[]){
   const host = (typeof el==='string')? $(el) : el;
   if(!host) return;
-  host.classList.remove('empty'); host.innerHTML = '';
+  host.classList.remove('empty'); host.innerHTML='';
   if(!series.length){ host.classList.add('empty'); host.textContent='No data'; return; }
   const W = host.clientWidth || 600, H = 220, pad=28;
   const max = Math.max(...series.map(v=>Number(v)||0), 1);
   const bw = (W - pad*2) / series.length;
   const svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
   svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
-
   const axis = document.createElementNS(svg.namespaceURI,'line');
   axis.setAttribute('x1', pad); axis.setAttribute('y1', H-pad);
   axis.setAttribute('x2', W-pad); axis.setAttribute('y2', H-pad);
   axis.setAttribute('stroke', '#2a4b6a'); axis.setAttribute('stroke-width', '1');
   svg.appendChild(axis);
-
   series.forEach((v,i)=>{
     const val = Number(v)||0;
     const h = (val/max) * (H - pad*2);
-    const x = pad + i*bw + 6;
-    const y = (H-pad) - h;
+    const x = pad + i*bw + 6, y = (H-pad) - h;
     const rect = document.createElementNS(svg.namespaceURI,'rect');
     rect.setAttribute('x', x); rect.setAttribute('y', y);
     rect.setAttribute('width', Math.max(8, bw-12)); rect.setAttribute('height', Math.max(0,h));
-    rect.setAttribute('fill', '#ffd559');
-    svg.appendChild(rect);
-
+    rect.setAttribute('fill', '#ffd559'); svg.appendChild(rect);
     if(labels[i]){
       const tx = document.createElementNS(svg.namespaceURI,'text');
-      tx.setAttribute('x', x + (bw-12)/2);
-      tx.setAttribute('y', H - pad + 14);
-      tx.setAttribute('text-anchor', 'middle');
-      tx.setAttribute('font-size', '10');
-      tx.setAttribute('fill', '#86a7c9');
-      tx.textContent = String(labels[i]).length>8 ? String(labels[i]).slice(0,8)+'…' : String(labels[i]);
+      tx.setAttribute('x', x + (bw-12)/2); tx.setAttribute('y', H - pad + 14);
+      tx.setAttribute('text-anchor', 'middle'); tx.setAttribute('font-size', '10'); tx.setAttribute('fill', '#86a7c9');
+      tx.textContent = labels[i].length>8 ? labels[i].slice(0,8)+'…' : labels[i];
       svg.appendChild(tx);
     }
   });
@@ -400,28 +114,20 @@ function renderPieChart(el, map={}){
   host.classList.remove('empty'); host.innerHTML='';
   const entries = Object.entries(map||{}).filter(([,v])=>Number(v)>0);
   if(!entries.length){ host.classList.add('empty'); host.textContent='No data'; return; }
-
-  const W=220, H=220, R=90, CX=W/2, CY=H/2;
+  const W=220,H=220,R=90,CX=W/2,CY=H/2;
   const total = entries.reduce((s,[,v])=>s+Number(v),0);
   let angle = -Math.PI/2;
   const svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
   svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
-
-  entries.forEach(([k,v], idx)=>{
-    const frac = Number(v)/total;
-    const theta = frac * Math.PI*2;
-    const x1 = CX + R*Math.cos(angle);
-    const y1 = CY + R*Math.sin(angle);
-    const x2 = CX + R*Math.cos(angle+theta);
-    const y2 = CY + R*Math.sin(angle+theta);
+  entries.forEach(([k,v])=>{
+    const frac = Number(v)/total, theta = frac*2*Math.PI;
+    const x1=CX+R*Math.cos(angle), y1=CY+R*Math.sin(angle);
+    const x2=CX+R*Math.cos(angle+theta), y2=CY+R*Math.sin(angle+theta);
     const large = theta>Math.PI ? 1 : 0;
     const path = document.createElementNS(svg.namespaceURI,'path');
-    const d = `M ${CX} ${CY} L ${x1} ${y1} A ${R} ${R} 0 ${large} 1 ${x2} ${y2} Z`;
-    path.setAttribute('d', d);
-    path.setAttribute('fill', '#ffd559');
-    path.setAttribute('opacity', 0.55 + 0.35*((idx%7)/6));
-    svg.appendChild(path);
-    angle += theta;
+    path.setAttribute('d', `M ${CX} ${CY} L ${x1} ${y1} A ${R} ${R} 0 ${large} 1 ${x2} ${y2} Z`);
+    path.setAttribute('fill', '#ffd559'); path.setAttribute('opacity', 0.5 + 0.5*Math.random());
+    svg.appendChild(path); angle += theta;
   });
   host.appendChild(svg);
 }
@@ -430,7 +136,6 @@ function renderPieChart(el, map={}){
 function show(route){
   $$('.nav a').forEach(a=>a.classList.toggle('active', a.dataset.route===route));
   $$('[data-page]').forEach(s=>s.style.display = (s.dataset.page===route)?'block':'none');
-
   if(route==='dashboard') initDashboard();
   if(route==='cpa')       initCpa();
   if(route==='users')     initUsers(currentUsersTab);
@@ -439,9 +144,7 @@ function show(route){
   if(route==='monitor')   initMonitor();
   if(route==='settings')  initSettings();
 }
-window.addEventListener('hashchange', ()=>{
-  const r = (location.hash||'#dashboard').replace('#',''); show(r);
-});
+window.addEventListener('hashchange', ()=>{ const r=(location.hash||'#dashboard').replace('#',''); show(r); });
 $('#nav').addEventListener('click', e=>{
   const a = e.target.closest('a'); if(!a) return;
   e.preventDefault(); location.hash = '#'+a.dataset.route;
@@ -452,44 +155,61 @@ async function initDashboard(){
   try{
     const [ov, us] = await Promise.all([ api('overview'), api('users', {status:'APPROVED'}) ]);
 
+    // KPIs
     const t = ov && ov.totals ? ov.totals : (ov||{});
     $('#dash-earn').textContent   = dollars(t.earnings||0);
     $('#dash-clicks').textContent = t.clicks||0;
-
-    const cr = (t.conversionRate!=null) ? Number(t.conversionRate) :
-               (t.leads && t.clicks ? (t.leads/t.clicks*100) : 0);
+    const cr = (t.conversionRate!=null) ? Number(t.conversionRate)
+              : (t.leads && t.clicks ? (t.leads/t.clicks*100) : 0);
     $('#dash-cr').textContent = Number(cr||0).toFixed(2) + '%';
+    $('#dash-users').textContent = arr(us).length;
 
-    const users = arr(us); $('#dash-users').textContent = users.length;
-
-    // Charts
-    const byDay = Array.isArray(ov?.byDay) ? ov.byDay : [];
-    if(byDay.length){
+    // Daily earnings (multi-shape + live fallback)
+    let byDay = [];
+    if (Array.isArray(ov?.byDay)) byDay = ov.byDay;
+    else if (Array.isArray(firstVal(ov, ['days','byday','performance','overviewByDay'], [])))
+      byDay = firstVal(ov, ['days','byday','performance','overviewByDay']);
+    if (byDay.length){
       renderBarChart('#dash-earnings',
-        byDay.map(d=>Number(d.earnings||0)),
-        byDay.map(d=>String(d.t||d.date||'')));
-    }else{
-      const host = $('#dash-earnings'); host.classList.add('empty'); host.textContent='No data';
+        byDay.map(d=>Number(d.earnings||d.revenue||d.value||0)),
+        byDay.map(d=>String(d.t||d.date||d.day||'')));
+    } else {
+      const live = await api('analytics', { live:1, windowSec: 24*3600, limit: 1000 });
+      const evs = arr(live?.live) || arr(live);
+      const buckets = {};
+      evs.forEach(e=>{ const k=(e.time||'').slice(0,13); buckets[k]=(buckets[k]||0)+Number(e.earnings||0); });
+      const keys = Object.keys(buckets).sort().slice(-12);
+      if(keys.length) renderBarChart('#dash-earnings', keys.map(k=>buckets[k]), keys.map(k=>k.slice(5)));
+      else { const host=$('#dash-earnings'); host.classList.add('empty'); host.textContent='No data'; }
     }
 
-    const offers = ov?.offerTypes || {};
-    renderPieChart('#dash-sources', offers);
+    // Traffic sources (offerTypes/… OR live)
+    let sources = firstVal(ov, ['offerTypes','sources','trafficSources','channels','offersByType'], {});
+    if (!sources || !Object.keys(sources).length) sources = await liveSourcesSnapshot(60);
+    renderPieChart('#dash-sources', sources);
 
-    // By Geo (Clicks/Leads optional)
+    // By Geo (earnings from overview; clicks/leads from detail or live)
     const tb = $('#tbl-dash-geo'); tb.innerHTML='';
-    const geoMap = ov && ov.geo ? ov.geo : {};
-    const rows = Object.keys(geoMap).map(k=>({country:k, earnings:geoMap[k]}))
-                  .sort((a,b)=>b.earnings-a.earnings).slice(0,10);
+    const geoEarnings = firstVal(ov, ['geo','geoEarnings','earningsByGeo'], {});
+    let rows = Object.keys(geoEarnings).map(k=>({country:k, earnings:Number(geoEarnings[k])}))
+                 .sort((a,b)=>b.earnings-a.earnings).slice(0,10);
+    const geoDetail = Array.isArray(ov?.byGeo) ? ov.byGeo
+                     : Array.isArray(ov?.geoDetail) ? ov.geoDetail : [];
     if(!rows.length){
-      tb.innerHTML='<tr><td colspan="4" class="muted">No data</td></tr>';
-    }else{
-      const geoDetail = Array.isArray(ov?.byGeo) ? ov.byGeo : [];
+      const liveGeo = await liveGeoSnapshot(60);
+      rows = Object.values(liveGeo).sort((a,b)=>b.earnings-a.earnings).slice(0,10)
+             .map(g=>({country:g.country, earnings:g.earnings, _clicks:g.clicks, _leads:g.leads}));
+    }
+    if(!rows.length){ tb.innerHTML='<tr><td colspan="4" class="muted">No data</td></tr>'; }
+    else{
+      let liveIndex = {};
+      if (!geoDetail.length || geoDetail.every(x=>!x.clicks && !x.leads)) liveIndex = await liveGeoSnapshot(60);
       rows.forEach(g=>{
         const match = geoDetail.find(x=>String(x.country).toUpperCase()===String(g.country).toUpperCase());
-        const clicks = match ? Number(match.clicks||0) : 0;
-        const leads  = match ? Number(match.leads||0)  : 0;
+        const clicks = match ? Number(match.clicks||0) : (liveIndex[g.country]?.clicks||g._clicks||0);
+        const leads  = match ? Number(match.leads||0)  : (liveIndex[g.country]?.leads ||g._leads ||0);
         const tr=document.createElement('tr');
-        tr.innerHTML=`<td>${g.country}</td><td>${clicks}</td><td>${leads}</td><td class="money">${dollars(g.earnings)}</td>`;
+        tr.innerHTML=`<td>${g.country}</td><td>${clicks}</td><td>${leads}</td><td class="money">${dollars(g.earnings||0)}</td>`;
         tb.appendChild(tr);
       });
     }
@@ -500,18 +220,15 @@ async function initDashboard(){
 async function initCpa(){
   const wrap = $('#cpa-grid'); wrap.innerHTML='';
   try{
-    const resp = await api('cpa'); // array or {items:[...]}
+    const resp = await api('cpa');
     const items = arr(resp);
     if(!items.length){ wrap.innerHTML = `<div class="card pad empty">No CPA accounts yet.</div>`; return; }
-
     items.forEach(r=>{
       let convPct = 0;
-      const cr1 = r.conversionrate, cr2 = r.conversionRate;
-      const v = (cr1!=null) ? Number(cr1) : (cr2!=null ? Number(cr2) : 0);
+      const v = (r.conversionrate!=null)? Number(r.conversionrate)
+              : (r.conversionRate!=null)? Number(r.conversionRate) : 0;
       convPct = v>1 ? v : v*100;
-
-      const card = document.createElement('div');
-      card.className='card pad';
+      const card = document.createElement('div'); card.className='card pad';
       card.innerHTML = `
         <div class="acct">
           <div>
@@ -523,22 +240,21 @@ async function initCpa(){
               <div class="kv"><b>Active Offers</b><span>${r.activeoffers||r.activeOffers||0}</span></div>
               <div class="kv"><b>Revenue</b><span class="money">${dollars(r.revenue||0)}</span></div>
               <div class="kv"><b>Clicks</b><span>${r.clicks||0}</span></div>
-              <div class="kv"><b>Conversion</b><span>${Number(convPct||0).toFixed(2)}%</span></div>
+              <div class="kv"><b>Conversion</b><span>${convPct.toFixed(2)}%</span></div>
             </div>
           </div>
           <div class="right flex">
             <span class="pill mono">${r.domain||'no-domain'}</span>
-            <button class="btn secondary" data-view="${r.account||r.accountid||''}">View Details</button>
+            <button class="btn secondary">View Details</button>
           </div>
         </div>`;
       wrap.appendChild(card);
     });
   }catch(e){
-    console.error('initCpa error', e);
+    console.error(e);
     wrap.innerHTML = `<div class="card pad empty">Failed to load accounts.</div>`;
   }
 }
-
 /* Add New Account modal wiring */
 const mdl = document.getElementById('mdl-cpa');
 const openMdl  = ()=> mdl.classList.add('open');
@@ -555,18 +271,13 @@ document.getElementById('btn-save-acct')?.addEventListener('click', async ()=>{
     apiKey  : document.getElementById('f-key').value.trim(),
     webhook : document.getElementById('f-webhook').value.trim()
   };
-  if(!v.account || !v.network){
-    err.textContent = 'Account Name and Network are required.'; err.style.display='block'; return;
-  }
+  if(!v.account || !v.network){ err.textContent='Account Name and Network are required.'; err.style.display='block'; return; }
   err.style.display='none';
   try{
-    const res = await apiWrite('cpaCreate', v); // expect {ok:true}
+    const res = await apiWrite('cpaCreate', v);
     if(!res || res.ok!==true) throw new Error('Create failed');
-    closeMdl();
-    await initCpa();
-  }catch(e){
-    err.textContent = 'Could not save account. Please try again.'; err.style.display='block';
-  }
+    closeMdl(); await initCpa();
+  }catch{ err.textContent='Could not save account. Please try again.'; err.style.display='block'; }
 });
 
 /* ========= USERS ========= */
@@ -574,55 +285,61 @@ let currentUsersTab = 'APPROVED';
 const userTabBtns = $$('[data-users-tab]');
 userTabBtns.forEach(b=>b.addEventListener('click',()=>{
   userTabBtns.forEach(x=>x.classList.toggle('active', x===b));
-  currentUsersTab = b.dataset.usersTab;
-  initUsers(currentUsersTab);
+  currentUsersTab = b.dataset.usersTab; initUsers(currentUsersTab);
 }));
 async function initUsers(tab='APPROVED'){
   const tb = $('#tbl-users'); tb.innerHTML = '';
   try{
     const resp = await api('users', {status: tab});
-    let list = arr(resp?.items || resp);
-
-    // If backend ignores status, filter strictly here:
-    if (list.length && list.some(u => (u.status && String(u.status).toUpperCase()!==tab.toUpperCase()))) {
-      list = list.filter(u => String(u.status||'APPROVED').toUpperCase()===tab.toUpperCase());
+    let filtered = arr(resp?.items || resp);
+    if (!filtered.length) {
+      const ALL = arr(resp?.items || resp);
+      filtered = ALL.filter(u => String(u.status||'APPROVED').toUpperCase()===tab.toUpperCase());
     }
-
-    if(!list.length){ tb.innerHTML = `<tr><td colspan="4" class="muted">No ${tab.toLowerCase()} users.</td></tr>`; return; }
-    list.forEach(u=>{
+    if(!filtered.length){ tb.innerHTML = `<tr><td colspan="4" class="muted">No ${tab.toLowerCase()} users.</td></tr>`; return; }
+    filtered.forEach(u=>{
       const tr = document.createElement('tr');
       tr.innerHTML = `<td>${u.name||'—'}</td><td>${u.email||''}</td><td>${u.phone||''}</td><td>${u.authority||'1x User'}</td>`;
       tb.appendChild(tr);
     });
-  }catch(e){
-    tb.innerHTML = `<tr><td colspan="4" class="muted">Failed to load users.</td></tr>`;
-  }
+  }catch{ tb.innerHTML = `<tr><td colspan="4" class="muted">Failed to load users.</td></tr>`; }
 }
 
 /* ========= ANALYTICS (base + live) ========= */
 let liveTimer=null, liveRows=[];
 async function initAnalytics(){
   try{
-    const base = await api('analytics'); // flexible shapes supported
+    const base = await api('analytics');
+    let series=[], labels=[];
     const items = arr(base) || arr(base?.items);
-
+    const byDay = Array.isArray(base?.byDay) ? base.byDay
+                 : Array.isArray(base?.overviewByDay) ? base.overviewByDay : [];
     if(items.length){
-      renderBarChart('#ana-overview',
-        items.map(r=>Number(r.earnings||0)),
-        items.map(r=>String(r.date||r.t||'')));
-    }else if (Array.isArray(base?.byDay) && base.byDay.length){
-      renderBarChart('#ana-overview',
-        base.byDay.map(d=>Number(d.earnings||0)),
-        base.byDay.map(d=>String(d.t||d.date||'')));
+      series = items.map(r=>Number(r.earnings||r.revenue||0));
+      labels = items.map(r=>String(r.date||r.t||''));
+    }else if(byDay.length){
+      series = byDay.map(d=>Number(d.earnings||d.revenue||0));
+      labels = byDay.map(d=>String(d.date||d.t||''));
     }else{
-      const host = $('#ana-overview'); host.classList.add('empty'); host.textContent='No data';
+      const live = await api('analytics', { live:1, windowSec: 24*3600, limit: 1000 });
+      const evs = arr(live?.live) || arr(live);
+      const buckets = {};
+      evs.forEach(e=>{ const k=(e.time||'').slice(0,13); buckets[k]=(buckets[k]||0)+Number(e.earnings||0); });
+      const keys = Object.keys(buckets).sort().slice(-12);
+      series = keys.map(k=>buckets[k]); labels = keys.map(k=>k.slice(5));
     }
+    if(series.length) renderBarChart('#ana-overview', series, labels);
+    else { const host=$('#ana-overview'); host.classList.add('empty'); host.textContent='No data'; }
 
-    const geoMap = base?.geo || {};
+    let geoMap = firstVal(base, ['geo','geoEarnings','earningsByGeo'], {});
+    if(!geoMap || !Object.keys(geoMap).length){
+      const liveGeo = await liveGeoSnapshot(60);
+      geoMap = Object.fromEntries(Object.values(liveGeo).map(g=>[g.country,g.earnings]));
+    }
     renderPieChart('#ana-geo-dist', geoMap);
-  }catch(e){
-    const a1 = $('#ana-overview'); a1.classList.add('empty'); a1.textContent='Failed to load';
-    const a2 = $('#ana-geo-dist'); a2.classList.add('empty'); a2.textContent='Failed to load';
+  }catch{
+    const a1=$('#ana-overview'); a1.classList.add('empty'); a1.textContent='Failed to load';
+    const a2=$('#ana-geo-dist'); a2.classList.add('empty'); a2.textContent='Failed to load';
   }
 
   if(liveTimer) clearInterval(liveTimer);
@@ -637,7 +354,6 @@ async function pullLive(){
     if(!events.length) return;
 
     liveRows = liveRows.concat(events).slice(-24);
-
     const tb = $('#tbl-live-perf'); tb.innerHTML='';
     liveRows.slice().reverse().forEach(r=>{
       const tr=document.createElement('tr');
@@ -663,7 +379,7 @@ async function pullLive(){
       tr.innerHTML = `<td>${g.country}</td><td>${g.clicks}</td><td>${g.conv}</td><td class="money">${dollars(g.earnings)}</td>`;
       tb2.appendChild(tr);
     });
-  }catch(e){ /* silent */ }
+  }catch{}
 }
 
 /* ========= WALLET ========= */
@@ -672,7 +388,6 @@ async function initWallet(){
     const w = obj(await api('wallet'));
     const hist = arr(w.history) || arr(w);
     $('#wal-balance').textContent = dollars(w.balance||0);
-
     const pendingAmt = hist.filter(t=>String(t.status||'').toUpperCase()==='PENDING')
                            .reduce((s,t)=>s+Number(t.amount||0),0);
     $('#wal-pending').textContent = dollars(pendingAmt);
@@ -686,7 +401,7 @@ async function initWallet(){
       tb.appendChild(tr);
     });
     if(!tb.children.length) tb.innerHTML = `<tr><td colspan="4" class="muted">No transactions.</td></tr>`;
-  }catch(e){
+  }catch{
     const tb = $('#tbl-wallet'); if(tb) tb.innerHTML = `<tr><td colspan="4" class="muted">Failed to load.</td></tr>`;
   }
 }
@@ -695,24 +410,18 @@ async function initWallet(){
 async function initMonitor(){
   const tb = $('#tbl-monitor'); tb.innerHTML='';
   try{
-    const m = obj(await api('monitoring')); // {events:[{time,type,msg}], health, maintenance}
+    const m = obj(await api('monitoring'));
     const events = arr(m.events) || arr(m);
     $('#box-alerts').textContent = events.length;
     $('#box-maint').textContent  = m.maintenance || '—';
     $('#box-health').textContent = m.health || 'OK';
-
-    if(!events.length){
-      tb.innerHTML = `<tr><td colspan="3" class="muted">No events.</td></tr>`;
-      return;
-    }
+    if(!events.length){ tb.innerHTML = `<tr><td colspan="3" class="muted">No events.</td></tr>`; return; }
     events.forEach(ev=>{
       const tr=document.createElement('tr');
       tr.innerHTML=`<td class="mono">${ev.time||''}</td><td>${ev.type||''}</td><td>${ev.msg||ev.message||''}</td>`;
       tb.appendChild(tr);
     });
-  }catch(e){
-    tb.innerHTML = `<tr><td colspan="3" class="muted">Failed to load.</td></tr>`;
-  }
+  }catch{ tb.innerHTML = `<tr><td colspan="3" class="muted">Failed to load.</td></tr>`; }
 }
 
 /* ========= SETTINGS ========= */
@@ -720,9 +429,7 @@ async function initSettings(){
   try{
     const j = await api('config');
     $('#pretty').textContent = JSON.stringify(j, null, 2);
-  }catch(e){
-    $('#pretty').textContent = 'Failed to load config';
-  }
+  }catch{ $('#pretty').textContent = 'Failed to load config'; }
 }
 
 /* ========= BOOT ========= */
@@ -731,5 +438,3 @@ window.addEventListener('DOMContentLoaded', ()=>{
   show(r);
 });
 </script>
-</body>
-</html>

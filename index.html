@@ -95,25 +95,32 @@
 
   .empty{padding:18px; text-align:center; color:var(--muted)}
 
-  /* Modal */
+  /* Modal & drawer */
   .modal{position:fixed; inset:0; display:none; align-items:center; justify-content:center; z-index:50}
   .modal.open{display:flex}
   .modal .scrim{position:absolute; inset:0; background:rgba(6,16,26,.6); backdrop-filter: blur(2px)}
   .modal .panel{
-    position:relative; width:min(680px,92vw); background:var(--card);
+    position:relative; width:min(720px,92vw); background:var(--card);
     border:1px solid var(--line); border-radius:16px; box-shadow:var(--shadow); padding:18px;
   }
+  .drawer{position:fixed; inset:0 0 0 auto; width:min(480px,92vw); background:var(--card); border-left:1px solid var(--line); display:none; z-index:60}
+  .drawer.open{display:block}
+  .drawer .head{padding:14px 16px; border-bottom:1px solid var(--line); font-weight:700}
+  .drawer .body{padding:14px 16px}
+
   .form-grid{display:grid; grid-template-columns:1fr 1fr; gap:12px}
   .form-grid .full{grid-column:1 / -1}
   .input{display:flex; flex-direction:column; gap:6px}
   .input label{font-size:12px; color:var(--muted)}
-  .input input,.input select{
+  .input input,.input select,.input textarea{
     background:#0e2236; color:var(--text); border:1px solid #24445e; border-radius:10px; padding:10px 12px; outline:none;
   }
-  .input input:focus,.input select:focus{border-color:#3a85ff}
+  .input textarea{min-height:80px; resize:vertical}
+  .input input:focus,.input select:focus,.input textarea:focus{border-color:#3a85ff}
   .modal .footer{display:flex; gap:10px; justify-content:flex-end; margin-top:14px}
   .bad{color:var(--bad); font-size:12px}
-  /* chart svg */
+  .toast{position:fixed; right:16px; bottom:16px; background:#0e2236; border:1px solid #24445e; padding:10px 12px; border-radius:10px; display:none; z-index:80}
+  .toast.show{display:block}
   .chart svg{width:100%; height:220px; display:block}
 </style>
 </head>
@@ -210,6 +217,7 @@
           <button class="btn secondary active" data-users-tab="APPROVED">Approved</button>
           <button class="btn secondary" data-users-tab="PENDING">Pending</button>
           <button class="btn secondary" data-users-tab="REJECTED">Rejected</button>
+          <button class="btn" id="btn-invite">+ Invite User</button>
         </div>
       </div>
       <div class="card pad">
@@ -219,6 +227,33 @@
         </table>
       </div>
     </section>
+
+    <!-- INVITE MODAL -->
+    <div id="mdl-invite" class="modal" aria-hidden="true">
+      <div class="scrim" data-close></div>
+      <div class="panel">
+        <h3 style="margin:0 0 12px">Create Invite Link</h3>
+        <div class="form-grid">
+          <div class="input"><label>Full name</label><input id="inv-name" placeholder="Jane Doe"/></div>
+          <div class="input"><label>Email</label><input id="inv-email" placeholder="jane@example.com"/></div>
+          <div class="input"><label>Authority</label>
+            <select id="inv-role">
+              <option>1x User</option>
+              <option>2x Manager</option>
+              <option>3x Admin</option>
+            </select>
+          </div>
+          <div class="input full"><label>Generated Link</label><input id="inv-url" readonly></div>
+          <div class="input full"><label>Message (optional)</label><textarea id="inv-msg" placeholder="Welcome to THE EMPIRE…"></textarea></div>
+        </div>
+        <div class="footer">
+          <button class="btn secondary" data-close>Close</button>
+          <button class="btn secondary" id="btn-copy-invite">Copy Link</button>
+          <button class="btn" id="btn-save-invite">Save Invite</button>
+        </div>
+        <div class="sub muted" id="inv-hint" style="margin-top:8px"></div>
+      </div>
+    </div>
 
     <!-- ANALYTICS -->
     <section data-page="analytics" style="display:none">
@@ -254,7 +289,10 @@
 
     <!-- WALLET -->
     <section data-page="wallet" style="display:none">
-      <div class="section-head"><h2>Wallet</h2></div>
+      <div class="section-head">
+        <h2>Wallet</h2>
+        <button class="btn" id="btn-withdraw">Request Withdrawal</button>
+      </div>
       <div class="grid cols-3">
         <div class="card pad kpi"><div class="label">Balance</div><div class="value" id="wal-balance">$0.00</div></div>
         <div class="card pad kpi"><div class="label">Pending Payout</div><div class="value" id="wal-pending">$0.00</div></div>
@@ -270,14 +308,57 @@
         </div>
         <div class="card pad">
           <h3 style="margin:0 0 10px">Request Withdrawal</h3>
-          <div class="muted" style="font-size:13px">Hook this to your GAS write endpoint.</div>
+          <div class="muted" style="font-size:13px">Use the button above to submit a payout request.</div>
         </div>
       </div>
     </section>
 
+    <!-- WITHDRAWAL MODAL -->
+    <div id="mdl-withdraw" class="modal" aria-hidden="true">
+      <div class="scrim" data-close></div>
+      <div class="panel">
+        <h3 style="margin:0 0 12px">Submit Withdrawal Request</h3>
+        <div class="form-grid">
+          <div class="input"><label>Amount (USD)</label><input id="wd-amount" type="number" min="1" step="0.01" placeholder="100.00"/></div>
+          <div class="input"><label>Method</label>
+            <select id="wd-method">
+              <option value="Bank">Bank</option>
+              <option value="Payoneer">Payoneer</option>
+              <option value="Crypto">Crypto (USDT)</option>
+            </select>
+          </div>
+
+          <!-- bank -->
+          <div class="input full m-bank"><label>Bank Name</label><input id="wd-bank-name" placeholder="Chase Bank"/></div>
+          <div class="input m-bank"><label>Account Name</label><input id="wd-bank-accname" placeholder="John Doe"/></div>
+          <div class="input m-bank"><label>Account Number / IBAN</label><input id="wd-bank-accno" placeholder="123456789 / IBAN"/></div>
+          <div class="input m-bank"><label>SWIFT/BIC</label><input id="wd-bank-swift" placeholder="CHASUS33"/></div>
+          <div class="input m-bank"><label>Country</label><input id="wd-bank-country" placeholder="USA"/></div>
+
+          <!-- payoneer -->
+          <div class="input full m-payoneer" style="display:none"><label>Payoneer Email</label><input id="wd-payo-email" placeholder="you@domain.com"/></div>
+
+          <!-- crypto -->
+          <div class="input full m-crypto" style="display:none"><label>USDT (TRC20) Address</label><input id="wd-crypto-addr" placeholder="T..."/></div>
+          <div class="input m-crypto" style="display:none"><label>Network</label>
+            <select id="wd-crypto-net"><option>TRC20</option><option>ERC20</option><option>BEP20</option></select>
+          </div>
+        </div>
+        <div id="wd-error" class="bad" style="display:none"></div>
+        <div class="footer">
+          <button class="btn secondary" data-close>Cancel</button>
+          <button class="btn" id="btn-submit-wd">Submit Request</button>
+        </div>
+        <div class="sub muted" style="margin-top:8px">Server endpoint: <b>walletRequest</b> (GAS) will persist this request.</div>
+      </div>
+    </div>
+
     <!-- MONITORING -->
     <section data-page="monitor" style="display:none">
-      <div class="section-head"><h2>Monitoring</h2></div>
+      <div class="section-head">
+        <h2>Monitoring</h2>
+        <button class="btn secondary" id="btn-open-ev">Open Details</button>
+      </div>
       <div class="grid cols-3">
         <div class="card pad kpi"><div class="label">Alerts</div><div class="value" id="box-alerts">—</div></div>
         <div class="card pad kpi"><div class="label">Maintenance</div><div class="value" id="box-maint">—</div></div>
@@ -292,16 +373,35 @@
       </div>
     </section>
 
+    <!-- MONITOR DETAILS DRAWER -->
+    <aside id="drawer-ev" class="drawer">
+      <div class="head">Monitoring Details</div>
+      <div class="body">
+        <div class="input"><label>Summary (last 24h)</label>
+          <div id="ev-summary" class="kv">Loading…</div>
+        </div>
+        <div style="height:10px"></div>
+        <div class="input"><label>Raw JSON</label>
+          <textarea id="ev-json" class="mono" readonly rows="12">{}</textarea>
+        </div>
+      </div>
+    </aside>
+
     <!-- SETTINGS -->
     <section data-page="settings" style="display:none">
-      <div class="section-head"><h2>Settings</h2></div>
+      <div class="section-head">
+        <h2>Settings</h2>
+        <button class="btn" id="btn-save-config">Save</button>
+      </div>
       <div class="card pad">
         <h3 style="margin:0 0 10px">Live Config</h3>
-        <code id="pretty" class="pretty mono">{ … }</code>
+        <textarea id="cfg-editor" class="mono" style="width:100%;min-height:260px;background:#0e2236;border:1px solid var(--line);border-radius:10px;color:var(--text);padding:12px">{} </textarea>
       </div>
     </section>
   </main>
 </div>
+
+<div id="toast" class="toast">Saved.</div>
 
 <!-- ========= FRONTEND SCRIPT ========= -->
 <script>
@@ -366,7 +466,7 @@ async function apiWrite(action, payload={}){
   }
 }
 
-/* normalizers */
+/* util */
 const arr = (m)=> Array.isArray(m) ? m : (m&&Array.isArray(m.items)?m.items:(m&&Array.isArray(m.rows)?m.rows:(m&&Array.isArray(m.data)?m.data:[])));
 const obj = (m)=> (m && typeof m==='object')? m : {};
 const normDomain = d=> String(d||'').trim().replace(/^https?:\/\//,'').replace(/\/.*$/,'');
@@ -481,54 +581,40 @@ $('#nav')?.addEventListener('click', e=>{
 async function initDashboard(){
   try{
     const [ov, us] = await Promise.all([ api('overview'), api('users', {status:'APPROVED'}) ]);
-
-    // KPIs
     const t = ov && ov.totals ? ov.totals : (ov||{});
     $('#dash-earn').textContent   = dollars(t.earnings||0);
     $('#dash-clicks').textContent = t.clicks||0;
     const cr = (t.conversionRate!=null) ? Number(t.conversionRate) :
                (t.leads && t.clicks ? (t.leads/t.clicks*100) : 0);
     $('#dash-cr').textContent = Number(cr||0).toFixed(2) + '%';
+    $('#dash-users').textContent = arr(us).length;
 
-    const users = arr(us); $('#dash-users').textContent = users.length;
-
-    // Charts (robust)
-    const byDay = Array.isArray(ov?.byDay) ? ov.byDay : (Array.isArray(ov?.items) ? ov.items : []);
+    // Charts
+    const byDay = Array.isArray(ov?.byDay) ? ov.byDay : [];
     if(byDay.length){
-      renderBarChart('#dash-earnings',
-        byDay.map(d=>Number(d.earnings||0)),
-        byDay.map(d=>String(d.date||d.t||'')));
+      renderBarChart('#dash-earnings', byDay.map(d=>Number(d.earnings||0)), byDay.map(d=>String(d.date||d.t||'')));
     }else{
       const host = $('#dash-earnings'); host.classList.add('empty'); host.textContent='No data';
     }
-
-    renderPieChart('#dash-sources', ov?.offerTypes || ov?.offers || {});
-
-    // By Geo table
+    renderPieChart('#dash-sources', ov?.offerTypes || {});
+    // By Geo
     const tb = $('#tbl-dash-geo'); tb.innerHTML='';
-    const geoMap = ov && ov.geo ? ov.geo : {};
+    const geoMap = ov?.geo || {};
     const rows = Object.keys(geoMap).map(k=>({country:k, earnings:geoMap[k]}))
                   .sort((a,b)=>b.earnings-a.earnings).slice(0,10);
-
     const byGeo = Array.isArray(ov?.byGeo) ? ov.byGeo : [];
-    const hasCL = byGeo.some(x => (x && (x.clicks||x.leads)));
-
+    const hasCL = byGeo.some(x=>(x&&(x.clicks||x.leads)));
     const thead = tb.closest('table').querySelector('thead');
     thead.innerHTML = hasCL
       ? '<tr><th>Country</th><th>Clicks</th><th>Leads</th><th>Earnings ($)</th></tr>'
       : '<tr><th>Country</th><th>Earnings ($)</th></tr>';
-
     if(!rows.length){ tb.innerHTML='<tr><td colspan="'+(hasCL?4:2)+'" class="muted">No data</td></tr>'; }
     rows.forEach(g=>{
       if(hasCL){
         const m = byGeo.find(x=>x.country===g.country) || {};
-        const tr=document.createElement('tr');
-        tr.innerHTML=`<td>${g.country}</td><td>${m.clicks||0}</td><td>${m.leads||0}</td><td class="money">${dollars(g.earnings)}</td>`;
-        tb.appendChild(tr);
+        tb.insertAdjacentHTML('beforeend', `<tr><td>${g.country}</td><td>${m.clicks||0}</td><td>${m.leads||0}</td><td class="money">${dollars(g.earnings)}</td></tr>`);
       }else{
-        const tr=document.createElement('tr');
-        tr.innerHTML=`<td>${g.country}</td><td class="money">${dollars(g.earnings)}</td>`;
-        tb.appendChild(tr);
+        tb.insertAdjacentHTML('beforeend', `<tr><td>${g.country}</td><td class="money">${dollars(g.earnings)}</td></tr>`);
       }
     });
   }catch(e){ console.error(e); }
@@ -538,10 +624,9 @@ async function initDashboard(){
 async function initCpa(){
   const wrap = $('#cpa-grid'); wrap.innerHTML='';
   try{
-    const resp = await api('cpa'); // accepts either array or {items:[...]}
+    const resp = await api('cpa');
     const items = arr(resp);
     if(!items.length){ wrap.innerHTML = `<div class="card pad empty">No CPA accounts yet.</div>`; return; }
-
     items.forEach(r=>{
       let convPct = 0;
       if (r.conversionrate != null) {
@@ -601,7 +686,7 @@ document.getElementById('btn-save-acct')?.addEventListener('click', async ()=>{
   }
   err.style.display='none';
   try{
-    const res = await apiWrite('cpaCreate', v); // expect {ok:true}
+    const res = await apiWrite('cpaCreate', v);
     if(!res || res.ok!==true) throw new Error('Create failed');
     closeMdl();
     await initCpa();
@@ -622,12 +707,10 @@ async function initUsers(tab='APPROVED'){
   try{
     const resp = await api('users', {status: tab});
     let filtered = arr(resp?.items || resp);
-
     if (!filtered.length) {
       const ALL = arr(resp?.items || resp);
       filtered = ALL.filter(u => String(u.status||'APPROVED').toUpperCase()===tab.toUpperCase());
     }
-
     if(!filtered.length){ tb.innerHTML = `<tr><td colspan="4" class="muted">No ${tab.toLowerCase()} users.</td></tr>`; return; }
     filtered.forEach(u=>{
       const tr = document.createElement('tr');
@@ -638,31 +721,64 @@ async function initUsers(tab='APPROVED'){
     tb.innerHTML = `<tr><td colspan="4" class="muted">Failed to load users.</td></tr>`;
   }
 }
+/* Invite modal */
+const mdlInv = document.getElementById('mdl-invite');
+document.getElementById('btn-invite')?.addEventListener('click', ()=>{
+  const token = Math.random().toString(36).slice(2)+Math.random().toString(36).slice(2);
+  const url = location.origin.replace(/\/+$/,'') + '/join?token=' + token;
+  $('#inv-url').value = url;
+  $('#inv-hint').textContent = 'Token generated. Save to backend to track this invite.';
+  mdlInv.classList.add('open');
+});
+mdlInv.addEventListener('click', e=>{ if(e.target.hasAttribute('data-close')) mdlInv.classList.remove('open'); });
+document.getElementById('btn-copy-invite')?.addEventListener('click', ()=>{
+  $('#inv-url').select(); document.execCommand('copy');
+  toast('Link copied.');
+});
+document.getElementById('btn-save-invite')?.addEventListener('click', async ()=>{
+  const payload = {
+    name:  $('#inv-name').value.trim(),
+    email: $('#inv-email').value.trim(),
+    role:  $('#inv-role').value,
+    url:   $('#inv-url').value,
+    msg:   $('#inv-msg').value.trim(),
+    token: $('#inv-url').value.split('token=')[1]||'',
+  };
+  try{
+    const r = await apiWrite('inviteCreate', payload);
+    if(!r || r.ok!==true) throw 0;
+    toast('Invite saved.');
+  }catch(_){
+    toast('Invite not saved server-side (no endpoint).');
+  }
+});
 
-/* ========= ANALYTICS (base + live) ========= */
+/* ========= ANALYTICS (base + live + overview fallbacks) ========= */
 let liveTimer=null, liveRows=[];
 async function initAnalytics(){
+  let base = null, ov = null;
   try{
-    const base = await api('analytics'); // expected: {overview, geo, items} or array
-    const items = arr(base) || arr(base?.items);
+    [base, ov] = await Promise.all([ api('analytics'), api('overview') ]);
+  }catch(_){}
 
-    if(items.length){
-      const series = items.map(r=>Number(r.earnings||0));
-      const labels = items.map(r=>String(r.date||r.t||''));
-      renderBarChart('#ana-overview', series, labels);
-    }else if (Array.isArray(base?.byDay) && base.byDay.length){
-      renderBarChart('#ana-overview', base.byDay.map(d=>Number(d.earnings||0)), base.byDay.map(d=>String(d.t||d.date||'')));
-    }else{
-      const host = $('#ana-overview'); host.classList.add('empty'); host.textContent='No data';
-    }
+  // Daily earnings series (prefer analytics.byDay → items → overview.byDay)
+  let byDay = [];
+  if (Array.isArray(base?.byDay) && base.byDay.length) byDay = base.byDay;
+  else if (Array.isArray(base)) byDay = base.map(r=>({date:String(r.date||r.t||''), earnings:Number(r.earnings||0)}));
+  else if (Array.isArray(base?.items)) byDay = base.items.map(r=>({date:String(r.date||r.t||''), earnings:Number(r.earnings||0)}));
+  else if (Array.isArray(ov?.byDay)) byDay = ov.byDay;
 
-    const geoMap = base?.geo || {};
-    renderPieChart('#ana-geo-dist', geoMap);
-  }catch(e){
-    const a1 = $('#ana-overview'); a1.classList.add('empty'); a1.textContent='Failed to load';
-    const a2 = $('#ana-geo-dist'); a2.classList.add('empty'); a2.textContent='Failed to load';
+  if(byDay.length){
+    renderBarChart('#ana-overview', byDay.map(d=>Number(d.earnings||0)), byDay.map(d=>String(d.date||d.t||'')));
+  }else{
+    const host = $('#ana-overview'); host.classList.add('empty'); host.textContent='No data';
   }
 
+  // Geo distribution (prefer analytics.geo → overview.geo)
+  const geoMap = obj(base?.geo) && Object.keys(base.geo).length ? base.geo : (ov?.geo || {});
+  renderPieChart('#ana-geo-dist', geoMap);
+
+  // live
   if(liveTimer) clearInterval(liveTimer);
   liveRows = [];
   liveTimer = setInterval(pullLive, POLL_FAST);
@@ -674,10 +790,8 @@ async function pullLive(){
     const events = arr(j?.live) || arr(j);
     if(!events.length) return;
 
-    // keep last 24 rows
     liveRows = liveRows.concat(events).slice(-24);
 
-    // table
     const tb = $('#tbl-live-perf'); tb.innerHTML='';
     liveRows.slice().reverse().forEach(r=>{
       const tr=document.createElement('tr');
@@ -687,7 +801,6 @@ async function pullLive(){
       tb.appendChild(tr);
     });
 
-    // live by geo (rebuild fresh from current batch to avoid inflation)
     const byGeo = {};
     events.forEach(ev=>{
       const k = ev.country || 'Unknown';
@@ -737,12 +850,54 @@ async function initWallet(){
     const tb = $('#tbl-wallet'); if(tb) tb.innerHTML = `<tr><td colspan="4" class="muted">Failed to load.</td></tr>`;
   }
 }
+/* Withdraw modal */
+const mdlWd = document.getElementById('mdl-withdraw');
+document.getElementById('btn-withdraw')?.addEventListener('click', ()=>{ mdlWd.classList.add('open'); });
+mdlWd.addEventListener('click', e=>{ if(e.target.hasAttribute('data-close')) mdlWd.classList.remove('open'); });
+$('#wd-method')?.addEventListener('change', e=>{
+  const m = e.target.value;
+  $$('.m-bank').forEach(x=>x.style.display = (m==='Bank')?'block':'none');
+  $$('.m-payoneer').forEach(x=>x.style.display = (m==='Payoneer')?'block':'none');
+  $$('.m-crypto').forEach(x=>x.style.display = (m==='Crypto')?'block':'none');
+});
+document.getElementById('btn-submit-wd')?.addEventListener('click', async ()=>{
+  const amt = Number($('#wd-amount').value||0);
+  const method = $('#wd-method').value;
+  const err = $('#wd-error');
+  if(!amt || amt<=0){ err.textContent='Enter a valid amount.'; err.style.display='block'; return; }
+  err.style.display='none';
+
+  const payload = { amount:amt, method, status:'PENDING' };
+  if(method==='Bank'){
+    Object.assign(payload,{
+      bankName: $('#wd-bank-name').value.trim(),
+      accountName: $('#wd-bank-accname').value.trim(),
+      accountNumber: $('#wd-bank-accno').value.trim(),
+      swift: $('#wd-bank-swift').value.trim(),
+      country: $('#wd-bank-country').value.trim()
+    });
+  }else if(method==='Payoneer'){
+    payload.payoneerEmail = $('#wd-payo-email').value.trim();
+  }else if(method==='Crypto'){
+    payload.cryptoAddress = $('#wd-crypto-addr').value.trim();
+    payload.network = $('#wd-crypto-net').value;
+  }
+  try{
+    const r = await apiWrite('walletRequest', payload);
+    if(!r || r.ok!==true) throw 0;
+    toast('Withdrawal submitted.');
+    mdlWd.classList.remove('open');
+    initWallet();
+  }catch(_){
+    toast('Request not saved server-side (no endpoint).');
+  }
+});
 
 /* ========= MONITORING ========= */
 async function initMonitor(){
   const tb = $('#tbl-monitor'); tb.innerHTML='';
   try{
-    const m = obj(await api('monitoring')); // expect {events:[...], health, maintenance}
+    const m = obj(await api('monitoring'));
     const events = arr(m.events) || arr(m);
     $('#box-alerts').textContent = events.length;
     $('#box-maint').textContent  = m.maintenance || '—';
@@ -757,26 +912,49 @@ async function initMonitor(){
       tr.innerHTML=`<td class="mono">${ev.time||''}</td><td>${ev.type||''}</td><td>${ev.msg||ev.message||''}</td>`;
       tb.appendChild(tr);
     });
+
+    // details drawer content
+    $('#ev-summary').innerHTML =
+      `<div class="kv"><b>Total events</b><span>${events.length}</span></div>`;
+    $('#ev-json').value = JSON.stringify({health:m.health,maintenance:m.maintenance,events}, null, 2);
   }catch(e){
     tb.innerHTML = `<tr><td colspan="3" class="muted">Failed to load.</td></tr>`;
   }
 }
+document.getElementById('btn-open-ev')?.addEventListener('click', ()=>{ document.getElementById('drawer-ev').classList.add('open'); });
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') document.getElementById('drawer-ev').classList.remove('open'); });
 
 /* ========= SETTINGS ========= */
 async function initSettings(){
   try{
     const j = await api('config');
-    $('#pretty').textContent = JSON.stringify(j, null, 2);
+    $('#cfg-editor').value = JSON.stringify(j||{}, null, 2);
   }catch(e){
-    $('#pretty').textContent = 'Failed to load config';
+    $('#cfg-editor').value = '{ "error": "Failed to load config" }';
   }
 }
+document.getElementById('btn-save-config')?.addEventListener('click', async ()=>{
+  try{
+    const data = JSON.parse($('#cfg-editor').value);
+    const r = await apiWrite('configSet', data);
+    if(!r || r.ok!==true) throw 0;
+    toast('Config saved.');
+  }catch(_){
+    toast('Config not saved server-side (no endpoint).');
+  }
+});
 
 /* ========= BOOT ========= */
 window.addEventListener('DOMContentLoaded', ()=>{
   const r = (location.hash||'#dashboard').replace('#','');
   show(r);
 });
+
+/* ========= tiny toast ========= */
+function toast(msg){
+  const t = $('#toast'); t.textContent = msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2200);
+}
 </script>
 </body>
 </html>

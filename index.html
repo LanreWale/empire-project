@@ -215,7 +215,7 @@
       <div class="card pad">
         <table>
           <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Authority</th></tr></thead>
-        <tbody id="tbl-users"><tr><td colspan="4" class="muted">No users.</td></tr></tbody>
+          <tbody id="tbl-users"><tr><td colspan="4" class="muted">No users.</td></tr></tbody>
         </table>
       </div>
     </section>
@@ -331,7 +331,7 @@ const $  = s => document.querySelector(s);
 const $$ = s => Array.from(document.querySelectorAll(s));
 const dollars = n => Number(n||0).toLocaleString(undefined,{style:'currency',currency:'USD'});
 
-/* GET helper */
+/* GET helper (defensive) */
 async function get(url, opt={}){
   try{
     const u = new URL(url);
@@ -358,6 +358,7 @@ async function apiWrite(action, payload={}){
     if(!res.ok) throw new Error('HTTP '+res.status);
     return res.json();
   }catch(e){
+    // GET fallback
     Object.entries(payload||{}).forEach(([k,v])=>url.searchParams.set(k, typeof v==='object'?JSON.stringify(v):String(v)));
     const res = await fetch(url, {cache:'no-store'});
     if(!res.ok) throw new Error('HTTP '+res.status);
@@ -365,14 +366,27 @@ async function apiWrite(action, payload={}){
   }
 }
 
-/* tiny chart helpers (SVG) */
+/* normalizers */
+const arr = (m)=> Array.isArray(m) ? m : (m&&Array.isArray(m.items)?m.items:(m&&Array.isArray(m.rows)?m.rows:(m&&Array.isArray(m.data)?m.data:[])));
+const obj = (m)=> (m && typeof m==='object')? m : {};
+const normDomain = d=> String(d||'').trim().replace(/^https?:\/\//,'').replace(/\/.*$/,'');
+
+/* ========= CHART HELPERS (robust width + retry) ========= */
+function _host(el){ return (typeof el==='string')? document.querySelector(el) : el; }
+function _ensureWidth(host){
+  const w = host.getBoundingClientRect().width || host.clientWidth || 0;
+  return w>40 ? w : 0;
+}
 function renderBarChart(el, series=[], labels=[]){
-  const host = (typeof el==='string')? $(el) : el;
-  if(!host) return;
+  const host = _host(el); if(!host) return;
+  const W0 = _ensureWidth(host);
+  if(!W0){ setTimeout(()=>renderBarChart(el,series,labels), 60); return; }
+
   host.classList.remove('empty');
-  host.innerHTML = '';
+  host.innerHTML='';
   if(!series.length){ host.classList.add('empty'); host.textContent='No data'; return; }
-  const W = host.clientWidth || 600, H = 220, pad=28;
+
+  const W = Math.max(W0, 300), H = 220, pad = 28;
   const max = Math.max(...series.map(v=>Number(v)||0), 1);
   const bw = (W - pad*2) / series.length;
   const svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
@@ -402,20 +416,23 @@ function renderBarChart(el, series=[], labels=[]){
       tx.setAttribute('text-anchor', 'middle');
       tx.setAttribute('font-size', '10');
       tx.setAttribute('fill', '#86a7c9');
-      tx.textContent = String(labels[i]).length>8 ? String(labels[i]).slice(0,8)+'…' : String(labels[i]);
+      const t = String(labels[i]);
+      tx.textContent = t.length>8 ? t.slice(5) : t;
       svg.appendChild(tx);
     }
   });
   host.appendChild(svg);
 }
 function renderPieChart(el, map={}){
-  const host = (typeof el==='string')? $(el) : el;
-  if(!host) return;
+  const host = _host(el); if(!host) return;
+  const W0 = _ensureWidth(host);
+  if(!W0){ setTimeout(()=>renderPieChart(el,map), 60); return; }
+
   host.classList.remove('empty'); host.innerHTML='';
   const entries = Object.entries(map||{}).filter(([,v])=>Number(v)>0);
   if(!entries.length){ host.classList.add('empty'); host.textContent='No data'; return; }
 
-  const W=220, H=220, R=90, CX=W/2, CY=H/2;
+  const W=220,H=220,R=90,CX=W/2,CY=H/2;
   const total = entries.reduce((s,[,v])=>s+Number(v),0);
   let angle = -Math.PI/2;
   const svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
@@ -429,12 +446,11 @@ function renderPieChart(el, map={}){
     const x2 = CX + R*Math.cos(angle+theta);
     const y2 = CY + R*Math.sin(angle+theta);
     const large = theta>Math.PI ? 1 : 0;
-    const path = document.createElementNS(svg.namespaceURI,'path');
-    const d = `M ${CX} ${CY} L ${x1} ${y1} A ${R} ${R} 0 ${large} 1 ${x2} ${y2} Z`;
-    path.setAttribute('d', d);
-    path.setAttribute('fill', '#ffd559');
-    path.setAttribute('opacity', 0.7);
-    svg.appendChild(path);
+    const p = document.createElementNS(svg.namespaceURI,'path');
+    p.setAttribute('d', `M ${CX} ${CY} L ${x1} ${y1} A ${R} ${R} 0 ${large} 1 ${x2} ${y2} Z`);
+    p.setAttribute('fill', '#ffd559');
+    p.setAttribute('opacity', 0.55 + 0.35*Math.random());
+    svg.appendChild(p);
     angle += theta;
   });
   host.appendChild(svg);
@@ -456,7 +472,7 @@ function show(route){
 window.addEventListener('hashchange', ()=>{
   const r = (location.hash||'#dashboard').replace('#',''); show(r);
 });
-$('#nav').addEventListener('click', e=>{
+$('#nav')?.addEventListener('click', e=>{
   const a = e.target.closest('a'); if(!a) return;
   e.preventDefault(); location.hash = '#'+a.dataset.route;
 });
@@ -466,6 +482,7 @@ async function initDashboard(){
   try{
     const [ov, us] = await Promise.all([ api('overview'), api('users', {status:'APPROVED'}) ]);
 
+    // KPIs
     const t = ov && ov.totals ? ov.totals : (ov||{});
     $('#dash-earn').textContent   = dollars(t.earnings||0);
     $('#dash-clicks').textContent = t.clicks||0;
@@ -473,32 +490,46 @@ async function initDashboard(){
                (t.leads && t.clicks ? (t.leads/t.clicks*100) : 0);
     $('#dash-cr').textContent = Number(cr||0).toFixed(2) + '%';
 
-    const users = Array.isArray(us?.items)? us.items : (Array.isArray(us)?us:[]);
-    $('#dash-users').textContent = users.length;
+    const users = arr(us); $('#dash-users').textContent = users.length;
 
-    const byDay = Array.isArray(ov?.byDay)? ov.byDay : [];
+    // Charts (robust)
+    const byDay = Array.isArray(ov?.byDay) ? ov.byDay : (Array.isArray(ov?.items) ? ov.items : []);
     if(byDay.length){
-      renderBarChart('#dash-earnings', byDay.map(d=>Number(d.earnings||0)), byDay.map(d=>String(d.date||d.t||'')));
+      renderBarChart('#dash-earnings',
+        byDay.map(d=>Number(d.earnings||0)),
+        byDay.map(d=>String(d.date||d.t||'')));
     }else{
       const host = $('#dash-earnings'); host.classList.add('empty'); host.textContent='No data';
     }
 
-    renderPieChart('#dash-sources', ov?.offerTypes || {});
+    renderPieChart('#dash-sources', ov?.offerTypes || ov?.offers || {});
 
-    // Geo table
+    // By Geo table
     const tb = $('#tbl-dash-geo'); tb.innerHTML='';
-    const hasCL = Array.isArray(ov?.byGeo) && ov.byGeo.some(x=>x.clicks||x.leads);
-    if(!hasCL){ tb.parentElement.querySelector('thead').innerHTML='<tr><th>Country</th><th>Clicks</th><th>Leads</th><th>Earnings ($)</th></tr>'; }
-
-    const geoMap = ov?.geo || {};
+    const geoMap = ov && ov.geo ? ov.geo : {};
     const rows = Object.keys(geoMap).map(k=>({country:k, earnings:geoMap[k]}))
                   .sort((a,b)=>b.earnings-a.earnings).slice(0,10);
-    if(!rows.length){ tb.innerHTML='<tr><td colspan="4" class="muted">No data</td></tr>'; }
+
+    const byGeo = Array.isArray(ov?.byGeo) ? ov.byGeo : [];
+    const hasCL = byGeo.some(x => (x && (x.clicks||x.leads)));
+
+    const thead = tb.closest('table').querySelector('thead');
+    thead.innerHTML = hasCL
+      ? '<tr><th>Country</th><th>Clicks</th><th>Leads</th><th>Earnings ($)</th></tr>'
+      : '<tr><th>Country</th><th>Earnings ($)</th></tr>';
+
+    if(!rows.length){ tb.innerHTML='<tr><td colspan="'+(hasCL?4:2)+'" class="muted">No data</td></tr>'; }
     rows.forEach(g=>{
-      const m = (ov.byGeo||[]).find(x=>x.country===g.country) || {};
-      const tr=document.createElement('tr');
-      tr.innerHTML=`<td>${g.country}</td><td>${m.clicks||0}</td><td>${m.leads||0}</td><td class="money">${dollars(g.earnings)}</td>`;
-      tb.appendChild(tr);
+      if(hasCL){
+        const m = byGeo.find(x=>x.country===g.country) || {};
+        const tr=document.createElement('tr');
+        tr.innerHTML=`<td>${g.country}</td><td>${m.clicks||0}</td><td>${m.leads||0}</td><td class="money">${dollars(g.earnings)}</td>`;
+        tb.appendChild(tr);
+      }else{
+        const tr=document.createElement('tr');
+        tr.innerHTML=`<td>${g.country}</td><td class="money">${dollars(g.earnings)}</td>`;
+        tb.appendChild(tr);
+      }
     });
   }catch(e){ console.error(e); }
 }
@@ -507,14 +538,19 @@ async function initDashboard(){
 async function initCpa(){
   const wrap = $('#cpa-grid'); wrap.innerHTML='';
   try{
-    const resp = await api('cpa');
-    const items = Array.isArray(resp?.items)? resp.items : (Array.isArray(resp)?resp:[]);
+    const resp = await api('cpa'); // accepts either array or {items:[...]}
+    const items = arr(resp);
     if(!items.length){ wrap.innerHTML = `<div class="card pad empty">No CPA accounts yet.</div>`; return; }
 
     items.forEach(r=>{
       let convPct = 0;
-      if (r.conversionrate != null) { const v = Number(r.conversionrate); convPct = v>1 ? v : v*100; }
-      else if (r.conversionRate != null) { const v = Number(r.conversionRate); convPct = v>1 ? v : v*100; }
+      if (r.conversionrate != null) {
+        const v = Number(r.conversionrate);
+        convPct = v>1 ? v : v*100;
+      } else if (r.conversionRate != null) {
+        const v = Number(r.conversionRate);
+        convPct = v>1 ? v : v*100;
+      }
       const card = document.createElement('div');
       card.className='card pad';
       card.innerHTML = `
@@ -555,7 +591,7 @@ document.getElementById('btn-save-acct')?.addEventListener('click', async ()=>{
   const v = {
     account : document.getElementById('f-account').value.trim(),
     network : document.getElementById('f-network').value.trim(),
-    domain  : String(document.getElementById('f-domain').value).trim().replace(/^https?:\/\//,'').replace(/\/.*$/,''),
+    domain  : normDomain(document.getElementById('f-domain').value),
     status  : document.getElementById('f-status').value,
     apiKey  : document.getElementById('f-key').value.trim(),
     webhook : document.getElementById('f-webhook').value.trim()
@@ -565,7 +601,7 @@ document.getElementById('btn-save-acct')?.addEventListener('click', async ()=>{
   }
   err.style.display='none';
   try{
-    const res = await apiWrite('cpaCreate', v);
+    const res = await apiWrite('cpaCreate', v); // expect {ok:true}
     if(!res || res.ok!==true) throw new Error('Create failed');
     closeMdl();
     await initCpa();
@@ -585,11 +621,13 @@ async function initUsers(tab='APPROVED'){
   const tb = $('#tbl-users'); tb.innerHTML = '';
   try{
     const resp = await api('users', {status: tab});
-    let filtered = Array.isArray(resp?.items)? resp.items : (Array.isArray(resp)?resp:[]);
-    if(!filtered.length){
-      const ALL = Array.isArray(resp?.items)? resp.items : (Array.isArray(resp)?resp:[]);
+    let filtered = arr(resp?.items || resp);
+
+    if (!filtered.length) {
+      const ALL = arr(resp?.items || resp);
       filtered = ALL.filter(u => String(u.status||'APPROVED').toUpperCase()===tab.toUpperCase());
     }
+
     if(!filtered.length){ tb.innerHTML = `<tr><td colspan="4" class="muted">No ${tab.toLowerCase()} users.</td></tr>`; return; }
     filtered.forEach(u=>{
       const tr = document.createElement('tr');
@@ -605,18 +643,21 @@ async function initUsers(tab='APPROVED'){
 let liveTimer=null, liveRows=[];
 async function initAnalytics(){
   try{
-    const base = await api('analytics');
-    const items = Array.isArray(base)? base : (Array.isArray(base?.items)? base.items : []);
+    const base = await api('analytics'); // expected: {overview, geo, items} or array
+    const items = arr(base) || arr(base?.items);
 
     if(items.length){
-      renderBarChart('#ana-overview', items.map(r=>Number(r.earnings||0)), items.map(r=>String(r.date||r.t||'')));
+      const series = items.map(r=>Number(r.earnings||0));
+      const labels = items.map(r=>String(r.date||r.t||''));
+      renderBarChart('#ana-overview', series, labels);
     }else if (Array.isArray(base?.byDay) && base.byDay.length){
-      renderBarChart('#ana-overview', base.byDay.map(d=>Number(d.earnings||0)), base.byDay.map(d=>String(d.date||d.t||'')));
+      renderBarChart('#ana-overview', base.byDay.map(d=>Number(d.earnings||0)), base.byDay.map(d=>String(d.t||d.date||'')));
     }else{
       const host = $('#ana-overview'); host.classList.add('empty'); host.textContent='No data';
     }
 
-    renderPieChart('#ana-geo-dist', base?.geo || {});
+    const geoMap = base?.geo || {};
+    renderPieChart('#ana-geo-dist', geoMap);
   }catch(e){
     const a1 = $('#ana-overview'); a1.classList.add('empty'); a1.textContent='Failed to load';
     const a2 = $('#ana-geo-dist'); a2.classList.add('empty'); a2.textContent='Failed to load';
@@ -630,11 +671,13 @@ async function initAnalytics(){
 async function pullLive(){
   try{
     const j = await api('analytics', { live:1, limit:24, windowSec:120 });
-    const events = Array.isArray(j?.live)? j.live : (Array.isArray(j)?j:[]);
+    const events = arr(j?.live) || arr(j);
     if(!events.length) return;
 
+    // keep last 24 rows
     liveRows = liveRows.concat(events).slice(-24);
 
+    // table
     const tb = $('#tbl-live-perf'); tb.innerHTML='';
     liveRows.slice().reverse().forEach(r=>{
       const tr=document.createElement('tr');
@@ -644,6 +687,7 @@ async function pullLive(){
       tb.appendChild(tr);
     });
 
+    // live by geo (rebuild fresh from current batch to avoid inflation)
     const byGeo = {};
     events.forEach(ev=>{
       const k = ev.country || 'Unknown';
@@ -664,17 +708,22 @@ async function pullLive(){
 }
 
 /* ========= WALLET ========= */
+/* Balance = Overview Total Earnings − Pending payouts */
 async function initWallet(){
   try{
-    const w = await api('wallet'); // { ok, balance, history:[...] }
-    const hist = Array.isArray(w?.history)? w.history : (Array.isArray(w)? w : []);
-    $('#wal-balance').textContent = dollars(w?.balance||0);
+    const [W, OV] = await Promise.all([ api('wallet'), api('overview') ]);
+    const hist = arr(W?.history) || arr(W);
+    const totals = OV?.totals || OV || {};
 
-    const pendingAmt = hist.filter(t=>String(t.status||'').toUpperCase()==='PENDING')
-                           .reduce((s,t)=>s+Number(t.amount||0),0);
+    const pendingAmt = hist
+      .filter(t => String(t.status||'').toUpperCase()==='PENDING')
+      .reduce((s,t)=>s+Number(t.amount||0),0);
+
+    const gross = Number(totals.earnings||0);
+    $('#wal-balance').textContent = dollars(Math.max(0, gross - pendingAmt));
     $('#wal-pending').textContent = dollars(pendingAmt);
-    const lastPaid = hist.filter(t=>String(t.status||'').toUpperCase()==='COMPLETED' || String(t.status||'').toUpperCase()==='SUCCESS')
-                         .slice(-1)[0];
+
+    const lastPaid = hist.filter(t=>String(t.status||'').toUpperCase()==='COMPLETED').slice(-1)[0];
     $('#wal-last').textContent = dollars(lastPaid ? lastPaid.amount : 0);
 
     const tb = $('#tbl-wallet'); tb.innerHTML='';
@@ -693,11 +742,11 @@ async function initWallet(){
 async function initMonitor(){
   const tb = $('#tbl-monitor'); tb.innerHTML='';
   try{
-    const m = await api('monitoring'); // { ok, events:[...], health, maintenance }
-    const events = Array.isArray(m?.events)? m.events : (Array.isArray(m)?m:[]);
+    const m = obj(await api('monitoring')); // expect {events:[...], health, maintenance}
+    const events = arr(m.events) || arr(m);
     $('#box-alerts').textContent = events.length;
-    $('#box-maint').textContent  = m?.maintenance || '—';
-    $('#box-health').textContent = m?.health || 'OK';
+    $('#box-maint').textContent  = m.maintenance || '—';
+    $('#box-health').textContent = m.health || 'OK';
 
     if(!events.length){
       tb.innerHTML = `<tr><td colspan="3" class="muted">No events.</td></tr>`;

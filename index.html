@@ -95,14 +95,7 @@
 
   .empty{padding:18px; text-align:center; color:var(--muted)}
 
-  /* ---------- Charts: compact heights ---------- */
-  .chart{min-height:120px}
-  .chart svg{width:100%; height:160px; display:block}
-  @media (max-width:760px){
-    .chart svg{height:140px}
-  }
-
-  /* ---------- Modal (hidden by default) ---------- */
+  /* Modal */
   .modal{position:fixed; inset:0; display:none; align-items:center; justify-content:center; z-index:50}
   .modal.open{display:flex}
   .modal .scrim{position:absolute; inset:0; background:rgba(6,16,26,.6); backdrop-filter: blur(2px)}
@@ -120,13 +113,11 @@
   .input input:focus,.input select:focus{border-color:#3a85ff}
   .modal .footer{display:flex; gap:10px; justify-content:flex-end; margin-top:14px}
   .bad{color:var(--bad); font-size:12px}
+  /* chart svg */
+  .chart svg{width:100%; height:220px; display:block}
 </style>
 </head>
 <body>
-
-<!-- Crash box (always present so blank pages show errors) -->
-<pre id="fatal" style="display:none;white-space:pre-wrap;background:#140b0b;color:#ffdede;border:1px solid #522; padding:12px; border-radius:10px; margin:16px"></pre>
-
 <div class="page">
   <aside class="sidebar">
     <div class="brand">
@@ -185,7 +176,7 @@
     </section>
 
     <!-- ADD NEW ACCOUNT MODAL -->
-    <div id="mdl-cpa" class="modal" style="display:none" aria-hidden="true">
+    <div id="mdl-cpa" class="modal" aria-hidden="true">
       <div class="scrim" data-close></div>
       <div class="panel">
         <h3 style="margin:0 0 12px">Add New CPA Account</h3>
@@ -315,132 +306,133 @@
 <!-- ========= FRONTEND SCRIPT ========= -->
 <script>
 /* ========= FATAL GUARD ========= */
-window.onerror = function(msg, src, line, col, err){
-  var fatal = document.getElementById('fatal');
-  if(!fatal) return;
-  fatal.style.display = 'block';
-  fatal.textContent =
-    '[FATAL] ' + msg + '\n' +
-    (src?('at '+src+':'+line+':'+col+'\n'):'') +
-    (err && err.stack ? err.stack : '');
-};
+(function(){
+  var fatalBox = document.createElement('pre');
+  fatalBox.id = 'fatal';
+  fatalBox.style.cssText = 'display:none;white-space:pre-wrap;background:#140b0b;color:#ffdede;border:1px solid #522; padding:12px; border-radius:10px; margin:16px';
+  document.addEventListener('DOMContentLoaded', function(){
+    document.body.appendChild(fatalBox);
+  });
+  window.onerror = function(msg, src, line, col, err){
+    try{
+      fatalBox.style.display = 'block';
+      fatalBox.textContent =
+        '[FATAL] ' + msg + '\n' +
+        (src?('at '+src+':'+line+':'+col+'\n'):'') +
+        (err && err.stack ? err.stack : '');
+    }catch(_){}
+  };
+})();
 
 /* ========= CONFIG ========= */
-var GAS = "https://script.google.com/macros/s/AKfycbzFOP1BQCV47c-uRHw0mTs-WHKTSAblrjb9XmpUrVPIjhbQdtNRGAtEWFAkZMUVJ4Uc/exec";
-var POLL_FAST = 5000;
-var $  = function(s){ return document.querySelector(s); };
-var $$ = function(s){ return Array.prototype.slice.call(document.querySelectorAll(s)); };
-var dollars = function(n){ return Number(n||0).toLocaleString(undefined,{style:'currency',currency:'USD'}); };
-function safeGet(o){ for(var i=1;i<arguments.length;i++){ if(!o || typeof o!=='object') return undefined; o = o[arguments[i]]; } return o; }
-function arr(m){
-  if(Array.isArray(m)) return m;
-  if(m && Array.isArray(m.items)) return m.items;
-  if(m && Array.isArray(m.rows))  return m.rows;
-  if(m && Array.isArray(m.data))  return m.data;
-  return [];
-}
-function obj(m){ return (m && typeof m==='object')? m : {}; }
-function normDomain(d){ return String(d||'').trim().replace(/^https?:\/\//,'').replace(/\/.*$/,''); }
+const GAS = "https://script.google.com/macros/s/AKfycbzFOP1BQCV47c-uRHw0mTs-WHKTSAblrjb9XmpUrVPIjhbQdtNRGAtEWFAkZMUVJ4Uc/exec";
+const POLL_FAST = 5000;
+const $  = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+const dollars = n => Number(n||0).toLocaleString(undefined,{style:'currency',currency:'USD'});
 
-/* ========= HTTP HELPERS ========= */
-async function get(url, opt){
-  opt = opt || {};
+/* GET helper */
+async function get(url, opt={}){
   try{
-    var u = new URL(url);
+    const u = new URL(url);
     u.searchParams.set('_t', Date.now());
-    var r = await fetch(u, Object.assign({cache:'no-store'}, opt));
+    const r = await fetch(u, {cache:'no-store', ...opt});
     if(!r.ok) throw new Error('HTTP '+r.status);
     return r.json();
-  }catch(e){ console.error('GET failed:', e); return null; }
+  }catch(e){
+    console.error('GET failed:', e); return null;
+  }
 }
-function api(action, params){
-  params = params || {};
-  var u = new URL(GAS);
+/* API helpers */
+function api(action, params={}){
+  const u = new URL(GAS);
   u.searchParams.set('action', action);
-  Object.keys(params).forEach(function(k){ u.searchParams.set(k, params[k]); });
+  Object.entries(params).forEach(([k,v])=>u.searchParams.set(k, v));
   return get(u);
 }
-async function apiWrite(action, payload){
-  payload = payload||{};
-  var url = new URL(GAS);
+async function apiWrite(action, payload={}){
+  const url = new URL(GAS);
   url.searchParams.set('action', action);
   try{
-    var res = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+    const res = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
     if(!res.ok) throw new Error('HTTP '+res.status);
     return res.json();
   }catch(e){
-    // GET fallback
-    Object.keys(payload).forEach(function(k){
-      var v = payload[k];
-      url.searchParams.set(k, (v && typeof v==='object')? JSON.stringify(v): String(v));
-    });
-    var res2 = await fetch(url, {cache:'no-store'});
-    if(!res2.ok) throw new Error('HTTP '+res2.status);
-    return res2.json();
+    Object.entries(payload||{}).forEach(([k,v])=>url.searchParams.set(k, typeof v==='object'?JSON.stringify(v):String(v)));
+    const res = await fetch(url, {cache:'no-store'});
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    return res.json();
   }
 }
 
-/* ========= MINI CHARTS (SVG) ========= */
-function renderBarChart(el, series, labels){
-  series = series||[]; labels = labels||[];
-  var host = (typeof el==='string')? $(el) : el; if(!host) return;
-  host.classList.remove('empty'); host.innerHTML='';
+/* tiny chart helpers (SVG) */
+function renderBarChart(el, series=[], labels=[]){
+  const host = (typeof el==='string')? $(el) : el;
+  if(!host) return;
+  host.classList.remove('empty');
+  host.innerHTML = '';
   if(!series.length){ host.classList.add('empty'); host.textContent='No data'; return; }
-  var W = host.clientWidth || 600, H = 220, pad=28;
-  var max = Math.max.apply(null, series.map(function(v){return Number(v)||0;}).concat([1]));
-  var bw = (W - pad*2) / series.length;
-  var svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
-  svg.setAttribute('viewBox', '0 0 '+W+' '+H);
-  var axis = document.createElementNS(svg.namespaceURI,'line');
+  const W = host.clientWidth || 600, H = 220, pad=28;
+  const max = Math.max(...series.map(v=>Number(v)||0), 1);
+  const bw = (W - pad*2) / series.length;
+  const svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+
+  const axis = document.createElementNS(svg.namespaceURI,'line');
   axis.setAttribute('x1', pad); axis.setAttribute('y1', H-pad);
   axis.setAttribute('x2', W-pad); axis.setAttribute('y2', H-pad);
   axis.setAttribute('stroke', '#2a4b6a'); axis.setAttribute('stroke-width', '1');
   svg.appendChild(axis);
-  series.forEach(function(v,i){
-    var val = Number(v)||0;
-    var h = (val/max) * (H - pad*2);
-    var x = pad + i*bw + 6;
-    var y = (H-pad) - h;
-    var rect = document.createElementNS(svg.namespaceURI,'rect');
+
+  series.forEach((v,i)=>{
+    const val = Number(v)||0;
+    const h = (val/max) * (H - pad*2);
+    const x = pad + i*bw + 6;
+    const y = (H-pad) - h;
+    const rect = document.createElementNS(svg.namespaceURI,'rect');
     rect.setAttribute('x', x); rect.setAttribute('y', y);
-    rect.setAttribute('width', Math.max(8,bw-12)); rect.setAttribute('height', Math.max(0,h));
+    rect.setAttribute('width', Math.max(8, bw-12)); rect.setAttribute('height', Math.max(0,h));
     rect.setAttribute('fill', '#ffd559');
     svg.appendChild(rect);
+
     if(labels[i]){
-      var tx = document.createElementNS(svg.namespaceURI,'text');
+      const tx = document.createElementNS(svg.namespaceURI,'text');
       tx.setAttribute('x', x + (bw-12)/2);
       tx.setAttribute('y', H - pad + 14);
-      tx.setAttribute('text-anchor','middle');
-      tx.setAttribute('font-size','10');
-      tx.setAttribute('fill','#86a7c9');
-      tx.textContent = (String(labels[i]).length>8 ? String(labels[i]).slice(0,8)+'…' : String(labels[i]));
+      tx.setAttribute('text-anchor', 'middle');
+      tx.setAttribute('font-size', '10');
+      tx.setAttribute('fill', '#86a7c9');
+      tx.textContent = String(labels[i]).length>8 ? String(labels[i]).slice(0,8)+'…' : String(labels[i]);
       svg.appendChild(tx);
     }
   });
   host.appendChild(svg);
 }
-function renderPieChart(el, map){
-  map = map||{};
-  var host = (typeof el==='string')? $(el) : el; if(!host) return;
+function renderPieChart(el, map={}){
+  const host = (typeof el==='string')? $(el) : el;
+  if(!host) return;
   host.classList.remove('empty'); host.innerHTML='';
-  var entries = [];
-  Object.keys(map).forEach(function(k){ var v = Number(map[k]); if(v>0) entries.push([k,v]); });
+  const entries = Object.entries(map||{}).filter(([,v])=>Number(v)>0);
   if(!entries.length){ host.classList.add('empty'); host.textContent='No data'; return; }
-  var W=220,H=220,R=90,CX=W/2,CY=H/2;
-  var total = entries.reduce(function(s,e){ return s+Number(e[1]); },0);
-  var angle = -Math.PI/2;
-  var svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
-  svg.setAttribute('viewBox','0 0 '+W+' '+H);
-  entries.forEach(function(e){
-    var frac = Number(e[1])/total;
-    var theta = frac * Math.PI*2;
-    var x1 = CX + R*Math.cos(angle), y1 = CY + R*Math.sin(angle);
-    var x2 = CX + R*Math.cos(angle+theta), y2 = CY + R*Math.sin(angle+theta);
-    var large = theta>Math.PI ? 1 : 0;
-    var path = document.createElementNS(svg.namespaceURI,'path');
-    var d = 'M '+CX+' '+CY+' L '+x1+' '+y1+' A '+R+' '+R+' 0 '+large+' 1 '+x2+' '+y2+' Z';
+
+  const W=220, H=220, R=90, CX=W/2, CY=H/2;
+  const total = entries.reduce((s,[,v])=>s+Number(v),0);
+  let angle = -Math.PI/2;
+  const svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+
+  entries.forEach(([k,v])=>{
+    const frac = Number(v)/total;
+    const theta = frac * Math.PI*2;
+    const x1 = CX + R*Math.cos(angle);
+    const y1 = CY + R*Math.sin(angle);
+    const x2 = CX + R*Math.cos(angle+theta);
+    const y2 = CY + R*Math.sin(angle+theta);
+    const large = theta>Math.PI ? 1 : 0;
+    const path = document.createElementNS(svg.namespaceURI,'path');
+    const d = `M ${CX} ${CY} L ${x1} ${y1} A ${R} ${R} 0 ${large} 1 ${x2} ${y2} Z`;
     path.setAttribute('d', d);
-    path.setAttribute('fill','#ffd559');
+    path.setAttribute('fill', '#ffd559');
     path.setAttribute('opacity', 0.7);
     svg.appendChild(path);
     angle += theta;
@@ -450,8 +442,8 @@ function renderPieChart(el, map){
 
 /* ========= ROUTER ========= */
 function show(route){
-  $$('.nav a').forEach(function(a){ a.classList.toggle('active', a.getAttribute('data-route')===route); });
-  $$('[data-page]').forEach(function(s){ s.style.display = (s.getAttribute('data-page')===route)?'block':'none'; });
+  $$('.nav a').forEach(a=>a.classList.toggle('active', a.dataset.route===route));
+  $$('[data-page]').forEach(s=>s.style.display = (s.dataset.page===route)?'block':'none');
 
   if(route==='dashboard') initDashboard();
   if(route==='cpa')       initCpa();
@@ -461,130 +453,109 @@ function show(route){
   if(route==='monitor')   initMonitor();
   if(route==='settings')  initSettings();
 }
-window.addEventListener('hashchange', function(){
-  var r = (location.hash||'#dashboard').replace('#',''); show(r);
+window.addEventListener('hashchange', ()=>{
+  const r = (location.hash||'#dashboard').replace('#',''); show(r);
 });
-var navEl = document.getElementById('nav');
-if(navEl){
-  navEl.addEventListener('click', function(e){
-    var a = e.target.closest && e.target.closest('a');
-    if(!a) return;
-    e.preventDefault(); location.hash = '#'+a.getAttribute('data-route');
-  });
-}
+$('#nav').addEventListener('click', e=>{
+  const a = e.target.closest('a'); if(!a) return;
+  e.preventDefault(); location.hash = '#'+a.dataset.route;
+});
 
 /* ========= DASHBOARD ========= */
 async function initDashboard(){
   try{
-    var resOv = api('overview');
-    var resUs = api('users', {status:'APPROVED'});
-    var ov = await resOv, us = await resUs;
+    const [ov, us] = await Promise.all([ api('overview'), api('users', {status:'APPROVED'}) ]);
 
-    var t = (ov && ov.totals) ? ov.totals : (ov||{});
-    var el;
-    if((el=$('#dash-earn')))   el.textContent = dollars(t.earnings||0);
-    if((el=$('#dash-clicks'))) el.textContent = t.clicks||0;
-    var cr = (t && t.conversionRate!=null) ? Number(t.conversionRate) :
-             (t && t.leads && t.clicks ? (t.leads/t.clicks*100) : 0);
-    if((el=$('#dash-cr'))) el.textContent = Number(cr||0).toFixed(2)+'%';
+    const t = ov && ov.totals ? ov.totals : (ov||{});
+    $('#dash-earn').textContent   = dollars(t.earnings||0);
+    $('#dash-clicks').textContent = t.clicks||0;
+    const cr = (t.conversionRate!=null) ? Number(t.conversionRate) :
+               (t.leads && t.clicks ? (t.leads/t.clicks*100) : 0);
+    $('#dash-cr').textContent = Number(cr||0).toFixed(2) + '%';
 
-    var users = arr(us);
-    if((el=$('#dash-users'))) el.textContent = users.length;
+    const users = Array.isArray(us?.items)? us.items : (Array.isArray(us)?us:[]);
+    $('#dash-users').textContent = users.length;
 
-    var byDay = arr(safeGet(ov,'byDay'));
+    const byDay = Array.isArray(ov?.byDay)? ov.byDay : [];
     if(byDay.length){
-      renderBarChart('#dash-earnings',
-        byDay.map(function(d){return Number(d.earnings||0);}),
-        byDay.map(function(d){return String(d.t||d.date||'');})
-      );
+      renderBarChart('#dash-earnings', byDay.map(d=>Number(d.earnings||0)), byDay.map(d=>String(d.date||d.t||'')));
     }else{
-      var host = $('#dash-earnings'); if(host){ host.classList.add('empty'); host.textContent='No data'; }
+      const host = $('#dash-earnings'); host.classList.add('empty'); host.textContent='No data';
     }
 
-    renderPieChart('#dash-sources', obj(safeGet(ov,'offerTypes')));
+    renderPieChart('#dash-sources', ov?.offerTypes || {});
 
-    // By Geo
-    var tableBody = document.getElementById('tbl-dash-geo');
-    var tableHead = tableBody && tableBody.closest('table') ? tableBody.closest('table').querySelector('thead') : null;
-    if(tableBody && tableHead){
-      var geoMap = obj(safeGet(ov,'geo'));
-      var entries = Object.keys(geoMap).map(function(k){ return {country:k, earnings:Number(geoMap[k])||0}; })
-        .sort(function(a,b){ return b.earnings-a.earnings; }).slice(0,10);
+    // Geo table
+    const tb = $('#tbl-dash-geo'); tb.innerHTML='';
+    const hasCL = Array.isArray(ov?.byGeo) && ov.byGeo.some(x=>x.clicks||x.leads);
+    if(!hasCL){ tb.parentElement.querySelector('thead').innerHTML='<tr><th>Country</th><th>Clicks</th><th>Leads</th><th>Earnings ($)</th></tr>'; }
 
-      var byGeoArr = Array.isArray(safeGet(ov,'byGeo')) ? ov.byGeo : [];
-      var hasCL = byGeoArr.some(function(x){ return (x && (x.clicks||x.leads)); });
-
-      tableHead.innerHTML = hasCL ? '<tr><th>Country</th><th>Clicks</th><th>Leads</th><th>Earnings ($)</th></tr>'
-                                  : '<tr><th>Country</th><th>Earnings ($)</th></tr>';
-
-      tableBody.innerHTML = '';
-      if(!entries.length){
-        tableBody.innerHTML = '<tr><td colspan="'+(hasCL?4:2)+'" class="muted">No data</td></tr>';
-      }else{
-        entries.forEach(function(g){
-          if(hasCL){
-            var m = byGeoArr.find(function(x){ return x && x.country===g.country; }) || {};
-            tableBody.insertAdjacentHTML('beforeend',
-              '<tr><td>'+g.country+'</td><td>'+(m.clicks||0)+'</td><td>'+(m.leads||0)+'</td><td class="money">'+dollars(g.earnings)+'</td></tr>');
-          }else{
-            tableBody.insertAdjacentHTML('beforeend',
-              '<tr><td>'+g.country+'</td><td class="money">'+dollars(g.earnings)+'</td></tr>');
-          }
-        });
-      }
-    }
+    const geoMap = ov?.geo || {};
+    const rows = Object.keys(geoMap).map(k=>({country:k, earnings:geoMap[k]}))
+                  .sort((a,b)=>b.earnings-a.earnings).slice(0,10);
+    if(!rows.length){ tb.innerHTML='<tr><td colspan="4" class="muted">No data</td></tr>'; }
+    rows.forEach(g=>{
+      const m = (ov.byGeo||[]).find(x=>x.country===g.country) || {};
+      const tr=document.createElement('tr');
+      tr.innerHTML=`<td>${g.country}</td><td>${m.clicks||0}</td><td>${m.leads||0}</td><td class="money">${dollars(g.earnings)}</td>`;
+      tb.appendChild(tr);
+    });
   }catch(e){ console.error(e); }
 }
 
 /* ========= CPA ACCOUNTS ========= */
 async function initCpa(){
-  var wrap = document.getElementById('cpa-grid'); if(!wrap) return;
-  wrap.innerHTML='';
+  const wrap = $('#cpa-grid'); wrap.innerHTML='';
   try{
-    var resp = await api('cpa');
-    var items = arr(resp);
-    if(!items.length){ wrap.innerHTML = '<div class="card pad empty">No CPA accounts yet.</div>'; return; }
-    items.forEach(function(r){
-      var convPct = 0, v;
-      if (r && r.conversionrate != null){ v = Number(r.conversionrate); convPct = v>1 ? v : v*100; }
-      else if (r && r.conversionRate != null){ v = Number(r.conversionRate); convPct = v>1 ? v : v*100; }
-      var card = document.createElement('div');
+    const resp = await api('cpa');
+    const items = Array.isArray(resp?.items)? resp.items : (Array.isArray(resp)?resp:[]);
+    if(!items.length){ wrap.innerHTML = `<div class="card pad empty">No CPA accounts yet.</div>`; return; }
+
+    items.forEach(r=>{
+      let convPct = 0;
+      if (r.conversionrate != null) { const v = Number(r.conversionrate); convPct = v>1 ? v : v*100; }
+      else if (r.conversionRate != null) { const v = Number(r.conversionRate); convPct = v>1 ? v : v*100; }
+      const card = document.createElement('div');
       card.className='card pad';
-      card.innerHTML =
-        '<div class="acct">'+
-          '<div>'+
-            '<h3>'+(r.account||r.accountid||'—')+'</h3>'+
-            '<div class="muted" style="margin-bottom:10px">Network <b style="color:#fff">'+(r.network||'—')+
-            '</b> · <span class="badge">'+(r.status||'ACTIVE')+'</span></div>'+
-            '<div class="stats">'+
-              '<div class="kv"><b>Active Offers</b><span>'+(r.activeoffers||r.activeOffers||0)+'</span></div>'+
-              '<div class="kv"><b>Revenue</b><span class="money">'+dollars(r.revenue||0)+'</span></div>'+
-              '<div class="kv"><b>Clicks</b><span>'+(r.clicks||0)+'</span></div>'+
-              '<div class="kv"><b>Conversion</b><span>'+convPct.toFixed(2)+'%</span></div>'+
-            </div>'+
-          </div>'+
-          '<div class="right flex"><span class="pill mono">'+(r.domain||'no-domain')+'</span><button class="btn secondary">View Details</button></div>'+
-        '</div>';
+      card.innerHTML = `
+        <div class="acct">
+          <div>
+            <h3>${r.account||r.accountid||'—'}</h3>
+            <div class="muted" style="margin-bottom:10px">
+              Network <b style="color:#fff">${r.network||'—'}</b> · <span class="badge">${(r.status||'ACTIVE')}</span>
+            </div>
+            <div class="stats">
+              <div class="kv"><b>Active Offers</b><span>${r.activeoffers||r.activeOffers||0}</span></div>
+              <div class="kv"><b>Revenue</b><span class="money">${dollars(r.revenue||0)}</span></div>
+              <div class="kv"><b>Clicks</b><span>${r.clicks||0}</span></div>
+              <div class="kv"><b>Conversion</b><span>${convPct.toFixed(2)}%</span></div>
+            </div>
+          </div>
+          <div class="right flex">
+            <span class="pill mono">${r.domain||'no-domain'}</span>
+            <button class="btn secondary">View Details</button>
+          </div>
+        </div>`;
       wrap.appendChild(card);
     });
   }catch(e){
     console.error(e);
-    wrap.innerHTML = '<div class="card pad empty">Failed to load accounts.</div>';
+    wrap.innerHTML = `<div class="card pad empty">Failed to load accounts.</div>`;
   }
 }
 
 /* Add New Account modal wiring */
-var mdl = document.getElementById('mdl-cpa');
-var openMdl  = function(){ mdl.style.display=''; mdl.classList.add('open'); };
-var closeMdl = function(){ mdl.classList.remove('open'); mdl.style.display='none'; };
+const mdl = document.getElementById('mdl-cpa');
+const openMdl  = ()=> mdl.classList.add('open');
+const closeMdl = ()=> mdl.classList.remove('open');
 document.getElementById('btn-add-acct')?.addEventListener('click', openMdl);
-mdl?.addEventListener('click', function(e){ if(e.target.hasAttribute && e.target.hasAttribute('data-close')) closeMdl(); });
-document.getElementById('btn-save-acct')?.addEventListener('click', async function(){
-  var err = document.getElementById('f-error');
-  var v = {
+mdl.addEventListener('click', e=>{ if(e.target.hasAttribute('data-close')) closeMdl(); });
+document.getElementById('btn-save-acct')?.addEventListener('click', async ()=>{
+  const err = document.getElementById('f-error');
+  const v = {
     account : document.getElementById('f-account').value.trim(),
     network : document.getElementById('f-network').value.trim(),
-    domain  : normDomain(document.getElementById('f-domain').value),
+    domain  : String(document.getElementById('f-domain').value).trim().replace(/^https?:\/\//,'').replace(/\/.*$/,''),
     status  : document.getElementById('f-status').value,
     apiKey  : document.getElementById('f-key').value.trim(),
     webhook : document.getElementById('f-webhook').value.trim()
@@ -594,7 +565,7 @@ document.getElementById('btn-save-acct')?.addEventListener('click', async functi
   }
   err.style.display='none';
   try{
-    var res = await apiWrite('cpaCreate', v); // expect {ok:true}
+    const res = await apiWrite('cpaCreate', v);
     if(!res || res.ok!==true) throw new Error('Create failed');
     closeMdl();
     await initCpa();
@@ -604,63 +575,51 @@ document.getElementById('btn-save-acct')?.addEventListener('click', async functi
 });
 
 /* ========= USERS ========= */
-var currentUsersTab = 'APPROVED';
-var userTabBtns = $$('[data-users-tab]');
-userTabBtns.forEach(function(b){
-  b.addEventListener('click',function(){
-    userTabBtns.forEach(function(x){ x.classList.toggle('active', x===b); });
-    currentUsersTab = b.getAttribute('data-users-tab'); initUsers(currentUsersTab);
-  });
-});
-async function initUsers(tab){
-  tab = tab || 'APPROVED';
-  var tb = document.getElementById('tbl-users'); if(!tb) return;
-  tb.innerHTML = '';
+let currentUsersTab = 'APPROVED';
+const userTabBtns = $$('[data-users-tab]');
+userTabBtns.forEach(b=>b.addEventListener('click',()=>{
+  userTabBtns.forEach(x=>x.classList.toggle('active', x===b));
+  currentUsersTab = b.dataset.usersTab; initUsers(currentUsersTab);
+}));
+async function initUsers(tab='APPROVED'){
+  const tb = $('#tbl-users'); tb.innerHTML = '';
   try{
-    var resp = await api('users', {status: tab});
-    var filtered = arr(safeGet(resp,'items')) || arr(resp);
-
+    const resp = await api('users', {status: tab});
+    let filtered = Array.isArray(resp?.items)? resp.items : (Array.isArray(resp)?resp:[]);
     if(!filtered.length){
-      var ALL = arr(safeGet(resp,'items')) || arr(resp);
-      filtered = ALL.filter(function(u){ return String(u.status||'APPROVED').toUpperCase()===tab.toUpperCase(); });
+      const ALL = Array.isArray(resp?.items)? resp.items : (Array.isArray(resp)?resp:[]);
+      filtered = ALL.filter(u => String(u.status||'APPROVED').toUpperCase()===tab.toUpperCase());
     }
-
-    if(!filtered.length){ tb.innerHTML = '<tr><td colspan="4" class="muted">No '+tab.toLowerCase()+' users.</td></tr>'; return; }
-    filtered.forEach(function(u){
-      var tr = document.createElement('tr');
-      tr.innerHTML = '<td>'+(u.name||'—')+'</td><td>'+(u.email||'')+'</td><td>'+(u.phone||'')+'</td><td>'+(u.authority||'1x User')+'</td>';
+    if(!filtered.length){ tb.innerHTML = `<tr><td colspan="4" class="muted">No ${tab.toLowerCase()} users.</td></tr>`; return; }
+    filtered.forEach(u=>{
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${u.name||'—'}</td><td>${u.email||''}</td><td>${u.phone||''}</td><td>${u.authority||'1x User'}</td>`;
       tb.appendChild(tr);
     });
   }catch(e){
-    tb.innerHTML = '<tr><td colspan="4" class="muted">Failed to load users.</td></tr>';
+    tb.innerHTML = `<tr><td colspan="4" class="muted">Failed to load users.</td></tr>`;
   }
 }
 
 /* ========= ANALYTICS (base + live) ========= */
-var liveTimer=null, liveRows=[];
+let liveTimer=null, liveRows=[];
 async function initAnalytics(){
   try{
-    var base = await api('analytics');
-    var items = arr(base) || arr(safeGet(base,'items'));
+    const base = await api('analytics');
+    const items = Array.isArray(base)? base : (Array.isArray(base?.items)? base.items : []);
 
     if(items.length){
-      renderBarChart('#ana-overview',
-        items.map(function(r){return Number(r.earnings||0);}),
-        items.map(function(r){return String(r.date||r.t||'');})
-      );
-    }else if (Array.isArray(safeGet(base,'byDay')) && base.byDay.length){
-      renderBarChart('#ana-overview',
-        base.byDay.map(function(d){return Number(d.earnings||0);}),
-        base.byDay.map(function(d){return String(d.t||d.date||'');})
-      );
+      renderBarChart('#ana-overview', items.map(r=>Number(r.earnings||0)), items.map(r=>String(r.date||r.t||'')));
+    }else if (Array.isArray(base?.byDay) && base.byDay.length){
+      renderBarChart('#ana-overview', base.byDay.map(d=>Number(d.earnings||0)), base.byDay.map(d=>String(d.date||d.t||'')));
     }else{
-      var host = $('#ana-overview'); if(host){ host.classList.add('empty'); host.textContent='No data'; }
+      const host = $('#ana-overview'); host.classList.add('empty'); host.textContent='No data';
     }
 
-    renderPieChart('#ana-geo-dist', obj(safeGet(base,'geo')));
+    renderPieChart('#ana-geo-dist', base?.geo || {});
   }catch(e){
-    var a1 = $('#ana-overview'); if(a1){ a1.classList.add('empty'); a1.textContent='Failed to load'; }
-    var a2 = $('#ana-geo-dist'); if(a2){ a2.classList.add('empty'); a2.textContent='Failed to load'; }
+    const a1 = $('#ana-overview'); a1.classList.add('empty'); a1.textContent='Failed to load';
+    const a2 = $('#ana-geo-dist'); a2.classList.add('empty'); a2.textContent='Failed to load';
   }
 
   if(liveTimer) clearInterval(liveTimer);
@@ -670,121 +629,104 @@ async function initAnalytics(){
 }
 async function pullLive(){
   try{
-    var j = await api('analytics', { live:1, limit:24, windowSec:120 });
-    var events = arr(safeGet(j,'live')) || arr(j);
+    const j = await api('analytics', { live:1, limit:24, windowSec:120 });
+    const events = Array.isArray(j?.live)? j.live : (Array.isArray(j)?j:[]);
     if(!events.length) return;
 
     liveRows = liveRows.concat(events).slice(-24);
 
-    var tb = document.getElementById('tbl-live-perf'); if(tb){
-      tb.innerHTML='';
-      liveRows.slice().reverse().forEach(function(r){
-        var tr=document.createElement('tr');
-        tr.innerHTML =
-          '<td class="mono">'+(r.time||'')+'</td><td>'+(r.country||'')+'</td><td>'+(r.offer||'')+'</td>'+
-          '<td>'+(r.clicks||0)+'</td><td>'+(r.conversions||r.conv||0)+'</td><td class="money">'+dollars(r.earnings||0)+'</td>';
-        tb.appendChild(tr);
-      });
-    }
+    const tb = $('#tbl-live-perf'); tb.innerHTML='';
+    liveRows.slice().reverse().forEach(r=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML =
+        `<td class="mono">${r.time||''}</td><td>${r.country||''}</td><td>${r.offer||''}</td>`+
+        `<td>${r.clicks||0}</td><td>${r.conversions||r.conv||0}</td><td class="money">${dollars(r.earnings||0)}</td>`;
+      tb.appendChild(tr);
+    });
 
-    var byGeo = {};
-    events.forEach(function(ev){
-      var k = ev.country || 'Unknown';
+    const byGeo = {};
+    events.forEach(ev=>{
+      const k = ev.country || 'Unknown';
       if(!byGeo[k]) byGeo[k] = {country:k, clicks:0, conv:0, earnings:0};
       byGeo[k].clicks   += Number(ev.clicks||0);
       byGeo[k].conv     += Number(ev.conversions||ev.conv||0);
       byGeo[k].earnings += Number(ev.earnings||0);
     });
-    var tb2 = document.getElementById('tbl-live-geo');
-    if(tb2){
-      tb2.innerHTML='';
-      var arrGeo = Object.keys(byGeo).map(function(k){return byGeo[k];})
-                     .sort(function(a,b){return b.earnings-a.earnings;}).slice(0,10);
-      if(!arrGeo.length){ tb2.innerHTML='<tr><td colspan="4" class="muted">Waiting for stream…</td></tr>'; return; }
-      arrGeo.forEach(function(g){
-        var tr=document.createElement('tr');
-        tr.innerHTML = '<td>'+g.country+'</td><td>'+g.clicks+'</td><td>'+g.conv+'</td><td class="money">'+dollars(g.earnings)+'</td>';
-        tb2.appendChild(tr);
-      });
-    }
+    const tb2 = $('#tbl-live-geo'); tb2.innerHTML='';
+    const arrGeo = Object.values(byGeo).sort((a,b)=>b.earnings-a.earnings).slice(0,10);
+    if(!arrGeo.length){ tb2.innerHTML='<tr><td colspan="4" class="muted">Waiting for stream…</td></tr>'; return; }
+    arrGeo.forEach(g=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML = `<td>${g.country}</td><td>${g.clicks}</td><td>${g.conv}</td><td class="money">${dollars(g.earnings)}</td>`;
+      tb2.appendChild(tr);
+    });
   }catch(e){ /* silent */ }
 }
 
 /* ========= WALLET ========= */
 async function initWallet(){
   try{
-    var w = obj(await api('wallet'));
-    var hist = arr(w.history) || arr(w);
-    var el;
-    if((el=$('#wal-balance'))) el.textContent = dollars(w.balance||0);
+    const w = await api('wallet'); // { ok, balance, history:[...] }
+    const hist = Array.isArray(w?.history)? w.history : (Array.isArray(w)? w : []);
+    $('#wal-balance').textContent = dollars(w?.balance||0);
 
-    var pendingAmt = hist.filter(function(t){return String(t.status||'').toUpperCase()==='PENDING';})
-                         .reduce(function(s,t){return s+Number(t.amount||0);},0);
-    if((el=$('#wal-pending'))) el.textContent = dollars(pendingAmt);
-    var lastPaid = hist.filter(function(t){return String(t.status||'').toUpperCase()==='COMPLETED';}).slice(-1)[0];
-    if((el=$('#wal-last'))) el.textContent = dollars(lastPaid ? lastPaid.amount : 0);
+    const pendingAmt = hist.filter(t=>String(t.status||'').toUpperCase()==='PENDING')
+                           .reduce((s,t)=>s+Number(t.amount||0),0);
+    $('#wal-pending').textContent = dollars(pendingAmt);
+    const lastPaid = hist.filter(t=>String(t.status||'').toUpperCase()==='COMPLETED' || String(t.status||'').toUpperCase()==='SUCCESS')
+                         .slice(-1)[0];
+    $('#wal-last').textContent = dollars(lastPaid ? lastPaid.amount : 0);
 
-    var tb = document.getElementById('tbl-wallet');
-    if(tb){
-      tb.innerHTML='';
-      hist.slice().reverse().forEach(function(t){
-        var tr=document.createElement('tr');
-        tr.innerHTML='<td>'+(t.date||'')+'</td><td>'+(t.method||'')+'</td><td class="money">'+dollars(t.amount||0)+'</td><td>'+(t.status||'')+'</td>';
-        tb.appendChild(tr);
-      });
-      if(!tb.children.length) tb.innerHTML = '<tr><td colspan="4" class="muted">No transactions.</td></tr>';
-    }
+    const tb = $('#tbl-wallet'); tb.innerHTML='';
+    hist.slice().reverse().forEach(t=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML=`<td>${t.date||''}</td><td>${t.method||''}</td><td class="money">${dollars(t.amount||0)}</td><td>${t.status||''}</td>`;
+      tb.appendChild(tr);
+    });
+    if(!tb.children.length) tb.innerHTML = `<tr><td colspan="4" class="muted">No transactions.</td></tr>`;
   }catch(e){
-    var tb2 = document.getElementById('tbl-wallet'); if(tb2) tb2.innerHTML = '<tr><td colspan="4" class="muted">Failed to load.</td></tr>';
+    const tb = $('#tbl-wallet'); if(tb) tb.innerHTML = `<tr><td colspan="4" class="muted">Failed to load.</td></tr>`;
   }
 }
 
 /* ========= MONITORING ========= */
 async function initMonitor(){
-  var tb = document.getElementById('tbl-monitor'); if(tb) tb.innerHTML='';
+  const tb = $('#tbl-monitor'); tb.innerHTML='';
   try{
-    var m = obj(await api('monitoring'));
-    var events = arr(m.events) || arr(m);
-    var el;
-    if((el=$('#box-alerts'))) el.textContent = events.length;
-    if((el=$('#box-maint')))  el.textContent = m.maintenance || '—';
-    if((el=$('#box-health'))) el.textContent = m.health || 'OK';
+    const m = await api('monitoring'); // { ok, events:[...], health, maintenance }
+    const events = Array.isArray(m?.events)? m.events : (Array.isArray(m)?m:[]);
+    $('#box-alerts').textContent = events.length;
+    $('#box-maint').textContent  = m?.maintenance || '—';
+    $('#box-health').textContent = m?.health || 'OK';
 
-    if(tb){
-      if(!events.length){ tb.innerHTML = '<tr><td colspan="3" class="muted">No events.</td></tr>'; return; }
-      events.forEach(function(ev){
-        var tr=document.createElement('tr');
-        tr.innerHTML='<td class="mono">'+(ev.time||'')+'</td><td>'+(ev.type||'')+'</td><td>'+(ev.msg||ev.message||'')+'</td>';
-        tb.appendChild(tr);
-      });
+    if(!events.length){
+      tb.innerHTML = `<tr><td colspan="3" class="muted">No events.</td></tr>`;
+      return;
     }
+    events.forEach(ev=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML=`<td class="mono">${ev.time||''}</td><td>${ev.type||''}</td><td>${ev.msg||ev.message||''}</td>`;
+      tb.appendChild(tr);
+    });
   }catch(e){
-    if(tb) tb.innerHTML = '<tr><td colspan="3" class="muted">Failed to load.</td></tr>';
+    tb.innerHTML = `<tr><td colspan="3" class="muted">Failed to load.</td></tr>`;
   }
 }
 
 /* ========= SETTINGS ========= */
 async function initSettings(){
   try{
-    var j = await api('config');
-    var pretty = document.getElementById('pretty'); if(pretty) pretty.textContent = JSON.stringify(j, null, 2);
+    const j = await api('config');
+    $('#pretty').textContent = JSON.stringify(j, null, 2);
   }catch(e){
-    var pretty2 = document.getElementById('pretty'); if(pretty2) pretty2.textContent = 'Failed to load config';
+    $('#pretty').textContent = 'Failed to load config';
   }
 }
 
 /* ========= BOOT ========= */
-window.addEventListener('DOMContentLoaded', function(){
-  try{
-    console.log('BOOT OK');
-    document.body.setAttribute('data-boot','ok');
-    var r = (location.hash||'#dashboard').replace('#','');
-    show(r);
-  }catch(e){
-    var fatal = document.getElementById('fatal');
-    if(fatal){ fatal.style.display='block'; fatal.textContent = '[BOOT ERROR] '+(e&&e.stack?e.stack:String(e)); }
-    console.error(e);
-  }
+window.addEventListener('DOMContentLoaded', ()=>{
+  const r = (location.hash||'#dashboard').replace('#','');
+  show(r);
 });
 </script>
 </body>

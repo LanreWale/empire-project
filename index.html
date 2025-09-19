@@ -1,4 +1,5 @@
 <!doctype html>
+
 <html lang="en">
 <head>
 <meta charset="utf-8" />
@@ -22,107 +23,36 @@
       radial-gradient(1200px 1200px at 120% -10%, #163b5c 0%, transparent 60%) fixed,
       radial-gradient(1000px 1000px at -10% 120%, #0c2338 0%, transparent 60%) fixed,
       var(--bg-0);
-  }
+  }.page{display:grid; grid-template-columns:260px 1fr; gap:0; min-height:100vh} .sidebar{ background:linear-gradient(180deg,#0d1a27 0%, #0b1825 100%); border-right:1px solid var(--line); padding:18px 12px; position:sticky; top:0; height:100vh; } .brand{display:flex; align-items:center; gap:10px; padding:8px 10px 18px} .brand img{width:28px;height:28px; filter:drop-shadow(0 2px 6px rgba(0,0,0,.35))} .brand span{font-weight:800; letter-spacing:.6px} .nav{display:flex; flex-direction:column; gap:6px; margin-top:6px} .nav a{ display:flex; align-items:center; gap:10px; padding:11px 12px; color:var(--text); text-decoration:none; border-radius:10px; background:transparent; border:1px solid transparent; } .nav a.active{background:var(--bg-2); border-color:var(--line)} .nav small{opacity:.65}
 
-  .page{display:grid; grid-template-columns:260px 1fr; gap:0; min-height:100vh}
-  .sidebar{
-    background:linear-gradient(180deg,#0d1a27 0%, #0b1825 100%);
-    border-right:1px solid var(--line); padding:18px 12px; position:sticky; top:0; height:100vh;
-  }
-  .brand{display:flex; align-items:center; gap:10px; padding:8px 10px 18px}
-  .brand img{width:28px;height:28px}
-  .brand span{font-weight:800; letter-spacing:.6px}
-  .nav{display:flex; flex-direction:column; gap:6px; margin-top:6px}
-  .nav a{
-    display:flex; align-items:center; gap:10px; padding:11px 12px;
-    color:var(--text); text-decoration:none; border-radius:10px;
-    background:transparent; border:1px solid transparent;
-  }
-  .nav a.active{background:var(--bg-2); border-color:var(--line)}
-  .nav small{opacity:.65}
+.content{padding:22px; min-width:0}
 
-  .content{padding:22px; min-width:0}
+.section-head{display:flex; align-items:center; justify-content:space-between; gap:12px; margin:4px 0 18px} .section-head h2{margin:0; font-size:18px; letter-spacing:.3px} .btn{ background:linear-gradient(180deg,var(--accent),#ffcb31); color:#1b1b1b; border:0; font-weight:700; padding:10px 14px; border-radius:10px; cursor:pointer; box-shadow:0 .5px 0 rgba(255,255,255,.4) inset, 0 6px 18px rgba(0,0,0,.25); transition:.15s ease } .btn:hover{transform:translateY(-1px)} .btn:active{transform:translateY(0)} .btn:focus{outline:2px solid #3a85ff; outline-offset:2px} .btn.secondary{background:#173046; color:#d6e7ff; border:1px solid #254660} .btn.secondary.active{background:#103b66; border-color:#3a85ff}
 
-  .section-head{display:flex; align-items:center; justify-content:space-between; gap:12px; margin:4px 0 18px}
-  .section-head h2{margin:0; font-size:18px; letter-spacing:.3px}
-  .btn{
-    background:linear-gradient(180deg,#ffd559,#ffcb31); color:#1b1b1b; border:0; font-weight:700;
-    padding:10px 14px; border-radius:10px; cursor:pointer; box-shadow:var(--shadow)
-  }
-  .btn.secondary{background:#173046; color:#d6e7ff; border:1px solid #254660}
-  .btn.secondary.active{background:#103b66; border-color:#3a85ff}
+.grid{display:grid; gap:16px} .grid.cols-4{grid-template-columns:repeat(4,minmax(0,1fr))} .grid.cols-3{grid-template-columns:repeat(3,minmax(0,1fr))} .grid.cols-2{grid-template-columns:repeat(2,minmax(0,1fr))} .grid.cols-1{grid-template-columns:1fr} @media (max-width:1150px){ .grid.cols-4{grid-template-columns:repeat(2,1fr)} } @media (max-width:760px){ .page{grid-template-columns:1fr} .sidebar{position:static;height:auto} .grid,[class*=cols-]{grid-template-columns:1fr} }
 
-  .grid{display:grid; gap:16px}
-  .grid.cols-4{grid-template-columns:repeat(4,minmax(0,1fr))}
-  .grid.cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}
-  .grid.cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .grid.cols-1{grid-template-columns:1fr}
-  @media (max-width:1150px){ .grid.cols-4{grid-template-columns:repeat(2,1fr)} }
-  @media (max-width:760px){ .page{grid-template-columns:1fr} .sidebar{position:static;height:auto} .grid,[class*=cols-]{grid-template-columns:1fr} }
+.card{ background:linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,0)) , var(--card); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow); transition:box-shadow .15s ease, transform .15s ease } .card:hover{box-shadow:0 10px 26px rgba(0,0,0,.28)} .card.pad{padding:16px}
 
-  .card{
-    background:linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,0)) , var(--card);
-    border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow)
-  }
-  .card.pad{padding:16px}
+.kpi{display:flex; flex-direction:column; gap:8px} .kpi .label{font-size:12px; color:var(--muted)} .kpi .value{font-weight:800; font-size:22px; letter-spacing:.2px} .sub{font-size:11px; color:var(--muted); margin-top:-2px}
 
-  .kpi{display:flex; flex-direction:column; gap:8px}
-  .kpi .label{font-size:12px; color:var(--muted)}
-  .kpi .value{font-weight:800; font-size:22px}
-  .sub{font-size:11px; color:var(--muted); margin-top:-2px}
+table{width:100%; border-collapse:separate; border-spacing:0; overflow:hidden; border-radius:12px; border:1px solid var(--line)} thead th{background:#0f2b45; text-align:left; padding:11px 12px; font-size:12px; color:#c4d7ef; border-bottom:1px solid var(--line)} tbody td{padding:10px 12px; border-bottom:1px solid var(--line)} tbody tr:hover td{background:rgba(20,48,74,.35)} tbody tr:last-child td{border-bottom:0} .muted{color:var(--muted)} .money{color:var(--good); font-weight:700} .badge{display:inline-block; padding:2px 8px; border-radius:999px; font-size:11px; border:1px solid var(--line); background:#14304a}
 
-  table{width:100%; border-collapse:separate; border-spacing:0; overflow:hidden; border-radius:12px; border:1px solid var(--line)}
-  thead th{background:#0f2b45; text-align:left; padding:11px 12px; font-size:12px; color:#c4d7ef; border-bottom:1px solid var(--line)}
-  tbody td{padding:10px 12px; border-bottom:1px solid var(--line)}
-  tbody tr:last-child td{border-bottom:0}
-  .muted{color:var(--muted)}
-  .money{color:var(--good); font-weight:700}
-  .badge{display:inline-block; padding:2px 8px; border-radius:999px; font-size:11px; border:1px solid var(--line); background:#14304a}
+.acct{display:grid; grid-template-columns:1fr auto; gap:10px} .acct h3{margin:0 0 6px; font-size:20px} .acct .stats{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px} .kv{background:var(--card-2); border:1px solid var(--line); border-radius:10px; padding:10px} .kv b{display:block; font-size:12px; color:var(--muted); margin-bottom:3px} .kv span{font-weight:800}
 
-  .acct{display:grid; grid-template-columns:1fr auto; gap:10px}
-  .acct h3{margin:0 0 6px; font-size:20px}
-  .acct .stats{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px}
-  .kv{background:var(--card-2); border:1px solid var(--line); border-radius:10px; padding:10px}
-  .kv b{display:block; font-size:12px; color:var(--muted); margin-bottom:3px}
-  .kv span{font-weight:800}
+.pill{padding:6px 9px; border-radius:999px; background:#103250; border:1px solid var(--line); font-size:12px} .flex{display:flex; gap:10px; align-items:center} .right{margin-left:auto}
 
-  .pill{padding:6px 9px; border-radius:999px; background:#103250; border:1px solid var(--line); font-size:12px}
-  .flex{display:flex; gap:10px; align-items:center}
-  .right{margin-left:auto}
+.mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;} code.pretty{white-space:pre-wrap; display:block; background:#0e2236; border:1px solid var(--line); padding:14px; border-radius:10px}
 
-  .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;}
-  code.pretty{white-space:pre-wrap; display:block; background:#0e2236; border:1px solid var(--line); padding:14px; border-radius:10px}
+.empty{padding:18px; text-align:center; color:var(--muted)} .skeleton{position:relative;overflow:hidden;background:#10263d;border-radius:10px;min-height:42px} .skeleton::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.06),transparent);transform:translateX(-100%);animation:sheen 1.2s infinite} @keyframes sheen{to{transform:translateX(100%)}}
 
-  .empty{padding:18px; text-align:center; color:var(--muted)}
+/* Modal & drawer */ .modal{position:fixed; inset:0; display:none; align-items:center; justify-content:center; z-index:50} .modal.open{display:flex} .modal .scrim{position:absolute; inset:0; background:rgba(6,16,26,.6); backdrop-filter: blur(2px)} .modal .panel{ position:relative; width:min(720px,92vw); background:var(--card); border:1px solid var(--line); border-radius:16px; box-shadow:var(--shadow); padding:18px; } .drawer{position:fixed; inset:0 0 0 auto; width:min(480px,92vw); background:var(--card); border-left:1px solid var(--line); display:none; z-index:60} .drawer.open{display:block} .drawer .head{padding:14px 16px; border-bottom:1px solid var(--line); font-weight:700} .drawer .body{padding:14px 16px}
 
-  /* Modal & drawer */
-  .modal{position:fixed; inset:0; display:none; align-items:center; justify-content:center; z-index:50}
-  .modal.open{display:flex}
-  .modal .scrim{position:absolute; inset:0; background:rgba(6,16,26,.6); backdrop-filter: blur(2px)}
-  .modal .panel{
-    position:relative; width:min(720px,92vw); background:var(--card);
-    border:1px solid var(--line); border-radius:16px; box-shadow:var(--shadow); padding:18px;
-  }
-  .drawer{position:fixed; inset:0 0 0 auto; width:min(480px,92vw); background:var(--card); border-left:1px solid var(--line); display:none; z-index:60}
-  .drawer.open{display:block}
-  .drawer .head{padding:14px 16px; border-bottom:1px solid var(--line); font-weight:700}
-  .drawer .body{padding:14px 16px}
+.form-grid{display:grid; grid-template-columns:1fr 1fr; gap:12px} .form-grid .full{grid-column:1 / -1} .input{display:flex; flex-direction:column; gap:6px} .input label{font-size:12px; color:var(--muted)} .input input,.input select,.input textarea{ background:#0e2236; color:var(--text); border:1px solid #24445e; border-radius:10px; padding:10px 12px; outline:none; } .input textarea{min-height:80px; resize:vertical} .input input:focus,.input select:focus,.input textarea:focus{border-color:#3a85ff} .modal .footer{display:flex; gap:10px; justify-content:flex-end; margin-top:14px} .bad{color:var(--bad); font-size:12px} .toast{position:fixed; right:16px; bottom:16px; background:#0e2236; border:1px solid #24445e; padding:10px 12px; border-radius:10px; display:none; z-index:80} .toast.show{display:block} .chart{min-height:220px} .chart svg{width:100%; height:220px; display:block}
 
-  .form-grid{display:grid; grid-template-columns:1fr 1fr; gap:12px}
-  .form-grid .full{grid-column:1 / -1}
-  .input{display:flex; flex-direction:column; gap:6px}
-  .input label{font-size:12px; color:var(--muted)}
-  .input input,.input select,.input textarea{
-    background:#0e2236; color:var(--text); border:1px solid #24445e; border-radius:10px; padding:10px 12px; outline:none;
-  }
-  .input textarea{min-height:80px; resize:vertical}
-  .input input:focus,.input select:focus,.input textarea:focus{border-color:#3a85ff}
-  .modal .footer{display:flex; gap:10px; justify-content:flex-end; margin-top:14px}
-  .bad{color:var(--bad); font-size:12px}
-  .toast{position:fixed; right:16px; bottom:16px; background:#0e2236; border:1px solid #24445e; padding:10px 12px; border-radius:10px; display:none; z-index:80}
-  .toast.show{display:block}
-  .chart svg{width:100%; height:220px; display:block}
-</style>
+/* Favicon chips for CPA domains */ .chip{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;background:#103250;border:1px solid var(--line);font-size:12px} .chip img{width:16px;height:16px;border-radius:4px;display:block}
+
+/* Print mode */ @media print{ .sidebar,.nav,.btn,.toast,.modal,.drawer{display:none!important} body{background:#fff;color:#000} .card{box-shadow:none;border:1px solid #ddd} } </style>
+
 </head>
 <body>
 <div class="page">
@@ -140,9 +70,7 @@
       <a href="#monitor" data-route="monitor">🛡️ Monitoring</a>
       <a href="#settings" data-route="settings">⚙️ Settings</a>
     </nav>
-  </aside>
-
-  <main class="content">
+  </aside>  <main class="content">
     <!-- DASHBOARD -->
     <section data-page="dashboard" style="display:block">
       <div class="section-head"><h2>Supreme Command Dashboard</h2><span class="pill">SUPREME COMMANDER</span></div>
@@ -151,260 +79,254 @@
         <div class="card pad kpi"><div class="label">Active Users</div><div class="value" id="dash-users">0</div><div class="sub muted"><span id="dash-users-diff">24h growth</span></div></div>
         <div class="card pad kpi"><div class="label">Conversion Rate</div><div class="value" id="dash-cr">0.00%</div><div class="sub muted">industry leading</div></div>
         <div class="card pad kpi"><div class="label">Total Clicks</div><div class="value" id="dash-clicks">0</div><div class="sub muted">daily average</div></div>
-      </div>
-
-      <div class="grid cols-2" style="margin-top:16px">
-        <div class="card pad">
-          <h3 style="margin:0 0 10px">Daily Earnings</h3>
-          <div id="dash-earnings" class="chart empty">Awaiting data..</div>
-        </div>
-        <div class="card pad">
-          <h3 style="margin:0 0 10px">Traffic Sources</h3>
-          <div id="dash-sources" class="chart empty">Awaiting data..</div>
-        </div>
-      </div>
-
-      <div class="card pad" style="margin-top:16px">
-        <h3 style="margin:0 0 10px">By Geo (Top)</h3>
-        <table>
-          <thead><tr><th>Country</th><th>Clicks</th><th>Leads</th><th>Earnings ($)</th></tr></thead>
-          <tbody id="tbl-dash-geo"><tr><td colspan="4" class="muted">No data</td></tr></tbody>
-        </table>
-      </div>
-    </section>
-
-    <!-- CPA ACCOUNTS -->
-    <section data-page="cpa" style="display:none">
-      <div class="section-head">
-        <h2>CPA Accounts Management</h2>
-        <button class="btn" id="btn-add-acct">+ Add New Account</button>
-      </div>
-      <div id="cpa-grid" class="grid cols-2"></div>
-    </section>
-
-    <!-- ADD NEW ACCOUNT MODAL -->
-    <div id="mdl-cpa" class="modal" aria-hidden="true">
-      <div class="scrim" data-close></div>
-      <div class="panel">
-        <h3 style="margin:0 0 12px">Add New CPA Account</h3>
-        <div class="form-grid">
-          <div class="input"><label>Account Name *</label><input id="f-account" placeholder="e.g. 2288690 / Main Grip"/></div>
-          <div class="input"><label>Network *</label><input id="f-network" placeholder="e.g. CPA Grip"/></div>
-          <div class="input"><label>Domain</label><input id="f-domain" placeholder="offers.example.com"/></div>
-          <div class="input">
-            <label>Status</label>
-            <select id="f-status">
-              <option value="ACTIVE" selected>ACTIVE</option>
-              <option value="PAUSED">PAUSED</option>
-              <option value="DISABLED">DISABLED</option>
-            </select>
-          </div>
-          <div class="input full"><label>API Key / Token</label><input id="f-key" placeholder="(optional) stored in GAS"/></div>
-          <div class="input"><label>Webhook URL</label><input id="f-webhook" placeholder="https://.../postback"/></div>
-        </div>
-        <div id="f-error" class="bad" style="display:none"></div>
-        <div class="footer">
-          <button class="btn secondary" data-close>Cancel</button>
-          <button class="btn" id="btn-save-acct">Save Account</button>
-        </div>
-      </div>
+      </div><div class="grid cols-2" style="margin-top:16px">
+    <div class="card pad">
+      <h3 style="margin:0 0 10px">Daily Earnings</h3>
+      <div id="dash-earnings" class="chart empty skeleton">Awaiting data..</div>
     </div>
-
-    <!-- USERS -->
-    <section data-page="users" style="display:none">
-      <div class="section-head"><h2>Users Management</h2>
-        <div class="flex right">
-          <button class="btn secondary active" data-users-tab="APPROVED">Approved</button>
-          <button class="btn secondary" data-users-tab="PENDING">Pending</button>
-          <button class="btn secondary" data-users-tab="REJECTED">Rejected</button>
-          <button class="btn" id="btn-invite">+ Invite User</button>
-        </div>
-      </div>
-      <div class="card pad">
-        <table>
-          <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Authority</th></tr></thead>
-          <tbody id="tbl-users"><tr><td colspan="4" class="muted">No users.</td></tr></tbody>
-        </table>
-      </div>
-    </section>
-
-    <!-- INVITE MODAL -->
-    <div id="mdl-invite" class="modal" aria-hidden="true">
-      <div class="scrim" data-close></div>
-      <div class="panel">
-        <h3 style="margin:0 0 12px">Create Invite Link</h3>
-        <div class="form-grid">
-          <div class="input"><label>Full name</label><input id="inv-name" placeholder="Jane Doe"/></div>
-          <div class="input"><label>Email</label><input id="inv-email" placeholder="jane@example.com"/></div>
-          <div class="input"><label>Authority</label>
-            <select id="inv-role">
-              <option>1x User</option>
-              <option>2x Manager</option>
-              <option>3x Admin</option>
-            </select>
-          </div>
-          <div class="input full"><label>Generated Link</label><input id="inv-url" readonly></div>
-          <div class="input full"><label>Message (optional)</label><textarea id="inv-msg" placeholder="Welcome to THE EMPIRE…"></textarea></div>
-        </div>
-        <div class="footer">
-          <button class="btn secondary" data-close>Close</button>
-          <button class="btn secondary" id="btn-copy-invite">Copy Link</button>
-          <button class="btn" id="btn-save-invite">Save Invite</button>
-        </div>
-        <div class="sub muted" id="inv-hint" style="margin-top:8px"></div>
-      </div>
+    <div class="card pad">
+      <h3 style="margin:0 0 10px">Traffic Sources</h3>
+      <div id="dash-sources" class="chart empty skeleton">Awaiting data..</div>
     </div>
+  </div>
 
-    <!-- ANALYTICS -->
-    <section data-page="analytics" style="display:none">
-      <div class="section-head"><h2>Analytics & Reports</h2></div>
-      <div class="grid cols-2">
-        <div class="card pad">
-          <h3 style="margin:0 0 10px">Performance Overview</h3>
-          <div id="ana-overview" class="chart empty">Loading…</div>
-        </div>
-        <div class="card pad">
-          <h3 style="margin:0 0 10px">Geographic Distribution</h3>
-          <div id="ana-geo-dist" class="chart empty">Loading…</div>
-        </div>
+  <div class="card pad" style="margin-top:16px">
+    <h3 style="margin:0 0 10px">By Geo (Top)</h3>
+    <table>
+      <thead><tr><th>Country</th><th>Clicks</th><th>Leads</th><th>Earnings ($)</th></tr></thead>
+      <tbody id="tbl-dash-geo"><tr><td colspan="4" class="muted">No data</td></tr></tbody>
+    </table>
+  </div>
+</section>
+
+<!-- CPA ACCOUNTS -->
+<section data-page="cpa" style="display:none">
+  <div class="section-head">
+    <h2>CPA Accounts Management</h2>
+    <button class="btn" id="btn-add-acct">+ Add New Account</button>
+  </div>
+  <div id="cpa-grid" class="grid cols-2"></div>
+</section>
+
+<!-- ADD NEW ACCOUNT MODAL -->
+<div id="mdl-cpa" class="modal" aria-hidden="true">
+  <div class="scrim" data-close></div>
+  <div class="panel">
+    <h3 style="margin:0 0 12px">Add New CPA Account</h3>
+    <div class="form-grid">
+      <div class="input"><label>Account Name *</label><input id="f-account" placeholder="e.g. 2288690 / Main Grip"/></div>
+      <div class="input"><label>Network *</label><input id="f-network" placeholder="e.g. CPA Grip"/></div>
+      <div class="input"><label>Domain</label><input id="f-domain" placeholder="offers.example.com"/></div>
+      <div class="input">
+        <label>Status</label>
+        <select id="f-status">
+          <option value="ACTIVE" selected>ACTIVE</option>
+          <option value="PAUSED">PAUSED</option>
+          <option value="DISABLED">DISABLED</option>
+        </select>
       </div>
-
-      <div class="grid cols-2" style="margin-top:16px">
-        <div class="card pad">
-          <h3 style="margin:0 0 10px">Live Performance Data (last 2 min)</h3>
-          <table>
-            <thead><tr><th>Time</th><th>Country</th><th>Offer</th><th>Clicks</th><th>Conv.</th><th>Earnings</th></tr></thead>
-            <tbody id="tbl-live-perf"><tr><td colspan="6" class="muted">Waiting for stream…</td></tr></tbody>
-          </table>
-        </div>
-        <div class="card pad">
-          <h3 style="margin:0 0 10px">Live by GEO (rolling)</h3>
-          <table>
-            <thead><tr><th>Country</th><th>Clicks</th><th>Conv.</th><th>Earnings</th></tr></thead>
-            <tbody id="tbl-live-geo"><tr><td colspan="4" class="muted">Waiting for stream…</td></tr></tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-
-    <!-- WALLET -->
-    <section data-page="wallet" style="display:none">
-      <div class="section-head">
-        <h2>Wallet</h2>
-        <button class="btn" id="btn-withdraw">Request Withdrawal</button>
-      </div>
-      <div class="grid cols-3">
-        <div class="card pad kpi"><div class="label">Balance</div><div class="value" id="wal-balance">$0.00</div></div>
-        <div class="card pad kpi"><div class="label">Pending Payout</div><div class="value" id="wal-pending">$0.00</div></div>
-        <div class="card pad kpi"><div class="label">Last Payout</div><div class="value" id="wal-last">$0.00</div></div>
-      </div>
-      <div class="grid cols-2" style="margin-top:16px">
-        <div class="card pad">
-          <h3 style="margin:0 0 10px">Transaction History</h3>
-          <table>
-            <thead><tr><th>Date</th><th>Method</th><th>Amount ($)</th><th>Status</th></tr></thead>
-            <tbody id="tbl-wallet"><tr><td colspan="4" class="muted">No transactions.</td></tr></tbody>
-          </table>
-        </div>
-        <div class="card pad">
-          <h3 style="margin:0 0 10px">Request Withdrawal</h3>
-          <div class="muted" style="font-size:13px">Use the button above to submit a payout request.</div>
-        </div>
-      </div>
-    </section>
-
-    <!-- WITHDRAWAL MODAL -->
-    <div id="mdl-withdraw" class="modal" aria-hidden="true">
-      <div class="scrim" data-close></div>
-      <div class="panel">
-        <h3 style="margin:0 0 12px">Submit Withdrawal Request</h3>
-        <div class="form-grid">
-          <div class="input"><label>Amount (USD)</label><input id="wd-amount" type="number" min="1" step="0.01" placeholder="100.00"/></div>
-          <div class="input"><label>Method</label>
-            <select id="wd-method">
-              <option value="Bank">Bank</option>
-              <option value="Payoneer">Payoneer</option>
-              <option value="Crypto">Crypto (USDT)</option>
-            </select>
-          </div>
-
-          <!-- bank -->
-          <div class="input full m-bank"><label>Bank Name</label><input id="wd-bank-name" placeholder="Chase Bank"/></div>
-          <div class="input m-bank"><label>Account Name</label><input id="wd-bank-accname" placeholder="John Doe"/></div>
-          <div class="input m-bank"><label>Account Number / IBAN</label><input id="wd-bank-accno" placeholder="123456789 / IBAN"/></div>
-          <div class="input m-bank"><label>SWIFT/BIC</label><input id="wd-bank-swift" placeholder="CHASUS33"/></div>
-          <div class="input m-bank"><label>Country</label><input id="wd-bank-country" placeholder="USA"/></div>
-
-          <!-- payoneer -->
-          <div class="input full m-payoneer" style="display:none"><label>Payoneer Email</label><input id="wd-payo-email" placeholder="you@domain.com"/></div>
-
-          <!-- crypto -->
-          <div class="input full m-crypto" style="display:none"><label>USDT (TRC20) Address</label><input id="wd-crypto-addr" placeholder="T..."/></div>
-          <div class="input m-crypto" style="display:none"><label>Network</label>
-            <select id="wd-crypto-net"><option>TRC20</option><option>ERC20</option><option>BEP20</option></select>
-          </div>
-        </div>
-        <div id="wd-error" class="bad" style="display:none"></div>
-        <div class="footer">
-          <button class="btn secondary" data-close>Cancel</button>
-          <button class="btn" id="btn-submit-wd">Submit Request</button>
-        </div>
-        <div class="sub muted" style="margin-top:8px">Server endpoint: <b>walletRequest</b> (GAS) will persist this request.</div>
-      </div>
+      <div class="input full"><label>API Key / Token</label><input id="f-key" placeholder="(optional) stored in GAS"/></div>
+      <div class="input"><label>Webhook URL</label><input id="f-webhook" placeholder="https://.../postback"/></div>
     </div>
-
-    <!-- MONITORING -->
-    <section data-page="monitor" style="display:none">
-      <div class="section-head">
-        <h2>Monitoring</h2>
-        <button class="btn secondary" id="btn-open-ev">Open Details</button>
-      </div>
-      <div class="grid cols-3">
-        <div class="card pad kpi"><div class="label">Alerts</div><div class="value" id="box-alerts">—</div></div>
-        <div class="card pad kpi"><div class="label">Maintenance</div><div class="value" id="box-maint">—</div></div>
-        <div class="card pad kpi"><div class="label">System Health</div><div class="value" id="box-health">—</div></div>
-      </div>
-      <div class="card pad" style="margin-top:16px">
-        <h3 style="margin:0 0 10px">Events Stream</h3>
-        <table>
-          <thead><tr><th>Time</th><th>Type</th><th>Message</th></tr></thead>
-          <tbody id="tbl-monitor"><tr><td colspan="3" class="muted">No events.</td></tr></tbody>
-        </table>
-      </div>
-    </section>
-
-    <!-- MONITOR DETAILS DRAWER -->
-    <aside id="drawer-ev" class="drawer">
-      <div class="head">Monitoring Details</div>
-      <div class="body">
-        <div class="input"><label>Summary (last 24h)</label>
-          <div id="ev-summary" class="kv">Loading…</div>
-        </div>
-        <div style="height:10px"></div>
-        <div class="input"><label>Raw JSON</label>
-          <textarea id="ev-json" class="mono" readonly rows="12">{}</textarea>
-        </div>
-      </div>
-    </aside>
-
-    <!-- SETTINGS -->
-    <section data-page="settings" style="display:none">
-      <div class="section-head">
-        <h2>Settings</h2>
-        <button class="btn" id="btn-save-config">Save</button>
-      </div>
-      <div class="card pad">
-        <h3 style="margin:0 0 10px">Live Config</h3>
-        <textarea id="cfg-editor" class="mono" style="width:100%;min-height:260px;background:#0e2236;border:1px solid var(--line);border-radius:10px;color:var(--text);padding:12px">{} </textarea>
-      </div>
-    </section>
-  </main>
+    <div id="f-error" class="bad" style="display:none"></div>
+    <div class="footer">
+      <button class="btn secondary" data-close>Cancel</button>
+      <button class="btn" id="btn-save-acct">Save Account</button>
+    </div>
+  </div>
 </div>
 
-<div id="toast" class="toast">Saved.</div>
+<!-- USERS -->
+<section data-page="users" style="display:none">
+  <div class="section-head"><h2>Users Management</h2>
+    <div class="flex right">
+      <button class="btn secondary active" data-users-tab="APPROVED">Approved</button>
+      <button class="btn secondary" data-users-tab="PENDING">Pending</button>
+      <button class="btn secondary" data-users-tab="REJECTED">Rejected</button>
+      <button class="btn" id="btn-invite">+ Invite User</button>
+    </div>
+  </div>
+  <div class="card pad">
+    <table>
+      <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Authority</th></tr></thead>
+      <tbody id="tbl-users"><tr><td colspan="4" class="muted">No users.</td></tr></tbody>
+    </table>
+  </div>
+</section>
 
-<!-- ========= FRONTEND SCRIPT ========= -->
-<script>
+<!-- INVITE MODAL -->
+<div id="mdl-invite" class="modal" aria-hidden="true">
+  <div class="scrim" data-close></div>
+  <div class="panel">
+    <h3 style="margin:0 0 12px">Create Invite Link</h3>
+    <div class="form-grid">
+      <div class="input"><label>Full name</label><input id="inv-name" placeholder="Jane Doe"/></div>
+      <div class="input"><label>Email</label><input id="inv-email" placeholder="jane@example.com"/></div>
+      <div class="input"><label>Authority</label>
+        <select id="inv-role">
+          <option>1x User</option>
+          <option>2x Manager</option>
+          <option>3x Admin</option>
+        </select>
+      </div>
+      <div class="input full"><label>Generated Link</label><input id="inv-url" readonly></div>
+      <div class="input full"><label>Message (optional)</label><textarea id="inv-msg" placeholder="Welcome to THE EMPIRE…"></textarea></div>
+    </div>
+    <div class="footer">
+      <button class="btn secondary" data-close>Close</button>
+      <button class="btn secondary" id="btn-copy-invite">Copy Link</button>
+      <button class="btn" id="btn-save-invite">Save Invite</button>
+    </div>
+    <div class="sub muted" id="inv-hint" style="margin-top:8px"></div>
+  </div>
+</div>
+
+<!-- ANALYTICS -->
+<section data-page="analytics" style="display:none">
+  <div class="section-head"><h2>Analytics & Reports</h2></div>
+  <div class="grid cols-2">
+    <div class="card pad">
+      <h3 style="margin:0 0 10px">Performance Overview</h3>
+      <div id="ana-overview" class="chart empty skeleton">Loading…</div>
+    </div>
+    <div class="card pad">
+      <h3 style="margin:0 0 10px">Geographic Distribution</h3>
+      <div id="ana-geo-dist" class="chart empty skeleton">Loading…</div>
+    </div>
+  </div>
+
+  <div class="grid cols-2" style="margin-top:16px">
+    <div class="card pad">
+      <h3 style="margin:0 0 10px">Live Performance Data (last 2 min)</h3>
+      <table>
+        <thead><tr><th>Time</th><th>Country</th><th>Offer</th><th>Clicks</th><th>Conv.</th><th>Earnings</th></tr></thead>
+        <tbody id="tbl-live-perf"><tr><td colspan="6" class="muted">Waiting for stream…</td></tr></tbody>
+      </table>
+    </div>
+    <div class="card pad">
+      <h3 style="margin:0 0 10px">Live by GEO (rolling)</h3>
+      <table>
+        <thead><tr><th>Country</th><th>Clicks</th><th>Conv.</th><th>Earnings</th></tr></thead>
+        <tbody id="tbl-live-geo"><tr><td colspan="4" class="muted">Waiting for stream…</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- WALLET -->
+<section data-page="wallet" style="display:none">
+  <div class="section-head">
+    <h2>Wallet</h2>
+    <button class="btn" id="btn-withdraw">Request Withdrawal</button>
+  </div>
+  <div class="grid cols-3">
+    <div class="card pad kpi"><div class="label">Balance</div><div class="value" id="wal-balance">$0.00</div></div>
+    <div class="card pad kpi"><div class="label">Pending Payout</div><div class="value" id="wal-pending">$0.00</div></div>
+    <div class="card pad kpi"><div class="label">Last Payout</div><div class="value" id="wal-last">$0.00</div></div>
+  </div>
+  <div class="grid cols-2" style="margin-top:16px">
+    <div class="card pad">
+      <h3 style="margin:0 0 10px">Transaction History</h3>
+      <table>
+        <thead><tr><th>Date</th><th>Method</th><th>Amount ($)</th><th>Status</th></tr></thead>
+        <tbody id="tbl-wallet"><tr><td colspan="4" class="muted">No transactions.</td></tr></tbody>
+      </table>
+    </div>
+    <div class="card pad">
+      <h3 style="margin:0 0 10px">Request Withdrawal</h3>
+      <div class="muted" style="font-size:13px">Use the button above to submit a payout request.</div>
+    </div>
+  </div>
+</section>
+
+<!-- WITHDRAWAL MODAL -->
+<div id="mdl-withdraw" class="modal" aria-hidden="true">
+  <div class="scrim" data-close></div>
+  <div class="panel">
+    <h3 style="margin:0 0 12px">Submit Withdrawal Request</h3>
+    <div class="form-grid">
+      <div class="input"><label>Amount (USD)</label><input id="wd-amount" type="number" min="1" step="0.01" placeholder="100.00"/></div>
+      <div class="input"><label>Method</label>
+        <select id="wd-method">
+          <option value="Bank">Bank</option>
+          <option value="Payoneer">Payoneer</option>
+          <option value="Crypto">Crypto (USDT)</option>
+        </select>
+      </div>
+
+      <!-- bank -->
+      <div class="input full m-bank"><label>Bank Name</label><input id="wd-bank-name" placeholder="Chase Bank"/></div>
+      <div class="input m-bank"><label>Account Name</label><input id="wd-bank-accname" placeholder="John Doe"/></div>
+      <div class="input m-bank"><label>Account Number / IBAN</label><input id="wd-bank-accno" placeholder="123456789 / IBAN"/></div>
+      <div class="input m-bank"><label>SWIFT/BIC</label><input id="wd-bank-swift" placeholder="CHASUS33"/></div>
+      <div class="input m-bank"><label>Country</label><input id="wd-bank-country" placeholder="USA"/></div>
+
+      <!-- payoneer -->
+      <div class="input full m-payoneer" style="display:none"><label>Payoneer Email</label><input id="wd-payo-email" placeholder="you@domain.com"/></div>
+
+      <!-- crypto -->
+      <div class="input full m-crypto" style="display:none"><label>USDT (TRC20) Address</label><input id="wd-crypto-addr" placeholder="T..."/></div>
+      <div class="input m-crypto" style="display:none"><label>Network</label>
+        <select id="wd-crypto-net"><option>TRC20</option><option>ERC20</option><option>BEP20</option></select>
+      </div>
+    </div>
+    <div id="wd-error" class="bad" style="display:none"></div>
+    <div class="footer">
+      <button class="btn secondary" data-close>Cancel</button>
+      <button class="btn" id="btn-submit-wd">Submit Request</button>
+    </div>
+    <div class="sub muted" style="margin-top:8px">Server endpoint: <b>walletRequest</b> (GAS) will persist this request.</div>
+  </div>
+</div>
+
+<!-- MONITORING -->
+<section data-page="monitor" style="display:none">
+  <div class="section-head">
+    <h2>Monitoring</h2>
+    <button class="btn secondary" id="btn-open-ev">Open Details</button>
+  </div>
+  <div class="grid cols-3">
+    <div class="card pad kpi"><div class="label">Alerts</div><div class="value" id="box-alerts">—</div></div>
+    <div class="card pad kpi"><div class="label">Maintenance</div><div class="value" id="box-maint">—</div></div>
+    <div class="card pad kpi"><div class="label">System Health</div><div class="value" id="box-health">—</div></div>
+  </div>
+  <div class="card pad" style="margin-top:16px">
+    <h3 style="margin:0 0 10px">Events Stream</h3>
+    <table>
+      <thead><tr><th>Time</th><th>Type</th><th>Message</th></tr></thead>
+      <tbody id="tbl-monitor"><tr><td colspan="3" class="muted">No events.</td></tr></tbody>
+    </table>
+  </div>
+</section>
+
+<!-- MONITOR DETAILS DRAWER -->
+<aside id="drawer-ev" class="drawer">
+  <div class="head">Monitoring Details</div>
+  <div class="body">
+    <div class="input"><label>Summary (last 24h)</label>
+      <div id="ev-summary" class="kv">Loading…</div>
+    </div>
+    <div style="height:10px"></div>
+    <div class="input"><label>Raw JSON</label>
+      <textarea id="ev-json" class="mono" readonly rows="12">{}</textarea>
+    </div>
+  </div>
+</aside>
+
+<!-- SETTINGS -->
+<section data-page="settings" style="display:none">
+  <div class="section-head">
+    <h2>Settings</h2>
+    <button class="btn" id="btn-save-config">Save</button>
+  </div>
+  <div class="card pad">
+    <h3 style="margin:0 0 10px">Live Config</h3>
+    <textarea id="cfg-editor" class="mono" style="width:100%;min-height:260px;background:#0e2236;border:1px solid var(--line);border-radius:10px;color:var(--text);padding:12px">{} </textarea>
+  </div>
+</section>
+
+  </main>
+</div><div id="toast" class="toast">Saved.</div><!-- ========= FRONTEND SCRIPT ========= --><script>
 /* ========= FATAL GUARD ========= */
 (function(){
   var fatalBox = document.createElement('pre');
@@ -420,7 +342,7 @@
         '[FATAL] ' + msg + '\n' +
         (src?('at '+src+':'+line+':'+col+'\n'):'') +
         (err && err.stack ? err.stack : '');
-    }catch(_){}
+    }catch(_){ }
   };
 })();
 
@@ -471,88 +393,40 @@ const arr = (m)=> Array.isArray(m) ? m : (m&&Array.isArray(m.items)?m.items:(m&&
 const obj = (m)=> (m && typeof m==='object')? m : {};
 const normDomain = d=> String(d||'').trim().replace(/^https?:\/\//,'').replace(/\/.*$/,'');
 
-/* ========= CHART HELPERS (robust width + retry) ========= */
+/* ========= BRAND CHART RENDERERS (gradient + theme vars) ========= */
 function _host(el){ return (typeof el==='string')? document.querySelector(el) : el; }
-function _ensureWidth(host){
-  const w = host.getBoundingClientRect().width || host.clientWidth || 0;
-  return w>40 ? w : 0;
+function _ensureWidth(host){ const w = host.getBoundingClientRect().width || host.clientWidth || 0; return w>40 ? w : 0; }
+function _theme(){
+  const cs = getComputedStyle(document.documentElement);
+  return {
+    accent: (cs.getPropertyValue('--accent')||'#ffd559').trim(),
+    axis:   (cs.getPropertyValue('--line')||'#173046').trim(),
+    label:  (cs.getPropertyValue('--muted')||'#7c97b5').trim()
+  };
 }
 function renderBarChart(el, series=[], labels=[]){
-  const host = _host(el); if(!host) return;
-  const W0 = _ensureWidth(host);
-  if(!W0){ setTimeout(()=>renderBarChart(el,series,labels), 60); return; }
-
-  host.classList.remove('empty');
-  host.innerHTML='';
-  if(!series.length){ host.classList.add('empty'); host.textContent='No data'; return; }
-
-  const W = Math.max(W0, 300), H = 220, pad = 28;
-  const max = Math.max(...series.map(v=>Number(v)||0), 1);
-  const bw = (W - pad*2) / series.length;
-  const svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
-  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
-
-  const axis = document.createElementNS(svg.namespaceURI,'line');
-  axis.setAttribute('x1', pad); axis.setAttribute('y1', H-pad);
-  axis.setAttribute('x2', W-pad); axis.setAttribute('y2', H-pad);
-  axis.setAttribute('stroke', '#2a4b6a'); axis.setAttribute('stroke-width', '1');
-  svg.appendChild(axis);
-
-  series.forEach((v,i)=>{
-    const val = Number(v)||0;
-    const h = (val/max) * (H - pad*2);
-    const x = pad + i*bw + 6;
-    const y = (H-pad) - h;
-    const rect = document.createElementNS(svg.namespaceURI,'rect');
-    rect.setAttribute('x', x); rect.setAttribute('y', y);
-    rect.setAttribute('width', Math.max(8, bw-12)); rect.setAttribute('height', Math.max(0,h));
-    rect.setAttribute('fill', '#ffd559');
-    svg.appendChild(rect);
-
-    if(labels[i]){
-      const tx = document.createElementNS(svg.namespaceURI,'text');
-      tx.setAttribute('x', x + (bw-12)/2);
-      tx.setAttribute('y', H - pad + 14);
-      tx.setAttribute('text-anchor', 'middle');
-      tx.setAttribute('font-size', '10');
-      tx.setAttribute('fill', '#86a7c9');
-      const t = String(labels[i]);
-      tx.textContent = t.length>8 ? t.slice(5) : t;
-      svg.appendChild(tx);
-    }
+  const host = _host(el); if(!host) return; const THEME=_theme();
+  const W0 = _ensureWidth(host); if(!W0){ setTimeout(()=>renderBarChart(el,series,labels), 60); return; }
+  host.classList.remove('empty','skeleton'); host.innerHTML=''; if(!series.length){ host.classList.add('empty'); host.textContent='No data'; return; }
+  const W = Math.max(W0, 300), H = 220, pad = 28; const max = Math.max(...series.map(v=>Number(v)||0), 1); const bw = (W - pad*2) / series.length;
+  const svg = document.createElementNS('http://www.w3.org/2000/svg','svg'); svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  const defs = document.createElementNS(svg.namespaceURI,'defs'); const grad = document.createElementNS(svg.namespaceURI,'linearGradient'); const gid = 'g'+Math.random().toString(36).slice(2,8);
+  grad.id = gid; grad.setAttribute('x1','0'); grad.setAttribute('y1','0'); grad.setAttribute('x2','0'); grad.setAttribute('y2','1');
+  const s1=document.createElementNS(svg.namespaceURI,'stop'); s1.setAttribute('offset','0%'); s1.setAttribute('stop-color',THEME.accent);
+  const s2=document.createElementNS(svg.namespaceURI,'stop'); s2.setAttribute('offset','100%'); s2.setAttribute('stop-color',THEME.accent); s2.setAttribute('stop-opacity','0.35');
+  grad.appendChild(s1); grad.appendChild(s2); defs.appendChild(grad); svg.appendChild(defs);
+  const axis = document.createElementNS(svg.namespaceURI,'line'); axis.setAttribute('x1', pad); axis.setAttribute('y1', H-pad); axis.setAttribute('x2', W-pad); axis.setAttribute('y2', H-pad); axis.setAttribute('stroke', THEME.axis); axis.setAttribute('stroke-width', '1'); svg.appendChild(axis);
+  series.forEach((v,i)=>{ const val = Number(v)||0; const h = (val/max) * (H - pad*2); const x = pad + i*bw + 6; const y = (H-pad) - h; const rect = document.createElementNS(svg.namespaceURI,'rect'); rect.setAttribute('x', x); rect.setAttribute('y', y); rect.setAttribute('width', Math.max(8, bw-12)); rect.setAttribute('height', Math.max(0,h)); rect.setAttribute('rx','6'); rect.setAttribute('fill', `url(#${gid})`); rect.setAttribute('opacity','0.95'); svg.appendChild(rect);
+    if(labels[i]){ const tx = document.createElementNS(svg.namespaceURI,'text'); tx.setAttribute('x', x + (bw-12)/2); tx.setAttribute('y', H - pad + 14); tx.setAttribute('text-anchor', 'middle'); tx.setAttribute('font-size', '10'); tx.setAttribute('fill', THEME.label); const t = String(labels[i]); tx.textContent = t.length>8 ? t.slice(5) : t; svg.appendChild(tx); }
   });
   host.appendChild(svg);
 }
 function renderPieChart(el, map={}){
-  const host = _host(el); if(!host) return;
-  const W0 = _ensureWidth(host);
-  if(!W0){ setTimeout(()=>renderPieChart(el,map), 60); return; }
-
-  host.classList.remove('empty'); host.innerHTML='';
-  const entries = Object.entries(map||{}).filter(([,v])=>Number(v)>0);
-  if(!entries.length){ host.classList.add('empty'); host.textContent='No data'; return; }
-
-  const W=220,H=220,R=90,CX=W/2,CY=H/2;
-  const total = entries.reduce((s,[,v])=>s+Number(v),0);
-  let angle = -Math.PI/2;
-  const svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
-  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
-
-  entries.forEach(([k,v])=>{
-    const frac = Number(v)/total;
-    const theta = frac * Math.PI*2;
-    const x1 = CX + R*Math.cos(angle);
-    const y1 = CY + R*Math.sin(angle);
-    const x2 = CX + R*Math.cos(angle+theta);
-    const y2 = CY + R*Math.sin(angle+theta);
-    const large = theta>Math.PI ? 1 : 0;
-    const p = document.createElementNS(svg.namespaceURI,'path');
-    p.setAttribute('d', `M ${CX} ${CY} L ${x1} ${y1} A ${R} ${R} 0 ${large} 1 ${x2} ${y2} Z`);
-    p.setAttribute('fill', '#ffd559');
-    p.setAttribute('opacity', 0.55 + 0.35*Math.random());
-    svg.appendChild(p);
-    angle += theta;
-  });
+  const host = _host(el); if(!host) return; const THEME=_theme();
+  const W0 = _ensureWidth(host); if(!W0){ setTimeout(()=>renderPieChart(el,map), 60); return; }
+  host.classList.remove('empty','skeleton'); host.innerHTML=''; const entries = Object.entries(map||{}).filter(([,v])=>Number(v)>0); if(!entries.length){ host.classList.add('empty'); host.textContent='No data'; return; }
+  const W=220,H=220,R=90,CX=W/2,CY=H/2; const total = entries.reduce((s,[,v])=>s+Number(v),0); let angle = -Math.PI/2; const svg = document.createElementNS('http://www.w3.org/2000/svg','svg'); svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  entries.forEach(([k,v], idx)=>{ const frac = Number(v)/total; const theta = frac * Math.PI*2; const x1 = CX + R*Math.cos(angle); const y1 = CY + R*Math.sin(angle); const x2 = CX + R*Math.cos(angle+theta); const y2 = CY + R*Math.sin(angle+theta); const large = theta>Math.PI ? 1 : 0; const p = document.createElementNS(svg.namespaceURI,'path'); p.setAttribute('d', `M ${CX} ${CY} L ${x1} ${y1} A ${R} ${R} 0 ${large} 1 ${x2} ${y2} Z`); p.setAttribute('fill', THEME.accent); p.setAttribute('opacity', 0.6 + 0.3*((idx%3)/3)); svg.appendChild(p); angle += theta; });
   host.appendChild(svg);
 }
 
@@ -560,7 +434,6 @@ function renderPieChart(el, map={}){
 function show(route){
   $$('.nav a').forEach(a=>a.classList.toggle('active', a.dataset.route===route));
   $$('[data-page]').forEach(s=>s.style.display = (s.dataset.page===route)?'block':'none');
-
   if(route==='dashboard') initDashboard();
   if(route==='cpa')       initCpa();
   if(route==='users')     initUsers(currentUsersTab);
@@ -569,53 +442,50 @@ function show(route){
   if(route==='monitor')   initMonitor();
   if(route==='settings')  initSettings();
 }
-window.addEventListener('hashchange', ()=>{
-  const r = (location.hash||'#dashboard').replace('#',''); show(r);
-});
-$('#nav')?.addEventListener('click', e=>{
-  const a = e.target.closest('a'); if(!a) return;
-  e.preventDefault(); location.hash = '#'+a.dataset.route;
-});
+window.addEventListener('hashchange', ()=>{ const r = (location.hash||'#dashboard').replace('#',''); show(r); });
+$('#nav')?.addEventListener('click', e=>{ const a = e.target.closest('a'); if(!a) return; e.preventDefault(); location.hash = '#'+a.dataset.route; });
+
+/* ========= OVERVIEW NORMALIZER (compat across shapes) ========= */
+const _num = x => (typeof x==='number')?x:Number(String(x||'').replace(/[, ]/g,''))||0;
+async function fetchOverviewCompat(){
+  let ov = await api('overview'); if(!ov || ov.ok===false) { ov = await api('bundle'); }
+  const totals = (ov && typeof ov.totals==='object')? ov.totals : ov;
+  let byDay = []; if (Array.isArray(ov?.byDay)) byDay = ov.byDay; else if (Array.isArray(ov?.daily)) byDay = ov.daily; else if (Array.isArray(ov?.items)) byDay = ov.items;
+  byDay = byDay.map(r=>({ date:String(r.date||r.t||r[0]||'').slice(0,10), earnings:_num(r.earnings||r.value||r.amount||r[1]) })).filter(r=>r.date);
+  let offerTypes = ov?.offerTypes; if (!offerTypes || typeof offerTypes!=='object'){ if (Array.isArray(ov?.sources)){ const m={}; ov.sources.forEach(s=>{ const k=s.source||s[0]||'Other'; m[k]=(m[k]||0)+_num(s.earnings||s[3]); }); offerTypes=m; } else offerTypes={}; }
+  let geo = ov?.geo; if(!geo){ if(Array.isArray(ov?.byGeo)){ const m={}; ov.byGeo.forEach(g=>{ m[g.country||g[0]||'Unknown'] = _num(g.earnings||g[3]||0); }); geo=m; } else geo={}; }
+  const byGeo = Array.isArray(ov?.byGeo) ? ov.byGeo : [];
+  return { totals, byDay, offerTypes, geo, byGeo };
+}
 
 /* ========= DASHBOARD ========= */
 async function initDashboard(){
   try{
-    const [ov, us] = await Promise.all([ api('overview'), api('users', {status:'APPROVED'}) ]);
-    const t = ov && ov.totals ? ov.totals : (ov||{});
+    const [ovC, us] = await Promise.all([ fetchOverviewCompat(), api('users', {status:'APPROVED'}) ]);
+    const t = ovC.totals || {};
     $('#dash-earn').textContent   = dollars(t.earnings||0);
     $('#dash-clicks').textContent = t.clicks||0;
-    const cr = (t.conversionRate!=null) ? Number(t.conversionRate) :
-               (t.leads && t.clicks ? (t.leads/t.clicks*100) : 0);
+    const cr = (t.conversionRate!=null) ? Number(t.conversionRate) : (t.leads && t.clicks ? (t.leads/t.clicks*100) : 0);
     $('#dash-cr').textContent = Number(cr||0).toFixed(2) + '%';
-    $('#dash-users').textContent = arr(us).length;
+    const users = Array.isArray(us?.items) ? us.items : (Array.isArray(us)?us:[]);
+    $('#dash-users').textContent = users.length;
 
     // Charts
-    const byDay = Array.isArray(ov?.byDay) ? ov.byDay : [];
-    if(byDay.length){
-      renderBarChart('#dash-earnings', byDay.map(d=>Number(d.earnings||0)), byDay.map(d=>String(d.date||d.t||'')));
-    }else{
-      const host = $('#dash-earnings'); host.classList.add('empty'); host.textContent='No data';
-    }
-    renderPieChart('#dash-sources', ov?.offerTypes || {});
+    const dVals = ovC.byDay.map(d=>Number(d.earnings||0));
+    const dLabs = ovC.byDay.map(d=>String(d.date||d.t||''));
+    if(dVals.length){ renderBarChart('#dash-earnings', dVals, dLabs); } else { const host=$('#dash-earnings'); host.classList.add('empty'); host.textContent='No data'; }
+    if (ovC.offerTypes && Object.keys(ovC.offerTypes).length){ renderPieChart('#dash-sources', ovC.offerTypes); } else { const host=$('#dash-sources'); host.classList.add('empty'); host.textContent='No data'; }
+
     // By Geo
     const tb = $('#tbl-dash-geo'); tb.innerHTML='';
-    const geoMap = ov?.geo || {};
-    const rows = Object.keys(geoMap).map(k=>({country:k, earnings:geoMap[k]}))
-                  .sort((a,b)=>b.earnings-a.earnings).slice(0,10);
-    const byGeo = Array.isArray(ov?.byGeo) ? ov.byGeo : [];
-    const hasCL = byGeo.some(x=>(x&&(x.clicks||x.leads)));
+    const rows = Object.entries(ovC.geo||{}).map(([k,v])=>({country:k, earnings:_num(v)})).sort((a,b)=>b.earnings-a.earnings).slice(0,10);
+    const byGeo = ovC.byGeo || []; const hasCL = byGeo.some(x=>(x&&(x.clicks||x.leads)));
     const thead = tb.closest('table').querySelector('thead');
-    thead.innerHTML = hasCL
-      ? '<tr><th>Country</th><th>Clicks</th><th>Leads</th><th>Earnings ($)</th></tr>'
-      : '<tr><th>Country</th><th>Earnings ($)</th></tr>';
+    thead.innerHTML = hasCL ? '<tr><th>Country</th><th>Clicks</th><th>Leads</th><th>Earnings ($)</th></tr>' : '<tr><th>Country</th><th>Earnings ($)</th></tr>';
     if(!rows.length){ tb.innerHTML='<tr><td colspan="'+(hasCL?4:2)+'" class="muted">No data</td></tr>'; }
     rows.forEach(g=>{
-      if(hasCL){
-        const m = byGeo.find(x=>x.country===g.country) || {};
-        tb.insertAdjacentHTML('beforeend', `<tr><td>${g.country}</td><td>${m.clicks||0}</td><td>${m.leads||0}</td><td class="money">${dollars(g.earnings)}</td></tr>`);
-      }else{
-        tb.insertAdjacentHTML('beforeend', `<tr><td>${g.country}</td><td class="money">${dollars(g.earnings)}</td></tr>`);
-      }
+      if(hasCL){ const m = byGeo.find(x=> (x.country||x[0])===g.country) || {}; tb.insertAdjacentHTML('beforeend', `<tr><td>${g.country}</td><td>${m.clicks||m[1]||0}</td><td>${m.leads||m[2]||0}</td><td class="money">${dollars(g.earnings)}</td></tr>`); }
+      else { tb.insertAdjacentHTML('beforeend', `<tr><td>${g.country}</td><td class="money">${dollars(g.earnings)}</td></tr>`); }
     });
   }catch(e){ console.error(e); }
 }
@@ -628,16 +498,9 @@ async function initCpa(){
     const items = arr(resp);
     if(!items.length){ wrap.innerHTML = `<div class="card pad empty">No CPA accounts yet.</div>`; return; }
     items.forEach(r=>{
-      let convPct = 0;
-      if (r.conversionrate != null) {
-        const v = Number(r.conversionrate);
-        convPct = v>1 ? v : v*100;
-      } else if (r.conversionRate != null) {
-        const v = Number(r.conversionRate);
-        convPct = v>1 ? v : v*100;
-      }
-      const card = document.createElement('div');
-      card.className='card pad';
+      let convPct = 0; if (r.conversionrate != null) { const v = Number(r.conversionrate); convPct = v>1 ? v : v*100; } else if (r.conversionRate != null) { const v = Number(r.conversionRate); convPct = v>1 ? v : v*100; }
+      const domainRaw = (r.domain||'no-domain').toString().trim().replace(/^https?:\/\//,'').replace(/\/.*$/,'');
+      const card = document.createElement('div'); card.className='card pad';
       card.innerHTML = `
         <div class="acct">
           <div>
@@ -653,16 +516,24 @@ async function initCpa(){
             </div>
           </div>
           <div class="right flex">
-            <span class="pill mono">${r.domain||'no-domain'}</span>
+            <span class="pill mono">${domainRaw}</span>
             <button class="btn secondary">View Details</button>
           </div>
         </div>`;
       wrap.appendChild(card);
     });
-  }catch(e){
-    console.error(e);
-    wrap.innerHTML = `<div class="card pad empty">Failed to load accounts.</div>`;
-  }
+    // enhance pills into favicon chips
+    setTimeout(()=>{
+      $$('#cpa-grid .acct .right').forEach(box=>{
+        if (box._chipApplied) return; box._chipApplied = true;
+        const pill = box.querySelector('.pill.mono'); if(!pill) return; const domain = pill.textContent.trim();
+        const chip = document.createElement('span'); chip.className='chip';
+        const img = document.createElement('img'); img.loading='lazy'; img.referrerPolicy='no-referrer'; img.src = `https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=32`;
+        chip.appendChild(img); chip.appendChild(document.createTextNode(domain||'no-domain'));
+        pill.replaceWith(chip);
+      });
+    }, 30);
+  }catch(e){ console.error(e); wrap.innerHTML = `<div class="card pad empty">Failed to load accounts.</div>`; }
 }
 
 /* Add New Account modal wiring */
@@ -681,216 +552,88 @@ document.getElementById('btn-save-acct')?.addEventListener('click', async ()=>{
     apiKey  : document.getElementById('f-key').value.trim(),
     webhook : document.getElementById('f-webhook').value.trim()
   };
-  if(!v.account || !v.network){
-    err.textContent = 'Account Name and Network are required.'; err.style.display='block'; return;
-  }
+  if(!v.account || !v.network){ err.textContent = 'Account Name and Network are required.'; err.style.display='block'; return; }
   err.style.display='none';
-  try{
-    const res = await apiWrite('cpaCreate', v);
-    if(!res || res.ok!==true) throw new Error('Create failed');
-    closeMdl();
-    await initCpa();
-  }catch(e){
-    err.textContent = 'Could not save account. Please try again.'; err.style.display='block';
-  }
+  try{ const res = await apiWrite('cpaCreate', v); if(!res || res.ok!==true) throw new Error('Create failed'); closeMdl(); await initCpa(); }
+  catch(e){ err.textContent = 'Could not save account. Please try again.'; err.style.display='block'; }
 });
 
 /* ========= USERS ========= */
 let currentUsersTab = 'APPROVED';
 const userTabBtns = $$('[data-users-tab]');
-userTabBtns.forEach(b=>b.addEventListener('click',()=>{
-  userTabBtns.forEach(x=>x.classList.toggle('active', x===b));
-  currentUsersTab = b.dataset.usersTab; initUsers(currentUsersTab);
-}));
+userTabBtns.forEach(b=>b.addEventListener('click',()=>{ userTabBtns.forEach(x=>x.classList.toggle('active', x===b)); currentUsersTab = b.dataset.usersTab; initUsers(currentUsersTab); }));
 async function initUsers(tab='APPROVED'){
   const tb = $('#tbl-users'); tb.innerHTML = '';
   try{
     const resp = await api('users', {status: tab});
     let filtered = arr(resp?.items || resp);
-    if (!filtered.length) {
-      const ALL = arr(resp?.items || resp);
-      filtered = ALL.filter(u => String(u.status||'APPROVED').toUpperCase()===tab.toUpperCase());
-    }
+    if (!filtered.length) { const ALL = arr(resp?.items || resp); filtered = ALL.filter(u => String(u.status||'APPROVED').toUpperCase()===tab.toUpperCase()); }
     if(!filtered.length){ tb.innerHTML = `<tr><td colspan="4" class="muted">No ${tab.toLowerCase()} users.</td></tr>`; return; }
-    filtered.forEach(u=>{
-      const tr = document.createElement('tr');
-      tr.innerHTML = `<td>${u.name||'—'}</td><td>${u.email||''}</td><td>${u.phone||''}</td><td>${u.authority||'1x User'}</td>`;
-      tb.appendChild(tr);
-    });
-  }catch(e){
-    tb.innerHTML = `<tr><td colspan="4" class="muted">Failed to load users.</td></tr>`;
-  }
+    filtered.forEach(u=>{ const tr = document.createElement('tr'); tr.innerHTML = `<td>${u.name||'—'}</td><td>${u.email||''}</td><td>${u.phone||''}</td><td>${u.authority||'1x User'}</td>`; tb.appendChild(tr); });
+  }catch(e){ tb.innerHTML = `<tr><td colspan="4" class="muted">Failed to load users.</td></tr>`; }
 }
 /* Invite modal */
 const mdlInv = document.getElementById('mdl-invite');
 document.getElementById('btn-invite')?.addEventListener('click', ()=>{
   const token = Math.random().toString(36).slice(2)+Math.random().toString(36).slice(2);
   const url = location.origin.replace(/\/+$/,'') + '/join?token=' + token;
-  $('#inv-url').value = url;
-  $('#inv-hint').textContent = 'Token generated. Save to backend to track this invite.';
-  mdlInv.classList.add('open');
+  $('#inv-url').value = url; $('#inv-hint').textContent = 'Token generated. Save to backend to track this invite.'; mdlInv.classList.add('open');
 });
 mdlInv.addEventListener('click', e=>{ if(e.target.hasAttribute('data-close')) mdlInv.classList.remove('open'); });
-document.getElementById('btn-copy-invite')?.addEventListener('click', ()=>{
-  $('#inv-url').select(); document.execCommand('copy');
-  toast('Link copied.');
-});
+document.getElementById('btn-copy-invite')?.addEventListener('click', ()=>{ $('#inv-url').select(); document.execCommand('copy'); toast('Link copied.'); });
 document.getElementById('btn-save-invite')?.addEventListener('click', async ()=>{
-  const payload = {
-    name:  $('#inv-name').value.trim(),
-    email: $('#inv-email').value.trim(),
-    role:  $('#inv-role').value,
-    url:   $('#inv-url').value,
-    msg:   $('#inv-msg').value.trim(),
-    token: $('#inv-url').value.split('token=')[1]||'',
-  };
-  try{
-    const r = await apiWrite('inviteCreate', payload);
-    if(!r || r.ok!==true) throw 0;
-    toast('Invite saved.');
-  }catch(_){
-    toast('Invite not saved server-side (no endpoint).');
-  }
+  const payload = { name:  $('#inv-name').value.trim(), email: $('#inv-email').value.trim(), role:  $('#inv-role').value, url:   $('#inv-url').value, msg:   $('#inv-msg').value.trim(), token: $('#inv-url').value.split('token=')[1]||'', };
+  try{ const r = await apiWrite('inviteCreate', payload); if(!r || r.ok!==true) throw 0; toast('Invite saved.'); }catch(_){ toast('Invite not saved server-side (no endpoint).'); }
 });
 
 /* ========= ANALYTICS (base + live + overview fallbacks) ========= */
 let liveTimer=null, liveRows=[];
 async function initAnalytics(){
-  let base = null, ov = null;
   try{
-    [base, ov] = await Promise.all([ api('analytics'), api('overview') ]);
-  }catch(_){}
-
-  // Daily earnings series (prefer analytics.byDay → items → overview.byDay)
-  let byDay = [];
-  if (Array.isArray(base?.byDay) && base.byDay.length) byDay = base.byDay;
-  else if (Array.isArray(base)) byDay = base.map(r=>({date:String(r.date||r.t||''), earnings:Number(r.earnings||0)}));
-  else if (Array.isArray(base?.items)) byDay = base.items.map(r=>({date:String(r.date||r.t||''), earnings:Number(r.earnings||0)}));
-  else if (Array.isArray(ov?.byDay)) byDay = ov.byDay;
-
-  if(byDay.length){
-    renderBarChart('#ana-overview', byDay.map(d=>Number(d.earnings||0)), byDay.map(d=>String(d.date||d.t||'')));
-  }else{
-    const host = $('#ana-overview'); host.classList.add('empty'); host.textContent='No data';
-  }
-
-  // Geo distribution (prefer analytics.geo → overview.geo)
-  const geoMap = obj(base?.geo) && Object.keys(base.geo).length ? base.geo : (ov?.geo || {});
-  renderPieChart('#ana-geo-dist', geoMap);
-
-  // live
-  if(liveTimer) clearInterval(liveTimer);
-  liveRows = [];
-  liveTimer = setInterval(pullLive, POLL_FAST);
-  await pullLive();
+    const ovC = await fetchOverviewCompat();
+    const vals1 = ovC.byDay.map(d=>Number(d.earnings||0)); const labs1 = ovC.byDay.map(d=>String(d.date||d.t||''));
+    if(vals1.length){ renderBarChart('#ana-overview', vals1, labs1); } else { const host=$('#ana-overview'); host.classList.add('empty'); host.textContent='No data'; }
+    if (ovC.geo && Object.keys(ovC.geo).length){ renderPieChart('#ana-geo-dist', ovC.geo); } else { const host=$('#ana-geo-dist'); host.classList.add('empty'); host.textContent='No data'; }
+    if(liveTimer) clearInterval(liveTimer); liveRows=[]; liveTimer = setInterval(pullLive, POLL_FAST); await pullLive();
+  }catch(e){ console.error('initAnalytics:', e); }
 }
 async function pullLive(){
   try{
     const j = await api('analytics', { live:1, limit:24, windowSec:120 });
-    const events = arr(j?.live) || arr(j);
-    if(!events.length) return;
-
+    const events = arr(j?.live) || arr(j); if(!events.length) return;
     liveRows = liveRows.concat(events).slice(-24);
-
     const tb = $('#tbl-live-perf'); tb.innerHTML='';
-    liveRows.slice().reverse().forEach(r=>{
-      const tr=document.createElement('tr');
-      tr.innerHTML =
-        `<td class="mono">${r.time||''}</td><td>${r.country||''}</td><td>${r.offer||''}</td>`+
-        `<td>${r.clicks||0}</td><td>${r.conversions||r.conv||0}</td><td class="money">${dollars(r.earnings||0)}</td>`;
-      tb.appendChild(tr);
-    });
-
-    const byGeo = {};
-    events.forEach(ev=>{
-      const k = ev.country || 'Unknown';
-      if(!byGeo[k]) byGeo[k] = {country:k, clicks:0, conv:0, earnings:0};
-      byGeo[k].clicks   += Number(ev.clicks||0);
-      byGeo[k].conv     += Number(ev.conversions||ev.conv||0);
-      byGeo[k].earnings += Number(ev.earnings||0);
-    });
-    const tb2 = $('#tbl-live-geo'); tb2.innerHTML='';
-    const arrGeo = Object.values(byGeo).sort((a,b)=>b.earnings-a.earnings).slice(0,10);
+    liveRows.slice().reverse().forEach(r=>{ const tr=document.createElement('tr'); tr.innerHTML = `<td class="mono">${r.time||''}</td><td>${r.country||''}</td><td>${r.offer||''}</td><td>${r.clicks||0}</td><td>${r.conversions||r.conv||0}</td><td class="money">${dollars(r.earnings||0)}</td>`; tb.appendChild(tr); });
+    const byGeo = {}; events.forEach(ev=>{ const k = ev.country || 'Unknown'; if(!byGeo[k]) byGeo[k] = {country:k, clicks:0, conv:0, earnings:0}; byGeo[k].clicks+=Number(ev.clicks||0); byGeo[k].conv+=Number(ev.conversions||ev.conv||0); byGeo[k].earnings+=Number(ev.earnings||0); });
+    const tb2 = $('#tbl-live-geo'); tb2.innerHTML=''; const arrGeo = Object.values(byGeo).sort((a,b)=>b.earnings-a.earnings).slice(0,10);
     if(!arrGeo.length){ tb2.innerHTML='<tr><td colspan="4" class="muted">Waiting for stream…</td></tr>'; return; }
-    arrGeo.forEach(g=>{
-      const tr=document.createElement('tr');
-      tr.innerHTML = `<td>${g.country}</td><td>${g.clicks}</td><td>${g.conv}</td><td class="money">${dollars(g.earnings)}</td>`;
-      tb2.appendChild(tr);
-    });
+    arrGeo.forEach(g=>{ const tr=document.createElement('tr'); tr.innerHTML = `<td>${g.country}</td><td>${g.clicks}</td><td>${g.conv}</td><td class="money">${dollars(g.earnings)}</td>`; tb2.appendChild(tr); });
   }catch(e){ /* silent */ }
 }
 
 /* ========= WALLET ========= */
-/* Balance = Overview Total Earnings − Pending payouts */
 async function initWallet(){
   try{
     const [W, OV] = await Promise.all([ api('wallet'), api('overview') ]);
-    const hist = arr(W?.history) || arr(W);
-    const totals = OV?.totals || OV || {};
-
-    const pendingAmt = hist
-      .filter(t => String(t.status||'').toUpperCase()==='PENDING')
-      .reduce((s,t)=>s+Number(t.amount||0),0);
-
+    const hist = arr(W?.history) || arr(W); const totals = OV?.totals || OV || {};
+    const pendingAmt = hist.filter(t => String(t.status||'').toUpperCase()==='PENDING').reduce((s,t)=>s+Number(t.amount||0),0);
     const gross = Number(totals.earnings||0);
     $('#wal-balance').textContent = dollars(Math.max(0, gross - pendingAmt));
     $('#wal-pending').textContent = dollars(pendingAmt);
-
     const lastPaid = hist.filter(t=>String(t.status||'').toUpperCase()==='COMPLETED').slice(-1)[0];
     $('#wal-last').textContent = dollars(lastPaid ? lastPaid.amount : 0);
-
     const tb = $('#tbl-wallet'); tb.innerHTML='';
-    hist.slice().reverse().forEach(t=>{
-      const tr=document.createElement('tr');
-      tr.innerHTML=`<td>${t.date||''}</td><td>${t.method||''}</td><td class="money">${dollars(t.amount||0)}</td><td>${t.status||''}</td>`;
-      tb.appendChild(tr);
-    });
+    hist.slice().reverse().forEach(t=>{ const tr=document.createElement('tr'); tr.innerHTML=`<td>${t.date||''}</td><td>${t.method||''}</td><td class="money">${dollars(t.amount||0)}</td><td>${t.status||''}</td>`; tb.appendChild(tr); });
     if(!tb.children.length) tb.innerHTML = `<tr><td colspan="4" class="muted">No transactions.</td></tr>`;
-  }catch(e){
-    const tb = $('#tbl-wallet'); if(tb) tb.innerHTML = `<tr><td colspan="4" class="muted">Failed to load.</td></tr>`;
-  }
+  }catch(e){ const tb = $('#tbl-wallet'); if(tb) tb.innerHTML = `<tr><td colspan="4" class="muted">Failed to load.</td></tr>`; }
 }
 /* Withdraw modal */
 const mdlWd = document.getElementById('mdl-withdraw');
 document.getElementById('btn-withdraw')?.addEventListener('click', ()=>{ mdlWd.classList.add('open'); });
 mdlWd.addEventListener('click', e=>{ if(e.target.hasAttribute('data-close')) mdlWd.classList.remove('open'); });
-$('#wd-method')?.addEventListener('change', e=>{
-  const m = e.target.value;
-  $$('.m-bank').forEach(x=>x.style.display = (m==='Bank')?'block':'none');
-  $$('.m-payoneer').forEach(x=>x.style.display = (m==='Payoneer')?'block':'none');
-  $$('.m-crypto').forEach(x=>x.style.display = (m==='Crypto')?'block':'none');
-});
-document.getElementById('btn-submit-wd')?.addEventListener('click', async ()=>{
-  const amt = Number($('#wd-amount').value||0);
-  const method = $('#wd-method').value;
-  const err = $('#wd-error');
-  if(!amt || amt<=0){ err.textContent='Enter a valid amount.'; err.style.display='block'; return; }
-  err.style.display='none';
-
-  const payload = { amount:amt, method, status:'PENDING' };
-  if(method==='Bank'){
-    Object.assign(payload,{
-      bankName: $('#wd-bank-name').value.trim(),
-      accountName: $('#wd-bank-accname').value.trim(),
-      accountNumber: $('#wd-bank-accno').value.trim(),
-      swift: $('#wd-bank-swift').value.trim(),
-      country: $('#wd-bank-country').value.trim()
-    });
-  }else if(method==='Payoneer'){
-    payload.payoneerEmail = $('#wd-payo-email').value.trim();
-  }else if(method==='Crypto'){
-    payload.cryptoAddress = $('#wd-crypto-addr').value.trim();
-    payload.network = $('#wd-crypto-net').value;
-  }
-  try{
-    const r = await apiWrite('walletRequest', payload);
-    if(!r || r.ok!==true) throw 0;
-    toast('Withdrawal submitted.');
-    mdlWd.classList.remove('open');
-    initWallet();
-  }catch(_){
-    toast('Request not saved server-side (no endpoint).');
-  }
+$('#wd-method')?.addEventListener('change', e=>{ const m = e.target.value; $$('.m-bank').forEach(x=>x.style.display = (m==='Bank')?'block':'none'); $$('.m-payoneer').forEach(x=>x.style.display = (m==='Payoneer')?'block':'none'); $$('.m-crypto').forEach(x=>x.style.display = (m==='Crypto')?'block':'none'); });
+document.getElementById('btn-submit-wd')?.addEventListener('click', async ()=>{ const amt = Number($('#wd-amount').value||0); const method = $('#wd-method').value; const err = $('#wd-error'); if(!amt || amt<=0){ err.textContent='Enter a valid amount.'; err.style.display='block'; return; } err.style.display='none'; const payload = { amount:amt, method, status:'PENDING' }; if(method==='Bank'){ Object.assign(payload,{ bankName: $('#wd-bank-name').value.trim(), accountName: $('#wd-bank-accname').value.trim(), accountNumber: $('#wd-bank-accno').value.trim(), swift: $('#wd-bank-swift').value.trim(), country: $('#wd-bank-country').value.trim() }); } else if(method==='Payoneer'){ payload.payoneerEmail = $('#wd-payo-email').value.trim(); } else if(method==='Crypto'){ payload.cryptoAddress = $('#wd-crypto-addr').value.trim(); payload.network = $('#wd-crypto-net').value; }
+  try{ const r = await apiWrite('walletRequest', payload); if(!r || r.ok!==true) throw 0; toast('Withdrawal submitted.'); mdlWd.classList.remove('open'); initWallet(); }catch(_){ toast('Request not saved server-side (no endpoint).'); }
 });
 
 /* ========= MONITORING ========= */
@@ -902,59 +645,24 @@ async function initMonitor(){
     $('#box-alerts').textContent = events.length;
     $('#box-maint').textContent  = m.maintenance || '—';
     $('#box-health').textContent = m.health || 'OK';
-
-    if(!events.length){
-      tb.innerHTML = `<tr><td colspan="3" class="muted">No events.</td></tr>`;
-      return;
-    }
-    events.forEach(ev=>{
-      const tr=document.createElement('tr');
-      tr.innerHTML=`<td class="mono">${ev.time||''}</td><td>${ev.type||''}</td><td>${ev.msg||ev.message||''}</td>`;
-      tb.appendChild(tr);
-    });
-
-    // details drawer content
-    $('#ev-summary').innerHTML =
-      `<div class="kv"><b>Total events</b><span>${events.length}</span></div>`;
+    if(!events.length){ tb.innerHTML = `<tr><td colspan="3" class="muted">No events.</td></tr>`; return; }
+    events.forEach(ev=>{ const tr=document.createElement('tr'); tr.innerHTML=`<td class="mono">${ev.time||ev.timestamp||''}</td><td>${ev.type||ev.level||''}</td><td>${ev.msg||ev.message||ev.event||''}</td>`; tb.appendChild(tr); });
+    $('#ev-summary').innerHTML = `<div class="kv"><b>Total events</b><span>${events.length}</span></div>`;
     $('#ev-json').value = JSON.stringify({health:m.health,maintenance:m.maintenance,events}, null, 2);
-  }catch(e){
-    tb.innerHTML = `<tr><td colspan="3" class="muted">Failed to load.</td></tr>`;
-  }
+  }catch(e){ tb.innerHTML = `<tr><td colspan="3" class="muted">Failed to load.</td></tr>`; }
 }
 document.getElementById('btn-open-ev')?.addEventListener('click', ()=>{ document.getElementById('drawer-ev').classList.add('open'); });
 document.addEventListener('keydown', e=>{ if(e.key==='Escape') document.getElementById('drawer-ev').classList.remove('open'); });
 
 /* ========= SETTINGS ========= */
-async function initSettings(){
-  try{
-    const j = await api('config');
-    $('#cfg-editor').value = JSON.stringify(j||{}, null, 2);
-  }catch(e){
-    $('#cfg-editor').value = '{ "error": "Failed to load config" }';
-  }
-}
-document.getElementById('btn-save-config')?.addEventListener('click', async ()=>{
-  try{
-    const data = JSON.parse($('#cfg-editor').value);
-    const r = await apiWrite('configSet', data);
-    if(!r || r.ok!==true) throw 0;
-    toast('Config saved.');
-  }catch(_){
-    toast('Config not saved server-side (no endpoint).');
-  }
-});
+async function initSettings(){ try{ const j = await api('config'); const has = j && typeof j==='object' && Object.keys(j).length; const base = has ? j : { commander:'SUPREME_COMMANDER', theme:'empire-dark', invite_base: location.origin + '/join', payout:{ weekly_day:'FRI', weekly_time_wat:'18:00', commander_ratio:0.75, min_non_commander_usd:500 }, alerts:{ telegram_chat_id:'', telegram_bot_token:'' } }; $('#cfg-editor').value = JSON.stringify(base, null, 2); }catch(e){ $('#cfg-editor').value = '{ "error": "Failed to load config" }'; } }
+document.getElementById('btn-save-config')?.addEventListener('click', async ()=>{ try{ const data = JSON.parse($('#cfg-editor').value); const r = await apiWrite('configSet', data); if(!r || r.ok!==true) throw 0; toast('Config saved.'); }catch(_){ toast('Config not saved server-side (no endpoint).'); } });
 
 /* ========= BOOT ========= */
-window.addEventListener('DOMContentLoaded', ()=>{
-  const r = (location.hash||'#dashboard').replace('#','');
-  show(r);
-});
+(function ensureBrandLogo(){ const img = document.querySelector('.brand img'); if(!img) return; const fallback = 'https://i.imgur.com/2sGv2cH.png'; if(!img.getAttribute('src')) img.src = fallback; img.addEventListener('error', function onErr(){ img.removeEventListener('error', onErr); img.src = fallback; }); })();
+window.addEventListener('DOMContentLoaded', ()=>{ const r = (location.hash||'#dashboard').replace('#',''); show(r); });
 
 /* ========= tiny toast ========= */
-function toast(msg){
-  const t = $('#toast'); t.textContent = msg; t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'), 2200);
-}
-</script>
-</body>
+function toast(msg){ const t = $('#toast'); t.textContent = msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'), 2200); }
+</script></body>
 </html>

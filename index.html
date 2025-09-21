@@ -47,9 +47,13 @@
   .section-head h2{margin:0; font-size:18px; letter-spacing:.3px}
   .btn{
     background:linear-gradient(180deg,#ffd559,#ffcb31); color:#1b1b1b; border:0; font-weight:700;
-    padding:10px 14px; border-radius:10px; cursor:pointer; box-shadow:var(--shadow)
+    padding:10px 14px; border-radius:10px; cursor:pointer; box-shadow:var(--shadow);
+    transition:.15s ease; will-change:transform,box-shadow;
   }
+  .btn:hover{transform:translateY(-1px)}
+  .btn:active{transform:none}
   .btn.secondary{background:#173046; color:#d6e7ff; border:1px solid #254660}
+  .btn.secondary:hover{background:#103b66}
   .btn.secondary.active{background:#103b66; border-color:#3a85ff}
 
   .grid{display:grid; gap:16px}
@@ -62,8 +66,10 @@
 
   .card{
     background:linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,0)) , var(--card);
-    border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow)
+    border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow);
+    transition:box-shadow .15s ease, transform .15s ease;
   }
+  .card:hover{box-shadow:0 10px 26px rgba(0,0,0,.28)}
   .card.pad{padding:16px}
 
   .kpi{display:flex; flex-direction:column; gap:8px}
@@ -75,6 +81,7 @@
   thead th{background:#0f2b45; text-align:left; padding:11px 12px; font-size:12px; color:#c4d7ef; border-bottom:1px solid var(--line)}
   tbody td{padding:10px 12px; border-bottom:1px solid var(--line)}
   tbody tr:last-child td{border-bottom:0}
+  tbody tr:hover td{background:rgba(20,48,74,.35)}
   .muted{color:var(--muted)}
   .money{color:var(--good); font-weight:700}
   .badge{display:inline-block; padding:2px 8px; border-radius:999px; font-size:11px; border:1px solid var(--line); background:#14304a}
@@ -116,12 +123,18 @@
     background:#0e2236; color:var(--text); border:1px solid #24445e; border-radius:10px; padding:10px 12px; outline:none;
   }
   .input textarea{min-height:80px; resize:vertical}
-  .input input:focus,.input select:focus,.input textarea:focus{border-color:#3a85ff}
+  .input input:focus,.input select:focus,.input textarea:focus{border-color:#3a85ff; box-shadow:0 0 0 2px #3a85ff}
   .modal .footer{display:flex; gap:10px; justify-content:flex-end; margin-top:14px}
   .bad{color:var(--bad); font-size:12px}
-  .toast{position:fixed; right:16px; bottom:16px; background:#0e2236; border:1px solid #24445e; padding:10px 12px; border-radius:10px; display:none; z-index:80}
+  .toast{position:fixed; right:16px; bottom:16px; background:#0e2236; border:1px solid #24445e; padding:10px 12px; border-radius:10px; display:none; z-index:80; color:var(--text)}
   .toast.show{display:block}
   .chart svg{width:100%; height:220px; display:block}
+
+  /* quick skeleton shimmer for charts */
+  .skeleton{position:relative;overflow:hidden;background:#10263d;border-radius:10px;min-height:42px}
+  .skeleton::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.06),transparent);transform:translateX(-100%);animation:sheen 1.2s infinite}
+  @keyframes sheen{to{transform:translateX(100%)}}
+  .chart{min-height:220px}
 </style>
 </head>
 <body>
@@ -471,89 +484,89 @@ const arr = (m)=> Array.isArray(m) ? m : (m&&Array.isArray(m.items)?m.items:(m&&
 const obj = (m)=> (m && typeof m==='object')? m : {};
 const normDomain = d=> String(d||'').trim().replace(/^https?:\/\//,'').replace(/\/.*$/,'');
 
-/* ========= CHART HELPERS (robust width + retry) ========= */
+/* ========= CHART HELPERS (visible-first, resize-safe) ========= */
 function _host(el){ return (typeof el==='string')? document.querySelector(el) : el; }
-function _ensureWidth(host){
-  const w = host.getBoundingClientRect().width || host.clientWidth || 0;
-  return w>40 ? w : 0;
+
+function _whenVisible(el, fn){
+  const h = _host(el); if(!h) return;
+  const run = ()=>{ if((h.clientWidth||0) > 40){ fn(); obs && obs.disconnect(); } };
+  run();
+  const obs = new ResizeObserver(()=>run());
+  obs.observe(h);
 }
+
 function renderBarChart(el, series=[], labels=[]){
   const host = _host(el); if(!host) return;
-  const W0 = _ensureWidth(host);
-  if(!W0){ setTimeout(()=>renderBarChart(el,series,labels), 60); return; }
+  _whenVisible(host, ()=>{
+    host.classList.remove('empty'); host.innerHTML='';
+    if(!series.length){ host.classList.add('empty'); host.textContent='No data'; return; }
 
-  host.classList.remove('empty');
-  host.innerHTML='';
-  if(!series.length){ host.classList.add('empty'); host.textContent='No data'; return; }
+    const W = Math.max(host.clientWidth||320, 300), H = 220, pad = 28;
+    const max = Math.max(...series.map(v=>Number(v)||0), 1);
+    const bw  = (W - pad*2) / series.length;
+    const svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
+    svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
 
-  const W = Math.max(W0, 300), H = 220, pad = 28;
-  const max = Math.max(...series.map(v=>Number(v)||0), 1);
-  const bw = (W - pad*2) / series.length;
-  const svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
-  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+    const axis = document.createElementNS(svg.namespaceURI,'line');
+    axis.setAttribute('x1', pad); axis.setAttribute('y1', H-pad);
+    axis.setAttribute('x2', W-pad); axis.setAttribute('y2', H-pad);
+    axis.setAttribute('stroke', '#2a4b6a'); axis.setAttribute('stroke-width', '1');
+    svg.appendChild(axis);
 
-  const axis = document.createElementNS(svg.namespaceURI,'line');
-  axis.setAttribute('x1', pad); axis.setAttribute('y1', H-pad);
-  axis.setAttribute('x2', W-pad); axis.setAttribute('y2', H-pad);
-  axis.setAttribute('stroke', '#2a4b6a'); axis.setAttribute('stroke-width', '1');
-  svg.appendChild(axis);
+    const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#ffd559';
 
-  series.forEach((v,i)=>{
-    const val = Number(v)||0;
-    const h = (val/max) * (H - pad*2);
-    const x = pad + i*bw + 6;
-    const y = (H-pad) - h;
-    const rect = document.createElementNS(svg.namespaceURI,'rect');
-    rect.setAttribute('x', x); rect.setAttribute('y', y);
-    rect.setAttribute('width', Math.max(8, bw-12)); rect.setAttribute('height', Math.max(0,h));
-    rect.setAttribute('fill', '#ffd559');
-    svg.appendChild(rect);
+    series.forEach((v,i)=>{
+      const val = Number(v)||0;
+      const h = (val/max) * (H - pad*2);
+      const x = pad + i*bw + 6;
+      const y = (H-pad) - h;
+      const r = document.createElementNS(svg.namespaceURI,'rect');
+      r.setAttribute('x', x); r.setAttribute('y', y);
+      r.setAttribute('width', Math.max(8, bw-12)); r.setAttribute('height', Math.max(0,h));
+      r.setAttribute('rx','6'); r.setAttribute('fill', accent);
+      svg.appendChild(r);
 
-    if(labels[i]){
-      const tx = document.createElementNS(svg.namespaceURI,'text');
-      tx.setAttribute('x', x + (bw-12)/2);
-      tx.setAttribute('y', H - pad + 14);
-      tx.setAttribute('text-anchor', 'middle');
-      tx.setAttribute('font-size', '10');
-      tx.setAttribute('fill', '#86a7c9');
-      const t = String(labels[i]);
-      tx.textContent = t.length>8 ? t.slice(5) : t;
-      svg.appendChild(tx);
-    }
+      if(labels[i]){
+        const tx = document.createElementNS(svg.namespaceURI,'text');
+        tx.setAttribute('x', x + (bw-12)/2);
+        tx.setAttribute('y', H - pad + 14);
+        tx.setAttribute('text-anchor', 'middle');
+        tx.setAttribute('font-size', '10');
+        tx.setAttribute('fill', '#86a7c9');
+        tx.textContent = String(labels[i]).slice(-5);
+        svg.appendChild(tx);
+      }
+    });
+    host.appendChild(svg);
   });
-  host.appendChild(svg);
 }
+
 function renderPieChart(el, map={}){
   const host = _host(el); if(!host) return;
-  const W0 = _ensureWidth(host);
-  if(!W0){ setTimeout(()=>renderPieChart(el,map), 60); return; }
+  _whenVisible(host, ()=>{
+    host.classList.remove('empty'); host.innerHTML='';
+    const entries = Object.entries(map||{}).filter(([,v])=>Number(v)>0);
+    if(!entries.length){ host.classList.add('empty'); host.textContent='No data'; return; }
 
-  host.classList.remove('empty'); host.innerHTML='';
-  const entries = Object.entries(map||{}).filter(([,v])=>Number(v)>0);
-  if(!entries.length){ host.classList.add('empty'); host.textContent='No data'; return; }
+    const W=220,H=220,R=90,CX=W/2,CY=H/2;
+    const total = entries.reduce((s,[,v])=>s+Number(v),0);
+    let angle = -Math.PI/2;
+    const svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
+    svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
 
-  const W=220,H=220,R=90,CX=W/2,CY=H/2;
-  const total = entries.reduce((s,[,v])=>s+Number(v),0);
-  let angle = -Math.PI/2;
-  const svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
-  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+    const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#ffd559';
 
-  entries.forEach(([k,v])=>{
-    const frac = Number(v)/total;
-    const theta = frac * Math.PI*2;
-    const x1 = CX + R*Math.cos(angle);
-    const y1 = CY + R*Math.sin(angle);
-    const x2 = CX + R*Math.cos(angle+theta);
-    const y2 = CY + R*Math.sin(angle+theta);
-    const large = theta>Math.PI ? 1 : 0;
-    const p = document.createElementNS(svg.namespaceURI,'path');
-    p.setAttribute('d', `M ${CX} ${CY} L ${x1} ${y1} A ${R} ${R} 0 ${large} 1 ${x2} ${y2} Z`);
-    p.setAttribute('fill', '#ffd559');
-    p.setAttribute('opacity', 0.55 + 0.35*Math.random());
-    svg.appendChild(p);
-    angle += theta;
+    entries.forEach(([k,v],i)=>{
+      const frac = Number(v)/total, theta = frac * Math.PI*2;
+      const x1 = CX + R*Math.cos(angle), y1 = CY + R*Math.sin(angle);
+      const x2 = CX + R*Math.cos(angle+theta), y2 = CY + R*Math.sin(angle+theta);
+      const p = document.createElementNS(svg.namespaceURI,'path');
+      p.setAttribute('d', `M ${CX} ${CY} L ${x1} ${y1} A ${R} ${R} 0 ${theta>Math.PI?1:0} 1 ${x2} ${y2} Z`);
+      p.setAttribute('fill', accent); p.setAttribute('opacity', 0.6+0.3*((i%3)/3));
+      svg.appendChild(p); angle += theta;
+    });
+    host.appendChild(svg);
   });
-  host.appendChild(svg);
 }
 
 /* ========= ROUTER ========= */
@@ -577,6 +590,32 @@ $('#nav')?.addEventListener('click', e=>{
   e.preventDefault(); location.hash = '#'+a.dataset.route;
 });
 
+/* ========= UX helpers: skeleton + safe preview ========= */
+const PREVIEW_TIMEOUT_MS = 1600; // how fast to seed optional preview
+const PREVIEW = false;           // flip to true for demo filler
+
+function skeletonizeCharts(){
+  ['#dash-earnings','#dash-sources','#ana-overview','#ana-geo-dist'].forEach(sel=>{
+    const el = document.querySelector(sel);
+    if(el && !el._sk){ el._sk = true; el.classList.add('skeleton'); }
+  });
+}
+function unskeletonize(sel){
+  const el = document.querySelector(sel);
+  if(el){ el.classList.remove('skeleton'); }
+}
+function seedPreview(){
+  renderBarChart('#dash-earnings',[120,180,90,220,160,140,200],
+                 ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']);
+  renderPieChart('#dash-sources',{Search:45, Social:25, Display:15, Direct:15});
+  unskeletonize('#dash-earnings'); unskeletonize('#dash-sources');
+
+  renderBarChart('#ana-overview',[40,70,55,80,65,95,110],
+                 ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']);
+  renderPieChart('#ana-geo-dist',{US:120, NG:90, GB:60, IN:50, CA:40});
+  unskeletonize('#ana-overview'); unskeletonize('#ana-geo-dist');
+}
+
 /* ========= DASHBOARD ========= */
 async function initDashboard(){
   try{
@@ -589,15 +628,17 @@ async function initDashboard(){
     $('#dash-cr').textContent = Number(cr||0).toFixed(2) + '%';
     $('#dash-users').textContent = arr(us).length;
 
-    // Charts
     const byDay = Array.isArray(ov?.byDay) ? ov.byDay : [];
     if(byDay.length){
       renderBarChart('#dash-earnings', byDay.map(d=>Number(d.earnings||0)), byDay.map(d=>String(d.date||d.t||'')));
+      unskeletonize('#dash-earnings');
     }else{
       const host = $('#dash-earnings'); host.classList.add('empty'); host.textContent='No data';
+      unskeletonize('#dash-earnings');
     }
     renderPieChart('#dash-sources', ov?.offerTypes || {});
-    // By Geo
+    unskeletonize('#dash-sources');
+
     const tb = $('#tbl-dash-geo'); tb.innerHTML='';
     const geoMap = ov?.geo || {};
     const rows = Object.keys(geoMap).map(k=>({country:k, earnings:geoMap[k]}))
@@ -761,7 +802,6 @@ async function initAnalytics(){
     [base, ov] = await Promise.all([ api('analytics'), api('overview') ]);
   }catch(_){}
 
-  // Daily earnings series (prefer analytics.byDay → items → overview.byDay)
   let byDay = [];
   if (Array.isArray(base?.byDay) && base.byDay.length) byDay = base.byDay;
   else if (Array.isArray(base)) byDay = base.map(r=>({date:String(r.date||r.t||''), earnings:Number(r.earnings||0)}));
@@ -770,15 +810,16 @@ async function initAnalytics(){
 
   if(byDay.length){
     renderBarChart('#ana-overview', byDay.map(d=>Number(d.earnings||0)), byDay.map(d=>String(d.date||d.t||'')));
+    unskeletonize('#ana-overview');
   }else{
     const host = $('#ana-overview'); host.classList.add('empty'); host.textContent='No data';
+    unskeletonize('#ana-overview');
   }
 
-  // Geo distribution (prefer analytics.geo → overview.geo)
   const geoMap = obj(base?.geo) && Object.keys(base.geo).length ? base.geo : (ov?.geo || {});
   renderPieChart('#ana-geo-dist', geoMap);
+  unskeletonize('#ana-geo-dist');
 
-  // live
   if(liveTimer) clearInterval(liveTimer);
   liveRows = [];
   liveTimer = setInterval(pullLive, POLL_FAST);
@@ -821,7 +862,6 @@ async function pullLive(){
 }
 
 /* ========= WALLET ========= */
-/* Balance = Overview Total Earnings − Pending payouts */
 async function initWallet(){
   try{
     const [W, OV] = await Promise.all([ api('wallet'), api('overview') ]);
@@ -913,9 +953,7 @@ async function initMonitor(){
       tb.appendChild(tr);
     });
 
-    // details drawer content
-    $('#ev-summary').innerHTML =
-      `<div class="kv"><b>Total events</b><span>${events.length}</span></div>`;
+    $('#ev-summary').innerHTML = `<div class="kv"><b>Total events</b><span>${events.length}</span></div>`;
     $('#ev-json').value = JSON.stringify({health:m.health,maintenance:m.maintenance,events}, null, 2);
   }catch(e){
     tb.innerHTML = `<tr><td colspan="3" class="muted">Failed to load.</td></tr>`;
@@ -946,8 +984,13 @@ document.getElementById('btn-save-config')?.addEventListener('click', async ()=>
 
 /* ========= BOOT ========= */
 window.addEventListener('DOMContentLoaded', ()=>{
+  skeletonizeCharts();
+  setTimeout(()=>{ if(PREVIEW) seedPreview(); }, PREVIEW_TIMEOUT_MS);
+
   const r = (location.hash||'#dashboard').replace('#','');
   show(r);
+  // Double-fire once more to catch browsers that attach late
+  setTimeout(()=>show(r), 0);
 });
 
 /* ========= tiny toast ========= */

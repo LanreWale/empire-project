@@ -4,90 +4,59 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>THE EMPIRE AFFILIATE MARKETING HUB</title>
-
-<!-- Font to match your screenshots -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
-
 <style>
-/* ===== EXACT LOOK & FEEL FROM YOUR SHOTS ===== */
+/* ====== THEME (matches your screenshots exactly) ====== */
 :root{
-  --bg:#0b1a29;           /* main canvas */
-  --panel:#0f2233;        /* card body */
-  --panel-2:#0e2131;      /* subtle gradient stop */
-  --ink:#dbe9ff;          /* text */
-  --muted:#8aa1be;        /* subtext */
-  --accent:#ffd559;       /* charts/accents (yellow) */
-  --good:#20d1a2;         /* green numbers */
-  --line:#173046;         /* borders */
-  --radius:14px;
-  --shadow:0 6px 22px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.03);
+  --bg:#0c1b2a; --bg-soft:#0f2233; --bg-soft-2:#132a42;
+  --ink:#eaf2ff; --muted:#8aa2bf; --accent:#ffd559;
+  --good:#1dd1a1; --line:#183046;
+  --radius:14px; --shadow:0 6px 20px rgba(0,0,0,.25),inset 0 1px 0 rgba(255,255,255,.02);
 }
 *{box-sizing:border-box}
 html,body{height:100%}
 body{
-  margin:0; font-family:Inter,system-ui,Segoe UI,Roboto,Arial; color:var(--ink);
+  margin:0;font-family:Inter,system-ui,Segoe UI,Roboto; color:var(--ink);
   background:
-    radial-gradient(900px 900px at 110% -10%, #143a5b 0%, transparent 60%) fixed,
+    radial-gradient(900px 900px at 115% -10%, #163b5c 0%, transparent 60%) fixed,
     radial-gradient(900px 900px at -10% 120%, #0c2338 0%, transparent 60%) fixed,
     var(--bg);
 }
-
-/* Layout */
 .wrap{display:grid;grid-template-columns:240px 1fr;min-height:100vh}
-aside{background:#091828;border-right:1px solid #112a41}
-.brand{display:flex;align-items:center;gap:10px;padding:16px 18px;font-weight:800;letter-spacing:.3px}
-.brand .mark{width:9px;height:9px;border-radius:50%;background:#ffcc00}
-.nav a{
-  display:flex;align-items:center;gap:10px;padding:12px 16px;margin:6px 10px;border-radius:10px;
-  color:#cfe2ff;text-decoration:none; font-weight:600; font-size:14px;
-}
+aside{background:#0a1a2a;border-right:1px solid #112a41}
+.brand{display:flex;align-items:center;gap:10px;padding:16px 18px;font-weight:800;letter-spacing:.4px}
+.brand .dot{width:8px;height:8px;border-radius:50%;background:#ffcc00}
+.nav a{display:flex;align-items:center;gap:10px;padding:12px 16px;margin:6px 10px;border-radius:10px;color:#cde1ff;text-decoration:none}
 .nav a.active,.nav a:hover{background:#122a3f}
 main{padding:18px 22px}
-
-/* Grid & Cards */
 .row{display:grid;grid-template-columns:repeat(12,1fr);gap:14px}
-.card{
-  background:linear-gradient(180deg,var(--panel),var(--panel-2));
-  border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow); padding:14px;
-}
+.card{background:linear-gradient(180deg,#0f2233,#0e2131);border:1px solid #173046;border-radius:var(--radius);box-shadow:var(--shadow);padding:14px}
 .card h3{margin:0 0 8px;font-size:14px;font-weight:700;color:#cfe2ff;letter-spacing:.3px}
 .kpi{font-size:20px;font-weight:800}
-.muted{color:var(--muted)}
-.green{color:var(--good)}
-.badge{display:inline-block;background:#123049;border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-size:12px}
-
-/* Table */
+.badge{display:inline-block;background:#14304a;border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-size:12px}
 .table{width:100%;border-collapse:collapse}
 .table th,.table td{padding:10px 12px;border-bottom:1px solid #15344d;font-size:13px}
 .table thead th{background:#0f2b45;color:#cfe2ff;position:sticky;top:0;z-index:1}
-
-/* Spans to match your tile sizes */
+.green{color:var(--good)} .muted{color:var(--muted)}
 .grid-xs{grid-column:span 3} .grid-sm{grid-column:span 4} .grid-md{grid-column:span 6}
 .grid-lg{grid-column:span 8} .grid-xl{grid-column:span 12}
-
-/* Charts */
 .chart{min-height:220px}
 .skeleton{position:relative;overflow:hidden;background:#10263d;border-radius:10px;min-height:180px}
 .skeleton::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.06),transparent);
   transform:translateX(-100%);animation:sheen 1.2s infinite}
 @keyframes sheen{to{transform:translateX(100%)}}
-
-/* Footer */
 footer{color:#7ea2c6;font-size:12px;padding:14px;margin-top:10px;border-top:1px solid #15344d}
-
-/* Responsive: same compact nav as your phone shots */
 @media (max-width:980px){.wrap{grid-template-columns:82px 1fr}.nav a span{display:none}}
 @media (max-width:720px){.row{grid-template-columns:1fr}.grid-xs,.grid-sm,.grid-md,.grid-lg,.grid-xl{grid-column:span 1}}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <!-- Sidebar: same order/titles as your screenshots -->
   <aside>
-    <div class="brand"><span class="mark"></span><span>THE EMPIRE</span></div>
+    <div class="brand"><span class="dot"></span> THE EMPIRE</div>
     <nav class="nav">
-      <a href="#dashboard"   id="nav-dashboard" class="active">🏠 <span>Dashboard</span></a>
+      <a href="#dashboard"   id="nav-dashboard"   class="active">🏠 <span>Dashboard</span></a>
       <a href="#cpa"         id="nav-cpa">💳 <span>CPA Accounts</span></a>
       <a href="#users"       id="nav-users">👥 <span>Users</span></a>
       <a href="#analytics"   id="nav-analytics">📈 <span>Analytics</span></a>
@@ -98,10 +67,10 @@ footer{color:#7ea2c6;font-size:12px;padding:14px;margin-top:10px;border-top:1px 
   </aside>
 
   <main>
-    <!-- ===== Dashboard (exact blocks you showed) ===== -->
+    <!-- DASHBOARD -->
     <section id="view-dashboard" class="view">
       <div class="row">
-        <div class="card grid-sm"><h3>Total Earnings</h3><div class="kpi" id="kpi-earnings">—</div><div class="muted">vs last 7d</div></div>
+        <div class="card grid-sm"><h3>Total Earnings</h3><div class="kpi" id="kpi-earnings">—</div><div class="muted" id="kpi-earnings-sub">vs last 7d</div></div>
         <div class="card grid-sm"><h3>Total Clicks</h3><div class="kpi" id="kpi-clicks">—</div><div class="muted">daily average</div></div>
         <div class="card grid-sm"><h3>Leads</h3><div class="kpi" id="kpi-leads">—</div></div>
         <div class="card grid-sm"><h3>Conversion Rate</h3><div class="kpi" id="kpi-conv">—</div><div class="muted">industry leading</div></div>
@@ -119,12 +88,12 @@ footer{color:#7ea2c6;font-size:12px;padding:14px;margin-top:10px;border-top:1px 
       </div>
     </section>
 
-    <!-- ===== CPA Accounts ===== -->
+    <!-- CPA ACCOUNTS -->
     <section id="view-cpa" class="view" hidden>
       <div class="row" id="cpa-grid"></div>
     </section>
 
-    <!-- ===== Users ===== -->
+    <!-- USERS -->
     <section id="view-users" class="view" hidden>
       <div class="card grid-xl">
         <h3>Users Management</h3>
@@ -135,7 +104,7 @@ footer{color:#7ea2c6;font-size:12px;padding:14px;margin-top:10px;border-top:1px 
       </div>
     </section>
 
-    <!-- ===== Analytics ===== -->
+    <!-- ANALYTICS -->
     <section id="view-analytics" class="view" hidden>
       <div class="row">
         <div class="card grid-md"><h3>Performance Overview</h3><div id="ana-overview" class="chart skeleton"></div></div>
@@ -150,7 +119,7 @@ footer{color:#7ea2c6;font-size:12px;padding:14px;margin-top:10px;border-top:1px 
       </div>
     </section>
 
-    <!-- ===== Wallet ===== -->
+    <!-- WALLET -->
     <section id="view-wallet" class="view" hidden>
       <div class="row">
         <div class="card grid-sm"><h3>Balance</h3><div class="kpi" id="wallet-balance">—</div></div>
@@ -164,7 +133,7 @@ footer{color:#7ea2c6;font-size:12px;padding:14px;margin-top:10px;border-top:1px 
       </div>
     </section>
 
-    <!-- ===== Monitoring ===== -->
+    <!-- MONITORING -->
     <section id="view-monitoring" class="view" hidden>
       <div class="row">
         <div class="card grid-sm"><h3>System Health</h3><div class="kpi" id="mon-health">—</div></div>
@@ -179,7 +148,7 @@ footer{color:#7ea2c6;font-size:12px;padding:14px;margin-top:10px;border-top:1px 
       </div>
     </section>
 
-    <!-- ===== Settings ===== -->
+    <!-- SETTINGS -->
     <section id="view-settings" class="view" hidden>
       <div class="card grid-xl">
         <h3>Live Config</h3>
@@ -192,19 +161,19 @@ footer{color:#7ea2c6;font-size:12px;padding:14px;margin-top:10px;border-top:1px 
 </div>
 
 <script>
-/* ===== FIXED API (your Apps Script) ===== */
+/* ================== API CONFIG ================== */
 const API_BASE = "https://script.google.com/macros/s/AKfycbyCjLNnMm0yQZeQ2PUn-zvNkWbp8vTpw-kZEu_zup6NiMW-ScR_cYwj59b4i09MgrdV/exec";
 const api = async (action) => {
-  const r = await fetch(API_BASE + "?action=" + encodeURIComponent(action), {cache:"no-store"});
+  const url = API_BASE + "?action=" + encodeURIComponent(action);
+  const r = await fetch(url, {cache:"no-store"});
   if(!r.ok) throw new Error("HTTP "+r.status);
   return r.json();
 };
 
-/* ===== simple chart helpers (SVG, no libs) — yellow like your shots ===== */
+/* ========== tiny SVG chart helpers (no libs) ========== */
 const THEME = {accent:getCSS('--accent')||'#ffd559', axis:getCSS('--line')||'#173046', label:getCSS('--muted')||'#7c97b5'};
 function getCSS(v){return getComputedStyle(document.documentElement).getPropertyValue(v).trim()}
 const NS="http://www.w3.org/2000/svg";
-
 function barChart(host, series=[], labels=[]){
   host.innerHTML=""; host.classList.remove('skeleton');
   if(!series.length){ host.textContent="No data"; return; }
@@ -223,56 +192,50 @@ function barChart(host, series=[], labels=[]){
   });
   host.appendChild(svg);
 }
-
 function pieChart(host, map={}){
   host.innerHTML=""; host.classList.remove('skeleton');
   const entries=Object.entries(map).filter(([,v])=>Number(v)>0); if(!entries.length){ host.textContent="No data"; return; }
-  const W=320,H=220,R=90,CX=W/2,CY=H/2,total=entries.reduce((s,[,v])=>s+Number(v),0);
+  const W=240,H=220,R=90,CX=W/2,CY=H/2,total=entries.reduce((s,[,v])=>s+Number(v),0);
   const svg=document.createElementNS(NS,'svg'); svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
   let angle=-Math.PI/2;
-  entries.forEach(([,v],i)=>{
+  entries.forEach(([k,v],i)=>{
     const frac=Number(v)/total, theta=frac*2*Math.PI;
     const x1=CX+R*Math.cos(angle), y1=CY+R*Math.sin(angle);
     const x2=CX+R*Math.cos(angle+theta), y2=CY+R*Math.sin(angle+theta);
     const p=document.createElementNS(NS,'path');
     p.setAttribute('d',`M ${CX} ${CY} L ${x1} ${y1} A ${R} ${R} 0 ${theta>Math.PI?1:0} 1 ${x2} ${y2} Z`);
-    p.setAttribute('fill',THEME.accent); p.setAttribute('opacity',0.55+0.35*((i%3)/3)); svg.appendChild(p);
-    angle+=theta;
+    p.setAttribute('fill',THEME.accent); p.setAttribute('opacity',0.55+0.35*((i%3)/3)); svg.appendChild(p); angle+=theta;
   });
   host.appendChild(svg);
 }
 
-/* ===== Router (keeps your left-nav behavior) ===== */
+/* ================== ROUTER ================== */
 const $=s=>document.querySelector(s), $$=s=>Array.from(document.querySelectorAll(s));
 function show(route){
   $$('.nav a').forEach(a=>a.classList.toggle('active', a.id==='nav-'+route));
   $$('.view').forEach(v=>v.hidden = (v.id!=='view-'+route));
 }
 window.addEventListener('hashchange',()=> boot());
-function money(n){return 'US$'+Number(n||0).toLocaleString()}
+function fmtMoney(n){return 'US$'+Number(n||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}
 
-/* ===== Page loaders (bound to your JSON schema) ===== */
+/* ================== LOADERS ================== */
 async function loadDashboard(){
   const d = await api('overview');
-  $("#kpi-earnings").textContent = d.totalsPretty?.earningsUsd ?? money(d.totals?.earnings);
+  $("#kpi-earnings").textContent = d.totalsPretty?.earningsUsd ?? fmtMoney(d.totals?.earnings);
   $("#kpi-clicks").textContent   = (d.totals?.clicks||0).toLocaleString();
   $("#kpi-leads").textContent    = (d.totals?.leads||0).toLocaleString();
   $("#kpi-conv").textContent     = d.totalsPretty?.conversionRatePct ?? ((d.totals?.conversionRate||0).toFixed(2)+'%');
-
   const byDay = (d.byDay||[]).map(x=>({label:String(x.date).slice(5), value:Number(x.earnings||0)}));
   barChart($("#dash-earnings"), byDay.map(x=>x.value), byDay.map(x=>x.label));
-
-  // Use devices if present; fall back to offerTypes (your JSON has both patterns across shots)
   pieChart($("#dash-sources"), d.devices || d.offerTypes || {});
-
-  const tbody=$("#geo-table"); tbody.innerHTML='';
+  const geoT=$("#geo-table"); geoT.innerHTML='';
   (d.byGeo||[]).forEach(g=>{
     const tr=document.createElement('tr');
     tr.innerHTML=`<td>${g.country}</td>
       <td>${(g.clicks||0).toLocaleString()}</td>
       <td>${(g.leads||0).toLocaleString()}</td>
-      <td class="green">${money(g.earnings)}</td>`;
-    tbody.appendChild(tr);
+      <td class="green">${fmtMoney(g.earnings)}</td>`;
+    geoT.appendChild(tr);
   });
 }
 
@@ -284,12 +247,12 @@ async function loadCpa(){
     card.innerHTML=`
       <h3>${item.account} · Network <b>${item.network}</b></h3>
       <div class="row" style="grid-template-columns:repeat(2,1fr);gap:8px">
-        <div><div class="muted">Domain</div><div class="badge">${item.domain}</div></div>
-        <div><div class="muted">Preferred Offer</div><div class="badge">${item.preferredOffer}</div></div>
+        <div><span class="muted">Domain</span><div class="badge">${item.domain}</div></div>
+        <div><span class="muted">Preferred Offer</span><div class="badge">${item.preferredOffer}</div></div>
       </div>
       <div style="margin-top:10px;display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
         <div><div class="muted">Active Offers</div><div class="kpi">${(item.activeOffers||0).toLocaleString()}</div></div>
-        <div><div class="muted">Revenue</div><div class="kpi green">${money(item.revenue)}</div></div>
+        <div><div class="muted">Revenue</div><div class="kpi green">${fmtMoney(item.revenue)}</div></div>
         <div><div class="muted">Clicks</div><div class="kpi">${(item.clicks||0).toLocaleString()}</div></div>
       </div>
       <div class="muted" style="margin-top:6px">Conversion: ${(Number(item.conversionRate||0)*100).toFixed(2)}% · Status: ${item.status}</div>
@@ -301,7 +264,7 @@ async function loadCpa(){
 async function loadUsers(){
   const r = await api('users');
   const tb=$("#users-tb"); tb.innerHTML='';
-  (r.items||[]).forEach(u=>{
+  r.items.forEach(u=>{
     const tr=document.createElement('tr');
     tr.innerHTML=`<td>${u.name}</td><td>${u.email}</td><td>${u.phone}</td><td>${u.authority}</td><td>${u.status}</td>`;
     tb.appendChild(tr);
@@ -318,18 +281,18 @@ async function loadAnalytics(){
     const tr=document.createElement('tr');
     tr.innerHTML=`<td>${i.date}</td><td>${i.country}</td><td>${i.offertype}</td>
     <td>${i.device}</td><td>${(i.clicks||0).toLocaleString()}</td><td>${(i.leads||0).toLocaleString()}</td>
-    <td class="green">${money(i.earnings)}</td>`;
+    <td class="green">${fmtMoney(i.earnings)}</td>`;
     live.appendChild(tr);
   });
 }
 
 async function loadWallet(){
   const w = await api('wallet');
-  $("#wallet-balance").textContent = money(w.balance);
+  $("#wallet-balance").textContent = fmtMoney(w.balance);
   const tb=$("#wallet-history"); tb.innerHTML='';
   (w.history||[]).forEach(h=>{
     const tr=document.createElement('tr');
-    tr.innerHTML=`<td>${h.date||'—'}</td><td>${h.method}</td><td>${money(h.amount)}</td><td>${h.status||'—'}</td>`;
+    tr.innerHTML=`<td>${h.date||'—'}</td><td>${h.method}</td><td>${fmtMoney(h.amount)}</td><td>${h.status||'—'}</td>`;
     tb.appendChild(tr);
   });
 }
@@ -351,7 +314,7 @@ async function loadSettings(){
   $("#cfg").textContent = JSON.stringify(cfg, null, 2);
 }
 
-/* ===== Boot & routing ===== */
+/* ================== BOOT ================== */
 async function boot(){
   const route = (location.hash||'#dashboard').slice(1);
   show(route);
@@ -368,8 +331,8 @@ async function boot(){
     alert("Failed to load: "+e.message);
   }
 }
-window.addEventListener('load', boot);
-window.addEventListener('hashchange', boot);
+window.addEventListener('load',boot);
+window.addEventListener('hashchange',boot);
 </script>
 </body>
 </html>

@@ -3,41 +3,88 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>THE EMPIRE • Command Center</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<title>THE EMPIRE · Affiliate Marketing Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
-  :root{--bg:#0e2233;--panel:#0f2538;--muted:#7c97b5;--text:#eaf2ff;--accent:#ffd559;--line:#183249;--good:#1dd1a1;--warn:#ffb142;--bad:#ff6b6b;--r:14px}
-  *{box-sizing:border-box} body{margin:0;font-family:Inter,system-ui,Segoe UI,Roboto;color:var(--text);background:#0d1a27}
-  .app{display:grid;grid-template-columns:240px 1fr;min-height:100vh;background:
-    radial-gradient(1100px 1100px at 120% -10%, #163b5c 0%, transparent 60%),
-    radial-gradient(900px 900px at -10% 120%, #0c2338 0%, transparent 60%),var(--bg)}
-  aside{background:#0c1c2b;border-right:1px solid #132c42;padding:14px}
-  .brand{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:.3px;margin:8px 0 18px}
-  nav a{display:block;padding:10px 12px;border-radius:10px;color:#d9e7ff;text-decoration:none;margin:4px 0}
-  nav a.active,nav a:hover{background:#122a40}
-  main{padding:18px 22px}
-  .grid{display:grid;gap:14px}
-  .kpis{grid-template-columns:repeat(4,minmax(220px,1fr))}
-  .two{grid-template-columns:1fr 1fr}
-  .panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);box-shadow:0 6px 24px rgba(0,0,0,.22)}
-  .panel h3{margin:0;padding:14px 16px;border-bottom:1px solid var(--line);font-size:16px}
-  .panel .pad{padding:14px 16px}
-  table{width:100%;border-collapse:collapse;font-size:13px}
-  th,td{padding:10px 12px;border-bottom:1px solid #15334a}
-  thead th{background:#0f2b45;text-align:left;color:#cfe2ff}
-  .knum{font-size:22px;font-weight:800}
-  .muted{color:var(--muted)}
-  .chip{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;background:#103250;border:1px solid var(--line);font-size:12px}
+  :root{
+    /* your palette */
+    --nav:#0f1f2c; --page:#0b1925; --panel:#0f2233; --panel-2:#112738;
+    --ink:#eaf2ff; --muted:#93a7bd; --accent:#ffd559;
+    --good:#1dd1a1; --warn:#ffb142; --bad:#ff6b6b; --line:#1a3248;
+    --radius:14px;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;
+    color:var(--ink);
+    background:
+      radial-gradient(1200px 1200px at 120% -10%, #163b5c 0%, transparent 60%) fixed,
+      radial-gradient(1000px 1000px at -10% 120%, #0c2338 0%, transparent 60%) fixed,
+      var(--page);
+  }
+  /* shell */
+  .wrap{display:grid; grid-template-columns: 260px 1fr; min-height:100vh}
+  aside{
+    background:var(--nav);
+    border-right:1px solid var(--line);
+    padding:14px 10px;
+  }
+  .brand{display:flex;align-items:center;gap:10px;padding:12px 10px 18px 12px;font-weight:800;letter-spacing:.4px}
+  .brand .crown{font-size:18px}
+  nav a{
+    display:flex;align-items:center;gap:10px;
+    color:var(--muted); text-decoration:none; padding:12px 12px; border-radius:10px;
+    margin:4px 6px; font-weight:600;
+  }
+  nav a.active{background:#132a42;color:#e9f4ff}
+  nav a:hover{background:#11293f;color:#e9f4ff}
+  main{padding:22px 22px 80px}
+  .bar{display:flex;align-items:center;justify-content:space-between;margin:2px 4px 18px}
+  .bar .title{font-size:22px;font-weight:800;letter-spacing:.3px}
+  .grid{display:grid; gap:16px}
+  /* dashboard grid */
+  .cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .cols-4{grid-template-columns:repeat(4,minmax(0,1fr))}
+  @media (max-width:1100px){ .cols-3,.cols-4{grid-template-columns:1fr} }
+  .card{
+    background:linear-gradient(180deg, var(--panel), var(--panel-2));
+    border:1px solid var(--line); border-radius: var(--radius);
+    box-shadow: 0 8px 28px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.04);
+    padding:16px;
+  }
+  .card h4{margin:0 0 8px;font-weight:700;color:#d9e8ff}
+  .stat{font-size:28px;font-weight:800}
+  .sub{font-size:12px;color:var(--muted)}
+  .btn{background:linear-gradient(180deg,var(--accent),#ffcb31); color:#1b1b1b; font-weight:800;
+       padding:10px 14px;border-radius:10px; cursor:pointer; border:0}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  thead th{background:#10324f; text-align:left; padding:10px 12px; color:#dbeaff; border-bottom:1px solid #1a3a56}
+  tbody td{padding:10px 12px; border-bottom:1px solid #15314a; color:#d7e7fb}
+  tbody tr:hover td{background:rgba(20,48,74,.35)}
+  .mono{font-variant-numeric:tabular-nums}
+  .green{color:var(--good)} .red{color:var(--bad)}
   .chart{min-height:220px}
-  .hidden{display:none}
-  .toast{position:fixed;top:14px;right:14px;background:#0e2236;border:1px solid #24445e;padding:10px 12px;border-radius:10px;z-index:11;max-width:80vw}
+  .skeleton{position:relative; overflow:hidden; background:#10263d; border-radius:10px; min-height:180px}
+  .skeleton::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.06),transparent);transform:translateX(-100%);animation:sheen 1.2s infinite}
+  @keyframes sheen{to{transform:translateX(100%)}}
+  .tabs{display:flex;gap:8px;margin-bottom:12px}
+  .pill{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;background:#14304a;border:1px solid var(--line);font-size:12px}
+  a:focus,button:focus{box-shadow:0 0 0 2px #3a85ff; outline:0}
+  /* small badges */
+  .badge{display:inline-block;background:#173046;border:1px solid #2b4b66;color:#b9d6f9;border-radius:8px;padding:4px 8px;font-size:12px}
+  .right{margin-left:auto}
 </style>
 </head>
 <body>
-<div class="app">
+<div class="wrap">
+
+  <!-- NAV -->
   <aside>
-    <div class="brand">👑 THE EMPIRE</div>
-    <nav id="nav">
+    <div class="brand"><span class="crown">👑</span> <span>THE EMPIRE</span></div>
+    <nav id="menu">
       <a href="#dashboard" data-route="dashboard" class="active">Dashboard</a>
       <a href="#cpa" data-route="cpa">CPA Accounts</a>
       <a href="#users" data-route="users">Users</a>
@@ -48,257 +95,363 @@
     </nav>
   </aside>
 
-  <main>
+  <!-- MAIN -->
+  <main id="view">
+
     <!-- DASHBOARD -->
-    <section id="route-dashboard" class="route">
-      <div class="grid kpis">
-        <div class="panel"><h3>Total Earnings</h3><div class="pad"><div id="kpi-earnings" class="knum">$0.00</div><div class="muted">vs last 7d</div></div></div>
-        <div class="panel"><h3>Total Clicks</h3><div class="pad"><div id="kpi-clicks" class="knum">0</div><div class="muted">daily average</div></div></div>
-        <div class="panel"><h3>Leads</h3><div class="pad"><div id="kpi-leads" class="knum">0</div></div></div>
-        <div class="panel"><h3>Conversion Rate</h3><div class="pad"><div id="kpi-conv" class="knum">0%</div><div class="muted">industry leading</div></div></div>
+    <section id="screen-dashboard">
+      <div class="bar"><div class="title">Supreme Command Dashboard</div><div class="badge" id="commanderTag">SUPREME COMMANDER</div></div>
+
+      <div class="grid cols-3">
+        <div class="card">
+          <h4>Total Earnings</h4>
+          <div class="stat mono" id="d-earnings">$0.00</div>
+          <div class="sub" id="d-earnings-sub">vs last 7d</div>
+        </div>
+        <div class="card">
+          <h4>Total Clicks</h4>
+          <div class="stat mono" id="d-clicks">0</div>
+          <div class="sub">daily average</div>
+        </div>
+        <div class="card">
+          <h4>Leads</h4>
+          <div class="stat mono" id="d-leads">0</div>
+          <div class="sub">&nbsp;</div>
+        </div>
       </div>
 
-      <div class="grid two" style="margin-top:14px">
-        <div class="panel"><h3>Daily Earnings</h3><div class="pad"><div id="dash-earnings" class="chart"></div></div></div>
-        <div class="panel"><h3>Traffic Sources</h3><div class="pad"><div id="dash-sources" class="chart"></div></div></div>
+      <div class="grid cols-2" style="margin-top:16px">
+        <div class="card">
+          <h4>Daily Earnings</h4>
+          <div id="dash-earnings" class="chart skeleton"></div>
+        </div>
+        <div class="card">
+          <h4>Traffic Sources</h4>
+          <div id="dash-sources" class="chart skeleton"></div>
+        </div>
       </div>
 
-      <div class="panel" style="margin-top:14px">
-        <h3>By Geo (Top)</h3>
-        <div class="pad">
-          <table>
+      <div class="card" style="margin-top:16px">
+        <h4>By Geo (Top)</h4>
+        <div style="overflow:auto">
+          <table id="dash-geo">
             <thead><tr><th>Country</th><th>Clicks</th><th>Leads</th><th>Earnings ($)</th></tr></thead>
-            <tbody id="geo-table"></tbody>
+            <tbody></tbody>
           </table>
         </div>
       </div>
     </section>
 
-    <!-- CPA -->
-    <section id="route-cpa" class="route hidden">
-      <div class="grid two" id="cpa-grid"></div>
+    <!-- CPA ACCOUNTS -->
+    <section id="screen-cpa" hidden>
+      <div class="bar"><div class="title">CPA Accounts Management</div><button class="btn">+ Add New Account</button></div>
+      <div id="cpa-grid" class="grid cols-3"></div>
     </section>
 
     <!-- USERS -->
-    <section id="route-users" class="route hidden">
-      <div class="panel">
-        <h3>Users Management</h3>
-        <div class="pad">
-          <table>
+    <section id="screen-users" hidden>
+      <div class="bar"><div class="title">Users Management</div><div class="tabs">
+        <span class="pill">Approved</span><span class="pill">Pending</span><span class="pill">Rejected</span>
+        <button class="btn">+ Invite User</button></div></div>
+      <div class="card">
+        <div style="overflow:auto">
+          <table id="users-table">
             <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Authority</th><th>Status</th></tr></thead>
-            <tbody id="users-tbody"></tbody>
+            <tbody></tbody>
           </table>
         </div>
       </div>
     </section>
 
     <!-- ANALYTICS -->
-    <section id="route-analytics" class="route hidden">
-      <div class="grid two">
-        <div class="panel"><h3>Performance Overview</h3><div class="pad"><div id="ana-overview" class="chart"></div></div></div>
-        <div class="panel"><h3>Geographic Distribution</h3><div class="pad"><div id="ana-geo-dist" class="chart"></div></div></div>
+    <section id="screen-analytics" hidden>
+      <div class="bar"><div class="title">Analytics & Reports</div><span class="badge right" id="ana-updated">Updated: —</span></div>
+      <div class="grid cols-2">
+        <div class="card">
+          <h4>Performance Overview</h4>
+          <div id="ana-overview" class="chart skeleton"></div>
+        </div>
+        <div class="card">
+          <h4>Geographic Distribution</h4>
+          <div id="ana-geo-dist" class="chart skeleton"></div>
+        </div>
       </div>
-      <div class="panel" style="margin-top:14px">
-        <h3>Live Performance Data (last 2 min)</h3>
-        <div class="pad"><table><thead><tr><th>Time</th><th>Country</th><th>Offer</th><th>Device</th><th>Clicks</th><th>Conv</th><th>Earnings</th></tr></thead><tbody id="ana-live"></tbody></table></div>
+      <div class="grid cols-2" style="margin-top:16px">
+        <div class="card">
+          <h4>Live Performance Data (last 2 min)</h4>
+          <div style="overflow:auto">
+            <table id="ana-live">
+              <thead><tr><th>Time</th><th>Country</th><th>Offer Type</th><th>Device</th><th>Clicks</th><th>Conv.</th><th>Earnings</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card">
+          <h4>Live by GEO (rolling)</h4>
+          <div style="overflow:auto">
+            <table id="ana-geo-rolling">
+              <thead><tr><th>Country</th><th>Clicks</th><th>Leads</th><th>Earnings</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </section>
 
     <!-- WALLET -->
-    <section id="route-wallet" class="route hidden">
-      <div class="grid two">
-        <div class="panel"><h3>Balance</h3><div class="pad"><div id="wallet-balance" class="knum">$0.00</div></div></div>
-        <div class="panel"><h3>Request Withdrawal</h3><div class="pad">Use back-office to submit payouts.</div></div>
+    <section id="screen-wallet" hidden>
+      <div class="bar"><div class="title">Payments & Wallet</div><button class="btn">Request Withdrawal</button></div>
+      <div class="grid cols-3">
+        <div class="card"><h4>Balance</h4><div class="stat mono" id="w-balance">$0.00</div></div>
+        <div class="card"><h4>Pending Payout</h4><div class="stat mono" id="w-pending">$0.00</div></div>
+        <div class="card"><h4>Last Payout</h4><div class="stat mono" id="w-last">$0.00</div></div>
       </div>
-      <div class="panel" style="margin-top:14px">
-        <h3>Transaction History</h3>
-        <div class="pad"><table><thead><tr><th>Date</th><th>Method</th><th>Amount ($)</th><th>Status</th></tr></thead><tbody id="wallet-history"></tbody></table></div>
+      <div class="grid cols-2" style="margin-top:16px">
+        <div class="card">
+          <h4>Transaction History</h4>
+          <div style="overflow:auto">
+            <table id="w-history">
+              <thead><tr><th>Date</th><th>Method</th><th>Amount ($)</th><th>Status</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card"><h4>Request Withdrawal</h4><div class="sub">Use the button above to submit a payout request.</div></div>
       </div>
     </section>
 
     <!-- MONITORING -->
-    <section id="route-monitoring" class="route hidden">
-      <div class="grid two">
-        <div class="panel"><h3>System Health</h3><div class="pad"><div>Health: <strong id="mon-health">—</strong></div><div>Maintenance: <strong id="mon-maint">—</strong></div></div></div>
-        <div class="panel"><h3>Service Status</h3><div class="pad">See backend dashboard for per-service metrics.</div></div>
+    <section id="screen-monitoring" hidden>
+      <div class="bar"><div class="title">Monitoring</div><button class="btn">Open Details</button></div>
+      <div class="grid cols-3">
+        <div class="card"><h4>Alerts</h4><div class="stat mono" id="m-alerts">0</div></div>
+        <div class="card"><h4>Maintenance</h4><div class="stat" id="m-maint">—</div></div>
+        <div class="card"><h4>System Health</h4><div class="stat green" id="m-health">OK</div></div>
       </div>
-      <div class="panel" style="margin-top:14px">
-        <h3>Events Stream</h3>
-        <div class="pad"><table><thead><tr><th>Time</th><th>Type</th><th>Message</th></tr></thead><tbody id="mon-events"></tbody></table></div>
+      <div class="card" style="margin-top:16px">
+        <h4>Events Stream</h4>
+        <div style="overflow:auto">
+          <table id="m-events">
+            <thead><tr><th>Time</th><th>Type</th><th>Message</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
       </div>
     </section>
 
     <!-- SETTINGS -->
-    <section id="route-settings" class="route hidden">
-      <div class="panel"><h3>Live Config</h3><div class="pad"><pre id="cfg-json" style="white-space:pre-wrap;margin:0"></pre></div></div>
+    <section id="screen-settings" hidden>
+      <div class="bar"><div class="title">Settings</div><button id="cfg-save" class="btn">Save</button></div>
+      <div class="card">
+        <h4>Live Config</h4>
+        <textarea id="cfg-json" style="width:100%;height:280px;background:#0e2030;border:1px solid #234660;color:#eaf2ff;border-radius:10px;padding:12px;font-family:ui-monospace,Menlo,Consolas,monospace"></textarea>
+      </div>
     </section>
+
   </main>
 </div>
 
-<div id="toast" class="toast hidden"></div>
-
 <script>
-/* ===== Helpers ===== */
-const API_URL = "https://script.google.com/macros/s/AKfycbyCjLNnMm0yQZeQ2PUn-zvNkWbp8vTpw-kZEu_zup6NiMW-ScR_cYwj59b4i09MgrdV/exec";
+/*** CONFIG ***/
+const API_BASE = 'https://script.google.com/macros/s/AKfycbyCjLNnMm0yQZeQ2PUn-zvNkWbp8vTpw-kZEu_zup6NiMW-ScR_cYwj59b4i09MgrdV/exec';
 const $ = s => document.querySelector(s);
 const $$ = s => Array.from(document.querySelectorAll(s));
-function toast(msg){ const t=$("#toast"); t.textContent=msg; t.classList.remove("hidden"); setTimeout(()=>t.classList.add("hidden"), 4000); }
 
-/* Basic charts (SVG, no libs) */
-const THEME={accent:getComputedStyle(document.documentElement).getPropertyValue('--accent').trim()||'#ffd559', axis:getComputedStyle(document.documentElement).getPropertyValue('--line').trim()||'#183249', label:getComputedStyle(document.documentElement).getPropertyValue('--muted').trim()||'#7c97b5'};
-function svgEl(tag){return document.createElementNS('http://www.w3.org/2000/svg',tag)}
-function renderBarChart(el,series,labels){
-  const host = (typeof el==='string')?$(el):el; if(!host) return;
-  host.innerHTML=''; const W=host.clientWidth||340,H=220,p=28,max=Math.max(...series,1),bw=(W-p*2)/series.length,svg=svgEl('svg'); svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
-  const axis=svgEl('line'); axis.setAttribute('x1',p);axis.setAttribute('y1',H-p);axis.setAttribute('x2',W-p);axis.setAttribute('y2',H-p);axis.setAttribute('stroke',THEME.axis);axis.setAttribute('stroke-width','1'); svg.appendChild(axis);
-  series.forEach((v,i)=>{ const h=(v/max)*(H-p*2),x=p+i*bw+6,y=(H-p)-h,rect=svgEl('rect'); rect.setAttribute('x',x);rect.setAttribute('y',y);rect.setAttribute('width',Math.max(8,bw-12));rect.setAttribute('height',Math.max(0,h));rect.setAttribute('rx','6');rect.setAttribute('fill',THEME.accent); svg.appendChild(rect);
-    if(labels && labels[i]){ const tx=svgEl('text'); tx.setAttribute('x',x+(bw-12)/2); tx.setAttribute('y',H-p+14); tx.setAttribute('text-anchor','middle'); tx.setAttribute('font-size','10'); tx.setAttribute('fill',THEME.label); tx.textContent=labels[i]; svg.appendChild(tx); }
+/*** LIGHT SVG CHARTS (bar + pie) ***/
+function svgEl(tag){ return document.createElementNS('http://www.w3.org/2000/svg', tag); }
+function barChart(host, series=[], labels=[]){
+  host.innerHTML='';
+  const W = Math.max(host.clientWidth||320,320), H = 220, pad=28;
+  const max = Math.max(...series, 1);
+  const bw = (W-pad*2)/series.length;
+  const svg = svgEl('svg'); svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+  const axis = svgEl('line'); axis.setAttribute('x1',pad);axis.setAttribute('y1',H-pad);axis.setAttribute('x2',W-pad);axis.setAttribute('y2',H-pad);
+  axis.setAttribute('stroke','#173046'); svg.appendChild(axis);
+  series.forEach((v,i)=>{
+    const h = (v/max) * (H-pad*2), x=pad+i*bw+6, y=(H-pad)-h;
+    const r = svgEl('rect'); r.setAttribute('x',x); r.setAttribute('y',y); r.setAttribute('width',Math.max(8,bw-12)); r.setAttribute('height',Math.max(0,h)); r.setAttribute('rx','6'); r.setAttribute('fill','#ffd559');
+    svg.appendChild(r);
+    if(labels[i]){
+      const tx = svgEl('text'); tx.setAttribute('x',x+(bw-12)/2); tx.setAttribute('y',H-pad+14); tx.setAttribute('text-anchor','middle'); tx.setAttribute('font-size','10'); tx.setAttribute('fill','#8fb4da'); tx.textContent = labels[i];
+      svg.appendChild(tx);
+    }
   });
   host.appendChild(svg);
 }
-function renderPieChart(el,map){
-  const host=(typeof el==='string')?$(el):el; if(!host) return;
-  host.innerHTML=''; const entries=Object.entries(map||{}).filter(([,v])=>+v>0); if(!entries.length){ host.textContent='No data'; return; }
-  const W=220,H=220,R=90,CX=W/2,CY=H/2,total=entries.reduce((s,[,v])=>s+Number(v),0); let a=-Math.PI/2; const svg=svgEl('svg'); svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
-  entries.forEach(([,v],i)=>{ const theta=(v/total)*Math.PI*2, x1=CX+R*Math.cos(a), y1=CY+R*Math.sin(a), x2=CX+R*Math.cos(a+theta), y2=CY+R*Math.sin(a+theta), p=svgEl('path');
-    p.setAttribute('d',`M ${CX} ${CY} L ${x1} ${y1} A ${R} ${R} 0 ${theta>Math.PI?1:0} 1 ${x2} ${y2} Z`); p.setAttribute('fill',THEME.accent); p.setAttribute('opacity',0.6+0.3*((i%3)/3)); svg.appendChild(p); a+=theta; });
+function pieChart(host, slices={}){
+  host.innerHTML='';
+  const entries = Object.entries(slices).filter(([,v])=>Number(v)>0);
+  if(!entries.length){ host.textContent='—'; return; }
+  const W=260,H=220,R=88,CX=W/2,CY=H/2,total=entries.reduce((s,[,v])=>s+Number(v),0);
+  const svg = svgEl('svg'); svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+  let ang = -Math.PI/2;
+  entries.forEach(([,v],i)=>{
+    const frac = v/total, theta = frac*2*Math.PI;
+    const x1=CX+R*Math.cos(ang), y1=CY+R*Math.sin(ang);
+    const x2=CX+R*Math.cos(ang+theta), y2=CY+R*Math.sin(ang+theta);
+    const p = svgEl('path');
+    p.setAttribute('d',`M ${CX} ${CY} L ${x1} ${y1} A ${R} ${R} 0 ${theta>Math.PI?1:0} 1 ${x2} ${y2} Z`);
+    p.setAttribute('fill','#ffd559'); p.setAttribute('opacity',0.6+0.3*((i%3)/3));
+    svg.appendChild(p); ang+=theta;
+  });
   host.appendChild(svg);
 }
 
-/* ===== API ===== */
+/*** ROUTER ***/
+function show(route){
+  $$('#menu a').forEach(a=>a.classList.toggle('active', a.dataset.route===route));
+  ['dashboard','cpa','users','analytics','wallet','monitoring','settings'].forEach(r=>{
+    $('#screen-'+r).hidden = (r!==route);
+  });
+  if(route==='dashboard') loadDashboard();
+  if(route==='cpa')       loadCPA();
+  if(route==='users')     loadUsers();
+  if(route==='analytics') loadAnalytics();
+  if(route==='wallet')    loadWallet();
+  if(route==='monitoring')loadMonitoring();
+  if(route==='settings')  loadSettings();
+}
+window.addEventListener('hashchange',()=>show((location.hash||'#dashboard').slice(1)));
+document.addEventListener('click',e=>{
+  const a = e.target.closest('a[data-route]');
+  if(a){ e.preventDefault(); history.replaceState(null,'','#'+a.dataset.route); show(a.dataset.route); }
+});
+
+/*** FETCH HELPERS ***/
 async function api(action){
-  const url = API_URL + "?action=" + encodeURIComponent(action);
-  const res = await fetch(url, {mode:"cors", cache:"no-cache"});
-  if(!res.ok) throw new Error("HTTP "+res.status);
+  const url = API_BASE + '?action=' + encodeURIComponent(action);
+  const res = await fetch(url, {cache:'no-cache'});
+  if(!res.ok) throw new Error('Network error');
   return res.json();
 }
-
-/* ===== Loaders ===== */
-async function loadOverview(){
-  const data = await api("overview");
-  // KPIs
-  $("#kpi-earnings").textContent = data.totalsPretty?.earningsUsd ?? `$${Number(data.totals?.earnings||0).toLocaleString()}`;
-  $("#kpi-clicks").textContent   = (data.totals?.clicks ?? 0).toLocaleString();
-  $("#kpi-leads").textContent    = (data.totals?.leads ?? 0).toLocaleString();
-  $("#kpi-conv").textContent     = (data.totalsPretty?.conversionRatePct ?? ((data.totals?.conversionRate||0)*1).toFixed(2)+"%");
-  // charts
-  renderBarChart("#dash-earnings",(data.byDay||[]).map(d=>Number(d.earnings)||0),(data.byDay||[]).map(d=>String(d.date).slice(5)));
-  renderPieChart("#dash-sources", data.devices || data.offerTypes || {});
-  // geo table
-  const tb=$("#geo-table"); tb.innerHTML="";
-  (data.byGeo||[]).forEach(g=>{
-    const tr=document.createElement("tr");
-    tr.innerHTML=`<td>${g.country}</td><td>${(g.clicks||0).toLocaleString()}</td><td>${(g.leads||0).toLocaleString()}</td><td style="color:#1dd1a1">$${Number(g.earnings||0).toLocaleString(undefined,{maximumFractionDigits:2})}</td>`;
-    tb.appendChild(tr);
-  });
+function fmtUsd(x){ return 'US$' + Number(x||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function setTbody(tbody, rows){
+  tbody.innerHTML = rows.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join('')}</tr>`).join('');
 }
 
-async function loadCpa(){
-  const data = await api("cpa");
-  const host=$("#cpa-grid"); host.innerHTML="";
-  (data.items||[]).forEach(x=>{
-    const card=document.createElement("div"); card.className="panel";
-    card.innerHTML=`<h3>${x.account}</h3>
-      <div class="pad">
-        <div class="chip"><img src="https://www.google.com/s2/favicons?domain=${encodeURIComponent(x.domain)}&sz=32" style="width:16px;height:16px;border-radius:4px"> ${x.domain}</div>
-        <div style="margin-top:10px" class="grid" style="grid-template-columns:1fr 1fr">
-          <div><div class="muted">Network</div><strong>${x.network}</strong></div>
-          <div><div class="muted">Active Offers</div><strong>${x.activeOffers}</strong></div>
-          <div><div class="muted">Revenue</div><strong style="color:#1dd1a1">$${Number(x.revenue||0).toLocaleString()}</strong></div>
-          <div><div class="muted">Clicks</div><strong>${(x.clicks||0).toLocaleString()}</strong></div>
-          <div><div class="muted">Conversion</div><strong>${((x.conversionRate||0)*100).toFixed(2)}%</strong></div>
-          <div><div class="muted">Status</div><strong>${x.status}</strong></div>
-        </div>
-      </div>`;
-    host.appendChild(card);
+/*** LOADERS — ALL EXACTLY TO YOUR SCREENS ***/
+async function loadDashboard(){
+  // overview returns: totals, totalsPretty, byDay[], geo{}, devices{}, offerTypes{}, byGeo[]
+  const o = await api('overview');
+  $('#d-earnings').textContent = fmtUsd(o.totals.earnings);
+  $('#d-earnings-sub').textContent = 'vs last 7d';
+  $('#d-clicks').textContent = (o.totals.clicks||0).toLocaleString();
+  $('#d-leads').textContent  = (o.totals.leads||0).toLocaleString();
+
+  // Daily earnings bar
+  const byDay = (o.byDay||[]).slice(0,7);
+  barChart($('#dash-earnings'), byDay.map(d=>Number(d.earnings)||0), byDay.map(d=>String(d.date).slice(5)));
+
+  // Sources pie from offerTypes OR devices (your JSON shows both; keep offerTypes)
+  pieChart($('#dash-sources'), o.offerTypes||{});
+
+  // Top GEO table (byGeo[])
+  const tb = $('#dash-geo tbody');
+  setTbody(tb, (o.byGeo||[]).map(g=>[
+    g.country, (g.clicks||0).toLocaleString(), (g.leads||0).toLocaleString(),
+    `<span class="green mono">${fmtUsd(g.earnings)}</span>`
+  ]));
+}
+
+async function loadCPA(){
+  const c = await api('cpa'); // items: [{account,network,domain,preferredOffer,activeOffers,revenue,clicks,conversionRate,status}]
+  const grid = $('#cpa-grid'); grid.innerHTML='';
+  (c.items||[]).forEach(item=>{
+    const el = document.createElement('div'); el.className='card acct';
+    el.innerHTML = `
+      <div class="sub mono" style="opacity:.75">${item.account}</div>
+      <div style="font-size:26px;font-weight:800;line-height:1.15;margin:6px 0 10px">
+        Network<br>CPA<br>${item.network?.split(' ')[1]||'Grip'}
+      </div>
+      <div class="tabs" style="margin:6px 0 10px">
+        <span class="pill">ACTIVE</span>
+        <span class="pill mono">${item.domain}</span>
+        <span class="pill"><button class="btn" style="padding:6px 10px;font-size:12px">View Details</button></span>
+      </div>
+      <div class="grid cols-2">
+        <div class="card" style="padding:12px"><div class="sub">Active Offers</div><div class="stat mono">${item.activeOffers}</div></div>
+        <div class="card" style="padding:12px"><div class="sub">Revenue</div><div class="stat green mono">${fmtUsd(item.revenue)}</div></div>
+      </div>
+      <div class="grid cols-2" style="margin-top:10px">
+        <div class="card" style="padding:12px"><div class="sub">Clicks</div><div class="stat mono">${(item.clicks||0).toLocaleString()}</div></div>
+        <div class="card" style="padding:12px"><div class="sub">Conversion</div><div class="stat mono">${(Number(item.conversionRate)*100).toFixed(2)}%</div></div>
+      </div>
+    `;
+    grid.appendChild(el);
   });
 }
 
 async function loadUsers(){
-  const data = await api("users");
-  const tb=$("#users-tbody"); tb.innerHTML="";
-  (data.items||[]).forEach(u=>{
-    const tr=document.createElement("tr");
-    tr.innerHTML=`<td>${u.name||""}</td><td>${u.email||""}</td><td>${u.phone||""}</td><td>${u.authority||""}</td><td>${u.status||""}</td>`;
-    tb.appendChild(tr);
-  });
+  const u = await api('users'); // items: [{name,email,phone,authority,status}]
+  const tb = $('#users-table tbody');
+  setTbody(tb, (u.items||[]).map(v=>[
+    v.name || '-', v.email || '-', v.phone || '-', v.authority || '-', v.status || '-'
+  ]));
 }
 
 async function loadAnalytics(){
-  const data = await api("analytics");
-  renderBarChart("#ana-overview",(data.byDay||[]).map(x=>Number(x.earnings)||0),(data.byDay||[]).map(x=>String(x.date).slice(5)));
-  renderPieChart("#ana-geo-dist", data.geo||{});
-  const tb=$("#ana-live"); tb.innerHTML="";
-  (data.items||[]).forEach(r=>{
-    const tr=document.createElement("tr");
-    tr.innerHTML=`<td>${r.date||""}</td><td>${r.country||""}</td><td>${r.offertype||""}</td><td>${r.device||""}</td><td>${(r.clicks||0).toLocaleString()}</td><td>${(r.leads||0).toLocaleString()}</td><td>$${Number(r.earnings||0).toLocaleString()}</td>`;
-    tb.appendChild(tr);
-  });
+  const a = await api('analytics');
+  $('#ana-updated').textContent = 'Updated: ' + (new Date()).toLocaleTimeString();
+
+  // Overview chart: use byDay
+  const byDay = (a.byDay||[]).slice(0,7);
+  barChart($('#ana-overview'), byDay.map(d=>Number(d.earnings)||0), byDay.map(d=>String(d.date).slice(5)));
+
+  // Geo pie
+  pieChart($('#ana-geo-dist'), a.geo||{});
+
+  // Live tables
+  setTbody($('#ana-live tbody'),
+    (a.items||[]).map(x=>[
+      (x.date||'').replace('T',' ').replace('.000Z','Z'),
+      x.country||'-', x.offertype||'-', x.device||'-',
+      (x.clicks||0).toLocaleString(),
+      (x.leads||0).toLocaleString(),
+      `<span class="mono">${fmtUsd(x.earnings)}</span>`
+    ])
+  );
+  setTbody($('#ana-geo-rolling tbody'),
+    (a.byGeo||[]).map(g=>[
+      g.country, (g.clicks||0).toLocaleString(), (g.leads||0).toLocaleString(),
+      `<span class="mono">${fmtUsd(g.earnings)}</span>`
+    ])
+  );
 }
 
 async function loadWallet(){
-  const data = await api("wallet");
-  $("#wallet-balance").textContent = `$${Number(data.balance||0).toLocaleString()}`;
-  const tb=$("#wallet-history"); tb.innerHTML="";
-  (data.history||[]).forEach(h=>{
-    const tr=document.createElement("tr");
-    tr.innerHTML=`<td>${h.date||""}</td><td>${h.method||""}</td><td>$${Number(h.amount||0).toLocaleString()}</td><td>${h.status||""}</td>`;
-    tb.appendChild(tr);
-  });
+  const w = await api('wallet'); // {ok,balance,pending?,history:[{date,method,amount,status}]}
+  $('#w-balance').textContent = fmtUsd(w.balance||0);
+  $('#w-pending').textContent = fmtUsd(w.pending||0);
+  $('#w-last').textContent = fmtUsd((w.history||[]).filter(h=>h.status==='SUCCESS').slice(-1)[0]?.amount||0);
+  setTbody($('#w-history tbody'),
+    (w.history||[]).map(h=>[
+      h.date||'', h.method||'', `<span class="mono">${fmtUsd(h.amount||0)}</span>`,
+      h.status||'-'
+    ])
+  );
 }
 
 async function loadMonitoring(){
-  const data = await api("monitoring");
-  $("#mon-health").textContent = data.health || "—";
-  $("#mon-maint").textContent = data.maintenance || "—";
-  const tb=$("#mon-events"); tb.innerHTML="";
-  (data.events||[]).forEach(e=>{
-    const tr=document.createElement("tr");
-    tr.innerHTML=`<td>${e.time||""}</td><td>${e.type||""}</td><td>${e.message||""}</td>`;
-    tb.appendChild(tr);
-  });
+  const m = await api('monitoring'); // {ok,health,maintenance,events:[{time,type,message}]}
+  $('#m-health').textContent = m.health||'OK';
+  $('#m-health').classList.toggle('green', (m.health||'').toUpperCase()==='OK');
+  $('#m-maint').textContent  = m.maintenance||'—';
+  $('#m-alerts').textContent = (m.events||[]).length||0;
+  setTbody($('#m-events tbody'),
+    (m.events||[]).map(e=>[ e.time||'', e.type||'system', e.message||'' ])
+  );
 }
 
 async function loadSettings(){
-  const data = await api("config");
-  $("#cfg-json").textContent = JSON.stringify(data,null,2);
+  const c = await api('config');
+  $('#cfg-json').value = JSON.stringify(c, null, 2);
 }
+$('#cfg-save').addEventListener('click',()=>alert('Config save is backend-controlled — submit via Apps Script as you already do.'));
 
-/* ===== Router ===== */
-const ROUTES = {
-  dashboard: loadOverview,
-  cpa: loadCpa,
-  users: loadUsers,
-  analytics: loadAnalytics,
-  wallet: loadWallet,
-  monitoring: loadMonitoring,
-  settings: loadSettings
-};
-
-function setActive(route){
-  $$("#nav a").forEach(a=>a.classList.toggle("active", a.dataset.route===route));
-  $$(".route").forEach(s=>s.classList.add("hidden"));
-  const sec = $("#route-"+route); if(sec) sec.classList.remove("hidden");
-}
-
-async function show(route){
-  route = ROUTES[route] ? route : "dashboard";
-  setActive(route);
-  try{ await ROUTES[route](); }
-  catch(err){ toast("Load error on "+route+": "+(err.message||err)); console.error(err); }
-}
-
-/* Boot */
-document.addEventListener("click", (e)=>{
-  const a=e.target.closest('a[data-route]'); if(!a) return;
-  e.preventDefault(); const r=a.dataset.route; history.replaceState(null,"","#"+r); show(r);
-});
-window.addEventListener("hashchange", ()=> show((location.hash||"#dashboard").slice(1)));
-
-document.addEventListener("DOMContentLoaded", ()=>{
-  const first=(location.hash||"#dashboard").slice(1);
-  show(first);
-});
+(function boot(){
+  const start = (location.hash||'#dashboard').slice(1);
+  show(start);
+})();
 </script>
 </body>
 </html>

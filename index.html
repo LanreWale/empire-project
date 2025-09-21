@@ -47,11 +47,8 @@
   .section-head h2{margin:0; font-size:18px; letter-spacing:.3px}
   .btn{
     background:linear-gradient(180deg,#ffd559,#ffcb31); color:#1b1b1b; border:0; font-weight:700;
-    padding:10px 14px; border-radius:10px; cursor:pointer; box-shadow:var(--shadow);
-    transition:.15s ease; will-change:transform,box-shadow;
+    padding:10px 14px; border-radius:10px; cursor:pointer; box-shadow:var(--shadow)
   }
-  .btn:hover{transform:translateY(-1px)}
-  .btn:active{transform:translateY(0)}
   .btn.secondary{background:#173046; color:#d6e7ff; border:1px solid #254660}
   .btn.secondary.active{background:#103b66; border-color:#3a85ff}
 
@@ -65,10 +62,8 @@
 
   .card{
     background:linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,0)) , var(--card);
-    border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow);
-    transition:box-shadow .15s ease, transform .15s ease;
+    border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow)
   }
-  .card:hover{box-shadow:0 10px 26px rgba(0,0,0,.28)}
   .card.pad{padding:16px}
 
   .kpi{display:flex; flex-direction:column; gap:8px}
@@ -80,7 +75,6 @@
   thead th{background:#0f2b45; text-align:left; padding:11px 12px; font-size:12px; color:#c4d7ef; border-bottom:1px solid var(--line)}
   tbody td{padding:10px 12px; border-bottom:1px solid var(--line)}
   tbody tr:last-child td{border-bottom:0}
-  tbody tr:hover td{background:rgba(20,48,74,.35)}
   .muted{color:var(--muted)}
   .money{color:var(--good); font-weight:700}
   .badge{display:inline-block; padding:2px 8px; border-radius:999px; font-size:11px; border:1px solid var(--line); background:#14304a}
@@ -119,19 +113,15 @@
   .input{display:flex; flex-direction:column; gap:6px}
   .input label{font-size:12px; color:var(--muted)}
   .input input,.input select,.input textarea{
-    background:#0e2236; color:#var(--text); border:1px solid #24445e; border-radius:10px; padding:10px 12px; outline:none;
+    background:#0e2236; color:var(--text); border:1px solid #24445e; border-radius:10px; padding:10px 12px; outline:none;
   }
   .input textarea{min-height:80px; resize:vertical}
-  .input input:focus,.input select:focus,.input textarea:focus{border-color:#3a85ff; box-shadow:0 0 0 2px rgba(58,133,255,.15)}
+  .input input:focus,.input select:focus,.input textarea:focus{border-color:#3a85ff}
   .modal .footer{display:flex; gap:10px; justify-content:flex-end; margin-top:14px}
   .bad{color:var(--bad); font-size:12px}
   .toast{position:fixed; right:16px; bottom:16px; background:#0e2236; border:1px solid #24445e; padding:10px 12px; border-radius:10px; display:none; z-index:80}
   .toast.show{display:block}
   .chart svg{width:100%; height:220px; display:block}
-
-  /* Nice chips for domains */
-  .chip{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;background:#103250;border:1px solid var(--line);font-size:12px}
-  .chip img{width:16px;height:16px;border-radius:4px;display:block}
 </style>
 </head>
 <body>
@@ -233,7 +223,7 @@
       <div class="card pad">
         <table>
           <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Authority</th></tr></thead>
-        <tbody id="tbl-users"><tr><td colspan="4" class="muted">No users.</td></tr></tbody>
+          <tbody id="tbl-users"><tr><td colspan="4" class="muted">No users.</td></tr></tbody>
         </table>
       </div>
     </section>
@@ -441,20 +431,16 @@ const $  = s => document.querySelector(s);
 const $$ = s => Array.from(document.querySelectorAll(s));
 const dollars = n => Number(n||0).toLocaleString(undefined,{style:'currency',currency:'USD'});
 
-/* GET helper (defensive) with retry */
+/* GET helper (defensive) */
 async function get(url, opt={}){
-  const attempt = async () => {
+  try{
     const u = new URL(url);
     u.searchParams.set('_t', Date.now());
     const r = await fetch(u, {cache:'no-store', ...opt});
     if(!r.ok) throw new Error('HTTP '+r.status);
     return r.json();
-  };
-  try { return await attempt(); }
-  catch(e){ console.error('GET failed (1st):', e);
-    await new Promise(r=>setTimeout(r,350));
-    try{ return await attempt(); }
-    catch(e2){ console.error('GET failed (2nd):', e2); return null; }
+  }catch(e){
+    console.error('GET failed:', e); return null;
   }
 }
 /* API helpers */
@@ -487,7 +473,10 @@ const normDomain = d=> String(d||'').trim().replace(/^https?:\/\//,'').replace(/
 
 /* ========= CHART HELPERS (robust width + retry) ========= */
 function _host(el){ return (typeof el==='string')? document.querySelector(el) : el; }
-function _ensureWidth(host){ const w = host.getBoundingClientRect().width || host.clientWidth || 0; return w>40 ? w : 0; }
+function _ensureWidth(host){
+  const w = host.getBoundingClientRect().width || host.clientWidth || 0;
+  return w>40 ? w : 0;
+}
 function renderBarChart(el, series=[], labels=[]){
   const host = _host(el); if(!host) return;
   const W0 = _ensureWidth(host);
@@ -517,7 +506,7 @@ function renderBarChart(el, series=[], labels=[]){
     const rect = document.createElementNS(svg.namespaceURI,'rect');
     rect.setAttribute('x', x); rect.setAttribute('y', y);
     rect.setAttribute('width', Math.max(8, bw-12)); rect.setAttribute('height', Math.max(0,h));
-    rect.setAttribute('fill', '#ffd559'); rect.setAttribute('rx','6');
+    rect.setAttribute('fill', '#ffd559');
     svg.appendChild(rect);
 
     if(labels[i]){
@@ -549,7 +538,7 @@ function renderPieChart(el, map={}){
   const svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
   svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
 
-  entries.forEach(([k,v],i)=>{
+  entries.forEach(([k,v])=>{
     const frac = Number(v)/total;
     const theta = frac * Math.PI*2;
     const x1 = CX + R*Math.cos(angle);
@@ -559,7 +548,8 @@ function renderPieChart(el, map={}){
     const large = theta>Math.PI ? 1 : 0;
     const p = document.createElementNS(svg.namespaceURI,'path');
     p.setAttribute('d', `M ${CX} ${CY} L ${x1} ${y1} A ${R} ${R} 0 ${large} 1 ${x2} ${y2} Z`);
-    p.setAttribute('fill', '#ffd559'); p.setAttribute('opacity', 0.55 + 0.35*((i%3)/3));
+    p.setAttribute('fill', '#ffd559');
+    p.setAttribute('opacity', 0.55 + 0.35*Math.random());
     svg.appendChild(p);
     angle += theta;
   });
@@ -669,18 +659,6 @@ async function initCpa(){
         </div>`;
       wrap.appendChild(card);
     });
-
-    // domain chip enhancement with favicon
-    $$('#cpa-grid .acct .right').forEach(box=>{
-      if(box._chipApplied) return; box._chipApplied=true;
-      const pill=box.querySelector('.pill.mono'); if(!pill) return;
-      const domain=pill.textContent.trim();
-      const chip=document.createElement('span'); chip.className='chip';
-      const img=document.createElement('img'); img.src=`https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=32`;
-      chip.appendChild(img); chip.appendChild(document.createTextNode(domain));
-      pill.replaceWith(chip);
-    });
-
   }catch(e){
     console.error(e);
     wrap.innerHTML = `<div class="card pad empty">Failed to load accounts.</div>`;
@@ -970,7 +948,6 @@ document.getElementById('btn-save-config')?.addEventListener('click', async ()=>
 window.addEventListener('DOMContentLoaded', ()=>{
   const r = (location.hash||'#dashboard').replace('#','');
   show(r);
-  setTimeout(()=>show(r),0); // double-tap to ensure first render
 });
 
 /* ========= tiny toast ========= */

@@ -7,11 +7,11 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
-/* ====== THEME (matches your screenshots) ====== */
+/* ====== THEME (your palette) ====== */
 :root{
   --bg:#0c1b2a; --bg-soft:#0f2233; --bg-soft-2:#132a42;
   --ink:#eaf2ff; --muted:#8aa2bf; --accent:#ffd559;
-  --good:#1dd1a1; --warn:#ffb142; --line:#183046;
+  --good:#1dd1a1; --warn:#ffb142; --bad:#ff6b6b; --line:#183046;
   --radius:14px; --shadow:0 6px 20px rgba(0,0,0,.25),inset 0 1px 0 rgba(255,255,255,.02);
 }
 *{box-sizing:border-box}
@@ -38,8 +38,9 @@ main{padding:18px 22px}
 .table{width:100%;border-collapse:collapse}
 .table th,.table td{padding:10px 12px;border-bottom:1px solid #15344d;font-size:13px}
 .table thead th{background:#0f2b45;color:#cfe2ff;position:sticky;top:0;z-index:1}
-.green{color:var(--good)} .muted{color:var(--muted)}
+.green{color:var(--good)} .muted{color:var(--muted)} .bad{color:var(--bad)}
 .button{background:linear-gradient(180deg,var(--accent),#ffcc31);border:0;border-radius:10px;padding:10px 14px;color:#1b1b1b;font-weight:800;cursor:pointer}
+.secondary{background:#173046;color:#d6e7ff;border:1px solid #254660}
 .grid-xs{grid-column:span 3} .grid-sm{grid-column:span 4} .grid-md{grid-column:span 6}
 .grid-lg{grid-column:span 8} .grid-xl{grid-column:span 12}
 .chart{min-height:220px}
@@ -50,6 +51,22 @@ main{padding:18px 22px}
 footer{color:#7ea2c6;font-size:12px;padding:14px;margin-top:10px;border-top:1px solid #15344d}
 @media (max-width:980px){.wrap{grid-template-columns:82px 1fr}.nav a span{display:none}}
 @media (max-width:720px){.row{grid-template-columns:1fr}.grid-xs,.grid-sm,.grid-md,.grid-lg,.grid-xl{grid-column:span 1}}
+/* Modals */
+.modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:50}
+.modal.open{display:flex}
+.modal .scrim{position:absolute;inset:0;background:rgba(6,16,26,.6);backdrop-filter:blur(2px)}
+.modal .panel{position:relative;width:min(720px,92vw);background:#0f2233;border:1px solid #173046;border-radius:16px;box-shadow:var(--shadow);padding:18px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form-grid .full{grid-column:1 / -1}
+.input{display:flex;flex-direction:column;gap:6px}
+.input label{font-size:12px;color:var(--muted)}
+.input input,.input select,.input textarea{background:#0e2236;color:var(--ink);border:1px solid #24445e;border-radius:10px;padding:10px 12px;outline:none}
+.input textarea{min-height:80px;resize:vertical}
+.input input:focus,.input select:focus,.input textarea:focus{border-color:#3a85ff}
+.modal .footer{display:flex;gap:10px;justify-content:flex-end;margin-top:14px}
+.pill{padding:6px 9px;border-radius:999px;background:#103250;border:1px solid var(--line);font-size:12px}
+.toast{position:fixed;right:16px;bottom:16px;background:#0e2236;border:1px solid #24445e;padding:10px 12px;border-radius:10px;display:none;z-index:80}
+.toast.show{display:block}
 </style>
 </head>
 <body>
@@ -64,6 +81,7 @@ footer{color:#7ea2c6;font-size:12px;padding:14px;margin-top:10px;border-top:1px 
       <a href="#wallet"      id="nav-wallet">💼 <span>Payments/Wallet</span></a>
       <a href="#monitoring"  id="nav-monitoring">🖥️ <span>Monitoring</span></a>
       <a href="#settings"    id="nav-settings">⚙️ <span>Settings</span></a>
+      <span id="login-chip" class="pill" style="margin:6px 10px;display:none"></span>
     </nav>
   </aside>
 
@@ -71,7 +89,7 @@ footer{color:#7ea2c6;font-size:12px;padding:14px;margin-top:10px;border-top:1px 
     <!-- DASHBOARD -->
     <section id="view-dashboard" class="view">
       <div class="row">
-        <div class="card grid-sm"><h3>Total Earnings</h3><div class="kpi" id="kpi-earnings">—</div><div class="muted" id="kpi-earnings-sub">vs last 7d</div></div>
+        <div class="card grid-sm"><h3>Total Earnings</h3><div class="kpi" id="kpi-earnings">—</div><div class="muted">vs last 7d</div></div>
         <div class="card grid-sm"><h3>Total Clicks</h3><div class="kpi" id="kpi-clicks">—</div><div class="muted">daily average</div></div>
         <div class="card grid-sm"><h3>Leads</h3><div class="kpi" id="kpi-leads">—</div></div>
         <div class="card grid-sm"><h3>Conversion Rate</h3><div class="kpi" id="kpi-conv">—</div><div class="muted">industry leading</div></div>
@@ -92,14 +110,31 @@ footer{color:#7ea2c6;font-size:12px;padding:14px;margin-top:10px;border-top:1px 
     <!-- CPA ACCOUNTS -->
     <section id="view-cpa" class="view" hidden>
       <div class="row" id="cpa-grid"></div>
+      <div style="margin-top:12px" class="row">
+        <div class="card grid-xl">
+          <h3>Rotation Engine</h3>
+          <div class="muted">Target: 1,300 offers/hour across 5 accounts · <b id="rot-status">idle</b></div>
+          <div style="margin-top:8px;display:flex;gap:8px">
+            <button class="button" id="btn-rot-start">Start Rotation</button>
+            <button class="secondary" id="btn-rot-stop">Stop</button>
+            <span class="pill" id="rot-tick">—</span>
+          </div>
+        </div>
+      </div>
     </section>
 
     <!-- USERS -->
     <section id="view-users" class="view" hidden>
       <div class="card grid-xl">
         <h3>Users Management</h3>
+        <div style="display:flex;gap:8px;margin:8px 0">
+          <button class="secondary" data-tab="APPROVED">Approved</button>
+          <button class="secondary" data-tab="PENDING">Pending</button>
+          <button class="secondary" data-tab="REJECTED">Rejected</button>
+          <button class="button" id="btn-open-invite" style="margin-left:auto">+ Invite User</button>
+        </div>
         <table class="table">
-          <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Authority</th><th>Status</th></tr></thead>
+          <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Authority</th><th>Status</th><th>Action</th></tr></thead>
           <tbody id="users-tb"></tbody>
         </table>
       </div>
@@ -108,6 +143,10 @@ footer{color:#7ea2c6;font-size:12px;padding:14px;margin-top:10px;border-top:1px 
     <!-- ANALYTICS -->
     <section id="view-analytics" class="view" hidden>
       <div class="row">
+        <div class="card grid-xl">
+          <h3>Live Metrics</h3>
+          <div id="live-bar" class="pill">—</div>
+        </div>
         <div class="card grid-md"><h3>Performance Overview</h3><div id="ana-overview" class="chart skeleton"></div></div>
         <div class="card grid-md"><h3>Geographic Distribution</h3><div id="ana-geo-dist" class="chart skeleton"></div></div>
         <div class="card grid-xl">
@@ -124,8 +163,13 @@ footer{color:#7ea2c6;font-size:12px;padding:14px;margin-top:10px;border-top:1px 
     <section id="view-wallet" class="view" hidden>
       <div class="row">
         <div class="card grid-sm"><h3>Balance</h3><div class="kpi" id="wallet-balance">—</div></div>
+        <div class="card grid-sm"><h3>Pending</h3><div class="kpi" id="wallet-pending">—</div></div>
+        <div class="card grid-sm"><h3>Last Payout</h3><div class="kpi" id="wallet-last">—</div></div>
         <div class="card grid-xl">
-          <h3>Transaction History</h3>
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <h3>Transaction History</h3>
+            <button class="button" id="btn-withdraw">Request Withdrawal</button>
+          </div>
           <table class="table">
             <thead><tr><th>Date</th><th>Method</th><th>Amount ($)</th><th>Status</th></tr></thead>
             <tbody id="wallet-history"></tbody>
@@ -145,6 +189,7 @@ footer{color:#7ea2c6;font-size:12px;padding:14px;margin-top:10px;border-top:1px 
             <thead><tr><th>Time</th><th>Type</th><th>Message</th></tr></thead>
             <tbody id="mon-events"></tbody>
           </table>
+          <div class="muted" style="margin-top:8px">AI Agent Summary: <span id="mon-ai">—</span></div>
         </div>
       </div>
     </section>
@@ -152,7 +197,10 @@ footer{color:#7ea2c6;font-size:12px;padding:14px;margin-top:10px;border-top:1px 
     <!-- SETTINGS -->
     <section id="view-settings" class="view" hidden>
       <div class="card grid-xl">
-        <h3>Live Config</h3>
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <h3>Live Config (GAS / Sheet / Paystack / Twilio WhatsApp)</h3>
+          <button class="button" id="btn-save-config">Save</button>
+        </div>
         <pre id="cfg" class="muted" style="white-space:pre-wrap"></pre>
       </div>
     </section>
@@ -161,17 +209,128 @@ footer{color:#7ea2c6;font-size:12px;padding:14px;margin-top:10px;border-top:1px 
   </main>
 </div>
 
+<!-- ======== Modals ======== -->
+
+<!-- Login -->
+<div id="mdl-login" class="modal" aria-hidden="true">
+  <div class="scrim" data-close></div>
+  <div class="panel">
+    <h3 style="margin:0 0 12px">Sign In</h3>
+    <div class="form-grid">
+      <div class="input full"><label>Email</label><input id="login-email" placeholder="you@empire.com"/></div>
+      <div class="input full"><label>Password</label><input id="login-pass" type="password" placeholder="••••••••"/></div>
+    </div>
+    <div id="login-error" class="bad" style="margin-top:6px;display:none"></div>
+    <div class="footer">
+      <button class="secondary" data-close>Cancel</button>
+      <button class="button" id="btn-login">Login</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add CPA -->
+<div id="mdl-cpa" class="modal" aria-hidden="true">
+  <div class="scrim" data-close></div>
+  <div class="panel">
+    <h3 style="margin:0 0 12px">Add New CPA Account</h3>
+    <div class="form-grid">
+      <div class="input"><label>Account Name *</label><input id="f-account" placeholder="e.g. 2288690 / Main Grip"/></div>
+      <div class="input"><label>Network *</label><input id="f-network" placeholder="e.g. CPA Grip"/></div>
+      <div class="input"><label>Domain</label><input id="f-domain" placeholder="offers.example.com"/></div>
+      <div class="input">
+        <label>Status</label>
+        <select id="f-status"><option>ACTIVE</option><option>PAUSED</option><option>DISABLED</option></select>
+      </div>
+      <div class="input full"><label>API Key / Token</label><input id="f-key" placeholder="(optional) stored in GAS"/></div>
+      <div class="input"><label>Webhook URL</label><input id="f-webhook" placeholder="https://.../postback"/></div>
+    </div>
+    <div id="f-error" class="bad" style="display:none"></div>
+    <div class="footer">
+      <button class="secondary" data-close>Cancel</button>
+      <button class="button" id="btn-save-acct">Save Account</button>
+    </div>
+  </div>
+</div>
+
+<!-- Invite -->
+<div id="mdl-invite" class="modal" aria-hidden="true">
+  <div class="scrim" data-close></div>
+  <div class="panel">
+    <h3 style="margin:0 0 12px">Create Invite (48h)</h3>
+    <div class="form-grid">
+      <div class="input"><label>Full name</label><input id="inv-name" placeholder="Jane Doe"/></div>
+      <div class="input"><label>Email</label><input id="inv-email" placeholder="jane@example.com"/></div>
+      <div class="input"><label>Authority</label>
+        <select id="inv-role"><option>1x User</option><option>2x Manager</option><option>3x Admin</option><option>4x Senior</option><option>5x Super</option></select>
+      </div>
+      <div class="input full"><label>Generated Link</label><input id="inv-url" readonly></div>
+      <div class="input full"><label>Message (optional)</label><textarea id="inv-msg" placeholder="Welcome to THE EMPIRE…"></textarea></div>
+      <div class="muted full" id="inv-hint"></div>
+    </div>
+    <div class="footer">
+      <button class="secondary" data-close>Close</button>
+      <button class="secondary" id="btn-copy-invite">Copy Link</button>
+      <button class="button" id="btn-save-invite">Save Invite</button>
+    </div>
+  </div>
+</div>
+
+<!-- Withdraw -->
+<div id="mdl-withdraw" class="modal" aria-hidden="true">
+  <div class="scrim" data-close></div>
+  <div class="panel">
+    <h3 style="margin:0 0 12px">Submit Withdrawal Request</h3>
+    <div class="form-grid">
+      <div class="input"><label>Amount (USD)</label><input id="wd-amount" type="number" min="1" step="0.01" placeholder="100.00"/></div>
+      <div class="input"><label>Method</label>
+        <select id="wd-method"><option value="Bank">Bank</option><option value="Payoneer">Payoneer</option><option value="Crypto">Crypto (USDT)</option></select>
+      </div>
+
+      <!-- Bank -->
+      <div class="input full bank-only"><label>Bank</label><select id="wd-bank-code"></select></div>
+      <div class="input bank-only"><label>Account Number</label><input id="wd-bank-accno" placeholder="0123456789"/></div>
+      <div class="input bank-only"><label>Account Name (Auto)</label><input id="wd-bank-accname" placeholder="—" readonly/></div>
+
+      <!-- Payoneer -->
+      <div class="input full payoneer-only" style="display:none"><label>Payoneer Email</label><input id="wd-payo-email" placeholder="you@domain.com"/></div>
+
+      <!-- Crypto -->
+      <div class="input full crypto-only" style="display:none"><label>USDT Address</label><input id="wd-crypto-addr" placeholder="T..."/></div>
+      <div class="input crypto-only" style="display:none"><label>Network</label><select id="wd-crypto-net"><option>TRC20</option><option>ERC20</option><option>BEP20</option></select></div>
+    </div>
+    <div id="wd-error" class="bad" style="display:none"></div>
+    <div class="footer">
+      <button class="secondary" data-close>Cancel</button>
+      <button class="button" id="btn-submit-wd">Submit Request</button>
+    </div>
+    <div class="muted" style="margin-top:8px">Validation via <b>paystackLookup</b> (GAS proxy) to keep keys safe.</div>
+  </div>
+</div>
+
+<div id="toast" class="toast">Saved.</div>
+
 <script>
-/* ================== API CONFIG ================== */
+/* ===== CONFIG (set to your GAS web app) ===== */
 const API_BASE = "https://script.google.com/macros/s/AKfycbyCjLNnMm0yQZeQ2PUn-zvNkWbp8vTpw-kZEu_zup6NiMW-ScR_cYwj59b4i09MgrdV/exec";
-const api = async (action) => {
-  const url = API_BASE + "?action=" + encodeURIComponent(action);
-  const r = await fetch(url, {cache:"no-store"});
-  if(!r.ok) throw new Error("HTTP "+r.status);
+const $=s=>document.querySelector(s), $$=s=>Array.from(document.querySelectorAll(s));
+const fmtMoney = n => '$'+Number(n||0).toLocaleString();
+const toast = m => { const t=$("#toast"); t.textContent=m; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2000); };
+const api = async (action, params={})=>{
+  const u = new URL(API_BASE);
+  u.searchParams.set('action', action);
+  Object.entries(params).forEach(([k,v])=>u.searchParams.set(k, typeof v==='object'?JSON.stringify(v):v));
+  const r = await fetch(u, {cache:'no-store'});
+  if(!r.ok) throw new Error('HTTP '+r.status);
+  return r.json();
+};
+const apiWrite = async (action, payload={})=>{
+  const u = new URL(API_BASE); u.searchParams.set('action', action);
+  const r = await fetch(u, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)});
+  if(!r.ok) throw new Error('HTTP '+r.status);
   return r.json();
 };
 
-/* ========== tiny SVG chart helpers (no libs) ========== */
+/* ===== Charts (tiny SVG) ===== */
 const THEME = {accent:getCSS('--accent')||'#ffd559', axis:getCSS('--line')||'#173046', label:getCSS('--muted')||'#7c97b5'};
 function getCSS(v){return getComputedStyle(document.documentElement).getPropertyValue(v).trim()}
 const NS="http://www.w3.org/2000/svg";
@@ -210,25 +369,55 @@ function pieChart(host, map={}){
   host.appendChild(svg);
 }
 
-/* ================== ROUTER ================== */
-const $=s=>document.querySelector(s), $$=s=>Array.from(document.querySelectorAll(s));
+/* ===== Router ===== */
 function show(route){
   $$('.nav a').forEach(a=>a.classList.toggle('active', a.id==='nav-'+route));
-  $$('.view').forEach(v=>v.hidden = (v.id!=='view-'+route));
+  $$('.view').forEach(v=>v.hidden=(v.id!=='view-'+route));
 }
-window.addEventListener('hashchange',()=> boot());
-function fmtMoney(n){return 'US$'+Number(n||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}
+window.addEventListener('hashchange',()=>boot());
 
-/* ================== LOADERS ================== */
+/* ===== Auth (Login + Session) ===== */
+const mdlLogin = $('#mdl-login');
+const openLogin = ()=> mdlLogin.classList.add('open');
+const closeLogin = ()=> mdlLogin.classList.remove('open');
+$('#btn-login')?.addEventListener('click', async ()=>{
+  const email=$('#login-email').value.trim(), pass=$('#login-pass').value;
+  const err=$('#login-error'); err.style.display='none';
+  try {
+    const r = await apiWrite('login',{email,pass});
+    if(!r || r.ok!==true){ throw new Error(r?.msg||'Login failed'); }
+    closeLogin(); toast('Welcome, '+(r.user?.name||''));
+    $('#login-chip').style.display='inline-block';
+    $('#login-chip').textContent = (r.user?.name||r.user?.email||'');
+  } catch(e){ err.textContent=e.message; err.style.display='block'; }
+});
+mdlLogin.addEventListener('click', e=>{ if(e.target.hasAttribute('data-close')) closeLogin(); });
+
+async function ensureSession(){
+  try{
+    const s = await api('session');
+    if(s?.ok && s.user){
+      $('#login-chip').style.display='inline-block';
+      $('#login-chip').textContent=s.user.name||s.user.email||'signed in';
+      return true;
+    }
+    openLogin(); return false;
+  }catch(_){ openLogin(); return false; }
+}
+
+/* ===== Dashboard ===== */
 async function loadDashboard(){
   const d = await api('overview');
   $("#kpi-earnings").textContent = d.totalsPretty?.earningsUsd ?? fmtMoney(d.totals?.earnings);
   $("#kpi-clicks").textContent   = (d.totals?.clicks||0).toLocaleString();
   $("#kpi-leads").textContent    = (d.totals?.leads||0).toLocaleString();
   $("#kpi-conv").textContent     = d.totalsPretty?.conversionRatePct ?? ((d.totals?.conversionRate||0).toFixed(2)+'%');
+
   const byDay = (d.byDay||[]).map(x=>({label:String(x.date).slice(5), value:Number(x.earnings||0)}));
   barChart($("#dash-earnings"), byDay.map(x=>x.value), byDay.map(x=>x.label));
-  pieChart($("#dash-sources"), d.devices || d.offerTypes || {});
+  // sources can be devices or offerTypes per your GAS
+  pieChart($("#dash-sources"), d.offerTypes || d.devices || {});
+
   const geoT=$("#geo-table"); geoT.innerHTML='';
   (d.byGeo||[]).forEach(g=>{
     const tr=document.createElement('tr');
@@ -240,64 +429,214 @@ async function loadDashboard(){
   });
 }
 
+/* ===== CPA (list + create + rotation 1300/h across 5 accs) ===== */
+const mdlCpa = $('#mdl-cpa'), openCpa=()=>mdlCpa.classList.add('open'), closeCpa=()=>mdlCpa.classList.remove('open');
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ mdlCpa.classList.remove('open'); $('#mdl-invite').classList.remove('open'); $('#mdl-withdraw').classList.remove('open'); }});
 async function loadCpa(){
   const r = await api('cpa');
+  const items = (Array.isArray(r)?r:(r.items||[]));
   const grid = $("#cpa-grid"); grid.innerHTML='';
-  (r.items||[]).forEach(item=>{
+  if(!items.length){
+    const empty=document.createElement('div'); empty.className='card grid-xl'; empty.textContent='No CPA accounts yet.'; grid.appendChild(empty);
+  }
+  items.forEach(item=>{
+    const conv = Number(item.conversionRate ?? item.conversionrate ?? 0);
+    const convPct = conv>1 ? conv : conv*100;
     const card=document.createElement('div'); card.className='card grid-md';
     card.innerHTML=`
-      <h3>${item.account} · Network <b>${item.network}</b></h3>
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <h3>${item.account||item.accountid||'—'} · Network <b>${item.network||'—'}</b></h3>
+        <button class="secondary" data-add-cpa>+ Add</button>
+      </div>
       <div class="row" style="grid-template-columns:repeat(2,1fr);gap:8px">
-        <div><span class="muted">Domain</span><div class="badge">${item.domain}</div></div>
-        <div><span class="muted">Preferred Offer</span><div class="badge">${item.preferredOffer}</div></div>
+        <div><span class="muted">Domain</span><div class="badge">${item.domain||'—'}</div></div>
+        <div><span class="muted">Preferred Offer</span><div class="badge">${item.preferredOffer||'—'}</div></div>
       </div>
       <div style="margin-top:10px;display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
-        <div><div class="muted">Active Offers</div><div class="kpi">${(item.activeOffers||0).toLocaleString()}</div></div>
-        <div><div class="muted">Revenue</div><div class="kpi green">${fmtMoney(item.revenue)}</div></div>
-        <div><div class="muted">Clicks</div><div class="kpi">${(item.clicks||0).toLocaleString()}</div></div>
+        <div><div class="muted">Active Offers</div><div class="kpi">${Number(item.activeOffers||item.activeoffers||0).toLocaleString()}</div></div>
+        <div><div class="muted">Revenue</div><div class="kpi green">${fmtMoney(item.revenue||0)}</div></div>
+        <div><div class="muted">Clicks</div><div class="kpi">${Number(item.clicks||0).toLocaleString()}</div></div>
       </div>
-      <div class="muted" style="margin-top:6px">Conversion: ${(Number(item.conversionRate||0)*100).toFixed(2)}% · Status: ${item.status}</div>
+      <div class="muted" style="margin-top:6px">Conversion: ${convPct.toFixed(2)}% · Status: ${item.status||'ACTIVE'}</div>
     `;
     grid.appendChild(card);
   });
+  grid.addEventListener('click',e=>{ if(e.target&&e.target.hasAttribute('data-add-cpa')) openCpa(); },{once:true});
 }
+$('#btn-save-acct')?.addEventListener('click', async ()=>{
+  const v = {
+    account: $('#f-account').value.trim(),
+    network: $('#f-network').value.trim(),
+    domain : $('#f-domain').value.trim(),
+    status : $('#f-status').value,
+    apiKey : $('#f-key').value.trim(),
+    webhook: $('#f-webhook').value.trim()
+  };
+  if(!v.account || !v.network){ $('#f-error').textContent='Account and Network required'; $('#f-error').style.display='block'; return; }
+  $('#f-error').style.display='none';
+  try{ await apiWrite('cpaCreate', v); closeCpa(); await loadCpa(); toast('CPA account saved'); }catch(_){ $('#f-error').textContent='Could not save'; $('#f-error').style.display='block'; }
+});
 
+/* Rotation engine: 1300 offers/h across 5 accounts = ~1 offer every 2.77s globally */
+let rotTimer=null, rotCount=0, rotIdx=0;
+async function rotationTick(){
+  try{
+    const payload = { index:rotIdx, count:rotCount, ts:Date.now() };
+    await apiWrite('rotateTick', payload); // GAS distributes offer to the current account
+    rotCount++; rotIdx=(rotIdx+1)%5; // cycle 0..4
+    $('#rot-tick').textContent = `tick #${rotCount} · acc ${rotIdx+1}/5`;
+  }catch(_){ /* silent */ }
+}
+$('#btn-rot-start')?.addEventListener('click', ()=>{
+  if(rotTimer) return;
+  $('#rot-status').textContent='running';
+  const everyMs = Math.round(3600_000/1300); // ≈ 2770ms
+  rotTimer = setInterval(rotationTick, everyMs);
+  rotationTick();
+});
+$('#btn-rot-stop')?.addEventListener('click', ()=>{ if(rotTimer){ clearInterval(rotTimer); rotTimer=null; $('#rot-status').textContent='idle'; }});
+
+/* ===== Users (tabs + invite + role changes) ===== */
+let currentUsersTab='APPROVED';
+$$('#view-users [data-tab]').forEach(b=>b.addEventListener('click', async ()=>{
+  currentUsersTab = b.dataset.tab; await loadUsers();
+}));
 async function loadUsers(){
-  const r = await api('users');
+  const r = await api('users',{status:currentUsersTab});
+  const list = r.items || r || [];
   const tb=$("#users-tb"); tb.innerHTML='';
-  (r.items||[]).forEach(u=>{
+  if(!list.length){ tb.innerHTML='<tr><td colspan="6" class="muted">No '+currentUsersTab.toLowerCase()+' users.</td></tr>'; return; }
+  list.forEach(u=>{
     const tr=document.createElement('tr');
-    tr.innerHTML=`<td>${u.name}</td><td>${u.email}</td><td>${u.phone}</td><td>${u.authority}</td><td>${u.status}</td>`;
+    tr.innerHTML=`<td>${u.name||'—'}</td>
+      <td>${u.email||''}</td><td>${u.phone||''}</td>
+      <td>${u.authority||'1x User'}</td><td>${u.status||currentUsersTab}</td>
+      <td>
+        <select data-role="${u.id||u.email}">
+          <option>1x User</option><option>2x Manager</option><option>3x Admin</option><option>4x Senior</option><option>5x Super</option>
+        </select>
+      </td>`;
     tb.appendChild(tr);
+    const sel = tr.querySelector('select'); sel.value = u.authority||'1x User';
+    sel.addEventListener('change', async ()=>{
+      try { await apiWrite('userSetRole',{id:(u.id||u.email), role:sel.value}); toast('Role updated'); }
+      catch(_){ toast('Failed to update'); sel.value=u.authority||'1x User'; }
+    });
   });
 }
+/* Invite */
+const mdlInvite = $('#mdl-invite'), openInvite=()=>{ genInviteLink(); mdlInvite.classList.add('open'); }, closeInvite=()=>mdlInvite.classList.remove('open');
+$('#btn-open-invite')?.addEventListener('click', openInvite);
+mdlInvite.addEventListener('click', e=>{ if(e.target.hasAttribute('data-close')) closeInvite(); });
+function genInviteLink(){
+  const token = Math.random().toString(36).slice(2)+Math.random().toString(36).slice(2);
+  const exp = Date.now() + 48*3600*1000;
+  const url = (location.origin||'https://empire.example') + '/join?token=' + token;
+  $('#inv-url').value = url; $('#inv-hint').textContent = 'Expires: '+ new Date(exp).toLocaleString();
+  $('#inv-url').dataset.token = token; $('#inv-url').dataset.exp = String(exp);
+}
+$('#btn-copy-invite')?.addEventListener('click', ()=>{ $('#inv-url').select(); document.execCommand('copy'); toast('Link copied'); });
+$('#btn-save-invite')?.addEventListener('click', async ()=>{
+  const payload = {
+    name:  $('#inv-name').value.trim(),
+    email: $('#inv-email').value.trim(),
+    role:  $('#inv-role').value,
+    url:   $('#inv-url').value,
+    msg:   $('#inv-msg').value.trim(),
+    token: $('#inv-url').dataset.token,
+    exp:   Number($('#inv-url').dataset.exp),
+    nonTransferable: true
+  };
+  try{ const r=await apiWrite('inviteCreate', payload); if(!r||r.ok!==true) throw 0; toast('Invite saved'); closeInvite(); }catch(_){ toast('Invite not saved'); }
+});
 
+/* ===== Analytics (live bar + charts + live table) ===== */
+let liveTimer=null;
 async function loadAnalytics(){
   const d = await api('analytics');
-  const byDay=(d.byDay||[]).map(x=>({label:String(x.date).slice(5), value:Number(x.earnings||0)}));
+  const byDay=(d.byDay||d.items||[]).map(x=>({label:String(x.date||x.t).slice(5), value:Number(x.earnings||0)}));
   barChart($("#ana-overview"), byDay.map(x=>x.value), byDay.map(x=>x.label));
-  pieChart($("#ana-geo-dist"), d.geo || {});
+  const geo = d.geo || (d.byGeo||[]).reduce((m,g)=>(m[g.country]=g.earnings,m),{});
+  pieChart($("#ana-geo-dist"), geo);
+
   const live=$("#ana-live"); live.innerHTML='';
   (d.items||[]).forEach(i=>{
     const tr=document.createElement('tr');
-    tr.innerHTML=`<td>${i.date}</td><td>${i.country}</td><td>${i.offertype}</td>
-    <td>${i.device}</td><td>${(i.clicks||0).toLocaleString()}</td><td>${(i.leads||0).toLocaleString()}</td>
-    <td class="green">${fmtMoney(i.earnings)}</td>`;
+    tr.innerHTML=`<td>${i.date||''}</td><td>${i.country||''}</td><td>${i.offertype||i.offerType||''}</td>
+    <td>${i.device||''}</td><td>${Number(i.clicks||0).toLocaleString()}</td><td>${Number(i.leads||0).toLocaleString()}</td>
+    <td class="green">${fmtMoney(i.earnings||0)}</td>`;
     live.appendChild(tr);
   });
+  $('#live-bar').textContent = `Clicks ${d.totals?.clicks??0} · Leads ${d.totals?.leads??0} · Earn ${fmtMoney(d.totals?.earnings??0)}`;
+  if(liveTimer) clearInterval(liveTimer);
+  liveTimer = setInterval(async ()=>{
+    try{
+      const j = await api('analytics',{live:1, limit:24, windowSec:120});
+      const items = j.items || j.live || [];
+      if(items.length){
+        $('#live-bar').textContent = `LIVE — +${items.reduce((s,a)=>s+Number(a.clicks||0),0)} clicks / +${items.reduce((s,a)=>s+Number(a.leads||0),0)} leads / ${fmtMoney(items.reduce((s,a)=>s+Number(a.earnings||0),0))}`;
+      }
+    }catch(_){}
+  }, 5000);
 }
 
+/* ===== Wallet (Paystack lookup via GAS) ===== */
+const mdlWd = $('#mdl-withdraw'), openWd=()=>mdlWd.classList.add('open'), closeWd=()=>mdlWd.classList.remove('open');
+$('#btn-withdraw')?.addEventListener('click', async ()=>{ openWd(); await ensureBanks(); });
+mdlWd.addEventListener('click', e=>{ if(e.target.hasAttribute('data-close')) closeWd(); });
+
+$('#wd-method')?.addEventListener('change', e=>{
+  const m = e.target.value;
+  $$('.bank-only').forEach(x=>x.style.display=(m==='Bank')?'block':'none');
+  $$('.payoneer-only').forEach(x=>x.style.display=(m==='Payoneer')?'block':'none');
+  $$('.crypto-only').forEach(x=>x.style.display=(m==='Crypto')?'block':'none');
+});
+async function ensureBanks(){
+  const sel = $('#wd-bank-code'); if(sel.options.length) return;
+  try{ const j = await api('paystackBanks'); sel.innerHTML=''; (j.banks||[]).forEach(b=>{ const o=document.createElement('option'); o.value=b.code; o.textContent=b.name; sel.appendChild(o); }); }
+  catch(_){ sel.innerHTML='<option value="">(banks unavailable)</option>'; }
+}
+$('#wd-bank-accno')?.addEventListener('blur', async ()=>{
+  if($('#wd-method').value!=='Bank') return;
+  const code=$('#wd-bank-code').value, accno=$('#wd-bank-accno').value.trim();
+  if(!code || accno.length<6) return;
+  try{
+    const res = await api('paystackLookup',{bank_code:code, account_number:accno});
+    $('#wd-bank-accname').value = res?.account_name || '';
+  }catch(_){ $('#wd-bank-accname').value=''; }
+});
+$('#btn-submit-wd')?.addEventListener('click', async ()=>{
+  const method=$('#wd-method').value, amt = Number($('#wd-amount').value||0), err=$('#wd-error');
+  if(!amt || amt<=0){ err.textContent='Enter a valid amount.'; err.style.display='block'; return; }
+  err.style.display='none';
+  const payload = { amount:amt, method, status:'PENDING' };
+  if(method==='Bank'){
+    payload.bank_code = $('#wd-bank-code').value;
+    payload.account_number = $('#wd-bank-accno').value.trim();
+    payload.account_name   = $('#wd-bank-accname').value.trim();
+  }else if(method==='Payoneer'){ payload.payoneerEmail=$('#wd-payo-email').value.trim(); }
+  else if(method==='Crypto'){ payload.cryptoAddress=$('#wd-crypto-addr').value.trim(); payload.network=$('#wd-crypto-net').value; }
+  try{ const r=await apiWrite('walletRequest', payload); if(!r||r.ok!==true) throw 0; toast('Withdrawal submitted'); closeWd(); await loadWallet(); }
+  catch(_){ toast('Request not saved'); }
+});
 async function loadWallet(){
-  const w = await api('wallet');
-  $("#wallet-balance").textContent = fmtMoney(w.balance);
-  const tb=$("#wallet-history"); tb.innerHTML='';
-  (w.history||[]).forEach(h=>{
+  const w = await api('wallet'), ov = await api('overview').catch(()=>({}));
+  const hist = w.history||w.items||[]; const pending = hist.filter(t=>String(t.status).toUpperCase()==='PENDING').reduce((s,t)=>s+Number(t.amount||0),0);
+  const gross = Number(ov?.totals?.earnings||w.balance||0);
+  $('#wallet-balance').textContent = fmtMoney(Math.max(0, gross - pending));
+  $('#wallet-pending').textContent = fmtMoney(pending);
+  const lastPaid = hist.filter(t=>String(t.status).toUpperCase()==='COMPLETED').slice(-1)[0];
+  $('#wallet-last').textContent = fmtMoney(lastPaid?lastPaid.amount:0);
+  const tb = $('#wallet-history'); tb.innerHTML = '';
+  hist.slice().reverse().forEach(t=>{
     const tr=document.createElement('tr');
-    tr.innerHTML=`<td>${h.date||'—'}</td><td>${h.method}</td><td>${fmtMoney(h.amount)}</td><td>${h.status||'—'}</td>`;
+    tr.innerHTML = `<td>${t.date||''}</td><td>${t.method||''}</td><td class="green">${fmtMoney(t.amount||0)}</td><td>${t.status||''}</td>`;
     tb.appendChild(tr);
   });
 }
 
+/* ===== Monitoring (10–15 min background, here 10 min) ===== */
+let monTimer=null;
 async function loadMonitoring(){
   const m = await api('monitoring');
   $("#mon-health").textContent = m.health || '—';
@@ -305,20 +644,35 @@ async function loadMonitoring(){
   const tb=$("#mon-events"); tb.innerHTML='';
   (m.events||[]).forEach(e=>{
     const tr=document.createElement('tr');
-    tr.innerHTML=`<td>${e.time}</td><td>${e.type||'system'}</td><td>${e.message||''}</td>`;
+    tr.innerHTML=`<td>${e.time||''}</td><td>${e.type||'system'}</td><td>${e.msg||e.message||''}</td>`;
     tb.appendChild(tr);
   });
+  $('#mon-ai').textContent = m.aiSummary || 'All systems nominal';
+  if(monTimer) clearInterval(monTimer);
+  monTimer = setInterval(async ()=>{
+    try { const mm = await api('monitoring'); $('#mon-health').textContent=mm.health||'—'; } catch(_){}
+  }, 10*60*1000);
 }
 
+/* ===== Settings ===== */
 async function loadSettings(){
-  const cfg = await api('config').catch(()=>({ok:false,note:"No config endpoint"}));
-  $("#cfg").textContent = JSON.stringify(cfg, null, 2);
+  try{ const cfg = await api('config'); $('#cfg').textContent = JSON.stringify(cfg, null, 2); }
+  catch(_){ $('#cfg').textContent = '{ "error": "Failed to load config" }'; }
 }
+$('#btn-save-config')?.addEventListener('click', async ()=>{
+  try{
+    const json = JSON.parse($('#cfg').textContent);
+    const r = await apiWrite('configSet', json);
+    if(!r || r.ok!==true) throw 0;
+    toast('Config saved');
+  }catch(_){ toast('Config not saved'); }
+});
 
-/* ================== BOOT ================== */
+/* ===== Boot ===== */
 async function boot(){
   const route = (location.hash||'#dashboard').slice(1);
   show(route);
+  const ok = await ensureSession(); if(!ok) return;
   try{
     if(route==='dashboard')  await loadDashboard();
     if(route==='cpa')        await loadCpa();
@@ -327,13 +681,10 @@ async function boot(){
     if(route==='wallet')     await loadWallet();
     if(route==='monitoring') await loadMonitoring();
     if(route==='settings')   await loadSettings();
-  }catch(e){
-    console.error(e);
-    alert("Failed to load: "+e.message);
-  }
+  }catch(e){ console.error(e); toast('Load failed'); }
 }
-window.addEventListener('load',boot);
-window.addEventListener('hashchange',boot);
+window.addEventListener('load', boot);
+window.addEventListener('hashchange', boot);
 </script>
 </body>
 </html>

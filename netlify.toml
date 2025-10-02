@@ -1,4 +1,4 @@
-# netlify.toml — minimal, deploy-unblocking config
+# netlify.toml – Empire Affiliate Hub configuration
 
 [build]
   command = ""
@@ -9,5 +9,12 @@
   node_bundler = "esbuild"
 
 [build.environment]
-  # Hard-disable Netlify’s secrets scanner so it doesn’t fail the build
+  # Hard-disable Netlify’s secrets scanner so it doesn’t block deploys with keys
   SECRETS_SCAN_ENABLED = "false"
+
+# === Redirects ===
+# API alias for Paystack account resolver
+[[redirects]]
+  from = "/api/resolve-account"
+  to = "/.netlify/functions/paystack-resolve"
+  status = 200

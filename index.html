@@ -1,467 +1,58 @@
-<!DOCTYPE html><html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>THE EMPIRE — Command Center</title>
-  <meta name="description" content="THE EMPIRE • Secure Command Center" />
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <!-- Chart.js for simple charts shown in screenshots -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
-  <style>
-    :root{
-      --bg:#0b0b10;          /* deep night */
-      --panel:#13131c;       /* raised panel */
-      --soft:#1b1b26;        /* soft section */
-      --muted:#9aa0aa;       /* muted text */
-      --text:#e9ecf1;        /* main text */
-      --brand:#d4af37;       /* empire gold */
-      --brand-2:#f2d16b;     /* soft gold */
-      --danger:#ea5455;      /* status */
-      --success:#28c76f;
-      --warn:#ff9f43;
-      --card:#0f0f15;
-      --radius:16px;
-      --shadow:0 10px 30px rgba(0,0,0,.35);
-    }
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{margin:0;background:linear-gradient(180deg,#0b0b10 0%, #0b0b10 60%, #0f0f15 100%);color:var(--text);font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
-    a{color:var(--brand);text-decoration:none}
-    .wrap{max-width:1220px;margin:0 auto;padding:24px}
-    header{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px 22px;background:radial-gradient(1200px 700px at -10% -20%, rgba(212,175,55,.08), transparent 70%),var(--panel);border:1px solid rgba(212,175,55,.18);border-radius:var(--radius);box-shadow:var(--shadow)}
-    .brand{display:flex;align-items:center;gap:14px}
-    .brand .logo{width:38px;height:38px;border-radius:12px;background:radial-gradient(120% 120% at 30% 20%, var(--brand-2), var(--brand) 60%, #7a5b0a 100%);position:relative;box-shadow:0 0 0 2px rgba(212,175,55,.25), inset 0 -4px 12px rgba(0,0,0,.35)}
-    .brand .logo:after{content:"";position:absolute;inset:8px;border-radius:10px;border:2px solid rgba(255,255,255,.2)}
-    .brand h1{font-size:18px;margin:0;font-weight:800;letter-spacing:.6px}
-    .brand small{display:block;opacity:.75;font-weight:600;color:var(--brand)}
-    .actions{display:flex;align-items:center;gap:12px}
-    .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 14px;border-radius:12px;border:1px solid rgba(255,255,255,.06);background:linear-gradient(180deg, #1d1d28, #151520);color:var(--text);cursor:pointer;font-weight:600}
-    .btn:hover{filter:brightness(1.08)}
-    .btn.gold{background:linear-gradient(180deg, #f3d984, #c49a26);color:#1a1606;border:1px solid rgba(212,175,55,.65)}
-    .btn.ghost{background:transparent;border-color:rgba(255,255,255,.14)}
-    .shield{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:12px;background:rgba(40,199,111,.1);color:var(--success);border:1px solid rgba(40,199,111,.3)}/* Tabs */
-.tabs{margin-top:18px;background:var(--panel);border:1px solid rgba(255,255,255,.06);border-radius:var(--radius);box-shadow:var(--shadow)}
-.tabbar{display:flex;flex-wrap:wrap;gap:8px;padding:10px;border-bottom:1px solid rgba(255,255,255,.08);background:linear-gradient(180deg,#161622,#14141f)}
-.tabbar .tab{padding:10px 12px;border-radius:10px;color:var(--muted);cursor:pointer;font-weight:600;border:1px solid transparent}
-.tabbar .tab.active{color:#0f0f15;background:linear-gradient(180deg,#f3d984,#c99f2b);border-color:rgba(212,175,55,.7)}
-.panel{display:none;padding:18px}
-.panel.active{display:block}
-
-/* Cards + grids */
-.grid{display:grid;gap:14px}
-.grid.cols-3{grid-template-columns:repeat(3,1fr)}
-.grid.cols-2{grid-template-columns:repeat(2,1fr)}
-@media (max-width:980px){.grid.cols-3{grid-template-columns:1fr 1fr}.grid.cols-2{grid-template-columns:1fr}}
-@media (max-width:640px){.grid{grid-template-columns:1fr}}
-.card{background:linear-gradient(180deg,#171722,#14141e);border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:16px;box-shadow:var(--shadow)}
-.card h3{margin:0 0 6px 0;font-size:14px;color:var(--muted);font-weight:700;letter-spacing:.4px;text-transform:uppercase}
-.metric{font-size:26px;font-weight:800;letter-spacing:.3px}
-.sub{font-size:12px;color:var(--muted)}
-
-/* Login gate */
-.gate{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:radial-gradient(800px 500px at 20% 0%, rgba(212,175,55,.10), transparent 40%),rgba(7,7,10,.92);backdrop-filter:blur(6px);z-index:50}
-.gate .box{width:min(520px,92%);background:var(--panel);border:1px solid rgba(212,175,55,.18);border-radius:20px;padding:22px;box-shadow:var(--shadow)}
-.form{display:flex;flex-direction:column;gap:10px;margin-top:12px}
-.input{padding:12px 14px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:#0f0f15;color:var(--text)}
-.hint{color:var(--muted);font-size:12px}
-
-/* Tables */
-table{width:100%;border-collapse:collapse}
-th,td{padding:10px 12px;text-align:left;border-bottom:1px dashed rgba(255,255,255,.06)}
-th{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.35px}
-
-.pill{display:inline-flex;align-items:center;gap:6px;padding:4px 8px;border-radius:999px;font-size:12px;font-weight:700}
-.pill.ok{background:rgba(40,199,111,.12);color:var(--success);border:1px solid rgba(40,199,111,.35)}
-.pill.warn{background:rgba(255,159,67,.12);color:var(--warn);border:1px solid rgba(255,159,67,.35)}
-.pill.fail{background:rgba(234,84,85,.12);color:var(--danger);border:1px solid rgba(234,84,85,.35)}
-
-.footer{opacity:.6;text-align:center;margin:24px 0 8px}
-
-  </style>
-</head>
-<body>
-  <div class="wrap">
-    <header>
-      <div class="brand">
-        <div class="logo" aria-hidden="true"></div>
-        <div>
-          <h1>THE EMPIRE <small>Command Center</small></h1>
-          <div class="sub">Go with the best • Private & Secure</div>
-        </div>
-      </div>
-      <div class="actions">
-        <div id="shield" class="shield" title="Security status">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l7 4v6c0 5-3.8 9.7-7 10-3.2-.3-7-5-7-10V6l7-4z"/></svg>
-          <span id="shieldText">Locked</span>
-        </div>
-        <button class="btn ghost" id="btnRefresh">Refresh</button>
-        <button class="btn gold" id="btnLogout">Logout</button>
-      </div>
-    </header><section class="tabs" id="app" hidden>
-  <nav class="tabbar" id="tabbar">
-    <button class="tab active" data-tab="overview">Overview</button>
-    <button class="tab" data-tab="analytics">Analytics</button>
-    <button class="tab" data-tab="wallet">Wallet</button>
-    <button class="tab" data-tab="users">User Management</button>
-    <button class="tab" data-tab="settings">Settings</button>
+<!DOCTYPE html><html lang="en" class="h-full"><head>
+<meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>THE EMPIRE — Welcome</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>:root{--g:#f2c14e;--ink:#0b0f14;--card:#121821;--line:#1e2a38}
+.bgx{background:radial-gradient(1200px 600px at 20% -10%,#2b3545 0%,#0b0f14 55%)}
+.glass{background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.02));backdrop-filter:blur(8px)}
+.ringx{box-shadow:0 0 0 1px var(--line) inset}</style>
+</head><body class="h-full text-white bg-[var(--ink)] bgx">
+<header class="max-w-7xl mx-auto px-4 py-5 flex items-center justify-between">
+  <div class="flex items-center gap-3">
+    <div class="w-9 h-9 rounded-full bg-[var(--g)]"></div>
+    <h1 class="text-xl font-semibold">THE EMPIRE</h1>
+  </div>
+  <nav class="hidden md:flex gap-6 text-sm">
+    <a href="login.html" class="opacity-90 hover:opacity-100">Login</a>
+    <a href="#tnc" onclick="tnc.showModal()" class="opacity-90 hover:opacity-100">T&amp;C</a>
   </nav>
+</header>
 
-  <!-- OVERVIEW -->
-  <div class="panel active" id="panel-overview">
-    <div class="grid cols-3">
-      <div class="card"><h3>Total Earnings</h3><div class="metric" id="m-earnings">—</div><div class="sub">Lifetime</div></div>
-      <div class="card"><h3>Leads</h3><div class="metric" id="m-leads">—</div><div class="sub">Approved</div></div>
-      <div class="card"><h3>Clicks</h3><div class="metric" id="m-clicks">—</div><div class="sub">Tracked</div></div>
-    </div>
-    <div class="grid cols-2" style="margin-top:14px">
-      <div class="card">
-        <h3>Daily Earnings</h3>
-        <canvas id="chartDaily" height="120"></canvas>
-      </div>
-      <div class="card">
-        <h3>Traffic Sources</h3>
-        <canvas id="chartSources" height="120"></canvas>
-      </div>
-    </div>
-    <div class="card" style="margin-top:14px">
-      <h3>Geo Distribution</h3>
-      <table id="geoTable"><thead><tr><th>Country</th><th>Earnings</th></tr></thead><tbody></tbody></table>
+<section class="max-w-7xl mx-auto px-4 pt-8 pb-16 grid md:grid-cols-2 gap-8 items-center">
+  <div>
+    <h2 class="text-4xl font-bold">Empire Affiliate Marketing Hub</h2>
+    <p class="mt-3 text-white/80">Commander-grade gateway. Live sync. Smart automation. Wallet control.</p>
+    <div class="mt-6 flex gap-3">
+      <a href="login.html" class="px-4 py-2 rounded-xl bg-[var(--g)] text-black font-semibold">Enter Command</a>
+      <button class="px-4 py-2 rounded-xl border border-[var(--line)] hover:border-[var(--g)]" onclick="tnc.showModal()">Terms</button>
     </div>
   </div>
-
-  <!-- ANALYTICS -->
-  <div class="panel" id="panel-analytics">
-    <div class="grid cols-2">
-      <div class="card">
-        <h3>Conversion Rate</h3>
-        <div class="metric" id="m-cr">—</div>
-        <div class="sub">Leads / Clicks</div>
+  <div class="glass ringx rounded-2xl p-6">
+    <div class="grid grid-cols-2 gap-4 text-sm">
+      <div class="p-4 rounded-xl bg-[var(--card)] ringx">
+        <div class="text-xs text-white/60">Total Earnings</div><div class="text-2xl font-bold mt-1">₦—</div>
       </div>
-      <div class="card">
-        <h3>EPC</h3>
-        <div class="metric" id="m-epc">—</div>
-        <div class="sub">Earnings Per Click</div>
+      <div class="p-4 rounded-xl bg-[var(--card)] ringx">
+        <div class="text-xs text-white/60">Leads (24h)</div><div class="text-2xl font-bold mt-1">—</div>
       </div>
-    </div>
-    <div class="card" style="margin-top:14px">
-      <h3>Top Offers</h3>
-      <table id="offersTable"><thead><tr><th>Offer</th><th>Leads</th><th>Earnings</th><th>CR</th></tr></thead><tbody></tbody></table>
-    </div>
-  </div>
-
-  <!-- WALLET -->
-  <div class="panel" id="panel-wallet">
-    <div class="grid cols-3">
-      <div class="card"><h3>Wallet Balance</h3><div class="metric" id="m-balance">—</div><div class="sub">Synced with Total Earnings</div></div>
-      <div class="card"><h3>Pending Payouts</h3><div class="metric" id="m-pending">—</div><div class="sub">Awaiting cycle</div></div>
-      <div class="card"><h3>Total Withdrawn</h3><div class="metric" id="m-withdrawn">—</div><div class="sub">Cumulative</div></div>
-    </div>
-    <div class="card" style="margin-top:14px">
-      <h3>Withdrawal Request</h3>
-      <form id="withdrawForm" class="form">
-        <div class="grid cols-3">
-          <input class="input" name="amount" type="number" step="0.01" placeholder="Amount (USD)" required />
-          <input class="input" name="destination" placeholder="Destination (Bank / Payoneer / Flutterwave)" required />
-          <input class="input" name="note" placeholder="Note (optional)" />
-        </div>
-        <div style="display:flex;gap:10px;align-items:center;justify-content:flex-end">
-          <span class="hint">Commander payouts: no limit • 2nd‑level: weekly policy enforced</span>
-          <button class="btn gold" type="submit">Submit Request</button>
-        </div>
-      </form>
-    </div>
-    <div class="card" style="margin-top:14px">
-      <h3>Wallet Report</h3>
-      <table id="walletTable"><thead><tr><th>Time</th><th>Type</th><th>Amount</th><th>Status</th><th>Ref</th></tr></thead><tbody></tbody></table>
-    </div>
-  </div>
-
-  <!-- USERS -->
-  <div class="panel" id="panel-users">
-    <div class="grid cols-2">
-      <div class="card">
-        <h3>Create Invite Link</h3>
-        <form id="inviteForm" class="form">
-          <div class="grid cols-2">
-            <input class="input" name="name" placeholder="Full name" required />
-            <input class="input" name="email" type="email" placeholder="Email" required />
-          </div>
-          <div class="grid cols-2">
-            <input class="input" name="phone" placeholder="WhatsApp number" />
-            <select class="input" name="tier">
-              <option value="second">Second‑level User</option>
-              <option value="viewer">Viewer (read‑only)</option>
-            </select>
-          </div>
-          <button class="btn gold" type="submit">Generate Link</button>
-          <div class="hint" id="inviteHint">Generated link will appear here.</div>
-        </form>
+      <div class="p-4 rounded-xl bg-[var(--card)] ringx">
+        <div class="text-xs text-white/60">Active Offers</div><div class="text-2xl font-bold mt-1">—</div>
       </div>
-      <div class="card">
-        <h3>Pending Approvals</h3>
-        <table id="pendingTable"><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Status</th><th>Action</th></tr></thead><tbody></tbody></table>
-      </div>
-    </div>
-  </div>
-
-  <!-- SETTINGS -->
-  <div class="panel" id="panel-settings">
-    <div class="grid cols-2">
-      <div class="card">
-        <h3>Runtime</h3>
-        <div class="sub">API Base: <code id="cfgApi">—</code></div>
-        <div class="sub">GAS Proxy: <code id="cfgGas">—</code></div>
-        <div class="sub">Theme: <code id="cfgTheme">empire-dark</code></div>
-      </div>
-      <div class="card">
-        <h3>Health</h3>
-        <div id="healthPill" class="pill ok">All systems nominal</div>
+      <div class="p-4 rounded-xl bg-[var(--card)] ringx">
+        <div class="text-xs text-white/60">Status</div><div class="text-2xl font-bold mt-1 text-[var(--g)]">ONLINE</div>
       </div>
     </div>
   </div>
 </section>
 
-<div class="footer">© <span id="yy"></span> THE EMPIRE • All Rights Reserved</div>
-
-  </div>  <!-- SECURE LOGIN GATE -->  <div class="gate" id="gate">
-    <div class="box">
-      <div style="display:flex;align-items:center;gap:10px;justify-content:space-between">
-        <div style="display:flex;align-items:center;gap:10px">
-          <div class="logo" aria-hidden="true"></div>
-          <div>
-            <div style="font-weight:800;letter-spacing:.4px">THE EMPIRE — Secure Access</div>
-            <div class="hint">Commander login only. All access is logged.</div>
-          </div>
-        </div>
-        <div class="pill ok">Encrypted</div>
-      </div>
-      <form id="loginForm" class="form">
-        <input class="input" name="username" placeholder="Username or Email" autocomplete="username" required />
-        <input class="input" name="password" type="password" placeholder="Access Key" autocomplete="current-password" required />
-        <button class="btn gold" type="submit">Enter Command Center</button>
-      </form>
+<dialog id="tnc" class="w-full max-w-2xl rounded-2xl p-0 bg-[var(--card)] text-white">
+  <div class="p-6">
+    <h4 class="text-lg font-semibold mb-2">Terms &amp; Conditions</h4>
+    <p class="text-sm text-white/80">Commander-exclusive system. All actions are logged. Unauthorized redistribution is prohibited.</p>
+    <div class="mt-6 flex justify-end gap-3">
+      <button class="px-4 py-2 rounded-lg border border-[var(--line)]" onclick="tnc.close()">Close</button>
+      <button class="px-4 py-2 rounded-lg bg-[var(--g)] text-black font-semibold" onclick="localStorage.setItem('empire_tnc','1');tnc.close()">I Agree</button>
     </div>
-  </div>  <!-- ====== CONFIG INJECTION (edit only these if needed) ====== -->  <script>
-    // You can override any of these by defining window.ENV before this file loads.
-    window.ENV = Object.assign({
-      EMPIRE_API: '/.netlify/functions',       // Netlify Functions base
-      GAS_PROXY: '/.netlify/functions/gas',    // Function that securely calls GAS
-      THEME: 'empire-dark',
-      // Optional: prefill commander username for convenience
-      PREFILL_USER: ''
-    }, window.ENV || {});
-  </script>  <!-- ====== APP LOGIC ====== -->  <script>
-  (function(){
-    const $ = (q,root=document)=>root.querySelector(q);
-    const $$ = (q,root=document)=>Array.from(root.querySelectorAll(q));
-
-    const ENV = window.ENV||{};
-    const BASE = (ENV.EMPIRE_API || '/.netlify/functions').replace(/\/+$/,'');
-    const GAS  = (ENV.GAS_PROXY   || BASE + '/gas').replace(/\/+$/,'');
-
-    const state = { token:null, charts:{} };
-
-    const els = {
-      app: $('#app'), gate: $('#gate'), shield: $('#shield'), shieldText: $('#shieldText'),
-      btnRefresh: $('#btnRefresh'), btnLogout: $('#btnLogout'), yy: $('#yy'),
-      // metrics
-      mE: $('#m-earnings'), mL: $('#m-leads'), mC: $('#m-clicks'), mCR: $('#m-cr'), mEPC: $('#m-epc'),
-      mBal: $('#m-balance'), mPend: $('#m-pending'), mWithd: $('#m-withdrawn'),
-      geoT: $('#geoTable tbody'), offersT: $('#offersTable tbody'), walletT: $('#walletTable tbody'), pendingT: $('#pendingTable tbody'),
-      cfgApi: $('#cfgApi'), cfgGas: $('#cfgGas'), healthPill: $('#healthPill'), inviteHint: $('#inviteHint'),
-      chartDaily: $('#chartDaily'), chartSources: $('#chartSources')
-    };
-
-    function number(n){
-      if(n==null || isNaN(n)) return '—';
-      return Number(n).toLocaleString(undefined,{maximumFractionDigits:2});
-    }
-    function money(n){
-      if(n==null || isNaN(n)) return '—';
-      return '$' + Number(n).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2});
-    }
-
-    // HTTP helper that always routes through backend (token attached)
-    async function api(path, opts={}){
-      const token = state.token || localStorage.getItem('EMPIRE_TOKEN') || '';
-      const headers = Object.assign({'Content-Type':'application/json'}, opts.headers||{});
-      if(token) headers['Authorization'] = 'Bearer ' + token;
-      const res = await fetch(BASE + path, Object.assign({}, opts, { headers }));
-      if(!res.ok){
-        if(res.status===401){ logout(true); }
-        throw new Error('API '+path+' failed: '+res.status);
-      }
-      return res.json();
-    }
-
-    // GAS proxy: always go through function /gas so GAS URL is never exposed
-    async function gas(params){
-      const qs = new URLSearchParams(params).toString();
-      return api('/gas?'+qs, { method:'GET' });
-    }
-
-    function setTab(name){
-      $$('.tab', $('#tabbar')).forEach(t=>t.classList.toggle('active', t.dataset.tab===name));
-      $$('.panel').forEach(p=>p.classList.toggle('active', p.id==='panel-'+name));
-    }
-
-    function drawChart(id, type, labels, data){
-      const ctx = id.getContext('2d');
-      if(state.charts[id.id]){ state.charts[id.id].destroy(); }
-      state.charts[id.id] = new Chart(ctx, {
-        type, data: { labels, datasets:[{ label:'', data }] }, options:{
-          plugins:{ legend:{ display:false } },
-          scales:{ x:{ grid:{ display:false } }, y:{ grid:{ color:'rgba(255,255,255,.08)' } } }
-        }
-      });
-    }
-
-    function setHealth(ok,msg){
-      const pill = els.healthPill;
-      pill.classList.remove('ok','warn','fail');
-      pill.classList.add(ok? 'ok': 'fail');
-      pill.textContent = msg || (ok? 'All systems nominal' : 'Issue detected');
-    }
-
-    async function hydrate(){
-      els.cfgApi.textContent = BASE;
-      els.cfgGas.textContent = GAS;
-      // Summary (lifetime metrics + geo)
-      const s = await api('/summary');
-      els.mE.textContent = money(s.totalEarnings);
-      els.mL.textContent = number(s.leads);
-      els.mC.textContent = number(s.clicks);
-      // Geo
-      els.geoT.innerHTML = '';
-      (s.geo||[]).forEach(row=>{
-        const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${row.country}</td><td>${money(row.earnings)}</td>`;
-        els.geoT.appendChild(tr);
-      });
-      // Analytics
-      const a = await api('/analytics');
-      els.mCR.textContent = (a.cr!=null? a.cr.toFixed(2)+'%' : '—');
-      els.mEPC.textContent = (a.epc!=null? '$'+a.epc.toFixed(2) : '—');
-      // Charts
-      drawChart(els.chartDaily, 'line', (a.daily||[]).map(d=>d.day), (a.daily||[]).map(d=>d.value));
-      drawChart(els.chartSources, 'bar', (a.sources||[]).map(d=>d.source), (a.sources||[]).map(d=>d.value));
-      // Offers
-      els.offersT.innerHTML = '';
-      (a.topOffers||[]).forEach(o=>{
-        const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${o.name}</td><td>${number(o.leads)}</td><td>${money(o.earnings)}</td><td>${(o.cr||0).toFixed(1)}%</td>`;
-        els.offersT.appendChild(tr);
-      });
-      // Wallet
-      const w = await api('/wallet');
-      els.mBal.textContent = money(w.balance);
-      els.mPend.textContent = money(w.pending);
-      els.mWithd.textContent = money(w.withdrawn);
-      els.walletT.innerHTML='';
-      (w.history||[]).forEach(r=>{
-        const pill = r.status==='paid'? 'ok' : r.status==='pending'? 'warn':'fail';
-        const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${new Date(r.time).toLocaleString()}</td><td>${r.type}</td><td>${money(r.amount)}</td><td><span class="pill ${pill}">${r.status}</span></td><td>${r.ref||''}</td>`;
-        els.walletT.appendChild(tr);
-      });
-      // Users (pending approvals from GAS sheet via proxy)
-      const u = await gas({ action:'pending' });
-      els.pendingT.innerHTML='';
-      (u.items||[]).forEach(p=>{
-        const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${p.name||''}</td><td>${p.email||''}</td><td>${p.phone||''}</td><td>${p.status||'pending'}</td><td><button class="btn" data-approve="${p.id}">Approve</button> <button class="btn ghost" data-reject="${p.id}">Reject</button></td>`;
-        els.pendingT.appendChild(tr);
-      });
-      setHealth(true);
-    }
-
-    // Approve / Reject handlers (Users)
-    document.addEventListener('click', async (e)=>{
-      const a = e.target.closest('button[data-approve]');
-      const r = e.target.closest('button[data-reject]');
-      if(a){
-        await gas({ action:'approve', id:a.dataset.approve });
-        hydrate();
-      }
-      if(r){
-        await gas({ action:'reject', id:r.dataset.reject });
-        hydrate();
-      }
-    });
-
-    // Invite
-    $('#inviteForm').addEventListener('submit', async (e)=>{
-      e.preventDefault();
-      const fd = new FormData(e.target);
-      const payload = Object.fromEntries(fd.entries());
-      const out = await api('/invite-create', { method:'POST', body: JSON.stringify(payload) });
-      els.inviteHint.textContent = out.url || 'Link created';
-      els.inviteHint.innerHTML = `Invite: <a href="${out.url}" target="_blank" rel="noopener">${out.url}</a>`;
-    });
-
-    // Withdraw
-    $('#withdrawForm').addEventListener('submit', async (e)=>{
-      e.preventDefault();
-      const fd = new FormData(e.target);
-      const payload = Object.fromEntries(fd.entries());
-      await api('/wallet-withdraw', { method:'POST', body: JSON.stringify(payload) });
-      hydrate();
-    });
-
-    // Tabs
-    $('#tabbar').addEventListener('click', (e)=>{
-      const b = e.target.closest('.tab');
-      if(!b) return;
-      setTab(b.dataset.tab);
-    });
-
-    // Refresh
-    els.btnRefresh.addEventListener('click', ()=>hydrate());
-
-    // Logout
-    function logout(silent){
-      localStorage.removeItem('EMPIRE_TOKEN');
-      state.token = null;
-      els.app.hidden = true;
-      els.gate.style.display = 'flex';
-      els.shieldText.textContent = 'Locked';
-      if(!silent) alert('You have been logged out.');
-    }
-    els.btnLogout.addEventListener('click', ()=>logout());
-
-    // Login
-    $('#loginForm').addEventListener('submit', async (e)=>{
-      e.preventDefault();
-      const fd = new FormData(e.target);
-      const body = { username: fd.get('username'), password: fd.get('password') };
-      const out = await api('/auth', { method:'POST', body: JSON.stringify(body) });
-      if(!out.ok || !out.token){ alert('Access denied'); return; }
-      localStorage.setItem('EMPIRE_TOKEN', out.token);
-      state.token = out.token;
-      els.gate.style.display = 'none';
-      els.app.hidden = false;
-      els.shieldText.textContent = 'Secured';
-      hydrate();
-    });
-
-    // Bootstrap
-    (function init(){
-      els.yy.textContent = new Date().getFullYear();
-      if(ENV.PREFILL_USER){ $('[name="username"]').value = ENV.PREFILL_USER; }
-      // If we already have a token, verify & enter
-      const t = localStorage.getItem('EMPIRE_TOKEN');
-      if(t){
-        state.token = t;
-        api('/auth-verify').then(()=>{
-          els.gate.style.display = 'none';
-          els.app.hidden = false;
-          els.shieldText.textContent = 'Secured';
-          hydrate();
-        }).catch(()=>logout(true));
-      }
-    })();
-  })();
-  </script></body>
-</html>
+  </div>
+</dialog>
+</body></html>

@@ -1,0 +1,151 @@
+<!DOCTYPE html><html lang="en" class="h-full"><head>
+<meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>THE EMPIRE — Dashboard</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>:root{--g:#f2c14e;--ink:#0b0f14;--card:#121821;--line:#1e2a38}
+.bgx{background:radial-gradient(1200px 600px at 20% -10%,#2b3545 0%,#0b0f14 55%)}
+.glass{background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.02));backdrop-filter:blur(8px)}
+.ringx{box-shadow:0 0 0 1px var(--line) inset}
+.nav a{display:block;padding:.6rem 1rem;border-radius:.75rem}
+.nav a.active{background:rgba(255,255,255,.06);box-shadow:inset 0 0 0 1px var(--line)}</style>
+</head><body class="h-full text-white bg-[var(--ink)] bgx">
+<header class="max-w-7xl mx-auto px-4 py-5 flex items-center justify-between">
+  <div class="flex items-center gap-3">
+    <div class="w-9 h-9 rounded-full bg-[var(--g)]"></div>
+    <h1 class="text-xl font-semibold">THE EMPIRE</h1>
+  </div>
+  <div class="text-sm">
+    <button class="px-3 py-1 rounded-lg border border-[var(--line)] hover:border-[var(--g)]" onclick="logout()">Logout</button>
+  </div>
+</header>
+
+<main class="max-w-7xl mx-auto px-4 pb-16 grid md:grid-cols-[240px_1fr] gap-6">
+  <aside class="glass ringx rounded-2xl p-4 nav text-sm">
+    <a href="#overview" class="active" onclick="showTab('overview',event)">Overview</a>
+    <a href="#wallet" onclick="showTab('wallet',event)">Wallet</a>
+    <a href="#monitor" onclick="showTab('monitor',event)">Monitoring</a>
+    <a href="#settings" onclick="showTab('settings',event)">Settings</a>
+  </aside>
+
+  <section class="space-y-6">
+    <!-- Overview -->
+    <div id="tab-overview" class="glass ringx rounded-2xl p-6">
+      <h3 class="text-lg font-semibold mb-2">Overview</h3>
+      <div class="grid md:grid-cols-4 gap-4 text-sm">
+        <div class="p-4 rounded-xl bg-[var(--card)] ringx">
+          <div class="text-xs text-white/60">Total Earnings</div><div id="k1" class="text-2xl font-bold mt-1">₦—</div>
+        </div>
+        <div class="p-4 rounded-xl bg-[var(--card)] ringx">
+          <div class="text-xs text-white/60">Leads (24h)</div><div id="k2" class="text-2xl font-bold mt-1">—</div>
+        </div>
+        <div class="p-4 rounded-xl bg-[var(--card)] ringx">
+          <div class="text-xs text-white/60">Active Offers</div><div id="k3" class="text-2xl font-bold mt-1">—</div>
+        </div>
+        <div class="p-4 rounded-xl bg-[var(--card)] ringx">
+          <div class="text-xs text-white/60">Status</div><div class="text-2xl font-bold mt-1 text-[var(--g)]">ONLINE</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Wallet -->
+    <div id="tab-wallet" class="glass ringx rounded-2xl p-6 hidden">
+      <h3 class="text-lg font-semibold mb-2">Wallet — Verify Beneficiary</h3>
+      <p class="text-white/70 text-sm mb-6">Auto-detect bank & account holder via Paystack before payout.</p>
+
+      <div class="grid md:grid-cols-2 gap-4">
+        <div>
+          <label class="text-xs text-white/70">Account Number (NG)</label>
+          <input id="acc" maxlength="10" inputmode="numeric"
+                 class="mt-1 w-full px-4 py-3 rounded-xl bg-[var(--card)] ringx outline-none"
+                 placeholder="10-digit NUBAN" />
+        </div>
+        <div>
+          <label class="text-xs text-white/70">Status</label>
+          <input id="status" readonly
+                 class="mt-1 w-full px-4 py-3 rounded-xl bg-[var(--card)] ringx outline-none text-[var(--g)]"
+                 placeholder="—" />
+        </div>
+        <div>
+          <label class="text-xs text-white/70">Bank</label>
+          <input id="bank" readonly
+                 class="mt-1 w-full px-4 py-3 rounded-xl bg-[var(--card)] ringx outline-none"
+                 placeholder="Detected bank appears here" />
+        </div>
+        <div>
+          <label class="text-xs text-white/70">Account Name</label>
+          <input id="accName" readonly
+                 class="mt-1 w-full px-4 py-3 rounded-xl bg-[var(--card)] ringx outline-none"
+                 placeholder="Detected name appears here" />
+        </div>
+      </div>
+
+      <div class="mt-6 flex gap-3">
+        <button id="btnVerify" class="px-5 py-3 rounded-xl bg-[var(--g)] text-black font-semibold">Verify Now</button>
+        <button id="btnClear"  class="px-5 py-3 rounded-xl border border-[var(--line)]">Clear</button>
+      </div>
+    </div>
+
+    <!-- Monitoring -->
+    <div id="tab-monitor" class="glass ringx rounded-2xl p-6 hidden">
+      <h3 class="text-lg font-semibold mb-2">Monitoring</h3>
+      <p class="text-white/70 text-sm">Hook this to GAS/Functions for live health.</p>
+    </div>
+
+    <!-- Settings -->
+    <div id="tab-settings" class="glass ringx rounded-2xl p-6 hidden">
+      <h3 class="text-lg font-semibold mb-2">Settings</h3>
+      <p class="text-white/70 text-sm">Commander preferences and kill switch go here.</p>
+    </div>
+  </section>
+</main>
+
+<script>
+// Auth guard (stub)
+if (!localStorage.getItem('empire_tnc') || !localStorage.getItem('empire_auth')) {
+  location.href = 'login.html';
+}
+
+function logout(){ localStorage.removeItem('empire_auth'); location.href='login.html'; }
+
+function showTab(name,e){
+  document.querySelectorAll('[id^="tab-"]').forEach(n=>n.classList.add('hidden'));
+  document.getElementById('tab-'+name).classList.remove('hidden');
+  document.querySelectorAll('.nav a').forEach(a=>a.classList.remove('active'));
+  e?.target.classList.add('active');
+}
+
+// Wallet verifier
+const accEl=document.getElementById('acc'), bankEl=document.getElementById('bank'),
+      nameEl=document.getElementById('accName'), statEl=document.getElementById('status');
+let debounce;
+function clean(v){ return (v||"").replace(/\D/g,"").slice(0,10); }
+async function resolveNow(v){
+  if (!/^\d{10}$/.test(v)){ statEl.value="Enter 10-digit NUBAN"; bankEl.value=""; nameEl.value=""; return; }
+  statEl.value="Checking…";
+  try{
+    const r = await fetch("/api/resolve-account", {
+      method:"POST", headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify({ accountNumber: v })
+    });
+    const data = await r.json();
+    if (data.ok){
+      bankEl.value = `${data.bankName} (${data.bankCode})`;
+      nameEl.value = data.accountName;
+      statEl.value = "✓ Verified";
+    }else{
+      bankEl.value=""; nameEl.value=""; statEl.value="✗ Not found";
+    }
+  }catch{ bankEl.value=""; nameEl.value=""; statEl.value="⚠️ Error"; }
+}
+accEl?.addEventListener('input',()=>{
+  clearTimeout(debounce);
+  accEl.value = clean(accEl.value);
+  if (accEl.value.length===10) debounce=setTimeout(()=>resolveNow(accEl.value),500);
+  else { statEl.value=""; bankEl.value=""; nameEl.value=""; }
+});
+document.getElementById('btnVerify')?.addEventListener('click',()=>resolveNow(clean(accEl.value)));
+document.getElementById('btnClear')?.addEventListener('click',()=>{
+  accEl.value=""; bankEl.value=""; nameEl.value=""; statEl.value="";
+});
+</script>
+</body></html>

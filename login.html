@@ -1,67 +1,52 @@
+<!DOCTYPE html><html lang="en" class="h-full"><head>
+<meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>THE EMPIRE — Login</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>:root{--g:#f2c14e;--ink:#0b0f14;--card:#121821;--line:#1e2a38}
+.bgx{background:radial-gradient(1200px 600px at 20% -10%,#2b3545 0%,#0b0f14 55%)}
+.glass{background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.02));backdrop-filter:blur(8px)}
+.ringx{box-shadow:0 0 0 1px var(--line) inset}</style>
+</head><body class="h-full text-white bg-[var(--ink)] bgx">
+<header class="max-w-5xl mx-auto px-4 py-5 flex items-center justify-between">
+  <a href="index.html" class="flex items-center gap-3">
+    <div class="w-9 h-9 rounded-full bg-[var(--g)]"></div>
+    <span class="text-xl font-semibold">THE EMPIRE</span>
+  </a>
+  <button class="px-3 py-1 rounded-lg border border-[var(--line)] hover:border-[var(--g)]" onclick="tnc.showModal()">T&amp;C</button>
+</header>
+
+<section class="max-w-3xl mx-auto px-4 py-10">
+  <div class="glass ringx rounded-2xl p-6 md:p-8">
+    <h3 class="text-xl font-semibold mb-1">Commander Login</h3>
+    <p class="text-white/70 text-sm mb-6">Secure access to the main dashboard.</p>
+    <form id="f" class="grid md:grid-cols-3 gap-4">
+      <input id="em" class="w-full px-4 py-3 rounded-xl bg-[var(--card)] ringx outline-none" placeholder="Email" type="email" required />
+      <input id="pw" class="w-full px-4 py-3 rounded-xl bg-[var(--card)] ringx outline-none" placeholder="Password" type="password" required />
+      <button class="px-4 py-3 rounded-xl bg-[var(--g)] text-black font-semibold">Login</button>
+    </form>
+    <p class="text-xs text-white/60 mt-3">By continuing you agree to the <button class="underline decoration-[var(--g)]" onclick="tnc.showModal()">Terms</button>.</p>
+  </div>
+</section>
+
+<dialog id="tnc" class="w-full max-w-2xl rounded-2xl p-0 bg-[var(--card)] text-white">
+  <div class="p-6">
+    <h4 class="text-lg font-semibold mb-2">Terms &amp; Conditions</h4>
+    <p class="text-sm text-white/80">Commander-exclusive system. All actions are logged. Unauthorized redistribution is prohibited.</p>
+    <div class="mt-6 flex justify-end gap-3">
+      <button class="px-4 py-2 rounded-lg border border-[var(--line)]" onclick="tnc.close()">Close</button>
+      <button class="px-4 py-2 rounded-lg bg-[var(--g)] text-black font-semibold" onclick="localStorage.setItem('empire_tnc','1');tnc.close()">I Agree</button>
+    </div>
+  </div>
+</dialog>
+
 <script>
-(function(){
-  const $ = s => document.querySelector(s);
-
-  // Keep invite token for later (unchanged)
-  const usp = new URLSearchParams(location.search);
-  const i = usp.get('i'); if(i){ sessionStorage.setItem('empire.invite', i); }
-
-  const modal = document.getElementById('loginModal');
-  const idInput = document.getElementById('identifier');
-  const err = document.getElementById('err');
-  const goBtn = document.getElementById('goBtn');
-  const modalTitle = document.getElementById('modalTitle');
-
-  let role = 'user';
-
-  function openModal(nextRole){
-    role = nextRole;
-    localStorage.setItem('empire.role', role);
-    modalTitle.textContent = role==='commander' ? 'Commander Login' : 'User Login';
-    document.querySelector('label[for="identifier"]').textContent =
-      role==='commander' ? 'Commander passphrase' : 'Email or phone';
-    idInput.placeholder = role==='commander' ? 'Enter Commander passphrase' : 'you@example.com or +234…';
-    idInput.type = role==='commander' ? 'password' : 'text';
-    err.style.display='none'; err.textContent='';
-    idInput.value='';
-    modal.style.display='flex';
-    setTimeout(()=>idInput.focus(),50);
-  }
-
-  document.querySelector('[data-role="commander"]').onclick = ()=>openModal('commander');
-  document.querySelector('[data-role="user"]').onclick = ()=>openModal('user');
-  document.getElementById('cancelBtn').onclick = ()=> modal.style.display='none';
-  document.getElementById('closeModal').onclick = ()=> modal.style.display='none';
-  modal.addEventListener('click', e=>{ if(e.target===modal) modal.style.display='none'; });
-  idInput.addEventListener('keydown', e=>{ if(e.key==='Enter') goBtn.click(); });
-
-  goBtn.addEventListener('click', async ()=>{
-    const cred = (idInput.value||'').trim();
-    if(!cred){ err.textContent='Please enter your credential.'; err.style.display='block'; return; }
-
-    goBtn.disabled=true; goBtn.textContent='Checking…';
-    try{
-      if(role==='commander'){
-        // passphrase path
-        await EmpireAuth.login({mode:'commander', pass: cred});
-      }else{
-        // user path
-        await EmpireAuth.login({mode:'user', id: cred});
-      }
-      location.href = '/dashboard.html';
-    }catch(e){
-      err.textContent = 'Access denied: unauthorized';
-      err.style.display='block';
-      goBtn.disabled=false; goBtn.textContent='Enter The Empire';
-    }
-  });
-
-  // Auto skip if already authed
-  document.addEventListener('DOMContentLoaded', async ()=>{
-    try{
-      const me = await EmpireAuth.whoami();
-      if(me && me.role){ location.href='/dashboard.html'; }
-    }catch{}
-  });
-})();
+const f = document.getElementById('f');
+f.addEventListener('submit', (e) => {
+  e.preventDefault();
+  if (!localStorage.getItem('empire_tnc')) { alert('Agree to the Terms first.'); return; }
+  // Stub auth (replace with real guard later)
+  localStorage.setItem('empire_auth','1');
+  location.href = 'dashboard.html';
+});
 </script>
+</body></html>

@@ -6,64 +6,50 @@ const PORT = process.env.PORT || 3000;
 // ✅ CORRECT SECRET
 const WEBHOOK_SECRET = "whsec_abewac7j2bA/6E58DvYgg0BfUuNsov";
 
-// Store raw body for signature verification
-let rawBodyCache = "";
-app.use("/webhooks/chimoney", (req, res, next) => {
-  rawBodyCache = "";
-  req.on("data", (chunk) => {
-    rawBodyCache += chunk.toString();
-  });
-  req.on("end", () => {
-    req.rawBody = rawBodyCache;
-    next();
-  });
-});
+// MIDDLEWARE: Capture RAW body BEFORE express.json()
+app.use("/webhooks/chimoney", express.raw({ type: "*/*" }));
 
-// Parse JSON with error handling
-app.use("/webhooks/chimoney", (req, res, next) => {
-  try {
-    if (rawBodyCache.trim()) {
-      req.body = JSON.parse(rawBodyCache);
-    } else {
-      req.body = {};
-    }
-    next();
-  } catch (error) {
-    console.error("❌ JSON parse error:", error.message);
-    req.body = { error: "Invalid JSON" };
-    next();
-  }
-});
+// Then parse JSON
+app.use("/webhooks/chimoney", express.json());
 
 // Verify signature using RAW BODY
 function verifySignature(signature, rawBody) {
   if (!rawBody || !signature) return false;
   
+  console.log("🔍 Raw body length:", rawBody.length);
+  console.log("🔍 First 50 chars:", rawBody.toString().substring(0, 50));
+  
   const computed = crypto
     .createHmac("sha256", WEBHOOK_SECRET)
-    .update(rawBody)
+    .update(rawBody)  // Use Buffer directly
     .digest("hex");
   
-  console.log("🔐 Signature Verification:");
-  console.log("  Received:", signature.substring(0, 20) + "...");
-  console.log("  Expected:", computed.substring(0, 20) + "...");
+  console.log("🔐 SIGNATURE CHECK:");
+  console.log("Received:", signature?.substring(0, 20) + "...");
+  console.log("Expected:", computed.substring(0, 20) + "...");
+  console.log("Full Expected:", computed);
   
   return signature === computed;
 }
 
 // Webhook endpoint
 app.post("/webhooks/chimoney", (req, res) => {
+  // Get RAW body from express.raw middleware
+  const rawBody = req.body;  // This is Buffer from express.raw
+  
+  // Parse JSON for event processing
+  const parsedBody = JSON.parse(rawBody.toString());
   const signature = req.headers["webhook-signature"];
   
   console.log("\n📥 WEBHOOK RECEIVED:", new Date().toISOString());
-  console.log("Event:", req.body?.type || req.body?.event || "unknown");
+  console.log("Event:", parsedBody.type || parsedBody.event || "unknown");
   
   if (!signature) {
     console.error("❌ Missing signature header");
     return res.status(400).json({ error: "Missing webhook-signature header" });
   }
   
-  if (!verifySignature(signature, req.rawBody)) {
+  if (!verifySignature(signature, rawBody)) {
     console.error("❌ Signature verification FAILED!");
     return res.status(401).json({ error: "Invalid signature" });
   }
@@ -71,17 +57,10 @@ app.post("/webhooks/chimoney", (req, res) => {
   console.log("✅ Signature verification PASSED!");
   
   // Process event
-  const eventType = req.body.type || req.body.event || "unknown";
-  const eventData = req.body.data || req.body;
-  
-  if (eventType === "payout.bank.completed") {
-    console.log(`💰 BANK PAYOUT: ${eventData.amount} ${eventData.currency}`);
-  }
-  
   res.json({
     success: true,
-    message: "Webhook processed",
-    event: eventType,
+    message: "Webhook processed successfully",
+    event: parsedBody.type || parsedBody.event,
     signatureVerified: true,
     timestamp: new Date().toISOString()
   });
@@ -92,22 +71,29 @@ app.get("/health", (req, res) => {
   res.json({
     status: "healthy",
     service: "chimoney-webhook-server",
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    version: "3.0.0",
+    signatureMethod: "RAW_BODY_HMAC_SHA256"
   });
 });
 
 // Root endpoint
 app.get("/", (req, res) => {
-  res.json({ message: "Chimoney Webhook Server", status: "operational" });
+  res.json({ 
+    message: "Chimoney Webhook Server", 
+    status: "operational",
+    webhook: "POST /webhooks/chimoney"
+  });
 });
 
 // Start server
 app.listen(PORT, () => {
   console.log("\n" + "=".repeat(50));
-  console.log("🚀 CHIMONEY WEBHOOK SERVER");
+  console.log("🚀 CHIMONEY WEBHOOK SERVER v3.0.0");
   console.log("=".repeat(50));
   console.log(`📍 Port: ${PORT}`);
-  console.log(`🔐 Using RAW BODY signature verification`);
+  console.log(`🔐 Using express.raw() for signatures`);
+  console.log(`📤 Endpoint: POST /webhooks/chimoney`);
   console.log("=".repeat(50));
   console.log("⏳ Waiting for webhooks...\n");
 });

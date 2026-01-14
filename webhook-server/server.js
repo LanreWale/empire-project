@@ -1,7 +1,7 @@
 ﻿const express = require("express");
 const crypto = require("crypto");
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 // ⚠️ USE THE EXACT SECRET FROM YOUR CHIMONEY DASHBOARD
 const WEBHOOK_SECRET = "whsec_abewac7j2bA/6E58DvYgg0BfUuNsov";
@@ -155,3 +155,4 @@ app.listen(PORT, () => {
 });
 
 // Last updated: 2026-01-14 02:47:19
+

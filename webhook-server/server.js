@@ -1,94 +1,154 @@
-﻿const express = require("express");
+const express = require("express");
 const crypto = require("crypto");
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-const WEBHOOK_SECRET = "whsec_abewac7j2bA/6E58DvYgg0BfUuNsov";
+/* ===============================
+   SECRETS
+================================ */
+const CHIMONEY_WEBHOOK_SECRET =
+  process.env.CHIMONEY_WEBHOOK_SECRET ||
+  "whsec_abewac7j2bA/6E58DvYgg0BfUuNsov";
 
-console.log("✅ Secret confirmed:", WEBHOOK_SECRET.substring(0, 10) + "...");
+const RUBIES_WEBHOOK_SECRET =
+  process.env.RUBIES_WEBHOOK_SECRET || null;
 
-// Handle body in multiple ways
+console.log("✅ Chimoney secret loaded:",
+  CHIMONEY_WEBHOOK_SECRET.substring(0, 10) + "..."
+);
+
+/* ===============================
+   CHIMONEY RAW BODY CAPTURE
+   (DO NOT use express.json here)
+================================ */
 app.use("/webhooks/chimoney", (req, res, next) => {
   let data = [];
+
   req.on("data", chunk => data.push(chunk));
+
   req.on("end", () => {
     const buffer = Buffer.concat(data);
-    
-    // Save all representations
+
     req.rawBytes = buffer;
     req.asString = buffer.toString();
     req.asUtf8 = buffer.toString("utf8");
-    
-    // Try to parse JSON
+
     try {
       req.body = JSON.parse(buffer.toString());
     } catch {
       req.body = {};
     }
-    
+
     next();
   });
 });
 
+/* ===============================
+   CHIMONEY WEBHOOK ENDPOINT
+================================ */
 app.post("/webhooks/chimoney", (req, res) => {
   const signature = req.headers["webhook-signature"];
-  
-  console.log("\n📥 INCOMING REQUEST:");
-  console.log("Raw bytes length:", req.rawBytes.length);
-  console.log("As string:", req.asString.substring(0, 80) + "...");
-  console.log("Hex of first 50 bytes:", req.rawBytes.toString("hex").substring(0, 100));
-  
-  // Calculate signatures using ALL methods
+
+  console.log("\n📥 CHIMONEY REQUEST");
+  console.log("Raw length:", req.rawBytes.length);
+  console.log("Preview:", req.asString.substring(0, 120));
+
   const signatures = new Set([
-    crypto.createHmac("sha256", WEBHOOK_SECRET).update(req.rawBytes).digest("hex"),
-    crypto.createHmac("sha256", WEBHOOK_SECRET).update(req.asString).digest("hex"),
-    crypto.createHmac("sha256", WEBHOOK_SECRET).update(req.asUtf8).digest("hex"),
+    crypto.createHmac("sha256", CHIMONEY_WEBHOOK_SECRET)
+      .update(req.rawBytes)
+      .digest("hex"),
+
+    crypto.createHmac("sha256", CHIMONEY_WEBHOOK_SECRET)
+      .update(req.asString)
+      .digest("hex"),
+
+    crypto.createHmac("sha256", CHIMONEY_WEBHOOK_SECRET)
+      .update(req.asUtf8)
+      .digest("hex"),
   ]);
-  
-  console.log("\n🔐 CALCULATED SIGNATURES:");
-  Array.from(signatures).forEach((sig, i) => {
-    console.log(`  ${i}: ${sig.substring(0, 20)}...`);
-  });
-  
-  console.log("Received:", signature?.substring(0, 20) + "...");
-  
-  if (signatures.has(signature)) {
-    console.log("✅ SIGNATURE ACCEPTED!");
+
+  console.log("Received sig:", signature?.substring(0, 20));
+
+  if (signature && signatures.has(signature)) {
+    console.log("✅ Chimoney signature verified");
+
     return res.json({
       success: true,
-      message: "Webhook verified",
-      event: req.body.type,
+      provider: "chimoney",
+      event: req.body?.type || null,
       timestamp: new Date().toISOString()
     });
   }
-  
-  console.log("❌ SIGNATURE REJECTED");
-  res.status(401).json({
-    error: "Invalid signature",
-    debug: {
-      receivedLength: req.rawBytes.length,
-      receivedHexPreview: req.rawBytes.toString("hex").substring(0, 40),
-      calculatedSignatures: Array.from(signatures)
-    }
+
+  console.log("❌ Chimoney signature failed");
+
+  return res.status(401).json({
+    error: "Invalid signature"
   });
 });
 
-app.get("/health", (req, res) => {
-  res.json({
-    status: "healthy",
-    service: "chimoney-webhook-compatible",
-    secret: "verified",
+/* ===============================
+   RUBIES WEBHOOK ENDPOINT
+   (Standard JSON — no raw capture needed)
+================================ */
+app.use("/webhooks/rubies", express.json({ limit: "1mb" }));
+
+app.post("/webhooks/rubies", (req, res) => {
+  console.log("\n💎 RUBIES CALLBACK");
+  console.log("Headers:", req.headers);
+  console.log("Body:", JSON.stringify(req.body, null, 2));
+
+  // Optional signature verification if Rubies provides one
+  const rubiesSig = req.headers["x-rubies-signature"];
+
+  if (RUBIES_WEBHOOK_SECRET && rubiesSig) {
+    const expected = crypto
+      .createHmac("sha256", RUBIES_WEBHOOK_SECRET)
+      .update(JSON.stringify(req.body))
+      .digest("hex");
+
+    if (expected !== rubiesSig) {
+      console.log("❌ Rubies signature invalid");
+      return res.status(401).json({
+        error: "Invalid Rubies signature"
+      });
+    }
+
+    console.log("✅ Rubies signature valid");
+  }
+
+  return res.json({
+    received: true,
+    provider: "rubies",
     timestamp: new Date().toISOString()
   });
 });
 
+/* ===============================
+   HEALTH CHECK
+================================ */
+app.get("/health", (req, res) => {
+  res.json({
+    status: "healthy",
+    webhooks: {
+      chimoney: true,
+      rubies: true
+    },
+    timestamp: new Date().toISOString()
+  });
+});
+
+/* ===============================
+   START SERVER
+================================ */
 app.listen(PORT, () => {
   console.log("\n" + "=".repeat(60));
-  console.log("🔄 CHIMONEY WEBHOOK - COMPATIBLE VERSION");
+  console.log("🚀 WEBHOOK SERVER READY");
   console.log("=".repeat(60));
-  console.log("📍 Port:", PORT);
-  console.log("🔐 Accepts multiple body encodings");
-  console.log("📤 POST /webhooks/chimoney");
+  console.log("Port:", PORT);
+  console.log("POST /webhooks/chimoney");
+  console.log("POST /webhooks/rubies");
+  console.log("GET  /health");
   console.log("=".repeat(60));
-  console.log("⏳ Waiting for requests...\n");
 });
